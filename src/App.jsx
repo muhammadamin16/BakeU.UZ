@@ -4,7 +4,7 @@ const App = () => {
   return (
     <div>
       <h1>ukam qalesa  </h1>
-      <h3></h3>
+      <h3>Nima gap</h3>
     </div>
   )
 }
