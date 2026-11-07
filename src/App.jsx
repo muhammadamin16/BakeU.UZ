@@ -4,7 +4,7 @@ const App = () => {
   return (
     <div>
       <h1>ukam qalesa  </h1>
-      <h3>vrver</h3>
+      <h3></h3>
     </div>
   )
 }
