@@ -1,0 +1,190 @@
+.bakeu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 25px;
+  padding-bottom: 20px;
+}
+
+.bakeu-header__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-decoration: none;
+}
+
+.bakeu-header__welcome {
+  color: #c58a29;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.bakeu-header__logo {
+  color: #432015;
+  font-family: "Arial Black", Arial, sans-serif;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2px;
+}
+
+.bakeu-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bakeu-header__languages {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(67, 32, 21, 0.12);
+  border-radius: 30px;
+  background: #fffcf7;
+}
+
+.bakeu-header__languages button {
+  padding: 7px 11px;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: #8b7364;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bakeu-header__languages button.selected {
+  background: #432015;
+  color: #f4b41b;
+}
+
+.bakeu-header__cart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #432015;
+  color: #fffcf7;
+}
+
+.bakeu-header__count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  display: grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border: 2px solid #f7f0e8;
+  border-radius: 20px;
+  background: #ed792d;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@media (max-width: 600px) {
+  .bakeu-header {
+    padding-top: 20px;
+    padding-bottom: 18px;
+  }
+
+  .bakeu-header__welcome {
+    font-size: 10px;
+  }
+
+  .bakeu-header__logo {
+    font-size: 36px;
+  }
+
+  .bakeu-header__actions {
+    gap: 10px;
+  }
+
+  .bakeu-header__cart {
+    width: 48px;
+    height: 48px;
+  }
+}
+.bakeu-header__favorites {
+  display: grid;
+  place-items: center;
+
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  background: #432015;
+  color: #fffcf7;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.bakeu-header__favorites:hover {
+  background: #654014;
+  color: #f4b41b;
+}
+
+@media (max-width: 600px) {
+  .bakeu-header__favorites {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 380px) {
+  .bakeu-header__actions {
+    gap: 6px;
+  }
+
+  .bakeu-header__favorites,
+  .bakeu-header__cart {
+    width: 40px;
+    height: 40px;
+  }
+
+  .bakeu-header__languages button {
+    padding: 6px 8px;
+  }
+
+  .bakeu-header__logo {
+    font-size: 30px;
+  }
+
+  .bakeu-header__welcome {
+    font-size: 8px;
+  }
+}
+.bakeu-header__logo-image {
+  display: block;
+  width: 155px;
+  height: 48px;
+  object-fit: cover;
+  object-position: bottom;
+  mix-blend-mode: multiply;
+}
+
+@media (max-width: 600px) {
+  .bakeu-header__logo-image {
+    width: 125px;
+    height: 39px;
+  }
+}
+
+@media (max-width: 380px) {
+  .bakeu-header__logo-image {
+    width: 100px;
+    height: 31px;
+  }
+}

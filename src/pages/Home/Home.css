@@ -1,0 +1,501 @@
+.home {
+  color: #432015;
+  font-family: Arial, sans-serif;
+}
+
+/* Главный баннер */
+.home-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "heading image"
+    "content image";
+  gap: 24px 40px;
+
+  padding: 36px;
+  border-radius: 36px;
+  background: #fffcf7;
+  box-shadow: 0 12px 30px rgba(67, 32, 21, 0.06);
+}
+
+.home-hero__heading {
+  grid-area: heading;
+  align-self: end;
+}
+
+.home-hero__heading h1 {
+  margin: 0;
+  font-family: "Arial Black", Arial, sans-serif;
+  font-size: clamp(36px, 4vw, 62px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  text-transform: uppercase;
+}
+
+.home-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 6px 13px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+.home-badge--tasty {
+  margin-top: 12px;
+  background: #4f9d75;
+  transform: rotate(-7deg);
+}
+
+.home-hero__content {
+  grid-area: content;
+  align-self: start;
+}
+
+.home-hero__content p {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.home-badge--crunchy {
+  margin-top: 12px;
+  background: #ed792d;
+  transform: rotate(5deg);
+}
+
+.home-order-button {
+  display: block;
+  margin-top: 30px;
+  padding: 13px 30px;
+  border: 2px solid #432015;
+  border-radius: 48% 52% 46% 54%;
+  background: #f4b41b;
+  color: #432015;
+  font-size: 17px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.home-order-button:hover {
+  background: #ffc643;
+}
+
+.home-hero__image {
+  grid-area: image;
+  position: relative;
+  min-width: 0;
+  min-height: 340px;
+}
+
+.home-hero__image img {
+  width: 100%;
+  height: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 28px;
+}
+
+.home-badge--fresh {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #3da7c4;
+  transform: rotate(7deg);
+}
+
+/* Баннер карты */
+.home-map-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 18px 22px;
+  border-radius: 25px;
+  background: #f4c21b;
+  color: #432015;
+  text-decoration: none;
+}
+
+.home-map-banner__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fffcf7;
+}
+
+.home-map-banner > div {
+  flex: 1;
+}
+
+.home-map-banner h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.home-map-banner p {
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+/* Поиск */
+.home-catalog {
+  margin-top: 22px;
+  scroll-margin-top: 20px;
+}
+
+.home-search {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  border: 1px solid rgba(67, 32, 21, 0.12);
+  border-radius: 22px;
+  background: #fffcf7;
+  color: #978b80;
+}
+
+.home-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 22px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #432015;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.home-search:focus-within {
+  outline: 2px solid #c58a29;
+  outline-offset: 2px;
+}
+
+/* Категории */
+.home-categories {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 24px 0 8px;
+  scrollbar-width: thin;
+}
+
+.home-category {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  padding: 12px 18px 12px 24px;
+  border: 2px solid transparent;
+  border-radius: 40px;
+  color: #432015;
+  font-size: 19px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.home-category.is-active {
+  border-color: #432015;
+}
+
+.home-category span {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 20px;
+  background: #432015;
+  color: white;
+  font-size: 13px;
+}
+
+/* Товары */
+.home-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.home-section-heading h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.home-section-heading button {
+  border: none;
+  background: transparent;
+  color: #d96a21;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.home-notice {
+  min-height: 18px;
+  margin: 8px 0 12px;
+  color: #39724f;
+  font-size: 12px;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.home-product {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 30px;
+}
+
+.home-product__image {
+  height: 240px;
+}
+
+.home-product__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 23px;
+}
+
+.home-product h3 {
+  flex: 1;
+  margin: 18px 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.home-product__bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-product__price {
+  flex: 1;
+  padding: 13px 8px;
+  border-radius: 30px;
+  background: #432015;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.home-product__add {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: #4f9d75;
+  color: white;
+  cursor: pointer;
+}
+
+.home-product__add:hover {
+  background: #3d805e;
+}
+
+.home-product__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 12px;
+  background: #432015;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.home-empty {
+  padding: 35px 20px;
+  border-radius: 24px;
+  background: #fffcf7;
+  text-align: center;
+}
+
+.home-empty p {
+  margin: 12px 0;
+}
+
+.home-empty button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 25px;
+  background: #f4b41b;
+  color: #432015;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Планшет */
+@media (max-width: 1100px) {
+  .home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Телефон */
+@media (max-width: 600px) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "heading heading"
+      "content image";
+    gap: 20px 12px;
+    padding: 24px 20px;
+    border-radius: 30px;
+  }
+
+  .home-hero__heading h1 {
+    font-size: 32px;
+    letter-spacing: -1px;
+  }
+
+  .home-hero__content {
+    align-self: center;
+  }
+
+  .home-hero__content p {
+    font-size: 13px;
+  }
+
+  .home-hero__image {
+    min-height: 215px;
+  }
+
+  .home-hero__image img {
+    height: 215px;
+    border-radius: 20px;
+  }
+
+  .home-badge {
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+
+  .home-badge--fresh {
+    top: 10px;
+    right: 8px;
+  }
+
+  .home-order-button {
+    margin-top: 25px;
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+
+  .home-map-banner {
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .home-map-banner h2 {
+    font-size: 16px;
+  }
+
+  .home-map-banner p {
+    font-size: 11px;
+  }
+
+  .home-map-banner__icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .home-search {
+    padding: 0 17px;
+  }
+
+  .home-search input {
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  .home-category {
+    padding: 10px 16px;
+    gap: 16px;
+    font-size: 16px;
+  }
+
+  .home-section-heading h2 {
+    font-size: 24px;
+  }
+
+  .home-section-heading button {
+    font-size: 11px;
+  }
+
+  .home-grid {
+    gap: 12px;
+  }
+
+  .home-product {
+    padding: 12px;
+    border-radius: 24px;
+  }
+
+  .home-product__image {
+    height: 180px;
+  }
+
+  .home-product__image img {
+    border-radius: 18px;
+  }
+
+  .home-product h3 {
+    font-size: 16px;
+    margin: 15px 0;
+  }
+
+  .home-product__bottom {
+    gap: 6px;
+  }
+
+  .home-product__price {
+    padding: 12px 5px;
+    font-size: 11px;
+  }
+
+  .home-product__add {
+    width: 36px;
+    height: 38px;
+    border-radius: 12px;
+  }
+}

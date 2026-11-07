@@ -1,12 +1,10 @@
-import React from 'react'
+import { HashRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes";
 
-const App = () => {
+export default function App() {
   return (
-    <div>
-      <h1>ukam qalesa  </h1>
-      <h3>Nima gap</h3>
-    </div>
-  )
+    <HashRouter>
+      <AppRoutes />
+    </HashRouter>
+  );
 }
-
-export default App

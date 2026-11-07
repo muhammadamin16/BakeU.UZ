@@ -1,0 +1,67 @@
+/* Светлая тема BakeU */
+:root,
+:root[data-theme="dark"],
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #e3b785;
+  --paper: #fffcf7;
+  --card: #fffcf7;
+  --ink: #432015;
+  --muted: #8b7364;
+  --gold: #f4b41b;
+  --green: #4f9d75;
+  --line: rgba(67, 32, 21, 0.1);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #e7dbce;
+  color: #432015;
+}
+
+body {
+  margin: 0;
+  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+}
+
+.container {
+  width: min(1100px, calc(100% - 40px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero,
+.panel,
+.search-field {
+  background: #fffcf7;
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: calc(100% - 32px);
+  }
+}
+.container {
+  width: 100%;
+  max-width: 1550px;
+  margin: 0 auto;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
