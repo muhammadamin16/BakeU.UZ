@@ -23,7 +23,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bake-footer">
+    <footer className="bake-footer container">
       <div className="bake-footer__inner">
         <div className="bake-footer__top">
           <div className="bake-footer__brand">
