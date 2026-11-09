@@ -8,25 +8,31 @@
   display: flex;
   width: min(560px, calc(100% - 24px));
   padding: 8px;
+  box-sizing: border-box;
 
   background: rgba(255, 255, 255, 0.16);
   -webkit-backdrop-filter: blur(16px) saturate(170%);
   backdrop-filter: blur(16px) saturate(170%);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 50px;
+
   box-shadow:
     0 8px 24px rgba(67, 32, 21, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   touch-action: pan-y;
   user-select: none;
+  -webkit-user-select: none;
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .bottom-nav {
-    background: rgba(255, 252, 247, 0.85);
-  }
+.bottom-nav *,
+.bottom-nav *::before,
+.bottom-nav *::after {
+  box-sizing: border-box;
 }
+
+/* Подвижная стеклянная капсула */
 
 .bottom-nav__indicator {
   position: absolute;
@@ -34,19 +40,51 @@
   bottom: 8px;
   left: 0;
   width: 0;
+
   border-radius: 40px;
   pointer-events: none;
 
-  background: rgba(255, 255, 255, 0.32);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.58),
+    rgba(255, 248, 230, 0.24)
+  );
+
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 2px 3px rgba(255, 255, 255, 0.65),
     0 4px 14px rgba(67, 32, 21, 0.1);
 
   transition:
-    transform 0.6s cubic-bezier(0.3, 1.35, 0.5, 1),
-    width 0.6s cubic-bezier(0.3, 1.35, 0.5, 1),
-    opacity 0.2s ease;
+    transform 450ms cubic-bezier(0.22, 1.2, 0.36, 1),
+    width 250ms ease,
+    opacity 180ms ease,
+    box-shadow 180ms ease;
 }
+
+/* При перетаскивании капсула следует без задержки */
+
+.bottom-nav.is-dragging .bottom-nav__indicator {
+  transition: none;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 243, 217, 0.35)
+  );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 3px 5px rgba(255, 255, 255, 0.7),
+    0 6px 18px rgba(67, 32, 21, 0.15);
+}
+
+.bottom-nav.is-dragging,
+.bottom-nav.is-dragging .bottom-nav__link {
+  cursor: grabbing;
+}
+
+/* Ссылки */
 
 .bottom-nav__link {
   position: relative;
@@ -67,21 +105,40 @@
   text-decoration: none;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1.3;
 
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.3s ease;
+  -webkit-touch-callout: none;
+
+  transition: color 180ms ease;
 }
 
 .bottom-nav__link svg {
   flex-shrink: 0;
 }
 
-.bottom-nav__link:hover {
+.bottom-nav__link.is-active {
   color: #9a5a14;
 }
 
-.bottom-nav__link.is-active {
-  color: #9a5a14;
+.bottom-nav__link:focus-visible {
+  outline: 2px solid #a77546;
+  outline-offset: -3px;
+}
+
+@media (hover: hover) {
+  .bottom-nav__link:hover {
+    color: #9a5a14;
+  }
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or
+  (-webkit-backdrop-filter: blur(1px))
+) {
+  .bottom-nav {
+    background: rgba(255, 252, 247, 0.92);
+  }
 }
 
 @media (max-width: 480px) {
@@ -106,7 +163,53 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bottom-nav__indicator {
+  .bottom-nav__indicator,
+  .bottom-nav__link {
+    transition: none;
+  }
+}
+/* Сувдек юмшоқ, эластик капсула */
+
+.bottom-nav__indicator {
+  transform-origin: center;
+  will-change: transform, width;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.22) 45%,
+    rgba(255, 241, 214, 0.32) 100%
+  );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 3px 5px rgba(255, 255, 255, 0.65),
+    inset 0 -3px 6px rgba(207, 163, 110, 0.1),
+    0 5px 16px rgba(67, 32, 21, 0.1);
+
+  transition:
+    transform 650ms cubic-bezier(0.22, 1.4, 0.36, 1),
+    width 650ms cubic-bezier(0.22, 1.4, 0.36, 1),
+    opacity 180ms ease,
+    box-shadow 250ms ease;
+}
+
+/* Бармоқ ортидан бироз юмшоқ эргашади */
+
+.bottom-nav.is-dragging .bottom-nav__indicator {
+  transition:
+    transform 90ms ease-out,
+    width 120ms ease-out;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 4px 7px rgba(255, 255, 255, 0.75),
+    inset 0 -3px 6px rgba(207, 163, 110, 0.12),
+    0 8px 22px rgba(67, 32, 21, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav .bottom-nav__indicator {
     transition: none;
   }
 }
