@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Header from "../components/Header/Header";
 import MobileNav from "../components/MobileNav/MobileNav";
 import Home from "../pages/Home/Home";
+import Map from "../pages/Map/Map"
 
 export default function AppRoutes() {
   return (
@@ -10,6 +11,7 @@ export default function AppRoutes() {
 
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/map" element={<Map />} />
 
         <Route
           path="*"

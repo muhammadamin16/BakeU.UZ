@@ -1,6 +1,23 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Store, MapPin, Sparkles, ShoppingBag, UserRound } from "lucide-react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  NavLink,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  Store,
+  MapPin,
+  Sparkles,
+  ShoppingBag,
+  UserRound,
+} from "lucide-react";
 
 import "./MobileNav.css";
 
@@ -16,108 +33,191 @@ export default function MobileNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
+  const navRef = useRef(null);
   const linkRefs = useRef([]);
-  const indicatorRef = useRef(null);
-  const dragging = useRef(false);
-  const firstRender = useRef(true);
+  const gestureRef = useRef(null);
+  const suppressClickRef = useRef(false);
+
+  const [previewIndex, setPreviewIndex] = useState(null);
+  const [indicator, setIndicator] = useState(null);
 
   const activeIndex = links.findIndex(({ to }) =>
-    to === "/" ? pathname === "/" : pathname.startsWith(to)
+    to === "/"
+      ? pathname === "/"
+      : pathname === to || pathname.startsWith(`${to}/`)
   );
 
-  const placeIndicator = (animate) => {
-    const el = linkRefs.current[activeIndex];
-    const ind = indicatorRef.current;
-    if (!ind) return;
+  const shownIndex = previewIndex ?? activeIndex;
 
-    if (!el) {
-      ind.style.opacity = "0";
+  // Обновляем положение индикатора при переходе и изменении размеров.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    function updateIndicator() {
+      const link = linkRefs.current[shownIndex];
+
+      if (!link) {
+        setIndicator(null);
+        return;
+      }
+
+      setIndicator({
+        left: link.offsetLeft,
+        width: link.offsetWidth,
+      });
+    }
+
+    updateIndicator();
+
+    const observer = new ResizeObserver(updateIndicator);
+    observer.observe(nav);
+
+    linkRefs.current.forEach((link) => {
+      if (link) observer.observe(link);
+    });
+
+    return () => observer.disconnect();
+  }, [shownIndex]);
+
+  useEffect(() => {
+    gestureRef.current = null;
+    setPreviewIndex(null);
+  }, [pathname]);
+
+  function findIndexAt(clientX, clientY) {
+    return linkRefs.current.findIndex((link) => {
+      if (!link) return false;
+
+      const rect = link.getBoundingClientRect();
+
+      return (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      );
+    });
+  }
+
+  function handlePointerDown(event) {
+    if (
+      !event.isPrimary ||
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
       return;
     }
 
-    ind.style.opacity = "1";
-    ind.style.width = `${el.offsetWidth}px`;
-    ind.style.transform = `translateX(${el.offsetLeft}px)`;
+    suppressClickRef.current = false;
 
-    if (animate && ind.animate) {
-      ind.animate(
-        [
-          { scale: "1 1" },
-          { scale: "1.22 0.86", offset: 0.4 },
-          { scale: "1 1" },
-        ],
-        { duration: 560, easing: "ease-in-out" }
-      );
+    gestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      dragging: false,
+    };
+  }
+
+  function handlePointerMove(event) {
+    const gesture = gestureRef.current;
+
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
     }
-  };
 
-  useLayoutEffect(() => {
-    const ind = indicatorRef.current;
+    const dx = event.clientX - gesture.startX;
+    const dy = event.clientY - gesture.startY;
 
-    if (firstRender.current) {
-      firstRender.current = false;
-      ind.style.transition = "none";
-      placeIndicator(false);
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          ind.style.transition = "";
-        })
-      );
-    } else {
-      placeIndicator(true);
+    // Вертикальный жест оставляем для прокрутки страницы.
+    if (!gesture.dragging) {
+      if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+        gestureRef.current = null;
+        return;
+      }
+
+      if (Math.abs(dx) < 8) return;
+
+      gesture.dragging = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
 
-  useEffect(() => {
-    const onResize = () => {
-      const ind = indicatorRef.current;
-      ind.style.transition = "none";
-      placeIndicator(false);
-      requestAnimationFrame(() => {
-        ind.style.transition = "";
-      });
-    };
-    const stopDrag = () => {
-      dragging.current = false;
-    };
+    const index = findIndexAt(event.clientX, event.clientY);
+    setPreviewIndex(index >= 0 ? index : null);
+  }
 
-    window.addEventListener("resize", onResize);
-    window.addEventListener("pointerup", stopDrag);
-    window.addEventListener("pointercancel", stopDrag);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("pointerup", stopDrag);
-      window.removeEventListener("pointercancel", stopDrag);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
+  function finishGesture(event, cancelled = false) {
+    const gesture = gestureRef.current;
 
-  const pick = (e) => {
-    const target = document.elementFromPoint(e.clientX, e.clientY);
-    const link = target?.closest?.(".bottom-nav__link");
-    const index = linkRefs.current.indexOf(link);
-    if (index !== -1 && index !== activeIndex) navigate(links[index].to);
-  };
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    gestureRef.current = null;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    setPreviewIndex(null);
+
+    if (!gesture.dragging) return;
+
+    // Не даём клику после перетаскивания выполнить второй переход.
+    suppressClickRef.current = true;
+
+    if (cancelled) return;
+
+    const index = findIndexAt(event.clientX, event.clientY);
+
+    if (index >= 0 && index !== activeIndex) {
+      navigate(links[index].to);
+    }
+  }
 
   return (
     <nav
+      ref={navRef}
       className="bottom-nav"
       aria-label="Основная навигация"
-      onPointerDown={(e) => {
-        dragging.current = true;
-        pick(e);
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={(event) => finishGesture(event)}
+      onPointerCancel={(event) => finishGesture(event, true)}
+      onLostPointerCapture={() => {
+        gestureRef.current = null;
+        setPreviewIndex(null);
       }}
-      onPointerMove={(e) => dragging.current && pick(e)}
+      onDragStart={(event) => event.preventDefault()}
+      onClickCapture={(event) => {
+        if (suppressClickRef.current && event.detail !== 0) {
+          event.preventDefault();
+          event.stopPropagation();
+          suppressClickRef.current = false;
+        }
+      }}
     >
-      <span className="bottom-nav__indicator" ref={indicatorRef} aria-hidden="true" />
+      <span
+        className="bottom-nav__indicator"
+        aria-hidden="true"
+        style={{
+          width: indicator?.width ?? 0,
+          transform: `translateX(${indicator?.left ?? 0}px)`,
+          opacity: indicator ? 1 : 0,
+        }}
+      />
 
-      {links.map(({ to, label, Icon }, i) => (
+      {links.map(({ to, label, Icon }, index) => (
         <NavLink
           key={to}
           to={to}
           end={to === "/"}
-          ref={(el) => (linkRefs.current[i] = el)}
+          ref={(element) => {
+            linkRefs.current[index] = element;
+          }}
           className={({ isActive }) =>
             `bottom-nav__link${isActive ? " is-active" : ""}`
           }

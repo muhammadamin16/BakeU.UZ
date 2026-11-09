@@ -23,23 +23,27 @@ export default function Header() {
         </span>
 
         <img
-  src="/images/logo.png"
-  alt="BakeU"
-  className="bakeu-header__logo-image"
-/>
+          src="/images/logo.png"
+          alt="BakeU"
+          className="bakeu-header__logo-image"
+        />
       </Link>
 
       <div className="bakeu-header__actions">
         <div
-          className="bakeu-header__languages"
+          className={`bakeu-header__languages is-${language}`}
           role="group"
           aria-label="Язык приветствия"
         >
+          <span
+            className="bakeu-header__language-slider"
+            aria-hidden="true"
+          />
+
           {["uz", "ru"].map((lang) => (
             <button
               key={lang}
               type="button"
-              className={language === lang ? "selected" : ""}
               aria-pressed={language === lang}
               onClick={() => setLanguage(lang)}
             >

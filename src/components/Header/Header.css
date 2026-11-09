@@ -5,30 +5,33 @@
   gap: 20px;
   padding-top: 25px;
   padding-bottom: 20px;
+  font-family: Arial, sans-serif;
 }
 
 .bakeu-header__brand {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 4px;
+  flex-shrink: 0;
   text-decoration: none;
 }
 
 .bakeu-header__welcome {
-  color: #c58a29;
+  color: #b77922;
   font-size: 12px;
   font-weight: 800;
   line-height: 1.4;
   text-transform: uppercase;
 }
 
-.bakeu-header__logo {
-  color: #432015;
-  font-family: "Arial Black", Arial, sans-serif;
-  font-size: 44px;
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -2px;
+.bakeu-header__logo-image {
+  display: block;
+  width: 155px;
+  height: 48px;
+  object-fit: cover;
+  object-position: bottom;
+  mix-blend-mode: multiply;
 }
 
 .bakeu-header__actions {
@@ -37,62 +40,178 @@
   gap: 14px;
 }
 
-.bakeu-header__languages {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px;
-  border: 1px solid rgba(67, 32, 21, 0.12);
-  border-radius: 30px;
-  background: #fffcf7;
-}
-
-.bakeu-header__languages button {
-  padding: 7px 11px;
-  border: none;
-  border-radius: 24px;
-  background: transparent;
-  color: #8b7364;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.bakeu-header__languages button.selected {
-  background: #432015;
-  color: #f4b41b;
-}
-
+/* Стеклянные кнопки */
+.bakeu-header__favorites,
 .bakeu-header__cart {
   position: relative;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  flex-shrink: 0;
+
+  width: 58px;
+  height: 58px;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 50%;
-  background: #432015;
-  color: #fffcf7;
+  background: rgba(255, 252, 247, 0.4);
+  color: #432015;
+  text-decoration: none;
+
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+
+  box-shadow:
+    0 6px 18px rgba(67, 32, 21, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(67, 32, 21, 0.05);
+
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
+.bakeu-header__favorites:hover,
+.bakeu-header__cart:hover {
+  background: rgba(255, 252, 247, 0.7);
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 22px rgba(67, 32, 21, 0.12),
+    inset 0 1px 2px rgba(255, 255, 255, 1);
+}
+
+.bakeu-header__favorites:active,
+.bakeu-header__cart:active {
+  transform: scale(0.95);
+}
+
+/* Счётчик корзины */
 .bakeu-header__count {
   position: absolute;
   top: -3px;
   right: -3px;
+
   display: grid;
   place-items: center;
-  min-width: 21px;
-  height: 21px;
+
+  min-width: 22px;
+  height: 22px;
   padding: 0 5px;
+  box-sizing: border-box;
+
   border: 2px solid #f7f0e8;
   border-radius: 20px;
   background: #ed792d;
   color: white;
+
   font-size: 10px;
   font-weight: 800;
 }
 
+/* Переключатель языка */
+.bakeu-header__languages {
+  position: relative;
+  isolation: isolate;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex-shrink: 0;
+
+  width: 124px;
+  height: 48px;
+  padding: 5px;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 30px;
+  background: rgba(255, 252, 247, 0.35);
+
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+
+  box-shadow:
+    0 5px 16px rgba(67, 32, 21, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+/* Подвижная стеклянная капля */
+.bakeu-header__language-slider {
+  position: absolute;
+  z-index: 0;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+
+  width: calc((100% - 10px) / 2);
+  box-sizing: border-box;
+
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(244, 180, 27, 0.22)
+  );
+
+  box-shadow:
+    0 3px 8px rgba(67, 32, 21, 0.12),
+    inset 0 1px 2px rgba(255, 255, 255, 1);
+
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bakeu-header__languages.is-uz
+  .bakeu-header__language-slider {
+  transform: translateX(0);
+}
+
+.bakeu-header__languages.is-ru
+  .bakeu-header__language-slider {
+  transform: translateX(100%);
+}
+
+.bakeu-header__languages button {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0;
+
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: #8b7364;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+
+  transition: color 0.25s ease;
+}
+
+.bakeu-header__languages button[aria-pressed="true"] {
+  color: #432015;
+}
+
+.bakeu-header a:focus-visible,
+.bakeu-header button:focus-visible {
+  outline: 2px solid #b77922;
+  outline-offset: 4px;
+}
+
+/* Телефон */
 @media (max-width: 600px) {
   .bakeu-header {
+    gap: 12px;
     padding-top: 20px;
     padding-bottom: 18px;
   }
@@ -101,49 +220,46 @@
     font-size: 10px;
   }
 
-  .bakeu-header__logo {
-    font-size: 36px;
+  .bakeu-header__logo-image {
+    width: 125px;
+    height: 39px;
   }
 
   .bakeu-header__actions {
-    gap: 10px;
+    gap: 8px;
   }
 
+  .bakeu-header__favorites,
   .bakeu-header__cart {
     width: 48px;
     height: 48px;
   }
-}
-.bakeu-header__favorites {
-  display: grid;
-  place-items: center;
 
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
+  .bakeu-header__languages {
+    width: 104px;
+    height: 44px;
+  }
 
-  border-radius: 50%;
-  background: #432015;
-  color: #fffcf7;
-
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.bakeu-header__favorites:hover {
-  background: #654014;
-  color: #f4b41b;
-}
-
-@media (max-width: 600px) {
-  .bakeu-header__favorites {
-    width: 48px;
-    height: 48px;
+  .bakeu-header__languages button {
+    font-size: 12px;
   }
 }
 
-@media (max-width: 380px) {
+/* Небольшие экраны */
+@media (max-width: 400px) {
+  .bakeu-header {
+    gap: 8px;
+  }
+
+  .bakeu-header__welcome {
+    font-size: 8px;
+  }
+
+  .bakeu-header__logo-image {
+    width: 100px;
+    height: 31px;
+  }
+
   .bakeu-header__actions {
     gap: 6px;
   }
@@ -154,37 +270,17 @@
     height: 40px;
   }
 
+  .bakeu-header__languages {
+    width: 88px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-header__favorites,
+  .bakeu-header__cart,
+  .bakeu-header__language-slider,
   .bakeu-header__languages button {
-    padding: 6px 8px;
-  }
-
-  .bakeu-header__logo {
-    font-size: 30px;
-  }
-
-  .bakeu-header__welcome {
-    font-size: 8px;
-  }
-}
-.bakeu-header__logo-image {
-  display: block;
-  width: 155px;
-  height: 48px;
-  object-fit: cover;
-  object-position: bottom;
-  mix-blend-mode: multiply;
-}
-
-@media (max-width: 600px) {
-  .bakeu-header__logo-image {
-    width: 125px;
-    height: 39px;
-  }
-}
-
-@media (max-width: 380px) {
-  .bakeu-header__logo-image {
-    width: 100px;
-    height: 31px;
+    transition: none;
   }
 }
