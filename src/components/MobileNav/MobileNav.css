@@ -213,3 +213,26 @@
     transition: none;
   }
 }
+/* Мягкое возвращение после отпускания */
+.bottom-nav .bottom-nav__indicator {
+  transition:
+    transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms ease,
+    box-shadow 300ms ease;
+}
+
+/* Плавное движение за пальцем */
+.bottom-nav.is-dragging .bottom-nav__indicator {
+  transition:
+    transform 140ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    width 220ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav .bottom-nav__indicator,
+  .bottom-nav.is-dragging .bottom-nav__indicator {
+    transition: none;
+  }
+}

@@ -126,9 +126,9 @@ function getDragPosition(clientX, gesture) {
   const movement = clientX - (gesture.lastX ?? gesture.startX);
   const speed = Math.min(Math.abs(movement) / elapsed, 2);
 
-  const desiredStretch = speed * 15;
-  const stretch =
-    (gesture.stretch ?? 0) * 0.6 + desiredStretch * 0.4;
+const desiredStretch = speed * 12;
+const stretch =
+  (gesture.stretch ?? 0) * 0.82 + desiredStretch * 0.18;
 
   gesture.lastX = clientX;
   gesture.lastTime = now;
