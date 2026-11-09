@@ -2,7 +2,7 @@
   position: fixed;
   z-index: 100;
   left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
 
   display: flex;
@@ -10,253 +10,30 @@
   padding: 8px;
   box-sizing: border-box;
 
-  background: rgba(255, 255, 255, 0.16);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-  backdrop-filter: blur(16px) saturate(170%);
-
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 50px;
 
-  box-shadow:
-    0 8px 24px rgba(67, 32, 21, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  /* Стекло: лёгкий градиент + сильное размытие */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.28),
+    rgba(255, 255, 255, 0.12)
+  );
 
-  touch-action: pan-y;
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 18px rgba(255, 255, 255, 0.12),
+    0 10px 30px rgba(67, 32, 21, 0.14),
+    0 2px 6px rgba(67, 32, 21, 0.06);
+
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.bottom-nav *,
-.bottom-nav *::before,
-.bottom-nav *::after {
-  box-sizing: border-box;
-}
-
-/* Подвижная стеклянная капсула */
-
-.bottom-nav__indicator {
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 0;
-  width: 0;
-
-  border-radius: 40px;
-  pointer-events: none;
-
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.58),
-    rgba(255, 248, 230, 0.24)
-  );
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 2px 3px rgba(255, 255, 255, 0.65),
-    0 4px 14px rgba(67, 32, 21, 0.1);
-
-  transition:
-    transform 450ms cubic-bezier(0.22, 1.2, 0.36, 1),
-    width 250ms ease,
-    opacity 180ms ease,
-    box-shadow 180ms ease;
-}
-
-/* При перетаскивании капсула следует без задержки */
-
-.bottom-nav.is-dragging .bottom-nav__indicator {
-  transition: none;
-
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 243, 217, 0.35)
-  );
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
-    inset 0 3px 5px rgba(255, 255, 255, 0.7),
-    0 6px 18px rgba(67, 32, 21, 0.15);
-}
-
-.bottom-nav.is-dragging,
-.bottom-nav.is-dragging .bottom-nav__link {
-  cursor: grabbing;
-}
-
-/* Ссылки */
-
-.bottom-nav__link {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-
-  padding: 11px 4px;
-  border-radius: 40px;
-
-  color: #4a2a1c;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.3;
-
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-
-  transition: color 180ms ease;
-}
-
-.bottom-nav__link svg {
-  flex-shrink: 0;
-}
-
-.bottom-nav__link.is-active {
-  color: #9a5a14;
-}
-
-.bottom-nav__link:focus-visible {
-  outline: 2px solid #a77546;
-  outline-offset: -3px;
-}
-
-@media (hover: hover) {
-  .bottom-nav__link:hover {
-    color: #9a5a14;
-  }
-}
-
-@supports not (
-  (backdrop-filter: blur(1px)) or
-  (-webkit-backdrop-filter: blur(1px))
-) {
-  .bottom-nav {
-    background: rgba(255, 252, 247, 0.92);
-  }
-}
-
-@media (max-width: 480px) {
-  .bottom-nav {
-    padding: 6px;
-  }
-
-  .bottom-nav__indicator {
-    top: 6px;
-    bottom: 6px;
-  }
-
-  .bottom-nav__link {
-    padding: 11px 2px;
-    font-size: 9px;
-  }
-
-  .bottom-nav__link svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottom-nav__indicator,
-  .bottom-nav__link {
-    transition: none;
-  }
-}
-/* Сувдек юмшоқ, эластик капсула */
-
-.bottom-nav__indicator {
-  transform-origin: center;
-  will-change: transform, width;
-
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.62) 0%,
-    rgba(255, 255, 255, 0.22) 45%,
-    rgba(255, 241, 214, 0.32) 100%
-  );
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 3px 5px rgba(255, 255, 255, 0.65),
-    inset 0 -3px 6px rgba(207, 163, 110, 0.1),
-    0 5px 16px rgba(67, 32, 21, 0.1);
-
-  transition:
-    transform 650ms cubic-bezier(0.22, 1.4, 0.36, 1),
-    width 650ms cubic-bezier(0.22, 1.4, 0.36, 1),
-    opacity 180ms ease,
-    box-shadow 250ms ease;
-}
-
-/* Бармоқ ортидан бироз юмшоқ эргашади */
-
-.bottom-nav.is-dragging .bottom-nav__indicator {
-  transition:
-    transform 90ms ease-out,
-    width 120ms ease-out;
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
-    inset 0 4px 7px rgba(255, 255, 255, 0.75),
-    inset 0 -3px 6px rgba(207, 163, 110, 0.12),
-    0 8px 22px rgba(67, 32, 21, 0.14);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottom-nav .bottom-nav__indicator {
-    transition: none;
-  }
-}
-/* Мягкое возвращение после отпускания */
-.bottom-nav .bottom-nav__indicator {
-  transition:
-    transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
-    width 850ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 200ms ease,
-    box-shadow 300ms ease;
-}
-
-/* Плавное движение за пальцем */
-.bottom-nav.is-dragging .bottom-nav__indicator {
-  transition:
-    transform 140ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    width 220ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    box-shadow 300ms ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottom-nav .bottom-nav__i.bottom-nav {
-  position: fixed;
-  z-index: 100;
-  left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-
-  display: flex;
-  width: min(560px, calc(100% - 24px));
-  padding: 8px;
-  box-sizing: border-box;
-
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  border-radius: 50px;
-  background: rgba(255, 255, 255, 0.16);
-
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-  backdrop-filter: blur(16px) saturate(170%);
-
-  box-shadow:
-    0 8px 24px rgba(67, 32, 21, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 .bottom-nav *,
@@ -265,7 +42,7 @@
   box-sizing: border-box;
 }
 
-/* Движением управляет JavaScript — без CSS-задержек. */
+/* Движение капсулы — только transform из JavaScript (пружина) */
 
 .bottom-nav__indicator {
   position: absolute;
@@ -279,30 +56,69 @@
   pointer-events: none;
   transform-origin: center;
   will-change: transform;
+  backface-visibility: hidden;
 
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.58),
-    rgba(255, 248, 230, 0.24)
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 250, 239, 0.3)
   );
 
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 2px 4px rgba(255, 255, 255, 0.65),
-    inset 0 -2px 4px rgba(207, 163, 110, 0.08),
+    inset 0 2px 5px rgba(255, 255, 255, 0.7),
+    inset 0 -3px 8px rgba(255, 255, 255, 0.18),
     0 4px 14px rgba(67, 32, 21, 0.1);
+
+  /* transform не анимируем через CSS, только цвет и тень */
+  transition:
+    background 280ms ease,
+    box-shadow 280ms ease;
 }
 
-/* Мягкий блик при перетаскивании */
+/* Блик "жидкого стекла" */
+.bottom-nav__indicator::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 14%;
+  right: 14%;
+  height: 38%;
+  border-radius: 40px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0)
+  );
+  opacity: 0.7;
+  transition: opacity 250ms ease;
+}
 
 .bottom-nav__indicator::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  background: rgba(255, 255, 255, 0.16);
   opacity: 0;
-  background: rgba(255, 255, 255, 0.12);
-  transition: opacity 180ms ease;
+  transition: opacity 220ms ease;
+}
+
+.bottom-nav.is-dragging .bottom-nav__indicator {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 250, 239, 0.42)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 2px 6px rgba(255, 255, 255, 0.8),
+    inset 0 -3px 10px rgba(255, 255, 255, 0.22),
+    0 8px 22px rgba(67, 32, 21, 0.16);
+}
+
+.bottom-nav.is-dragging .bottom-nav__indicator::before {
+  opacity: 1;
 }
 
 .bottom-nav.is-dragging .bottom-nav__indicator::after {
@@ -312,45 +128,55 @@
 .bottom-nav__link {
   position: relative;
   z-index: 1;
-  flex: 1;
-  min-width: 0;
 
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 5px;
 
-  padding: 11px 4px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 10px 2px;
   border-radius: 40px;
 
   color: #4a2a1c;
-  text-decoration: none;
+  font-family: Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   line-height: 1.3;
+  text-decoration: none;
 
-  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
   -webkit-touch-callout: none;
-  transition: color 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: color 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .bottom-nav__link svg {
   flex-shrink: 0;
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .bottom-nav__link.is-active {
   color: #9a5a14;
 }
 
-.bottom-nav.is-dragging,
-.bottom-nav.is-dragging .bottom-nav__link {
-  cursor: grabbing;
+/* Иконка слегка "подпрыгивает" на активной вкладке */
+.bottom-nav__link.is-active svg {
+  transform: scale(1.1);
 }
 
 .bottom-nav__link:focus-visible {
   outline: 2px solid #a77546;
-  outline-offset: -3px;
+  outline-offset: -4px;
+}
+
+.bottom-nav.is-dragging,
+.bottom-nav.is-dragging .bottom-nav__link {
+  cursor: grabbing;
 }
 
 @media (hover: hover) {
@@ -359,18 +185,10 @@
   }
 }
 
-@supports not (
-  (backdrop-filter: blur(1px)) or
-  (-webkit-backdrop-filter: blur(1px))
-) {
-  .bottom-nav {
-    background: rgba(255, 252, 247, 0.94);
-  }
-}
-
 @media (max-width: 480px) {
   .bottom-nav {
     padding: 6px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .bottom-nav__indicator {
@@ -379,7 +197,8 @@
   }
 
   .bottom-nav__link {
-    padding: 11px 2px;
+    min-height: 56px;
+    padding: 9px 2px;
     font-size: 9px;
   }
 
@@ -389,13 +208,21 @@
   }
 }
 
+@supports not (
+  (backdrop-filter: blur(1px)) or
+  (-webkit-backdrop-filter: blur(1px))
+) {
+  .bottom-nav {
+    background: rgba(255, 252, 247, 0.95);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bottom-nav__link,
+  .bottom-nav__link svg,
+  .bottom-nav__indicator,
+  .bottom-nav__indicator::before,
   .bottom-nav__indicator::after {
-    transition: none;
-  }
-}ndicator,
-  .bottom-nav.is-dragging .bottom-nav__indicator {
     transition: none;
   }
 }
