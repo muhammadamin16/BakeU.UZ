@@ -1,16 +1,5 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  NavLink,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
+import { useLayoutEffect, useRef, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Store,
   MapPin,
@@ -34,12 +23,18 @@ export default function MobileNav() {
   const navigate = useNavigate();
 
   const navRef = useRef(null);
+  const indicatorRef = useRef(null);
   const linkRefs = useRef([]);
+  const slotsRef = useRef([]);
   const gestureRef = useRef(null);
   const suppressClickRef = useRef(false);
+  const frameRef = useRef(null);
+  const previousTimeRef = useRef(null);
+  const currentRef = useRef(null);
+  const targetRef = useRef(null);
+  const reducedMotionRef = useRef(false);
 
-  const [positions, setPositions] = useState([]);
-  const [drag, setDrag] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const activeIndex = links.findIndex(({ to }) =>
     to === "/"
@@ -47,105 +42,162 @@ export default function MobileNav() {
       : pathname === to || pathname.startsWith(`${to}/`)
   );
 
-  const activePosition = positions[activeIndex];
-  const indicator = drag ?? activePosition;
-  const highlightedIndex = drag?.index ?? activeIndex;
+  function paint(value) {
+    const element = indicatorRef.current;
+    if (!element) return;
+
+    element.style.opacity = "1";
+    element.style.width = `${value.width}px`;
+    element.style.transform =
+      `translate3d(${value.center - value.width / 2}px, 0, 0) ` +
+      `scaleY(${value.height})`;
+  }
+
+  function animate(time) {
+    frameRef.current = null;
+
+    const target = targetRef.current;
+    const current = currentRef.current;
+    if (!target || !current) return;
+
+    const dt = previousTimeRef.current
+      ? Math.min(time - previousTimeRef.current, 32)
+      : 16;
+
+    previousTimeRef.current = time;
+
+    const dragging = Boolean(gestureRef.current?.dragging);
+    const reduce = reducedMotionRef.current;
+
+    // Быстро следует за пальцем, мягко останавливается.
+    const positionEase = reduce
+      ? 1
+      : 1 - Math.exp(-dt / (dragging ? 38 : 65));
+
+    const shapeEase = reduce ? 1 : 1 - Math.exp(-dt / 80);
+
+    const distance = target.center - current.center;
+
+    // Растяжение зависит от отставания, а не от частоты событий.
+    const stretch = reduce
+      ? 0
+      : Math.min(Math.abs(distance) * 0.18, target.width * 0.16);
+
+    const desiredWidth = target.width + stretch;
+    const desiredHeight = 1 - (stretch / target.width) * 0.3;
+
+    const next = {
+      center: current.center + distance * positionEase,
+      width: current.width +
+        (desiredWidth - current.width) * shapeEase,
+      height: current.height +
+        (desiredHeight - current.height) * shapeEase,
+    };
+
+    currentRef.current = next;
+    paint(next);
+
+    const settled =
+      Math.abs(target.center - next.center) < 0.1 &&
+      Math.abs(target.width - next.width) < 0.1 &&
+      Math.abs(1 - next.height) < 0.001;
+
+    if (settled) {
+      const finalValue = { ...target, height: 1 };
+      currentRef.current = finalValue;
+      paint(finalValue);
+      previousTimeRef.current = null;
+    } else {
+      frameRef.current = requestAnimationFrame(animate);
+    }
+  }
+
+  function moveTo(slot, immediately = false) {
+    if (!slot) return;
+
+    targetRef.current = {
+      center: slot.center,
+      width: slot.width,
+    };
+
+    if (!currentRef.current || immediately) {
+      currentRef.current = { ...targetRef.current, height: 1 };
+      paint(currentRef.current);
+    }
+
+    if (frameRef.current === null) {
+      previousTimeRef.current = null;
+      frameRef.current = requestAnimationFrame(animate);
+    }
+  }
+
+  function nearest(center) {
+    return slotsRef.current.reduce((best, slot, index, slots) => {
+      return Math.abs(slot.center - center) <
+        Math.abs(slots[best].center - center)
+        ? index
+        : best;
+    }, 0);
+  }
+
+  function restoreActive() {
+    const slot = slotsRef.current[activeIndex];
+
+    if (slot) {
+      moveTo(slot);
+    } else {
+      targetRef.current = null;
+      currentRef.current = null;
+      if (indicatorRef.current) {
+        indicatorRef.current.style.opacity = "0";
+      }
+    }
+  }
 
   useLayoutEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
+    const media = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    const updateMotion = () => {
+      reducedMotionRef.current = media.matches;
+    };
+
+    updateMotion();
+    media.addEventListener("change", updateMotion);
+
+    return () => {
+      media.removeEventListener("change", updateMotion);
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    gestureRef.current = null;
+    setPreview(null);
 
     function measure() {
-      setPositions(
-        linkRefs.current.map((link) => ({
-          left: link.offsetLeft,
-          width: link.offsetWidth,
-        }))
-      );
+      slotsRef.current = linkRefs.current.map((link) => ({
+        center: link.offsetLeft + link.offsetWidth / 2,
+        width: link.offsetWidth,
+      }));
+
+      gestureRef.current = null;
+      setPreview(null);
+      restoreActive();
     }
 
     measure();
 
     const observer = new ResizeObserver(measure);
-    observer.observe(nav);
-
-    linkRefs.current.forEach((link) => {
-      if (link) observer.observe(link);
-    });
+    observer.observe(navRef.current);
+    linkRefs.current.forEach((link) => observer.observe(link));
 
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    gestureRef.current = null;
-    setDrag(null);
   }, [pathname]);
-
-  function nearestIndex(center, slots) {
-    let nearest = 0;
-    let distance = Infinity;
-
-    slots.forEach((slot, index) => {
-      const nextDistance = Math.abs(
-        center - (slot.left + slot.width / 2)
-      );
-
-      if (nextDistance < distance) {
-        distance = nextDistance;
-        nearest = index;
-      }
-    });
-
-    return nearest;
-  }
-
-function getDragPosition(clientX, gesture) {
-  const dx = clientX - gesture.startX;
-  const first = gesture.slots[0];
-  const last = gesture.slots[gesture.slots.length - 1];
-
-  const minLeft = first.left;
-  const maxLeft = last.left + last.width - gesture.width;
-  const rawLeft = gesture.initialLeft + dx;
-
-  const clampedLeft = Math.max(
-    minLeft,
-    Math.min(maxLeft, rawLeft)
-  );
-
-  // Четга етганда енгил резинадек тортилади.
-  const overflow = rawLeft - clampedLeft;
-  const resistance =
-    Math.sign(overflow) *
-    18 *
-    (1 - Math.exp(-Math.abs(overflow) / 70));
-
-  // Ҳаракат тезлигига қараб чўзилади.
-  const now = performance.now();
-  const elapsed = Math.max(16, now - (gesture.lastTime ?? now));
-  const movement = clientX - (gesture.lastX ?? gesture.startX);
-  const speed = Math.min(Math.abs(movement) / elapsed, 2);
-
-const desiredStretch = speed * 12;
-const stretch =
-  (gesture.stretch ?? 0) * 0.82 + desiredStretch * 0.18;
-
-  gesture.lastX = clientX;
-  gesture.lastTime = now;
-  gesture.stretch = stretch;
-
-  const width = gesture.width + stretch;
-
-  return {
-    left: clampedLeft + resistance - stretch / 2,
-    width,
-    scaleY: 1 - Math.min(stretch / gesture.width, 0.3) * 0.35,
-    index: nearestIndex(
-      clampedLeft + gesture.width / 2,
-      gesture.slots
-    ),
-  };
-}
 
   function handlePointerDown(event) {
     if (
@@ -161,99 +213,93 @@ const stretch =
 
     suppressClickRef.current = false;
 
-    const pressedIndex = linkRefs.current.findIndex(
+    const index = linkRefs.current.findIndex(
       (link) => link?.contains(event.target)
     );
 
-    if (pressedIndex < 0 || !positions.length) return;
-
-    const initial = positions[pressedIndex];
+    if (index < 0) return;
 
     gestureRef.current = {
-      pointerId: event.pointerId,
+      id: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      initialLeft: initial.left,
-      width: initial.width,
-      slots: positions,
+      center: slotsRef.current[index].center,
+      width: slotsRef.current[index].width,
       dragging: false,
     };
+  }
 
-    // Сохраняем жест, даже если указатель выйдет за navbar.
-    event.currentTarget.setPointerCapture(event.pointerId);
+  function dragTarget(clientX, gesture) {
+    const slots = slotsRef.current;
+    const raw = gesture.center + clientX - gesture.startX;
+    const min = slots[0].center;
+    const max = slots[slots.length - 1].center;
+    const clamped = Math.max(min, Math.min(max, raw));
+    const overflow = raw - clamped;
+
+    // Небольшое сопротивление у края.
+    const rubber =
+      Math.sign(overflow) *
+      10 *
+      (1 - Math.exp(-Math.abs(overflow) / 65));
+
+    return {
+      center: clamped + rubber,
+      width: gesture.width,
+      index: nearest(clamped),
+    };
   }
 
   function handlePointerMove(event) {
     const gesture = gestureRef.current;
-
-    if (!gesture || gesture.pointerId !== event.pointerId) {
-      return;
-    }
+    if (!gesture || gesture.id !== event.pointerId) return;
 
     const dx = event.clientX - gesture.startX;
     const dy = event.clientY - gesture.startY;
 
     if (!gesture.dragging) {
-      // Вертикальное движение остаётся прокруткой страницы.
       if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-        finishGesture(event, true);
+        gestureRef.current = null;
         return;
       }
 
       if (Math.abs(dx) < 6) return;
 
       gesture.dragging = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
     }
 
-    setDrag(getDragPosition(event.clientX, gesture));
+    const target = dragTarget(event.clientX, gesture);
+    setPreview(target.index);
+    moveTo(target);
   }
 
   function finishGesture(event, cancelled = false) {
     const gesture = gestureRef.current;
-
-    if (!gesture || gesture.pointerId !== event.pointerId) {
-      return;
-    }
-
-    const target = getDragPosition(event.clientX, gesture);
+    if (!gesture || gesture.id !== event.pointerId) return;
 
     gestureRef.current = null;
-    setDrag(null);
+    setPreview(null);
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    if (cancelled || gesture.dragging) {
-      suppressClickRef.current = true;
-    }
+    // Обычный клик обрабатывается самим NavLink.
+    if (!gesture.dragging) return;
 
-    if (cancelled) return;
+    suppressClickRef.current = true;
 
-    if (gesture.dragging) {
-      if (target.index !== activeIndex) {
-        navigate(links[target.index].to);
-      }
+    if (cancelled) {
+      restoreActive();
       return;
     }
 
-    // Обычное нажатие: проверяем, где отпустили указатель.
-    const index = linkRefs.current.findIndex((link) => {
-      const rect = link.getBoundingClientRect();
+    const { index } = dragTarget(event.clientX, gesture);
 
-      return (
-        event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom
-      );
-    });
+    moveTo(slotsRef.current[index]);
 
-    // Pointer capture может перенаправить click на nav,
-    // поэтому переход при нажатии выполняем здесь.
-    suppressClickRef.current = true;
-
-    if (index >= 0 && index !== activeIndex) {
+    if (index !== activeIndex) {
       navigate(links[index].to);
     }
   }
@@ -261,22 +307,20 @@ const stretch =
   return (
     <nav
       ref={navRef}
-      className={`bottom-nav${drag ? " is-dragging" : ""}`}
+      className={`bottom-nav${preview !== null ? " is-dragging" : ""}`}
       aria-label="Основная навигация"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={(event) => finishGesture(event)}
+      onPointerUp={finishGesture}
       onPointerCancel={(event) => finishGesture(event, true)}
-      onLostPointerCapture={() => {
-        if (gestureRef.current) {
-          suppressClickRef.current = true;
+      onLostPointerCapture={(event) => finishGesture(event, true)}
+      onPointerLeave={() => {
+        if (!gestureRef.current?.dragging) {
           gestureRef.current = null;
-          setDrag(null);
         }
       }}
       onDragStart={(event) => event.preventDefault()}
       onClickCapture={(event) => {
-        // Клавиатурные клики продолжают работать.
         if (suppressClickRef.current && event.detail !== 0) {
           event.preventDefault();
           event.stopPropagation();
@@ -284,18 +328,11 @@ const stretch =
         }
       }}
     >
-<span
-  className="bottom-nav__indicator"
-  aria-hidden="true"
-  style={{
-    width: indicator?.width ?? 0,
-    transform: `
-      translate3d(${indicator?.left ?? 0}px, 0, 0)
-      scaleY(${drag?.scaleY ?? 1})
-    `,
-    opacity: indicator ? 1 : 0,
-  }}
-/>
+      <span
+        ref={indicatorRef}
+        className="bottom-nav__indicator"
+        aria-hidden="true"
+      />
 
       {links.map(({ to, label, Icon }, index) => (
         <NavLink
@@ -307,7 +344,7 @@ const stretch =
             linkRefs.current[index] = element;
           }}
           className={`bottom-nav__link${
-            highlightedIndex === index ? " is-active" : ""
+            (preview ?? activeIndex) === index ? " is-active" : ""
           }`}
         >
           <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
