@@ -16,11 +16,6 @@ export default function Header() {
   return (
     <header className="bakeu-header container">
       <Link to="/" className="bakeu-header__brand">
-        <span className="bakeu-header__welcome">
-          {language === "ru"
-            ? "Добро пожаловать"
-            : "Xush kelibsiz"}
-        </span>
 
         <img
           src="/images/logo.png"

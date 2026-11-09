@@ -1,0 +1,313 @@
+.bake-footer {
+  margin-top: 48px;
+  padding: 0 16px calc(110px + env(safe-area-inset-bottom));
+  color: #432b21;
+  font-family: Arial, sans-serif;
+}
+
+.bake-footer,
+.bake-footer * {
+  box-sizing: border-box;
+}
+
+.bake-footer__inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 32px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 28px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 247, 232, 0.18)
+  );
+
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    0 10px 30px rgba(80, 51, 29, 0.035);
+}
+
+.bake-footer a {
+  text-decoration: none;
+}
+
+.bake-footer__top {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
+  gap: 30px;
+  align-items: start;
+}
+
+/* Бренд */
+
+.bake-footer__logo {
+  display: inline-block;
+  color: #432015;
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.bake-footer__logo span {
+  color: #c68b32;
+}
+
+.bake-footer__brand p {
+  margin: 16px 0 12px;
+  color: #806b5c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.bake-footer__signature {
+  color: #a17853;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Ссылки */
+
+.bake-footer__column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.bake-footer h3 {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.bake-footer__column a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 0;
+  color: #806b5c;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: color 180ms ease;
+}
+
+.bake-footer__column svg {
+  flex-shrink: 0;
+  color: #9a7b60;
+}
+
+/* Блок карты */
+
+.bake-footer__discover {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.bake-footer__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.35);
+  color: #6e8059;
+}
+
+.bake-footer__discover h3 {
+  margin-bottom: 7px;
+}
+
+.bake-footer__discover p {
+  margin: 0 0 14px;
+  color: #806b5c;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* Стеклянные кнопки */
+
+.bake-footer__map-link,
+.bake-footer__up {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 100px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.65),
+    rgba(245, 211, 155, 0.24)
+  );
+
+  color: #432b21;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 1),
+    0 4px 12px rgba(80, 51, 29, 0.06);
+
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* Нижняя строка */
+
+.bake-footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 30px;
+  padding-top: 17px;
+  border-top: 1px solid rgba(111, 79, 51, 0.12);
+}
+
+.bake-footer__bottom p {
+  flex-shrink: 0;
+  margin: 0;
+  color: #806b5c;
+  font-size: 11px;
+}
+
+.bake-footer__made {
+  color: #8c7867;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.bake-footer__up {
+  flex-shrink: 0;
+}
+
+/* Наведение и фокус */
+
+@media (hover: hover) {
+  .bake-footer__column a:hover {
+    color: #b36535;
+  }
+
+  .bake-footer__map-link:hover,
+  .bake-footer__up:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.85),
+      rgba(245, 211, 155, 0.42)
+    );
+
+    box-shadow:
+      inset 0 1px 2px #fff,
+      0 6px 16px rgba(80, 51, 29, 0.1);
+
+    transform: translateY(-2px);
+  }
+}
+
+.bake-footer__map-link:active,
+.bake-footer__up:active {
+  transform: translateY(1px);
+}
+
+.bake-footer a:focus-visible,
+.bake-footer button:focus-visible {
+  outline: 2px solid #a77546;
+  outline-offset: 4px;
+}
+
+/* Планшет */
+
+@media (max-width: 950px) {
+  .bake-footer__top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+
+/* Телефон */
+
+@media (max-width: 540px) {
+  .bake-footer {
+    margin-top: 28px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .bake-footer__inner {
+    padding: 24px 20px 16px;
+    border-radius: 22px;
+  }
+
+  .bake-footer__top {
+    gap: 24px 16px;
+  }
+
+  .bake-footer__brand,
+  .bake-footer__discover {
+    grid-column: 1 / -1;
+  }
+
+  .bake-footer__logo {
+    font-size: 32px;
+  }
+
+  .bake-footer__brand p {
+    margin-top: 12px;
+  }
+
+  .bake-footer h3 {
+    font-size: 13px;
+  }
+
+  .bake-footer__column a {
+    min-height: 42px;
+    font-size: 12px;
+  }
+
+  .bake-footer__bottom {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .bake-footer__made {
+    order: 3;
+    width: 100%;
+    font-size: 10px;
+  }
+
+  .bake-footer__up {
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bake-footer * {
+    transition: none !important;
+  }
+}
