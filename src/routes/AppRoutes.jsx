@@ -12,6 +12,7 @@ import AiAssistant from "../pages/AiAssistant/AiAssistant";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
 import Profile from "../pages/Profile/Profile";
+import Seller from "../pages/Seller/Seller";
 
 export default function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ export default function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<Map />} />
           <Route path="/ai" element={<AiAssistant />} />
+          <Route path="/seller" element={<Seller />} />
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
