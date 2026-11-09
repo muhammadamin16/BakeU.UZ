@@ -1,4 +1,5 @@
-/* Светлая тема BakeU */
+
+
 :root,
 :root[data-theme="dark"],
 :root[data-theme="light"] {
@@ -7,61 +8,108 @@
   --bg: #e3b785;
   --paper: #fffcf7;
   --card: #fffcf7;
+
   --ink: #432015;
   --muted: #8b7364;
+
   --gold: #f4b41b;
   --green: #4f9d75;
+
   --line: rgba(67, 32, 21, 0.1);
+
+  --container-width: 1550px;
+  --container-padding: 30px;
+
+  --nav-space: 110px;
 }
 
-html,
-body,
-#root {
+/* ==========================================
+   BASE
+========================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
   min-height: 100%;
-  background: #e7dbce;
-  color: #432015;
+  scroll-behavior: auto;
+  scroll-padding-top: 0;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  min-height: 100%;
   margin: 0;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+
+  padding-bottom: calc(
+    var(--nav-space) + env(safe-area-inset-bottom, 0px)
+  );
+
+  background: #e7dbce;
+  color: var(--ink);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  background: #e7dbce;
+  color: var(--ink);
+}
+
+/* ==========================================
+   CONTAINER
+========================================== */
+
 .container {
-  width: min(1300px, calc(100% - 40px));
+  width: 100%;
+  max-width: var(--container-width);
+
   margin-left: auto;
   margin-right: auto;
+
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
 }
+
+/* ==========================================
+   SURFACES
+========================================== */
 
 .hero,
 .panel,
 .search-field {
-  background: #fffcf7;
+  background: var(--paper);
 }
 
-@media (max-width: 600px) {
-  .container {
-    width: calc(100% - 32px);
-  }
-}
-.container {
-  width: 100%;
-  max-width: 1550px;
-  margin: 0 auto;
-  padding-left: 30px;
-  padding-right: 30px;
-}
+/* ==========================================
+   RESPONSIVE
+========================================== */
 
 @media (max-width: 768px) {
-  .container {
-    padding-left: 20px;
-    padding-right: 20px;
+  :root {
+    --container-padding: 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding-left: 16px;
-    padding-right: 16px;
+  :root {
+    --container-padding: 16px;
+  }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }

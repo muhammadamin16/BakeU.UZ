@@ -1,5 +1,17 @@
-import { useLayoutEffect, useRef, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  NavLink,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   Store,
   MapPin,
@@ -21,515 +33,139 @@ const links = [
 const clamp = (value, min, max) =>
   Math.max(min, Math.min(max, value));
 
-const isActivePath = (pathname, to) =>
-  to === "/"
-    ? pathname === "/"
-    : pathname === to || pathname.startsWith(`${to}/`);
+const getActiveIndex = (pathname) =>
+  links.findIndex(({ to }) =>
+    to === "/"
+      ? pathname === "/"
+      : pathname === to || pathname.startsWith(`${to}/`)
+  );
 
 export default function MobileNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
   const navRef = useRef(null);
-  const bubbleRef = useRef(null);
+  const indicatorRef = useRef(null);
   const linkRefs = useRef([]);
-  const engineRef = useRef(null);
+  const animationRef = useRef(null);
+  const positionRef = useRef(null);
+  const dragRef = useRef(null);
+  const activeRef = useRef(0);
+  const suppressClickRef = useRef(false);
 
-  const activeRef = useRef(-1);
-  const pathRef = useRef(pathname);
-  const navigateRef = useRef(navigate);
-
-  const [highlight, setHighlight] = useState(null);
   const [pressed, setPressed] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(null);
 
-  const activeIndex = links.findIndex(({ to }) =>
-    isActivePath(pathname, to)
-  );
+  const activeIndex = getActiveIndex(pathname);
+  const selectedIndex = previewIndex ?? activeIndex;
 
+  // Har safar route o'zgarganda sahifani tepaga qaytarish
   useLayoutEffect(() => {
-    activeRef.current = activeIndex;
-    pathRef.current = pathname;
-    navigateRef.current = navigate;
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, [pathname]);
 
-    engineRef.current?.routeChanged();
-  }, [pathname, activeIndex, navigate]);
+  const getSlots = useCallback(() => {
+    return linkRefs.current.map((element) => {
+      if (!element) return null;
 
-  useLayoutEffect(() => {
-    const nav = navRef.current;
-    const bubble = bubbleRef.current;
+      return {
+        center: element.offsetLeft + element.offsetWidth / 2,
+        width: element.offsetWidth,
+      };
+    });
+  }, []);
 
-    const media = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
+  const paint = useCallback((x, scale = 1) => {
+    const indicator = indicatorRef.current;
+    const slots = getSlots();
 
-    let slots = [];
-    let gesture = null;
-    let frame = null;
+    if (!indicator || !slots.length || !slots[0]) return;
+
+    const width = slots[0].width;
+
+    indicator.style.width = `${width}px`;
+    indicator.style.opacity = "1";
+    indicator.style.transform =
+      `translate3d(${x - width / 2}px, 0, 0) scale(${scale})`;
+  }, [getSlots]);
+
+  const animateTo = useCallback((target, immediate = false) => {
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+
+    if (positionRef.current === null || immediate) {
+      positionRef.current = target;
+      paint(target);
+      return;
+    }
+
     let lastTime = null;
-    let pendingTimer = null;
 
-    let current = null;
-    let target = null;
-    let baseWidth = 1;
-    let pressTarget = 0;
-
-    let reduced = media.matches;
-    let destroyed = false;
-    let highlighted = null;
-    let suppressUntil = 0;
-
-    function setHighlightIndex(index) {
-      if (highlighted === index) return;
-      highlighted = index;
-      setHighlight(index);
-    }
-
-    function clearPending() {
-      if (pendingTimer !== null) {
-        clearTimeout(pendingTimer);
-        pendingTimer = null;
-      }
-    }
-
-    function paint() {
-      if (!current) {
-        bubble.style.opacity = "0";
-        return;
-      }
-
-      bubble.style.opacity = "1";
-
-      const pressScale = 1 + current.press * 0.025;
-      const scaleX = (1 + current.stretch) * pressScale;
-      const scaleY = (1 - current.stretch * 0.3) * pressScale;
-
-      bubble.style.transform =
-        `translate3d(${current.x - baseWidth / 2}px, 0, 0) ` +
-        `scale(${scaleX}, ${scaleY})`;
-    }
-
-    function stopAnimation() {
-      if (frame !== null) cancelAnimationFrame(frame);
-      frame = null;
-      lastTime = null;
-    }
-
-    function tick(time) {
-      frame = null;
-
-      if (destroyed || !current || target === null) return;
-
-      const dt =
-        lastTime === null
-          ? 16
-          : clamp(time - lastTime, 1, 32);
+    const frame = (time) => {
+      const dt = lastTime === null
+        ? 16
+        : clamp(time - lastTime, 1, 32);
 
       lastTime = time;
 
-      const dragging = Boolean(gesture?.dragging);
+      const ease = 1 - Math.exp(-dt / 65);
+      const current = positionRef.current;
+      const next = current + (target - current) * ease;
 
-      const positionEase = reduced
-        ? 1
-        : 1 - Math.exp(-dt / (dragging ? 24 : 65));
+      positionRef.current = next;
+      paint(next);
 
-      const shapeEase = reduced
-        ? 1
-        : 1 - Math.exp(-dt / 75);
-
-      const distance = target - current.x;
-
-      const desiredStretch =
-        reduced || !dragging
-          ? 0
-          : Math.min(
-              (Math.abs(distance) / baseWidth) * 0.2,
-              0.06
-            );
-
-      current.x += distance * positionEase;
-      current.stretch +=
-        (desiredStretch - current.stretch) * shapeEase;
-      current.press +=
-        (pressTarget - current.press) * shapeEase;
-
-      paint();
-
-      const settled =
-        Math.abs(target - current.x) < 0.05 &&
-        Math.abs(current.stretch - desiredStretch) < 0.0005 &&
-        Math.abs(current.press - pressTarget) < 0.001;
-
-      if (settled) {
-        current.x = target;
-        current.stretch = 0;
-        current.press = pressTarget;
-        paint();
-        lastTime = null;
+      if (Math.abs(target - next) < 0.1) {
+        positionRef.current = target;
+        paint(target);
+        animationRef.current = null;
         return;
       }
 
-      frame = requestAnimationFrame(tick);
-    }
-
-    function startAnimation() {
-      if (
-        frame === null &&
-        current &&
-        target !== null &&
-        !destroyed
-      ) {
-        lastTime = null;
-        frame = requestAnimationFrame(tick);
-      }
-    }
-
-    function moveTo(x, immediate = false) {
-      target = x;
-
-      if (!current || immediate || reduced) {
-        stopAnimation();
-
-        current = {
-          x,
-          stretch: 0,
-          press: reduced ? 0 : pressTarget,
-        };
-
-        paint();
-        return;
-      }
-
-      startAnimation();
-    }
-
-    function setPress(value) {
-      pressTarget = reduced ? 0 : value;
-      setPressed(Boolean(value));
-
-      if (reduced && current) {
-        current.press = 0;
-        current.stretch = 0;
-        paint();
-      } else {
-        startAnimation();
-      }
-    }
-
-    function restore(immediate = false) {
-      const slot = slots[activeRef.current];
-
-      if (slot) {
-        moveTo(slot.center, immediate);
-      } else {
-        stopAnimation();
-        target = null;
-        current = null;
-        paint();
-      }
-    }
-
-    function releaseCapture(id) {
-      if (nav.hasPointerCapture(id)) {
-        nav.releasePointerCapture(id);
-      }
-    }
-
-    function cancelGesture() {
-      if (!gesture) return;
-
-      const id = gesture.id;
-      gesture = null;
-
-      suppressUntil = performance.now() + 700;
-      clearPending();
-      setHighlightIndex(null);
-      setPress(0);
-      releaseCapture(id);
-      restore();
-    }
-
-    function measure() {
-      const elements = linkRefs.current;
-
-      if (
-        elements.length !== links.length ||
-        elements.some((element) => !element)
-      ) {
-        return;
-      }
-
-      const next = elements.map((element) => ({
-        center: element.offsetLeft + element.offsetWidth / 2,
-        width: element.offsetWidth,
-      }));
-
-      const changed =
-        slots.length !== next.length ||
-        next.some((slot, index) => {
-          const previous = slots[index];
-
-          return (
-            !previous ||
-            Math.abs(slot.center - previous.center) > 0.1 ||
-            Math.abs(slot.width - previous.width) > 0.1
-          );
-        });
-
-      if (!changed) return;
-
-      cancelGesture();
-      clearPending();
-      setHighlightIndex(null);
-
-      slots = next;
-      baseWidth = slots[0].width || 1;
-      bubble.style.width = `${baseWidth}px`;
-
-      restore(true);
-    }
-
-    function hitTest(x, y) {
-      return linkRefs.current.findIndex((element) => {
-        if (!element) return false;
-
-        const rect = element.getBoundingClientRect();
-
-        return (
-          x >= rect.left &&
-          x <= rect.right &&
-          y >= rect.top &&
-          y <= rect.bottom
-        );
-      });
-    }
-
-    function nearestIndex(x) {
-      let nearest = 0;
-      let distance = Infinity;
-
-      slots.forEach((slot, index) => {
-        const nextDistance = Math.abs(slot.center - x);
-
-        if (nextDistance < distance) {
-          distance = nextDistance;
-          nearest = index;
-        }
-      });
-
-      return nearest;
-    }
-
-    function getDragPosition(clientX) {
-      const raw =
-        gesture.startCenter + clientX - gesture.startX;
-
-      const minimum = slots[0].center;
-      const maximum = slots[slots.length - 1].center;
-      const limited = clamp(raw, minimum, maximum);
-      const overflow = raw - limited;
-
-      const resistance =
-        Math.sign(overflow) *
-        5 *
-        (1 - Math.exp(-Math.abs(overflow) / 60));
-
-      return {
-        center: limited + resistance,
-        index: nearestIndex(limited),
-      };
-    }
-
-    function down(event) {
-      if (
-        gesture ||
-        !event.isPrimary ||
-        event.button !== 0 ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
-        return;
-      }
-
-      const index = hitTest(event.clientX, event.clientY);
-      const slot = slots[index];
-
-      if (!slot) return;
-
-      clearPending();
-      suppressUntil = 0;
-
-      gesture = {
-        id: event.pointerId,
-        index,
-        startX: event.clientX,
-        startY: event.clientY,
-        startCenter: slot.center,
-        dragging: false,
-      };
-
-      nav.setPointerCapture(event.pointerId);
-
-      setHighlightIndex(index);
-      setPress(1);
-      moveTo(slot.center);
-    }
-
-    function move(event) {
-      if (!gesture || gesture.id !== event.pointerId) return;
-
-      const dx = event.clientX - gesture.startX;
-      const dy = event.clientY - gesture.startY;
-
-      if (!gesture.dragging) {
-        if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
-          cancelGesture();
-          return;
-        }
-
-        if (Math.abs(dx) < 4) return;
-
-        gesture.dragging = true;
-      }
-
-      const position = getDragPosition(event.clientX);
-
-      setHighlightIndex(position.index);
-      moveTo(position.center);
-    }
-
-    function up(event) {
-      if (!gesture || gesture.id !== event.pointerId) return;
-
-      const rect = nav.getBoundingClientRect();
-
-      const outside =
-        event.clientY < rect.top - 50 ||
-        event.clientY > rect.bottom + 50;
-
-      let index = -1;
-
-      if (!outside) {
-        if (gesture.dragging) {
-          // Без прогноза скорости и перескакивания.
-          index = getDragPosition(event.clientX).index;
-        } else {
-          const releasedIndex = hitTest(
-            event.clientX,
-            event.clientY
-          );
-
-          if (releasedIndex === gesture.index) {
-            index = releasedIndex;
-          }
-        }
-      }
-
-      const pointerId = gesture.id;
-
-      // Сначала завершаем жест, затем снимаем захват.
-      gesture = null;
-      suppressUntil = performance.now() + 700;
-
-      setPress(0);
-      releaseCapture(pointerId);
-
-      if (index < 0) {
-        setHighlightIndex(null);
-        restore();
-        return;
-      }
-
-      setHighlightIndex(index);
-      moveTo(slots[index].center);
-
-      const destination = links[index].to;
-
-      if (pathRef.current === destination) {
-        setHighlightIndex(null);
-        return;
-      }
-
-      clearPending();
-
-      pendingTimer = setTimeout(() => {
-        pendingTimer = null;
-
-        if (!gesture) {
-          setHighlightIndex(null);
-          restore();
-        }
-      }, 1500);
-
-      navigateRef.current(destination);
-    }
-
-    function routeChanged() {
-      cancelGesture();
-      clearPending();
-      setHighlightIndex(null);
-      setPress(0);
-      restore();
-    }
-
-    function updateMotion() {
-      reduced = media.matches;
-
-      if (reduced) {
-        pressTarget = 0;
-
-        if (target !== null) {
-          moveTo(target, true);
-        }
-      }
-    }
-
-    function onVisibilityChange() {
-      if (document.hidden) cancelGesture();
-    }
-
-    engineRef.current = {
-      down,
-      move,
-      up,
-      routeChanged,
-
-      cancelPointer(event) {
-        if (gesture?.id === event.pointerId) {
-          cancelGesture();
-        }
-      },
-
-      click(event) {
-        if (
-          event.detail === 0 ||
-          event.ctrlKey ||
-          event.metaKey ||
-          event.shiftKey ||
-          event.altKey
-        ) {
-          return;
-        }
-
-        if (performance.now() < suppressUntil) {
-          event.preventDefault();
-          event.stopPropagation();
-          suppressUntil = 0;
-        }
-      },
-
-      contextMenu(event) {
-        if (gesture) event.preventDefault();
-      },
+      animationRef.current = requestAnimationFrame(frame);
     };
 
-    measure();
+    animationRef.current = requestAnimationFrame(frame);
+  }, [paint]);
 
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(measure)
-        : null;
+  // Aktiv route indikatorini yangilash
+  useLayoutEffect(() => {
+    const slots = getSlots();
+    const slot = slots[activeIndex];
+
+    activeRef.current = activeIndex;
+
+    if (slot && !dragRef.current) {
+      animateTo(
+        slot.center,
+        positionRef.current === null
+      );
+    }
+  }, [activeIndex, animateTo, getSlots]);
+
+  // Ekran o'lchami o'zgarganda qayta hisoblash
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const update = () => {
+      const slots = getSlots();
+      const slot = slots[activeRef.current];
+
+      if (slot && !dragRef.current) {
+        animateTo(slot.center, true);
+      }
+    };
+
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(update)
+      : null;
 
     observer?.observe(nav);
 
@@ -537,74 +173,194 @@ export default function MobileNav() {
       if (element) observer?.observe(element);
     });
 
-    window.addEventListener("resize", measure);
-    window.addEventListener("blur", cancelGesture);
-    document.addEventListener(
-      "visibilitychange",
-      onVisibilityChange
-    );
-
-    if (media.addEventListener) {
-      media.addEventListener("change", updateMotion);
-    } else {
-      media.addListener(updateMotion);
-    }
+    window.addEventListener("resize", update);
+    update();
 
     return () => {
-      destroyed = true;
-
-      const pointerId = gesture?.id;
-      gesture = null;
-
-      if (pointerId !== undefined) {
-        releaseCapture(pointerId);
-      }
-
-      clearPending();
-      stopAnimation();
       observer?.disconnect();
+      window.removeEventListener("resize", update);
 
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("blur", cancelGesture);
-      document.removeEventListener(
-        "visibilitychange",
-        onVisibilityChange
-      );
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [animateTo, getSlots]);
 
-      if (media.removeEventListener) {
-        media.removeEventListener("change", updateMotion);
-      } else {
-        media.removeListener(updateMotion);
+  const getNearestIndex = (clientX) => {
+    const nav = navRef.current;
+    const slots = getSlots();
+
+    if (!nav || !slots.length) return -1;
+
+    const rect = nav.getBoundingClientRect();
+    const localX = clientX - rect.left;
+
+    let nearest = 0;
+    let distance = Infinity;
+
+    slots.forEach((slot, index) => {
+      if (!slot) return;
+
+      const difference = Math.abs(slot.center - localX);
+
+      if (difference < distance) {
+        distance = difference;
+        nearest = index;
+      }
+    });
+
+    return nearest;
+  };
+
+  const handlePointerDown = (event) => {
+    if (
+      !event.isPrimary ||
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return;
+
+    const index = getNearestIndex(event.clientX);
+    const slots = getSlots();
+
+    if (index < 0 || !slots[index]) return;
+
+    dragRef.current = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      index,
+      dragging: false,
+    };
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    setPressed(true);
+    setPreviewIndex(index);
+    animateTo(slots[index].center);
+  };
+
+  const handlePointerMove = (event) => {
+    const drag = dragRef.current;
+
+    if (!drag || drag.id !== event.pointerId) return;
+
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+
+    if (!drag.dragging) {
+      if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
+        handlePointerCancel(event);
+        return;
       }
 
-      engineRef.current = null;
-    };
-  }, []);
+      if (Math.abs(dx) < 5) return;
 
-  const selectedIndex = highlight ?? activeIndex;
+      drag.dragging = true;
+    }
+
+    const index = getNearestIndex(event.clientX);
+    const slots = getSlots();
+
+    if (index < 0 || !slots[index]) return;
+
+    setPreviewIndex(index);
+    animateTo(slots[index].center);
+  };
+
+  const handlePointerUp = (event) => {
+    const drag = dragRef.current;
+
+    if (!drag || drag.id !== event.pointerId) return;
+
+    const index = drag.dragging
+      ? getNearestIndex(event.clientX)
+      : drag.index;
+
+    const nav = navRef.current;
+    const rect = nav?.getBoundingClientRect();
+
+    const outside = !rect ||
+      event.clientY < rect.top - 50 ||
+      event.clientY > rect.bottom + 50;
+
+    dragRef.current = null;
+    setPressed(false);
+    setPreviewIndex(null);
+
+    if (nav?.hasPointerCapture(event.pointerId)) {
+      nav.releasePointerCapture(event.pointerId);
+    }
+
+    suppressClickRef.current = true;
+
+    if (outside || index < 0) {
+      const slots = getSlots();
+      const slot = slots[activeRef.current];
+
+      if (slot) animateTo(slot.center);
+      return;
+    }
+
+    const destination = links[index].to;
+
+    if (destination === pathname) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } else {
+      navigate(destination);
+    }
+  };
+
+  const handlePointerCancel = (event) => {
+    const drag = dragRef.current;
+
+    if (!drag || drag.id !== event.pointerId) return;
+
+    dragRef.current = null;
+
+    setPressed(false);
+    setPreviewIndex(null);
+
+    const nav = navRef.current;
+
+    if (nav?.hasPointerCapture(event.pointerId)) {
+      nav.releasePointerCapture(event.pointerId);
+    }
+
+    const slots = getSlots();
+    const slot = slots[activeRef.current];
+
+    if (slot) animateTo(slot.center);
+  };
+
+  const handleClickCapture = (event) => {
+    if (event.detail === 0) {
+      return;
+    }
+
+    if (suppressClickRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickRef.current = false;
+    }
+  };
 
   return (
     <nav
       ref={navRef}
       className={`bottom-nav${pressed ? " is-pressed" : ""}`}
       aria-label="Основная навигация"
-      onPointerDown={(event) => engineRef.current?.down(event)}
-      onPointerMove={(event) => engineRef.current?.move(event)}
-      onPointerUp={(event) => engineRef.current?.up(event)}
-      onPointerCancel={(event) =>
-        engineRef.current?.cancelPointer(event)
-      }
-      onLostPointerCapture={(event) =>
-        engineRef.current?.cancelPointer(event)
-      }
-      onClickCapture={(event) => engineRef.current?.click(event)}
-      onContextMenu={(event) =>
-        engineRef.current?.contextMenu(event)
-      }
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onClickCapture={handleClickCapture}
       onDragStart={(event) => event.preventDefault()}
     >
       <span
-        ref={bubbleRef}
+        ref={indicatorRef}
         className="bottom-nav__indicator"
         aria-hidden="true"
       />
@@ -621,13 +377,25 @@ export default function MobileNav() {
           className={`bottom-nav__link${
             selectedIndex === index ? " is-active" : ""
           }`}
+          onClick={() => {
+            if (pathname === to) {
+              window.scrollTo({
+                top: 0,
+                behavior: "instant",
+              });
+            }
+          }}
+          aria-label={label}
         >
           <Icon
             size={22}
             strokeWidth={1.8}
             aria-hidden="true"
           />
-          <span>{label}</span>
+
+          <span className="bottom-nav__label">
+            {label}
+          </span>
         </NavLink>
       ))}
     </nav>
