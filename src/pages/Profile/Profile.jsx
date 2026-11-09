@@ -23,7 +23,7 @@ export default function Profile() {
     <main className="bp-page container" >
       <div className="bp-shell bp-profile-shell">
         <p className="bp-notice" role="status">
-          Демо-профиль: данные не отправлялись на сервер.
+          Демо-профиль: данные не отправлялись на сервер
         </p>
         {account.role === "seller" ? (
           <SellerProfile account={account} onLogout={logout} />
