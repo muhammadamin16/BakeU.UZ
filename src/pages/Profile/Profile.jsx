@@ -11,7 +11,6 @@ export default function Profile() {
       sessionStorage.getItem("bakeu-demo-profile") || "null",
     );
   } catch {
-    /* ignore invalid demo data */
   }
   if (!account || !["client", "seller"].includes(account.role))
     return <Navigate to="/login" replace />;

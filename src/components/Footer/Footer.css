@@ -1,6 +1,5 @@
 .bake-footer {
   margin-top: 48px;
-  padding: 0 16px calc(10px + env(safe-area-inset-bottom));
   color: #432b21;
   font-family: Arial, sans-serif;
 }
@@ -258,7 +257,7 @@
   }
 
   .bake-footer__inner {
-    padding: 24px 20px 16px;
+    /* padding: 24px 20px 16px; */
     border-radius: 22px;
   }
 

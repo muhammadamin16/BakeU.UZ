@@ -348,7 +348,7 @@ export default function Map() {
         : "По цене!";
 
   return (
-    <main className="container map">
+    <main className="map">
       <div className="map-layout">
         <aside className="map-sidebar">
           <div className="map-tabs">

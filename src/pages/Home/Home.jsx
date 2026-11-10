@@ -106,7 +106,7 @@
     const isFiltered = query.trim() !== "" || category !== "Все";
 
     return (
-        <main className="bu-home container">
+        <main className="bu-home">
         <section className="bu-hero" aria-labelledby="bu-hero-title">
             <div className="bu-hero__content">
             <span className="bu-eyebrow">

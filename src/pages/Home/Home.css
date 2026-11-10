@@ -6,7 +6,7 @@
   --bu-paper: #fffcf7;
 
   display: block;
-  margin: 20px auto 40px;
+  /* margin: 20px auto 40px; */
   color: var(--bu-ink);
   font-family: Arial, sans-serif;
 }
@@ -642,7 +642,7 @@
 @media (max-width: 950px) {
   .bu-hero {
     gap: 22px;
-    padding: 26px;
+    /* padding: 26px; */
   }
 
   .bu-hero h1 {
@@ -669,15 +669,11 @@
 /* Телефоны */
 
 @media (max-width: 640px) {
-  .bu-home {
-    width: calc(100% - 24px);
-    margin-top: 12px;
-  }
 
   .bu-hero {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
-    padding: 23px 20px 16px;
+    /* padding: 23px 20px 16px; */
     border-radius: 22px;
   }
 

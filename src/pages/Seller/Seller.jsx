@@ -168,7 +168,7 @@ export default function Seller() {
   }
 
   return (
-    <main className="seller-page container">
+    <main className="seller-page">
       <div className="seller-tabs" role="group" aria-label="Что показать">
         <button
           type="button"

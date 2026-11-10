@@ -11,9 +11,8 @@
   --ai-line: rgba(67, 32, 21, 0.08);
 
   width: 100%;
-  max-width: 680px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 20px 16px 40px;
   font-family: Arial, system-ui, -apple-system, sans-serif;
   color: var(--ai-ink);
 }
@@ -316,9 +315,6 @@
 
 /* Mobile */
 @media (max-width: 520px) {
-  .ai {
-    padding: 12px 12px 32px;
-  }
 
   .ai__card {
     border-radius: 22px;

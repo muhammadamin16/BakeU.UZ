@@ -16,7 +16,7 @@
   display: flex;
   align-items: stretch;
 
-  width: min(560px, calc(100% - 24px));
+  width: min(560px, calc(97% - 24px));
   padding: 8px;
 
   box-sizing: border-box;
