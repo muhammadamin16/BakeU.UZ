@@ -41,7 +41,7 @@ export default function Header() {
         <Link
           to="/"
           className="bakeu-header__brand"
-          aria-label="BakeU — главная"
+          aria-label="BakeU — главнаяs"
         >
           <img
             src="/images/logo.png"
