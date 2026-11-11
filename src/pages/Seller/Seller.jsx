@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Store,
   ShoppingBag,
@@ -53,6 +54,7 @@ const shops = [
     id: "shahzoda",
     name: "Shahzoda Family",
     initials: "SF",
+    logo: "",
     color: "#ead9bd",
     description:
       "Торты и десерты для семейных праздников и особенных моментов.",
@@ -67,6 +69,7 @@ const shops = [
     id: "sweet-home",
     name: "Sweet Home",
     initials: "SH",
+    logo: "",
     color: "#e9d8df",
     description:
       "Домашнее печенье и сладкие дополнения к любимому чаю.",
@@ -81,6 +84,7 @@ const shops = [
     id: "bakeu",
     name: "BakeU Bakery",
     initials: "BU",
+    logo: "",
     color: "#dce5d4",
     description:
       "Домашний хлеб и сытная выпечка для уютных завтраков и обедов.",
@@ -98,68 +102,224 @@ const categories = ["Все", "Торты", "Печенье", "Хлеб", "Са�
 const formatPrice = (price) =>
   `${price.toLocaleString("ru-RU")} сум`;
 
+const shopUrl = (id) => `?shop=${encodeURIComponent(id)}`;
+
+function ShopLogo({ shop }) {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <span
+      className="seller-shop__logo"
+      style={{ "--shop-color": shop.color }}
+      aria-hidden="true"
+    >
+      {shop.logo && !failed ? (
+        <img
+          src={shop.logo}
+          alt=""
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        shop.initials
+      )}
+    </span>
+  );
+}
+
+function ShopRating({ shop }) {
+  return (
+    <div className="seller-shop__rating">
+      <Star size={14} fill="currentColor" aria-hidden="true" />
+      <strong>{shop.rating}</strong>
+      <span>Оценок: {shop.reviewsCount}</span>
+    </div>
+  );
+}
+
+function ProductCard({ product, quantity, onAdd }) {
+  const shop = shops.find((item) => item.id === product.shopId);
+
+  return (
+    <article className="seller-product">
+      <div className="seller-product__image">
+        <img
+          src={product.image}
+          alt={product.name}
+          loading="lazy"
+          width="400"
+          height="350"
+        />
+
+        {quantity > 0 && (
+          <span className="seller-product__count">
+            В корзине: {quantity}
+          </span>
+        )}
+      </div>
+
+      <div className="seller-product__body">
+        <Link
+          to={shopUrl(product.shopId)}
+          className="seller-product__shop"
+        >
+          <Store size={13} aria-hidden="true" />
+          {shop?.name}
+        </Link>
+
+        <h2>{product.name}</h2>
+
+        <div className="seller-product__bottom">
+          <strong>{formatPrice(product.price)}</strong>
+
+          <button
+            type="button"
+            className="seller-product__add"
+            onClick={() => onAdd(product)}
+            aria-label={`Добавить в корзину: ${product.name}`}
+          >
+            <Plus size={21} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ShopCard({ shop }) {
+  const shopProducts = products.filter(
+    (product) => product.shopId === shop.id
+  );
+
+  return (
+    <article className="seller-shop">
+      <Link to={shopUrl(shop.id)} className="seller-shop__top">
+        <ShopLogo shop={shop} />
+
+        <div className="seller-shop__identity">
+          <h2>{shop.name}</h2>
+          <ShopRating shop={shop} />
+        </div>
+
+        <ArrowUpRight
+          className="seller-shop__arrow"
+          size={18}
+          aria-hidden="true"
+        />
+      </Link>
+
+      <p className="seller-shop__description">
+        {shop.description}
+      </p>
+
+      <div className="seller-shop__preview-heading">
+        <span>Витрина</span>
+        <span>Товаров: {shopProducts.length}</span>
+      </div>
+
+      <div className="seller-shop__previews">
+        {shopProducts.slice(0, 3).map((product) => (
+          <Link
+            key={product.id}
+            to={shopUrl(shop.id)}
+            className="seller-shop__preview"
+            aria-label={`${product.name} — открыть магазин ${shop.name}`}
+          >
+            <img
+              src={product.image}
+              alt=""
+              loading="lazy"
+              width="100"
+              height="76"
+            />
+
+            <strong>{formatPrice(product.price)}</strong>
+          </Link>
+        ))}
+      </div>
+
+      <blockquote className="seller-shop__review">
+        <p>«{shop.review.text}»</p>
+        <footer>{shop.review.author} · пример отзыва</footer>
+      </blockquote>
+
+      <Link to={shopUrl(shop.id)} className="seller-shop__open">
+        Открыть профиль
+        <ArrowUpRight size={18} aria-hidden="true" />
+      </Link>
+    </article>
+  );
+}
+
 export default function Seller() {
-  const [tab, setTab] = useState("products");
+  const [params] = useSearchParams();
+  const shopId = params.get("shop");
+
+  const tab =
+    params.get("tab") === "sellers" ? "sellers" : "products";
+
+  // При переходе между каталогом и профилями
+  // поиск и фильтры получают отдельное состояние.
+  const viewKey = shopId ? `shop:${shopId}` : tab;
+
+  return (
+    <SellerView
+      key={viewKey}
+      tab={tab}
+      shopId={shopId}
+    />
+  );
+}
+
+function SellerView({ tab, shopId }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
-  const [selectedShopId, setSelectedShopId] = useState(null);
   const [notice, setNotice] = useState("");
 
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
+  const shop = shops.find((item) => item.id === shopId);
+  const isProfile = shopId !== null;
+  const showSellers = !isProfile && tab === "sellers";
+
   const normalizedQuery = query.trim().toLocaleLowerCase("ru-RU");
 
-  const selectedShop = shops.find(
-    (shop) => shop.id === selectedShopId
-  );
+  const shopProducts = shop
+    ? products.filter((product) => product.shopId === shop.id)
+    : products;
 
-  const visibleProducts = products.filter((product) => {
-    const shop = shops.find((item) => item.id === product.shopId);
+  const availableCategories = isProfile
+    ? [
+        "Все",
+        ...new Set(shopProducts.map((product) => product.category)),
+      ]
+    : categories;
 
-    const matchesQuery =
-      `${product.name} ${shop?.name ?? ""}`
-        .toLocaleLowerCase("ru-RU")
-        .includes(normalizedQuery);
+  const visibleProducts = shopProducts.filter((product) => {
+    const owner = shops.find((item) => item.id === product.shopId);
 
     return (
-      matchesQuery &&
-      (category === "Все" || product.category === category) &&
-      (!selectedShopId || product.shopId === selectedShopId)
+      `${product.name} ${owner?.name ?? ""}`
+        .toLocaleLowerCase("ru-RU")
+        .includes(normalizedQuery) &&
+      (category === "Все" || category === product.category)
     );
   });
 
-  const visibleShops = shops.filter((shop) => {
-    const shopProducts = products
-      .filter((product) => product.shopId === shop.id)
+  const visibleShops = shops.filter((item) => {
+    const names = products
+      .filter((product) => product.shopId === item.id)
       .map((product) => product.name)
       .join(" ");
 
-    return `${shop.name} ${shop.description} ${shopProducts}`
+    return `${item.name} ${item.description} ${names}`
       .toLocaleLowerCase("ru-RU")
       .includes(normalizedQuery);
   });
 
-  function changeTab(nextTab) {
-    setTab(nextTab);
-    setQuery("");
-    setCategory("Все");
-    setSelectedShopId(null);
-    setNotice("");
-  }
-
-  function openShop(shopId) {
-    setSelectedShopId(shopId);
-    setTab("products");
-    setQuery("");
-    setCategory("Все");
-    setNotice("");
-  }
-
   function resetFilters() {
     setQuery("");
     setCategory("Все");
-    setSelectedShopId(null);
   }
 
   function addProduct(product) {
@@ -167,67 +327,139 @@ export default function Seller() {
     setNotice(`Добавлено в корзину: ${product.name}`);
   }
 
+  if (isProfile && !shop) {
+    return (
+      <main className="seller-page">
+        <div className="seller-empty">
+          <Store size={30} aria-hidden="true" />
+          <h1>Магазин не найден</h1>
+          <p>Проверьте ссылку или выберите другой магазин.</p>
+
+          <Link className="seller-back" to="?tab=sellers">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Все продавцы
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="seller-page">
-      <div className="seller-tabs" role="group" aria-label="Что показать">
-        <button
-          type="button"
-          className={tab === "sellers" ? "is-active" : ""}
-          aria-pressed={tab === "sellers"}
-          onClick={() => changeTab("sellers")}
-        >
-          <Store size={19} aria-hidden="true" />
-          Продавцы.m
-        </button>
+      {isProfile ? (
+        <>
+          <Link to="?tab=sellers" className="seller-back">
+            <ArrowLeft size={17} aria-hidden="true" />
+            Все продавцы
+          </Link>
 
-        <button
-          type="button"
-          className={tab === "products" ? "is-active" : ""}
-          aria-pressed={tab === "products"}
-          onClick={() => changeTab("products")}
-        >
-          <ShoppingBag size={19} aria-hidden="true" />
-          Товары
-        </button>
-      </div>
+          <section
+            className="seller-profile"
+            aria-labelledby="seller-profile-title"
+          >
+            <div className="seller-profile__identity">
+              <ShopLogo shop={shop} />
 
-      <div className="seller-heading">
+              <div>
+                <span className="seller-eyebrow">
+                  ПРОФИЛЬ МАГАЗИНА
+                </span>
+
+                <h1 id="seller-profile-title">{shop.name}</h1>
+                <ShopRating shop={shop} />
+              </div>
+            </div>
+
+            <p className="seller-profile__description">
+              {shop.description}
+            </p>
+
+            <div className="seller-profile__actions">
+              <a className="seller-pill" href="#seller-products">
+                <ShoppingBag size={17} aria-hidden="true" />
+                Товары · {shopProducts.length}
+              </a>
+
+              <a className="seller-pill" href="#seller-reviews">
+                <Star size={16} aria-hidden="true" />
+                Отзывы
+              </a>
+            </div>
+          </section>
+        </>
+      ) : (
+        <nav className="seller-tabs" aria-label="Раздел каталога">
+          <Link
+            to="?tab=sellers"
+            className={showSellers ? "is-active" : ""}
+            aria-current={showSellers ? "page" : undefined}
+          >
+            <Store size={19} aria-hidden="true" />
+            Продавцы
+          </Link>
+
+          <Link
+            to="?tab=products"
+            className={!showSellers ? "is-active" : ""}
+            aria-current={!showSellers ? "page" : undefined}
+          >
+            <ShoppingBag size={19} aria-hidden="true" />
+            Товары
+          </Link>
+        </nav>
+      )}
+
+      <div className="seller-heading" id="seller-products">
         <div>
-          <span className="seller-eyebrow">СДЕЛАНО С ЛЮБОВЬЮ</span>
+          {!isProfile && (
+            <span className="seller-eyebrow">
+              СДЕЛАНО С ЛЮБОВЬЮ
+            </span>
+          )}
 
-          <h1>
-            {tab === "sellers"
-              ? "Знакомьтесь с мастерами"
-              : selectedShop
-                ? selectedShop.name
+          {isProfile ? (
+            <h2>Витрина магазина</h2>
+          ) : (
+            <h1>
+              {showSellers
+                ? "Знакомьтесь с мастерами"
                 : "Найдите своё любимое"}
-          </h1>
+            </h1>
+          )}
 
-          <p>
-            {tab === "sellers"
-              ? "Маленькие магазины с большим вниманием к вкусу."
-              : selectedShop
-                ? selectedShop.description
+          {!isProfile && (
+            <p>
+              {showSellers
+                ? "Маленькие магазины с большим вниманием к вкусу."
                 : "Торты, десерты и домашняя выпечка в одном месте."}
-          </p>
+            </p>
+          )}
         </div>
 
         <label className="seller-search">
-          <Search size={20} aria-hidden="true" />
+          <Search size={19} aria-hidden="true" />
 
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
-              tab === "sellers"
-                ? "Найти магазин…"
-                : "Найти вкусное…"
+              showSellers ? "Найти магазин…" : "Найти вкусное…"
             }
             aria-label={
-              tab === "sellers" ? "Поиск магазинов" : "Поиск товаров"
+              showSellers ? "Поиск магазинов" : "Поиск товаров"
             }
           />
+
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Очистить поиск"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          )}
         </label>
       </div>
 
@@ -235,25 +467,32 @@ export default function Seller() {
         Демо-каталог: магазины, рейтинги и отзывы приведены для примера.
       </p>
 
-      {tab === "products" ? (
-        <section aria-label="Товары">
-          {selectedShop && (
-            <div className="seller-shop-filter">
+      {showSellers ? (
+        <section className="seller-shops" aria-label="Продавцы">
+          {visibleShops.map((item) => (
+            <ShopCard key={item.id} shop={item} />
+          ))}
+
+          {visibleShops.length === 0 && (
+            <div className="seller-empty">
+              <Store size={28} aria-hidden="true" />
+              <h2>Магазины не найдены</h2>
+              <p>Попробуйте другое название.</p>
+
               <button
                 type="button"
-                className="seller-back"
-                onClick={() => changeTab("sellers")}
+                className="seller-pill"
+                onClick={resetFilters}
               >
-                <ArrowLeft size={16} aria-hidden="true" />
-                Все магазины
+                Сбросить поиск
               </button>
-
-              <span>Товары магазина {selectedShop.name}</span>
             </div>
           )}
-
+        </section>
+      ) : (
+        <section aria-label="Товары">
           <div className="seller-categories">
-            {categories.map((item) => (
+            {availableCategories.map((item) => (
               <button
                 key={item}
                 type="button"
@@ -269,7 +508,7 @@ export default function Seller() {
           <div className="seller-results">
             <span>Товаров: {visibleProducts.length}</span>
 
-            {(query || category !== "Все" || selectedShopId) && (
+            {(query || category !== "Все") && (
               <button type="button" onClick={resetFilters}>
                 Сбросить фильтры
                 <X size={14} aria-hidden="true" />
@@ -278,163 +517,59 @@ export default function Seller() {
           </div>
 
           <div className="seller-products">
-            {visibleProducts.map((product) => {
-              const shop = shops.find(
-                (item) => item.id === product.shopId
-              );
-              const quantity = items?.[product.id] ?? 0;
-
-              return (
-                <article className="seller-product" key={product.id}>
-                  <div className="seller-product__image">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                    />
-
-                    {quantity > 0 && (
-                      <span className="seller-product__count">
-                        В корзине: {quantity}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="seller-product__body">
-                    <button
-                      type="button"
-                      className="seller-product__shop"
-                      onClick={() => openShop(product.shopId)}
-                    >
-                      <Store size={13} aria-hidden="true" />
-                      {shop?.name}
-                    </button>
-
-                    <h2>{product.name}</h2>
-
-                    <div className="seller-product__bottom">
-                      <strong>{formatPrice(product.price)}</strong>
-
-                      <button
-                        type="button"
-                        className="seller-product__add"
-                        onClick={() => addProduct(product)}
-                        aria-label={`Добавить в корзину: ${product.name}`}
-                      >
-                        <Plus size={21} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+            {visibleProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                quantity={items?.[product.id] ?? 0}
+                onAdd={addProduct}
+              />
+            ))}
           </div>
 
           {visibleProducts.length === 0 && (
             <div className="seller-empty">
               <Search size={28} aria-hidden="true" />
               <h2>Товары не найдены</h2>
-              <p>Попробуйте другое название или сбросьте фильтры.</p>
-              <button type="button" onClick={resetFilters}>
-                Показать все товары
-              </button>
-            </div>
-          )}
-        </section>
-      ) : (
-        <section className="seller-shops" aria-label="Магазины">
-          {visibleShops.map((shop) => {
-            const shopProducts = products.filter(
-              (product) => product.shopId === shop.id
-            );
+              <p>Попробуйте другое название или категорию.</p>
 
-            return (
-              <article className="seller-shop" key={shop.id}>
-                <div className="seller-shop__top">
-                  <div
-                    className="seller-shop__logo"
-                    style={{ "--shop-color": shop.color }}
-                    aria-label={`Логотип ${shop.name}`}
-                  >
-                    {shop.initials}
-                  </div>
-
-                  <div className="seller-shop__identity">
-                    <h2>{shop.name}</h2>
-
-                    <div className="seller-shop__rating">
-                      <Star
-                        size={14}
-                        fill="currentColor"
-                        aria-hidden="true"
-                      />
-                      <strong>{shop.rating}</strong>
-                      <span>Оценок: {shop.reviewsCount}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="seller-shop__description">
-                  {shop.description}
-                </p>
-
-                <div className="seller-shop__preview-heading">
-                  <h3>Витрина магазина</h3>
-                  <span>{shopProducts.length} шт.</span>
-                </div>
-
-                <div className="seller-shop__products">
-                  {shopProducts.slice(0, 3).map((product) => (
-                    <button
-                      type="button"
-                      key={product.id}
-                      onClick={() => openShop(shop.id)}
-                      aria-label={`Посмотреть ${product.name} в магазине ${shop.name}`}
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        loading="lazy"
-                      />
-                      <span>{product.name}</span>
-                      <strong>{formatPrice(product.price)}</strong>
-                    </button>
-                  ))}
-                </div>
-
-                <blockquote className="seller-shop__review">
-                  <p>«{shop.review.text}»</p>
-                  <footer>{shop.review.author} · пример отзыва</footer>
-                </blockquote>
-
-                <button
-                  type="button"
-                  className="seller-shop__open"
-                  onClick={() => openShop(shop.id)}
-                >
-                  Посмотреть товары
-                  <ArrowUpRight size={19} aria-hidden="true" />
-                </button>
-              </article>
-            );
-          })}
-
-          {visibleShops.length === 0 && (
-            <div className="seller-empty">
-              <Store size={28} aria-hidden="true" />
-              <h2>Магазины не найдены</h2>
-              <p>Попробуйте другое название.</p>
-              <button type="button" onClick={() => setQuery("")}>
-                Показать все магазины
+              <button
+                type="button"
+                className="seller-pill"
+                onClick={resetFilters}
+              >
+                Сбросить фильтры
               </button>
             </div>
           )}
         </section>
       )}
 
-      <p className="seller-notice" role="status" aria-live="polite">
+      <p className="seller-notice" role="status">
         {notice}
       </p>
+
+      {isProfile && (
+        <section
+          className="seller-reviews"
+          id="seller-reviews"
+          aria-labelledby="seller-reviews-title"
+        >
+          <div className="seller-reviews__heading">
+            <h2 id="seller-reviews-title">Отзывы покупателей</h2>
+            <ShopRating shop={shop} />
+          </div>
+
+          <p className="seller-demo">
+            Ниже показан один демонстрационный отзыв.
+          </p>
+
+          <blockquote className="seller-profile-review">
+            <p>«{shop.review.text}»</p>
+            <footer>{shop.review.author} · пример отзыва</footer>
+          </blockquote>
+        </section>
+      )}
     </main>
   );
 }
