@@ -41,7 +41,7 @@ export default function Header() {
         <Link
           to="/"
           className="bakeu-header__brand"
-          aria-label="BakeU — главнаяs"
+          aria-label="BakeU — главная"
         >
           <img
             src="/images/logo.png"
@@ -54,7 +54,7 @@ export default function Header() {
           <div
             className={`bakeu-header__languages is-${language}`}
             role="group"
-            aria-label="Выбор языка"
+            aria-label="Выбор языкаa"
           >
             <span
               className="bakeu-header__language-slider"
