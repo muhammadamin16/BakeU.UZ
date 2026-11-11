@@ -8,6 +8,7 @@ import {
   LogOut,
   ArrowRight,
   UserRound,
+  
 } from "lucide-react";
 export default function SellerProfile({ account, onLogout }) {
   return (

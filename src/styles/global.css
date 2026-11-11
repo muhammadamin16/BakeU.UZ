@@ -1,109 +1,94 @@
-
-
 :root,
 :root[data-theme="dark"],
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #e3b785;
+  --bg: #e7dbce;
   --paper: #fffcf7;
   --card: #fffcf7;
-
   --ink: #432015;
   --muted: #8b7364;
-
   --gold: #f4b41b;
   --green: #4f9d75;
-
   --line: rgba(67, 32, 21, 0.1);
 
-  --container-width: 1550px;
-  --container-padding: 30px;
-
+  --container-width: 1300px;
+  --container-padding: 20px;
   --nav-space: 110px;
 }
-
-/* ==========================================
-   BASE
-========================================== */
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
   min-height: 100%;
-  scroll-behavior: auto;
-  scroll-padding-top: 0;
+  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
   min-height: 100%;
+  min-width: 320px;
   margin: 0;
-
-  padding-bottom: calc(
-    var(--nav-space) + env(safe-area-inset-bottom, 0px)
-  );
-
-  background: #e7dbce;
+  background: var(--bg);
   color: var(--ink);
-
+  font-family: Arial, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom, 0px));
 }
 
 #root {
   min-height: 100vh;
   min-height: 100dvh;
-
-  background: #e7dbce;
+  background: var(--bg);
   color: var(--ink);
 }
 
-/* ==========================================
-   CONTAINER
-========================================== */
-
 .container {
   width: 100%;
-  max-width: 1300px;
+  max-width: var(--container-width);
   margin: 0 auto;
-  padding: 10px;
-
+  padding: 16px var(--container-padding);
 }
 
-/* ==========================================
-   SURFACES
-========================================== */
-
-.hero,
-.panel,
-.search-field {
-  background: var(--paper);
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
-/* ==========================================
-   RESPONSIVE
-========================================== */
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
 
 @media (max-width: 768px) {
-  :root {
-    --container-padding: 20px;
-  }
-}
-
-@media (max-width: 480px) {
   :root {
     --container-padding: 16px;
   }
 }
 
-/* ==========================================
-   ACCESSIBILITY
-========================================== */
+@media (max-width: 480px) {
+  :root {
+    --container-padding: 12px;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {

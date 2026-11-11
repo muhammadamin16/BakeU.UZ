@@ -20,11 +20,18 @@ export default function AiAssistant() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const messagesEndRef = useRef(null);
+
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -109,7 +116,6 @@ export default function AiAssistant() {
   return (
     <div className="ai">
       <div className="ai__card">
-        {/* Header */}
         <header className="ai__header">
           <div className="ai__header-top">
             <div className="ai__badge">
@@ -133,8 +139,12 @@ export default function AiAssistant() {
           </p>
         </header>
 
-        {/* Messages */}
-        <div className="ai__messages" role="log" aria-live="polite">
+        <div
+          className="ai__messages"
+          role="log"
+          aria-live="polite"
+          ref={messagesContainerRef}
+        >
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -151,11 +161,8 @@ export default function AiAssistant() {
               <span className="ai-dot" />
             </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions */}
         {showSuggestions && !isTyping && (
           <div className="ai__suggestions">
             {SUGGESTIONS.map((item) => (
@@ -171,7 +178,6 @@ export default function AiAssistant() {
           </div>
         )}
 
-        {/* Input */}
         <form className="ai__form" onSubmit={handleSubmit}>
           <div className="ai__input-wrap">
             <input
