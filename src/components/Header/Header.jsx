@@ -54,7 +54,7 @@ export default function Header() {
           <div
             className={`bakeu-header__languages is-${language}`}
             role="group"
-            aria-label="Выбор языкаa"
+            aria-label="Выбор языка"
           >
             <span
               className="bakeu-header__language-slider"
