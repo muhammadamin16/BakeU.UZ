@@ -177,7 +177,7 @@ export default function Seller() {
           onClick={() => changeTab("sellers")}
         >
           <Store size={19} aria-hidden="true" />
-          Продавцы
+          Продавцы.m
         </button>
 
         <button
