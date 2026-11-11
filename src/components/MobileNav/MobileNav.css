@@ -1,35 +1,28 @@
 /* ==========================================
-   BAKEU â€” FLOATING GLASS TAB BAR (v2)
-   - Animatsiya faqat transform/opacity (GPU)
-   - Blur qatlami harakatlanuvchi qismdan ajratilgan
+   BAKEU — LIQUID GLASS TAB BAR (v5)
+   - Bosib turganda: JS fizika (barmoq tomonga suyuq deformatsiya)
+   - Qo'yib yuborganda: CSS prujina (GPU, qotmaydi)
+   - Chromium: indikatorda haqiqiy refraction (SVG lens)
 ========================================== */
 
 .bottom-nav {
   --nav-pad: 8px;
-  --spring: linear(
-    0, 0.03, 0.105, 0.208, 0.325, 0.445, 0.56, 0.666, 0.759, 0.838,
-    0.903, 0.954, 0.992, 1.02, 1.038, 1.049, 1.054, 1.054, 1.051,
-    1.046, 1.04, 1.034, 1.028, 1.021, 1.016, 1.011, 1.007, 1.004,
-    1.002, 1, 0.998, 0.998, 0.997, 0.997, 0.997, 0.997, 1
-  );
+
+  --ease-spring: cubic-bezier(0.22, 1.25, 0.36, 1);
+  --dur-indicator: 520ms;
+  --dur-body: 480ms;
 
   position: fixed;
   z-index: 1000;
 
-  /* transform ishlatmasdan markazlash (fixed + backdrop uchun yengilroq) */
   right: 0;
   left: 0;
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
   width: min(560px, calc(100% - 24px));
   margin-inline: auto;
-  padding: var(--nav-pad);
-
-  display: flex;
-  align-items: stretch;
 
   box-sizing: border-box;
-  border-radius: 50px;
 
   touch-action: none;
   user-select: none;
@@ -37,7 +30,21 @@
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 
-  isolation: isolate;
+  /* DIQQAT: bu yerda isolation / filter / opacity / mask ISHLATILMAYDI —
+     aks holda indikator sahifa fonini "ko'ra olmaydi" (backdrop root) */
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  .bottom-nav {
+    --ease-spring: linear(
+      0, 0.03, 0.105, 0.208, 0.325, 0.445, 0.56, 0.666, 0.759, 0.838,
+      0.903, 0.954, 0.992, 1.02, 1.038, 1.049, 1.054, 1.054, 1.051,
+      1.046, 1.04, 1.034, 1.028, 1.021, 1.016, 1.011, 1.007, 1.004,
+      1.002, 1, 0.998, 0.998, 0.997, 0.997, 0.997, 0.997, 1
+    );
+    --dur-indicator: 640ms;
+    --dur-body: 580ms;
+  }
 }
 
 .bottom-nav *,
@@ -46,8 +53,42 @@
   box-sizing: border-box;
 }
 
+.bottom-nav__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* ==========================================
-   GLASS (statik â€” harakatlanmaydi)
+   BODY — butun bar (deformatsiya shu elementda)
+========================================== */
+
+.bottom-nav__body {
+  position: relative;
+
+  display: flex;
+  align-items: stretch;
+
+  padding: var(--nav-pad);
+  border-radius: 50px;
+
+  transform: translate3d(0px, 0px, 0) scale(1, 1);
+  transform-origin: center;
+  will-change: transform;
+
+  /* qo'yib yuborilganda joyiga prujina bilan qaytadi */
+  transition: transform var(--dur-body) var(--ease-spring);
+}
+
+/* barmoq bosib turganda transformni JS boshqaradi */
+.bottom-nav[data-pressed] .bottom-nav__body {
+  transition: none;
+}
+
+/* ==========================================
+   GLASS
 ========================================== */
 
 .bottom-nav__glass {
@@ -55,29 +96,58 @@
   inset: 0;
   z-index: 0;
 
-  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: inherit;
   pointer-events: none;
 
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.46),
-    rgba(255, 255, 255, 0.3)
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0.32)
   );
 
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    0 10px 30px rgba(67, 32, 21, 0.14),
-    0 2px 6px rgba(67, 32, 21, 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -10px 18px rgba(154, 90, 20, 0.05),
+    0 0 0 0.5px rgba(67, 32, 21, 0.1),
+    0 12px 32px rgba(67, 32, 21, 0.18),
+    0 2px 6px rgba(67, 32, 21, 0.08);
+}
+
+/* Yorug'lik qirrasi (specular rim) */
+.bottom-nav__glass::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  padding: 1.5px;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.12) 36%,
+    rgba(255, 255, 255, 0.06) 64%,
+    rgba(255, 255, 255, 0.75)
+  );
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+
+  pointer-events: none;
 }
 
 /* ==========================================
-   INDICATOR
-   Faqat transform va opacity o'zgaradi.
+   INDICATOR (liquid lens)
 ========================================== */
 
 .bottom-nav__indicator {
@@ -91,28 +161,43 @@
   width: 0;
   opacity: 1;
 
-  border-radius: 40px;
+  border-radius: 999px;
   pointer-events: none;
 
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0px, 0px, 0) scale(1, 1) skewX(0deg);
   transform-origin: center;
-  will-change: transform, opacity;
+  will-change: transform;
   backface-visibility: hidden;
 
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 250, 239, 0.4)
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 250, 239, 0.42)
   );
 
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.88),
-    inset 0 2px 5px rgba(255, 255, 255, 0.6),
-    0 4px 12px rgba(67, 32, 21, 0.1);
+    inset 2px 2px 3px rgba(255, 255, 255, 0.7),
+    inset -2px -2px 3px rgba(255, 255, 255, 0.35),
+    inset 0 -8px 12px rgba(154, 90, 20, 0.07),
+    0 0 0 0.5px rgba(67, 32, 21, 0.1),
+    0 4px 12px rgba(67, 32, 21, 0.14);
 }
 
 .bottom-nav__indicator[data-hidden="true"] {
   opacity: 0;
+}
+
+/* Chromium: haqiqiy refraction — shisha chekkasida fon egiladi */
+.bottom-nav[data-refract] .bottom-nav__indicator {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.46),
+    rgba(255, 250, 239, 0.2)
+  );
+
+  -webkit-backdrop-filter: url(#bakeu-lens) saturate(165%) brightness(1.07);
+  backdrop-filter: url(#bakeu-lens) saturate(165%) brightness(1.07);
 }
 
 /* Yuqori yorug'lik */
@@ -121,20 +206,20 @@
 
   position: absolute;
   top: 3px;
-  right: 15%;
-  left: 15%;
+  right: 16%;
+  left: 16%;
 
-  height: 35%;
-  border-radius: 40px;
+  height: 34%;
+  border-radius: 999px;
 
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.45),
+    rgba(255, 255, 255, 0.5),
     rgba(255, 255, 255, 0)
   );
 }
 
-/* Bosilgan holat: chuqurroq soya + yorqinroq (faqat opacity animatsiya qilinadi) */
+/* Bosilganda: chuqurroq soya (faqat opacity animatsiya qilinadi) */
 .bottom-nav__indicator::before {
   content: "";
 
@@ -144,9 +229,9 @@
   border-radius: inherit;
   opacity: 0;
 
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
   box-shadow:
-    0 10px 24px rgba(67, 32, 21, 0.2),
+    0 8px 20px rgba(67, 32, 21, 0.16),
     0 2px 6px rgba(67, 32, 21, 0.1);
 
   transition: opacity 180ms ease;
@@ -156,31 +241,17 @@
   opacity: 1;
 }
 
-/* ---- Harakat rejimlari (JS data-mode ni almashtiradi) ---- */
+/* ---- Rejimlar (JS data-mode ni almashtiradi) ---- */
 
-/* Prujina: bosish, qo'yib yuborish, route almashish */
+/* Qo'yib yuborish, route almashish: CSS prujina */
 .bottom-nav__indicator[data-mode="settle"] {
   transition:
-    transform 480ms cubic-bezier(0.22, 1.25, 0.36, 1),
+    transform var(--dur-indicator) var(--ease-spring),
     opacity 200ms ease;
 }
 
-@supports (transition-timing-function: linear(0, 1)) {
-  .bottom-nav__indicator[data-mode="settle"] {
-    transition:
-      transform 620ms var(--spring),
-      opacity 200ms ease;
-  }
-}
-
-/* Surish: barmoqqa yopishgan, lekin ozgina yumshoq */
-.bottom-nav__indicator[data-mode="drag"] {
-  transition:
-    transform 110ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    opacity 200ms ease;
-}
-
-/* Animatsiyasiz (birinchi joylash, resize) */
+/* Bosib turganda (fizika JS da) va birinchi joylash */
+.bottom-nav__indicator[data-mode="physics"],
 .bottom-nav__indicator[data-mode="instant"] {
   transition: opacity 200ms ease;
 }
@@ -246,7 +317,7 @@
 }
 
 .bottom-nav[data-pressed] .bottom-nav__link.is-active svg {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 .bottom-nav__link:focus-visible {
@@ -331,6 +402,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bottom-nav__body,
   .bottom-nav__indicator,
   .bottom-nav__indicator[data-mode],
   .bottom-nav__indicator::before,
