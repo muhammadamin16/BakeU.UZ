@@ -1,6 +1,6 @@
 /* ==========================================
    BAKEU — FLOATING GLASS TAB BAR
-   iOS-style: draggable lens indicator
+   iOS-style: liquid glass lens indicator
 ========================================== */
 
 .bottom-nav {
@@ -44,7 +44,7 @@
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 
-  /* indikator bosilganda nav chegarasidan biroz chiqishi mumkin */
+  /* indikator bosilganda navbardan tashqariga chiqishi uchun */
   overflow: visible;
   isolation: isolate;
 }
@@ -56,80 +56,112 @@
 }
 
 /* ==========================================
-   GLASS INDICATOR (JS prujina bilan harakatlanadi)
+   GLASS INDICATOR
+   Kengligi, balandligi va joyini JS boshqaradi
 ========================================== */
 
 .bottom-nav__indicator {
   position: absolute;
-
-  top: 8px;
-  bottom: 8px;
+  top: 0;
   left: 0;
 
   width: 0;
+  height: 0;
   opacity: 0;
 
-  border-radius: 40px;
+  border-radius: 999px;
   pointer-events: none;
 
-  transform-origin: center;
-  will-change: transform;
+  will-change: transform, width, height;
   backface-visibility: hidden;
 
-  /* transform ATAYLAB transition qilinmaydi — uni JS boshqaradi */
   transition:
     opacity 200ms ease,
-    background 220ms ease,
-    box-shadow 220ms ease;
+    background 260ms ease,
+    box-shadow 260ms ease;
 
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.62),
-    rgba(255, 250, 239, 0.34)
-  );
+  /* Suyuq shisha: deyarli shaffof, cheti yorug' */
+  background:
+    radial-gradient(
+      120% 90% at 30% 0%,
+      rgba(255, 255, 255, 0.55),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.34),
+      rgba(255, 244, 222, 0.16)
+    );
 
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 2px 5px rgba(255, 255, 255, 0.6),
-    inset 0 -2px 5px rgba(255, 255, 255, 0.15),
-    0 4px 12px rgba(67, 32, 21, 0.09);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+    inset 2px 3px 6px rgba(255, 255, 255, 0.7),
+    inset -2px -3px 7px rgba(255, 255, 255, 0.28),
+    0 4px 14px rgba(67, 32, 21, 0.1);
 }
 
-/* Yuqoridagi yorug'lik */
+/* Yuqoridagi yaltiroq nur */
 .bottom-nav__indicator::before {
   content: "";
 
   position: absolute;
-  top: 3px;
-  right: 15%;
-  left: 15%;
+  top: 4px;
+  right: 14%;
+  left: 14%;
 
-  height: 35%;
-  border-radius: 40px;
+  height: 34%;
+  border-radius: 999px;
 
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0.55),
     rgba(255, 255, 255, 0)
   );
 
   pointer-events: none;
 }
 
-/* Bosilgan holat: indikator "ko'tarilib", yorqinroq va chuqurroq soyali bo'ladi */
-.bottom-nav.is-pressed .bottom-nav__indicator {
+/* Pastdagi aks-yorug'lik */
+.bottom-nav__indicator::after {
+  content: "";
+
+  position: absolute;
+  right: 22%;
+  bottom: 3px;
+  left: 22%;
+
+  height: 18%;
+  border-radius: 999px;
+
   background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.82),
-    rgba(255, 250, 239, 0.5)
+    0deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0)
   );
 
+  pointer-events: none;
+}
+
+/* Bosilganda: deyarli shaffof shisha, cheti porlaydi */
+.bottom-nav.is-pressed .bottom-nav__indicator {
+  background:
+    radial-gradient(
+      120% 90% at 30% 0%,
+      rgba(255, 255, 255, 0.5),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.22),
+      rgba(255, 244, 222, 0.08)
+    );
+
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
-    inset 0 2px 6px rgba(255, 255, 255, 0.75),
-    inset 0 -2px 6px rgba(255, 255, 255, 0.2),
-    0 8px 22px rgba(67, 32, 21, 0.18),
-    0 2px 6px rgba(67, 32, 21, 0.08);
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    inset 3px 4px 9px rgba(255, 255, 255, 0.8),
+    inset -3px -4px 10px rgba(255, 255, 255, 0.35),
+    0 14px 30px rgba(67, 32, 21, 0.22),
+    0 3px 8px rgba(67, 32, 21, 0.1);
 }
 
 /* ==========================================
@@ -192,9 +224,9 @@
   color: #9a5a14;
 }
 
-/* Bosilgan paytda tanlangan ikonka ozgina kattalashadi */
+/* Bosilganda tanlangan ikonka sal kattalashadi */
 .bottom-nav.is-pressed .bottom-nav__link.is-active svg {
-  transform: scale(1.08);
+  transform: scale(1.12);
 }
 
 /* Klaviatura fokusi */
@@ -225,11 +257,6 @@
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
-  .bottom-nav__indicator {
-    top: 6px;
-    bottom: 6px;
-  }
-
   .bottom-nav__link {
     min-height: 56px;
     padding: 9px 2px;
@@ -247,11 +274,6 @@
   .bottom-nav {
     width: calc(100% - 16px);
     padding: 5px;
-  }
-
-  .bottom-nav__indicator {
-    top: 5px;
-    bottom: 5px;
   }
 
   .bottom-nav__link {

@@ -1,0 +1,385 @@
+.shop-card,
+.shop-hero {
+  border: 1px solid var(--seller-border);
+  background: var(--seller-glass);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), 0 6px 20px rgba(67, 32, 21, 0.04);
+}
+
+.shop-card {
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.shop-card h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+/* ШАПКА */
+.shop-hero {
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.shop-hero__cover {
+  height: 110px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.55), transparent 55%),
+    linear-gradient(135deg, var(--shop-color, #ead9bd), #f4c97c);
+}
+
+.shop-hero__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 0 26px 24px;
+  margin-top: -40px;
+}
+
+.shop-hero .seller-shop__logo {
+  width: 92px;
+  height: 92px;
+  border-width: 4px;
+  border-radius: 28px;
+  font-size: 34px;
+  box-shadow: 0 8px 20px rgba(67, 32, 21, 0.12);
+}
+
+.shop-hero__info {
+  flex: 1 1 260px;
+  min-width: 0;
+  padding-top: 44px;
+}
+
+.shop-hero__info h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+  overflow-wrap: anywhere;
+}
+
+.shop-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--seller-muted);
+  font-size: 13px;
+}
+
+.shop-hero__rating,
+.shop-hero__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.shop-hero__rating {
+  color: #a66b20;
+  font-size: 13px;
+}
+
+.shop-hero__rating span {
+  color: var(--seller-muted);
+}
+
+.shop-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* КНОПКИ (уникальный класс — не пересекается с глобальными) */
+.seller-page .shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  min-height: 46px;
+  padding: 11px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--seller-ink);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.seller-page .shop-btn--primary {
+  border-color: #a06436;
+  background: linear-gradient(135deg, #b9794a, #8f552d);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(143, 85, 45, 0.3);
+}
+
+@media (hover: hover) {
+  .seller-page .shop-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* НАВИГАЦИЯ */
+.shop-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 16px 2px 4px;
+  scrollbar-width: none;
+}
+
+.shop-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.seller-page .shop-nav button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--seller-border);
+  border-radius: 100px;
+  background: var(--seller-glass);
+  color: var(--seller-ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* СЕТКА */
+.shop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+.shop-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.shop-aside {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shop-about {
+  margin: 0;
+  color: #6b5646;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* КОНТАКТЫ */
+.shop-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop-contacts a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.shop-contacts__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: rgba(244, 201, 124, 0.35);
+  color: #8f552d;
+}
+
+.shop-contacts__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shop-contacts__text small {
+  color: var(--seller-muted);
+  font-size: 11px;
+}
+
+.shop-contacts__text strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.shop-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.shop-location:last-child {
+  margin-bottom: 0;
+}
+
+.shop-location strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.shop-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: #a06436;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ВИТРИНА */
+.shop-section__head {
+  margin-top: 0;
+}
+
+.shop-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+/* ОТЗЫВЫ */
+.shop-reviews__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shop-reviews__head h2 {
+  margin: 0;
+}
+
+.shop-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop-review {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.shop-review__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shop-review__top > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-review__top strong {
+  display: block;
+  font-size: 14px;
+}
+
+.shop-review__top small {
+  color: var(--seller-muted);
+  font-size: 11px;
+}
+
+.shop-review__avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ead9bd;
+  color: #65452e;
+  font-weight: 700;
+}
+
+.shop-stars {
+  display: inline-flex;
+  gap: 2px;
+  color: #d08a2e;
+}
+
+.shop-review p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* АДАПТИВ */
+@media (max-width: 900px) {
+  .shop-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shop-aside {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .shop-hero__body {
+    padding: 0 16px 18px;
+  }
+
+  .shop-hero .seller-shop__logo {
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
+    font-size: 26px;
+  }
+
+  .shop-hero__info {
+    padding-top: 0;
+    flex-basis: 100%;
+  }
+
+  .shop-hero__actions {
+    width: 100%;
+  }
+
+  .seller-page .shop-btn {
+    flex: 1 1 0;
+  }
+
+  .shop-card {
+    padding: 18px;
+  }
+
+  .shop-products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
