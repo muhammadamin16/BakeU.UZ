@@ -19,9 +19,13 @@ const getActiveIndex = (pathname) =>
     to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`)
   );
 
-// Ҳаракат пружинаси
-const STIFFNESS = 380;
-const DAMPING = 24;
+// Судраётганда: бармоқни тез кузатади
+const DRAG_STIFFNESS = 380;
+const DRAG_DAMPING = 24;
+
+// Тугмага ўтишда: юмшоқ ва силлиқ
+const SETTLE_STIFFNESS = 150;
+const SETTLE_DAMPING = 21;
 
 // Босилгандаги кенгайиш пружинаси
 const SIZE_STIFFNESS = 260;
@@ -30,6 +34,12 @@ const SIZE_DAMPING = 17;
 // Четдаги резинка чўзилиши пружинаси
 const EDGE_STIFFNESS = 300;
 const EDGE_DAMPING = 20;
+
+// Созлаш учун қийматлар
+const PRESS_GROW = 0.32; // босилганда ён томонга кенгайиш
+const MOVE_STRETCH_MAX = 0.14; // ҳаракатдаги максимал чўзилиш
+const EDGE_STRETCH_MAX = 0.2; // четдаги резинка максимуми
+const NAV_OVERFLOW = 22; // индикатор навбардан максимал чиқиши (px)
 
 export default function MobileNav() {
   const { pathname } = useLocation();
@@ -86,25 +96,30 @@ export default function MobileNav() {
     // 1) Ўртада: ҳаракат йўналишида озгина чўзилиш
     const speed = Math.abs(st.v);
     const dir = Math.sign(st.v);
-    const moveStretch = Math.min(speed / 30, slotW * 0.22);
+    const moveStretch = Math.min(speed / 30, slotW * MOVE_STRETCH_MAX);
 
-    // тепа ва пастдан ҳам жуда озгина
-    const hExtra = Math.min(speed / 90, 5);
+    // тепа ва пастдан жуда озгина
+    const hExtra = Math.min(speed / 90, 4);
 
     // 2) Четда: резинка каби чўзилиш
     const edge = Math.abs(st.o);
     const edgeDir = Math.sign(st.o);
 
-    let w = slotW * (1 + 0.4 * st.s) + moveStretch + edge;
-    let h = baseH + hExtra * 2 - Math.min(edge * 0.08, 4);
+    const w = slotW * (1 + PRESS_GROW * st.s) + moveStretch + edge;
+    const h = baseH + hExtra * 2 - Math.min(edge * 0.08, 3);
 
     // Олд томони кўпроқ чўзилади
     let centerX = st.x + dir * moveStretch * 0.25;
 
-    // Четга чўзилганда фақат шу томони кетади, қарама-қарши чети жойида қолади
+    // Четга чўзилганда фақат шу томони кетади
     centerX += edgeDir * (edge / 2);
 
-    const left = centerX - w / 2;
+    // Навбар чегарасидан ортиқча чиқмайди
+    const left = clamp(
+      centerX - w / 2,
+      -NAV_OVERFLOW,
+      nav.clientWidth - w + NAV_OVERFLOW
+    );
     const top = pad - (h - baseH) / 2;
 
     indicator.style.width = `${w}px`;
@@ -124,8 +139,12 @@ export default function MobileNav() {
       const dt = last === null ? 0.016 : clamp((time - last) / 1000, 0.001, 0.032);
       last = time;
 
-      // Ҳаракат
-      st.v += (STIFFNESS * (st.target - st.x) - DAMPING * st.v) * dt;
+      // Ҳаракат: судраётганда қаттиқ, бошқа пайтда юмшоқ пружина
+      const dragging = !!dragRef.current?.dragging;
+      const k = dragging ? DRAG_STIFFNESS : SETTLE_STIFFNESS;
+      const c = dragging ? DRAG_DAMPING : SETTLE_DAMPING;
+
+      st.v += (k * (st.target - st.x) - c * st.v) * dt;
       st.x += st.v * dt;
 
       // Босилганда кенгайиш
@@ -308,9 +327,9 @@ export default function MobileNav() {
     // Индикатор четки тугмадан нарига чиқмайди
     animateTo(clamp(localX, first, lastC));
 
-    // Бармоқ четдан ўтса, индикатор резинка каби чўзилади
+    // Бармоқ четдан ўтса, индикатор резинка каби озгина чўзилади
     const slotW = slots[0].width;
-    const maxO = slotW * 0.5;
+    const maxO = slotW * EDGE_STRETCH_MAX;
 
     let overshoot = 0;
     if (localX > lastC) overshoot = localX - lastC;
