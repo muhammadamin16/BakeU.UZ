@@ -5,7 +5,7 @@ export const products = [
   { id: "somsa", name: "Самса", category: "Самса", price: 7000, image: "/images/products/somsa.jpg", shopId: "bakeu" },
 ];
 
-// Демо-маълумотлар: телефон, username ва манзилни ҳақиқийсига алмаштиринг
+// Демо-маълумотлар: телефон, username, манзил ва координаталарни ҳақиқийсига алмаштиринг
 export const shops = [
   {
     id: "shahzoda",
@@ -22,7 +22,8 @@ export const shops = [
     telegram: "shahzoda_family",
     instagram: "shahzoda.family",
     address: "г. Ташкент, Мирзо-Улугбекский район",
-    mapUrl: "https://www.google.com/maps?q=41.3111,69.2797",
+    lat: 41.3111,
+    lng: 69.2797,
     hours: "Ежедневно, 09:00–20:00",
     reviews: [
       { id: 1, author: "Мадина", rating: 5, date: "2 недели назад", text: "Красивый торт и нежный вкус. Отлично подошёл для нашего праздника!" },
@@ -44,7 +45,8 @@ export const shops = [
     telegram: "sweethome_uz",
     instagram: "sweethome.uz",
     address: "г. Ташкент, Юнусабадский район",
-    mapUrl: "https://www.google.com/maps?q=41.3640,69.2870",
+    lat: 41.364,
+    lng: 69.287,
     hours: "Пн–Сб, 10:00–19:00",
     reviews: [
       { id: 1, author: "Азиза", rating: 5, date: "неделю назад", text: "Очень вкусное печенье. Заказывали к семейному чаепитию." },
@@ -65,7 +67,8 @@ export const shops = [
     telegram: "bakeu_bakery",
     instagram: "bakeu.bakery",
     address: "г. Ташкент, Чиланзарский район",
-    mapUrl: "https://www.google.com/maps?q=41.2750,69.2040",
+    lat: 41.275,
+    lng: 69.204,
     hours: "Ежедневно, 07:00–21:00",
     reviews: [
       { id: 1, author: "Сардор", rating: 5, date: "3 дня назад", text: "Понравились хлеб и самса. Обязательно попробуем ещё." },
@@ -75,4 +78,12 @@ export const shops = [
 ];
 
 export const categories = ["Все", "Торты", "Печенье", "Хлеб", "Самса"];
+
 export const getShop = (id) => shops.find((s) => s.id === id);
+
+export const getMapLinks = (shop) => ({
+  embed: `https://www.google.com/maps?q=${shop.lat},${shop.lng}&z=15&output=embed`,
+  google: `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`,
+  route: `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`,
+  yandex: `https://yandex.com/maps/?pt=${shop.lng},${shop.lat}&z=16&l=map`,
+});

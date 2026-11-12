@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Header from "../components/Header/Header";
@@ -8,6 +7,7 @@ import Footer from "../components/Footer/Footer";
 import Home from "../pages/Home/Home";
 import Map from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
+import Chat from "../pages/Messages/Chatп";
 
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
@@ -25,15 +25,13 @@ export default function AppRoutes() {
           <Route path="/map" element={<Map />} />
           <Route path="/ai" element={<AiAssistant />} />
           <Route path="/seller" element={<Seller />} />
+          <Route path="/messages" element={<Chat />} />
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
 
-          <Route
-            path="*"
-            element={<Navigate to="/" replace />}
-          />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         <MobileNav />

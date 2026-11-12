@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft, MessageCircle, Phone, Send, MapPin,
+  ArrowLeft, MessageCircle, Phone, Send, MapPin, Navigation,
   Clock, Star, Store, ShoppingBag, Search, X,
 } from "lucide-react";
 import { useCartStore } from "../../store/cartStore";
-import { products, getShop } from "./sellerData";
+import { products, getShop, getMapLinks } from "./sellerData";
 import { ShopLogo, ProductCard } from "./SellerParts";
 import "./Seller.css";
 import "./SellerShop.css";
@@ -40,6 +40,8 @@ function Stars({ value }) {
   );
 }
 
+const telHref = (phone) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
 export default function SellerShop({ shopId }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
@@ -65,6 +67,7 @@ export default function SellerShop({ shopId }) {
     );
   }
 
+  const maps = getMapLinks(shop);
   const shopProducts = products.filter((p) => p.shopId === shop.id);
   const cats = ["Все", ...new Set(shopProducts.map((p) => p.category))];
   const q = query.trim().toLocaleLowerCase("ru-RU");
@@ -89,7 +92,7 @@ export default function SellerShop({ shopId }) {
       icon: Phone,
       label: "Телефон",
       value: shop.phone,
-      href: `tel:${shop.phone.replace(/[^\d+]/g, "")}`,
+      href: telHref(shop.phone),
     },
     shop.telegram && {
       key: "tg",
@@ -143,7 +146,7 @@ export default function SellerShop({ shopId }) {
               Написать в чат
             </Link>
             {shop.phone && (
-              <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="shop-btn">
+              <a href={telHref(shop.phone)} className="shop-btn">
                 <Phone size={17} aria-hidden="true" />
                 Позвонить
               </a>
@@ -152,56 +155,15 @@ export default function SellerShop({ shopId }) {
         </div>
       </section>
 
-      {/* ВКЛАДКИ-ЯКОРЯ */}
+      {/* БЫСТРАЯ НАВИГАЦИЯ */}
       <div className="shop-nav">
         <button type="button" onClick={() => scrollTo("shop-about")}>О магазине</button>
+        <button type="button" onClick={() => scrollTo("shop-location")}>Локация</button>
         <button type="button" onClick={() => scrollTo("shop-products")}>Товары · {shopProducts.length}</button>
         <button type="button" onClick={() => scrollTo("shop-reviews")}>Отзывы · {shop.reviews.length}</button>
       </div>
 
       <div className="shop-layout">
-        {/* САЙДБАР */}
-        <aside className="shop-aside">
-          <section className="shop-card">
-            <h2>Контакты</h2>
-            <ul className="shop-contacts">
-              {contacts.map(({ key, icon: Icon, label, value, href, external }) => (
-                <li key={key}>
-                  <a
-                    href={href}
-                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  >
-                    <span className="shop-contacts__icon"><Icon size={18} aria-hidden="true" /></span>
-                    <span className="shop-contacts__text">
-                      <small>{label}</small>
-                      <strong>{value}</strong>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="shop-card">
-            <h2>Адрес и время работы</h2>
-            <div className="shop-location">
-              <span className="shop-contacts__icon"><MapPin size={18} aria-hidden="true" /></span>
-              <div>
-                <strong>{shop.address}</strong>
-                {shop.mapUrl && (
-                  <a href={shop.mapUrl} target="_blank" rel="noopener noreferrer" className="shop-link">
-                    Открыть на карте
-                  </a>
-                )}
-              </div>
-            </div>
-            <div className="shop-location">
-              <span className="shop-contacts__icon"><Clock size={18} aria-hidden="true" /></span>
-              <div><strong>{shop.hours}</strong></div>
-            </div>
-          </section>
-        </aside>
-
         {/* ОСНОВНАЯ КОЛОНКА */}
         <div className="shop-main">
           <section className="shop-card" id="shop-about">
@@ -290,6 +252,65 @@ export default function SellerShop({ shopId }) {
             </ul>
           </section>
         </div>
+
+        {/* САЙДБАР */}
+        <aside className="shop-aside">
+          <section className="shop-card">
+            <h2>Контакты</h2>
+            <ul className="shop-contacts">
+              {contacts.map(({ key, icon: Icon, label, value, href, external }) => (
+                <li key={key}>
+                  <a
+                    href={href}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  >
+                    <span className="shop-contacts__icon"><Icon size={18} aria-hidden="true" /></span>
+                    <span className="shop-contacts__text">
+                      <small>{label}</small>
+                      <strong>{value}</strong>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="shop-card" id="shop-location">
+            <h2>Локация и время работы</h2>
+
+            <div className="shop-map">
+              <iframe
+                title={`Карта: ${shop.name}`}
+                src={maps.embed}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+
+            <div className="shop-location">
+              <span className="shop-contacts__icon"><MapPin size={18} aria-hidden="true" /></span>
+              <div><strong>{shop.address}</strong></div>
+            </div>
+
+            <div className="shop-location">
+              <span className="shop-contacts__icon"><Clock size={18} aria-hidden="true" /></span>
+              <div><strong>{shop.hours}</strong></div>
+            </div>
+
+            <div className="shop-map-actions">
+              <a className="shop-chip shop-chip--primary" href={maps.route} target="_blank" rel="noopener noreferrer">
+                <Navigation size={15} aria-hidden="true" /> Маршрут
+              </a>
+              <a className="shop-chip" href={maps.google} target="_blank" rel="noopener noreferrer">
+                Google Maps
+              </a>
+              <a className="shop-chip" href={maps.yandex} target="_blank" rel="noopener noreferrer">
+                Яндекс Карты
+              </a>
+            </div>
+          </section>
+        </aside>
       </div>
     </main>
   );
