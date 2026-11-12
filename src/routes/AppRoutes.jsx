@@ -7,7 +7,7 @@ import Footer from "../components/Footer/Footer";
 import Home from "../pages/Home/Home";
 import Map from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
-import Chat from "../pages/Messages/Chatп";
+import Chat from "../pages/Messages/Chat";
 
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
