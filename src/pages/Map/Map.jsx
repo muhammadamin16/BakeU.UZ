@@ -17,7 +17,6 @@ import {
   Plus,
   Minus,
   LocateFixed,
-  MapPin,
   Info,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
@@ -268,14 +267,37 @@ const GEO_MESSAGES = {
   unsupported: "Ваш браузер не поддерживает геолокацию.",
   insecure:
     "Геолокация работает только на защищённом сайте (https). Откройте сайт по https:// или через localhost.",
-  denied:
-    "Доступ к геолокации запрещён. Нажмите на значок замка рядом с адресом сайта, выберите «Геолокация» → «Разрешить» и повторите. Если сайт открыт внутри Telegram или Instagram, откройте его в Chrome или Safari.",
+  denied: "Доступ к геолокации запрещён в браузере.",
   unavailable:
     "Не удалось определить местоположение. Проверьте, что на устройстве включены службы геолокации и интернет.",
   timeout: "Определение заняло слишком много времени. Попробуйте ещё раз.",
   approx:
     "Точное местоположение определить не удалось, поэтому мы показываем его приблизительно (по сети). Для точности разрешите геолокацию или укажите место на карте.",
 };
+
+/* Qurilma va brauzerga mos ko'rsatma: ruxsatni faqat foydalanuvchining o'zi
+   brauzer sozlamalarida yoqa oladi (kod bilan qayta so'rab bo'lmaydi) */
+function deniedHelp() {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const inApp = /Telegram|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(ua);
+  const ios = /iPhone|iPad|iPod/i.test(ua);
+  const android = /Android/i.test(ua);
+  const firefox = /Firefox|FxiOS/i.test(ua);
+
+  if (inApp) {
+    return "Сайт открыт внутри приложения (Telegram, Instagram и т. п.), где геолокация обычно заблокирована. Откройте его в Chrome или Safari.";
+  }
+  if (ios) {
+    return "Включите: «Настройки» → «Конфиденциальность и безопасность» → «Службы геолокации» → Safari → «При использовании». Затем в Safari нажмите «aA» → «Настройки веб-сайта» → «Геопозиция» → «Разрешить» и нажмите «Повторить».";
+  }
+  if (android) {
+    return "Нажмите на значок слева от адреса сайта → «Разрешения» → «Геолокация» → «Разрешить», затем нажмите «Повторить».";
+  }
+  if (firefox) {
+    return "Нажмите на значок слева от адреса сайта, снимите блокировку у пункта «Доступ к местоположению» и нажмите «Повторить».";
+  }
+  return "Нажмите на значок слева от адреса сайта → «Настройки сайта» → «Геолокация» → «Разрешить», затем нажмите «Повторить».";
+}
 
 const USER_LABELS = {
   gps: "Вы здесь",
@@ -366,6 +388,7 @@ export default function MapPage() {
 
   const cardRefs = useRef({});
   const posRef = useRef(null);
+  const wantNearRef = useRef(false);
 
   const posSource = userPos?.source || "gps";
   const userIcon = useMemo(
@@ -429,12 +452,18 @@ export default function MapPage() {
     }
   }, []);
 
-  /* Ruxsat avval berilgan bo'lsa, joylashuvni jimgina yangilaymiz */
+  /* Ruxsat berilsa (avval yoki sozlamalarda keyin), avtomatik tiklanamiz */
   useEffect(() => {
     if (!navigator.permissions?.query) return;
     let status;
-    const refresh = () => {
-      if (status?.state === "granted") ensurePosition({ silent: true });
+    const refresh = async () => {
+      if (status?.state !== "granted") return;
+      setGeoError((e) => (e === "denied" ? "" : e));
+      const pos = await ensurePosition({ silent: true });
+      if (pos && wantNearRef.current) {
+        wantNearRef.current = false;
+        setNearMe(true);
+      }
     };
     navigator.permissions
       .query({ name: "geolocation" })
@@ -462,8 +491,40 @@ export default function MapPage() {
       return;
     }
     const pos = await ensurePosition();
-    if (pos) setNearMe(true);
+    if (pos) {
+      wantNearRef.current = false;
+      setNearMe(true);
+    } else {
+      wantNearRef.current = true; /* ruxsat berilgach avtomatik yoqiladi */
+    }
   }, [nearMe, userPos, ensurePosition]);
+
+  /* "Повторить": sozlamani o'zgartirgandan keyin qayta urinish */
+  const retryGeo = async () => {
+    const pos = await ensurePosition();
+    if (pos) {
+      wantNearRef.current = false;
+      setNearMe(true);
+    }
+  };
+
+  /* Foydalanuvchi o'zi tanlaganda: tarmoq orqali taxminiy joylashuv */
+  const approxLocate = async () => {
+    setGeoError("");
+    setGeoDebug("");
+    setLoadingGeo(true);
+    try {
+      const pos = { ...(await requestByIp()), source: "ip" };
+      setUserPos(pos);
+      saveLastPos(pos);
+      setNearMe(true);
+      setGeoError("approx");
+    } catch {
+      setGeoError("unavailable");
+    } finally {
+      setLoadingGeo(false);
+    }
+  };
 
   const locateMe = useCallback(async () => {
     setPickMode(false);
@@ -836,15 +897,6 @@ export default function MapPage() {
             >
               <LocateFixed size={19} strokeWidth={2} />
             </button>
-            <button
-              type="button"
-              className={`map-round ${pickMode ? "is-on" : ""}`}
-              onClick={pickMode ? () => setPickMode(false) : startPick}
-              aria-label="Указать место на карте"
-              aria-pressed={pickMode}
-            >
-              <MapPin size={19} strokeWidth={2} />
-            </button>
           </div>
 
           {/* Mualliflik ma'lumoti: litsenziya talabi, bosilganda ochiladi */}
@@ -939,29 +991,74 @@ export default function MapPage() {
               className={`map-geo-error ${geoError === "approx" ? "is-info" : ""}`}
               role="alert"
             >
-              <p>{GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable}</p>
+              <p>
+                {geoError === "denied"
+                  ? `${GEO_MESSAGES.denied} ${deniedHelp()}`
+                  : GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable}
+              </p>
+
               {geoDebug && geoError !== "approx" && (
                 <details className="map-geo-error__debug">
-                  <summary>Технические детали.</summary>
+                  <summary>Технические детали</summary>
                   <code>{geoDebug}</code>
                 </details>
               )}
-              <div className="map-geo-error__actions">
-                <button
-                  type="button"
-                  className="map-geo-error__btn is-primary"
-                  onClick={startPick}
-                >
-                  {geoError === "approx" ? "Указать точнее" : "Указать на карте"}
-                </button>
-                <button
-                  type="button"
-                  className="map-geo-error__btn"
-                  onClick={() => setGeoError("")}
-                >
-                  {geoError === "approx" ? "Ок" : "Закрыть"}
-                </button>
-              </div>
+
+              {geoError === "approx" ? (
+                <div className="map-geo-error__actions">
+                  <button
+                    type="button"
+                    className="map-geo-error__btn is-primary"
+                    onClick={startPick}
+                  >
+                    Указать точнее
+                  </button>
+                  <button
+                    type="button"
+                    className="map-geo-error__btn"
+                    onClick={() => setGeoError("")}
+                  >
+                    Ок
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="map-geo-error__actions is-stacked">
+                    <button
+                      type="button"
+                      className="map-geo-error__btn is-primary"
+                      onClick={startPick}
+                    >
+                      Указать на карте
+                    </button>
+                    {["denied", "unavailable", "timeout"].includes(geoError) && (
+                      <button
+                        type="button"
+                        className="map-geo-error__btn"
+                        onClick={retryGeo}
+                        disabled={loadingGeo}
+                      >
+                        Повторить
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="map-geo-error__btn"
+                      onClick={() => setGeoError("")}
+                    >
+                      Закрыть
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="map-geo-error__link"
+                    onClick={approxLocate}
+                    disabled={loadingGeo}
+                  >
+                    Определить примерно по сети
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>
