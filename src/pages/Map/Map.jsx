@@ -1055,7 +1055,7 @@ export default function MapPage() {
                     onClick={approxLocate}
                     disabled={loadingGeo}
                   >
-                    Определить примерно по сети
+                    Определить примерно по сети.
                   </button>
                 </>
               )}
