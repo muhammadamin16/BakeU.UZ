@@ -1,5 +1,7 @@
+import HeroSlider from "./components/HeroSlider";
+import { demoProducts, demoSubscriptions, eligibleProducts } from "./homeData";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
-    import { useState } from "react";
+    import { useEffect, useState } from "react";
     import { Link } from "react-router-dom";
     import {
     Search,
@@ -15,40 +17,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
     import { useCartStore } from "../../store/cartStore";
     import "./Home.css";
 
-    const products = [
-    {
-        id: "cookie",
-        name: "Печенье",
-        category: "Печенье",
-        price: 13200,
-        image: "/images/products/cookie.jpg",
-        color: "#f2e5dd",
-    },
-    {
-        id: "bread",
-        name: "Домашний хлеб",
-        category: "Хлеб",
-        price: 3400,
-        image: "/images/products/bread.jpg",
-        color: "#e6eee5",
-    },
-    {
-        id: "cake",
-        name: "Шоколадный торт",
-        category: "Торты",
-        price: 45000,
-        image: "/images/products/cake.jpg",
-        color: "#eee5f2",
-    },
-    {
-        id: "somsa",
-        name: "Самса",
-        category: "Самса",
-        price: 7000,
-        image: "/images/products/somsa.jpg",
-        color: "#f6ead4",
-    },
-    ];
+    const products = demoProducts;
 
     const categories = [
     { name: "Все", icon: "✦" },
@@ -58,7 +27,10 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
     { name: "Самса", icon: "🥟" },
     ];
 
-    export default function Home() {
+    export default function Home({ catalog = products, subscriptions = demoSubscriptions, demo = true }) {
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
+    const featured = eligibleProducts(catalog, subscriptions, now);
     const [query, setQuery] = useState("");
     const [category, setCategory] = useState("Все");
     const [notice, setNotice] = useState("");
@@ -66,7 +38,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
     const add = useCartStore((state) => state.add);
     const items = useCartStore((state) => state.items);
 
-    const visibleProducts = products.filter((product) => {
+    const visibleProducts = featured.filter((product) => {
         const matchesCategory =
         category === "Все" || product.category === category;
 
@@ -211,8 +183,10 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
         >
             <div className="bu-catalog__top">
             <div>
-                <span className="bu-overline">КАТАЛОГ BAKEU</span>
-                <h2 id="bu-catalog-title">Что хочется сегодня?</h2>
+                <span className="bu-overline">ВИТРИНА МАСТЕРОВ</span>
+                <h2 id="bu-catalog-title">Топ товары</h2>
+                <Link className="bu-all-products" to="/seller?tab=products">Смотреть все товары <ArrowUpRight size={18} aria-hidden="true" /></Link>
+                <p className="bu-subtitle">Выпечка магазинов с активной подпиской BakeU.</p>
             </div>
 
             <div className="bu-search">
@@ -240,7 +214,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 
             <div className="bu-categories" aria-label="Категории товаров">
             {categories.map((item) => {
-                const count = products.filter(
+                const count = featured.filter(
                 (product) =>
                     item.name === "Все" ||
                     product.category === item.name
@@ -264,6 +238,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
             })}
             </div>
 
+            {demo && <p className="bu-demo">Демо-витрина: подписки магазинов показаны для примера.</p>}
             <div className="bu-results">
             <span>
                 {isFiltered ? "Найдено товаров" : "Всего товаров"}:{" "}
@@ -304,6 +279,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
                     </div>
 
                     <div className="bu-product__body">
+                    <Link to={`/profile?shop=${encodeURIComponent(product.sellerId)}`} className="bu-shop-link">{product.sellerName}</Link>
                     <span className="bu-product__category">
                         {product.category}
                     </span>
@@ -342,7 +318,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
                 className="bu-button bu-button--primary"
                 onClick={resetFilters}
                 >
-                Показать все товары
+                Сбросить фильтры
                 </button>
             </div>
             )}
@@ -361,6 +337,30 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
             )}
             </div>
         </section>
+        <section className="bu-discover" aria-labelledby="bu-discover-title">
+          <div className="bu-discover__intro">
+            <span className="bu-overline">ВДОХНОВЕНИЕ НА КАЖДЫЙ ДЕНЬ</span>
+            <h2 id="bu-discover-title">Найдите свой<br /><span>любимый вкус.</span></h2>
+            <p>От хрустящего хлеба до любимого десерта — всё от домашних мастеров.</p>
+            <Link to="/seller?tab=products" className="bu-button bu-button--primary">Выбрать вкусное <ArrowRight size={18} /></Link>
+          </div>
+          <HeroSlider />
+        </section>
+        <section className="bu-makers" aria-labelledby="bu-makers-title">
+          <div className="bu-makers__heading"><div><span className="bu-overline">ЛЮДИ, КОТОРЫЕ ПЕКУТ С ЛЮБОВЬЮ</span><h2 id="bu-makers-title">Знакомьтесь, кондитеры</h2></div><Link to="/seller?tab=sellers">Все продавцы <ArrowUpRight size={18} /></Link></div>
+          <div className="bu-makers__grid">
+            {[
+              { id: 'shahzoda', name: 'Shahzoda Family', initials: 'SF', description: 'Торты для ваших особенных моментов', image: 'cake', color: '#ead9b9' },
+              { id: 'sweet-home', name: 'Sweet Home', initials: 'SH', description: 'Печенье и сладости к любимому чаю', image: 'cookie', color: '#ead9e1' },
+              { id: 'bakeu', name: 'BakeU Bakery', initials: 'BU', description: 'Домашний хлеб и ароматная самса', image: 'bread', color: '#dce6d5' },
+            ].map(shop => <Link key={shop.id} className="bu-maker" to={`/profile?shop=${shop.id}`} aria-label={`Открыть профиль: ${shop.name}`}>
+              <span className="bu-maker__avatar" style={{background: shop.color}}>{shop.initials}</span>
+              <span className="bu-maker__info"><strong>{shop.name}</strong><span>{shop.description}</span><small>Открыть профиль ↗</small></span>
+              <img src={`/images/products/${shop.image}.jpg`} alt="" loading="lazy" />
+            </Link>)}
+          </div>
+        </section>
+        <Link to="/ai" className="bu-helper"><span className="bu-helper__icon" aria-hidden="true">✦</span><span><strong>Не знаете, что выбрать?</strong><small>Расскажите помощнику BakeU, чего хочется сегодня.</small></span><span className="bu-helper__action">Спросить помощника <ArrowUpRight size={20}/></span></Link>
         </main>
     );
     }
