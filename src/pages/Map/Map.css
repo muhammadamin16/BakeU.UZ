@@ -1117,6 +1117,44 @@
   color: var(--gold);
 }
 
+/* ---------- Geolokatsiya kartochkasi: tugmalar joylashuvi ---------- */
+
+.map .map-geo-error {
+  max-height: calc(100% - 170px);
+  overflow-y: auto;
+}
+
+.map-geo-error__actions {
+  flex-wrap: wrap;
+}
+
+.map-geo-error__actions.is-stacked .map-geo-error__btn.is-primary {
+  flex: 1 1 100%;
+}
+
+.map-geo-error__btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.map-geo-error__link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.map-geo-error__link:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* ---------- Harakatni kamaytirish ---------- */
 
 @media (prefers-reduced-motion: reduce) {
