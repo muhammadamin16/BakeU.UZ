@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCartStore } from "../../store/cartStore";
 import ProductImage from "../../components/ProductImage/ProductImage";
-import "../../styles/shopping.css";
+import "./Cart.css"
 const money = n => new Intl.NumberFormat("ru-RU").format(n) + " сум";
 export default function Cart() {
   const { items, products, increase, decrease, remove, clear } = useCartStore();

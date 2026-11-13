@@ -4,6 +4,7 @@ import Header from "../components/Header/Header";
 import MobileNav from "../components/MobileNav/MobileNav";
 import Footer from "../components/Footer/Footer";
 
+import Cart from "../pages/Cart/Cart";
 import Home from "../pages/Home/Home";
 import Map from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
@@ -22,6 +23,7 @@ export default function AppRoutes() {
       <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/map" element={<Map />} />
           <Route path="/ai" element={<AiAssistant />} />
           <Route path="/seller" element={<Seller />} />
