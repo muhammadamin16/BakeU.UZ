@@ -1,16 +1,34 @@
+/* =====================================================
+   MAP PAGE — sayt ranglariga moslangan, shisha uslubidagi xarita
+   ===================================================== */
+
 .map {
   --ink: #432015;
   --paper: #fffcf7;
   --muted: #8b7364;
+  --soft: #715a49;
   --gold: #f4b41b;
   --green: #4f9d75;
+  --focus: #956137;
   --line: rgba(67, 32, 21, 0.12);
-  --shadow: 0 12px 30px rgba(67, 32, 21, 0.07);
+
+  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 244, 224, 0.36));
+  --glass-strong: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 246, 229, 0.72));
+  --glass-active: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(245, 208, 146, 0.5));
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --glass-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.3), 0 6px 20px rgba(78, 49, 25, 0.1);
 
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
   padding-bottom: 24px;
 }
+
+.map button {
+  font-family: inherit;
+}
+
+/* ---------- Layout ---------- */
 
 .map-layout {
   display: grid;
@@ -19,77 +37,133 @@
   min-height: calc(100vh - 200px);
 }
 
+/* ---------- Umumiy shisha sirt ---------- */
+
+.map .map-tab,
+.map .map-chip,
+.map .map-card,
+.map .map-search,
+.map .map-round,
+.map .map-zoom,
+.map .map-detail,
+.map .map-btn,
+.map .map-near,
+.map .map-credits__btn,
+.map .map-credits__panel,
+.map .map-empty button {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass);
+  color: var(--ink);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--glass-shadow);
+  transition: background 180ms ease, box-shadow 180ms ease,
+    border-color 180ms ease, transform 180ms ease, color 180ms ease;
+}
+
+.map .map-search,
+.map .map-round,
+.map .map-zoom,
+.map .map-detail,
+.map .map-credits__btn,
+.map .map-credits__panel {
+  background: var(--glass-strong);
+}
+
+.map .map-tab.is-active,
+.map .map-chip.is-active,
+.map .map-card.is-selected,
+.map .map-btn--light,
+.map .map-near {
+  background: var(--glass-active);
+}
+
+/* ---------- Chap panel ---------- */
+
 .map-sidebar {
   display: flex;
   flex-direction: column;
-  background: var(--paper);
-  border-radius: 30px;
-  box-shadow: var(--shadow);
+  min-height: 0;
   overflow: hidden;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 245, 228, 0.3));
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: var(--glass-shadow);
 }
 
 .map-tabs {
   display: flex;
   gap: 10px;
-  padding: 18px 18px 8px;
+  padding: 18px 18px 10px;
 }
 
 .map-tab {
   flex: 1;
   padding: 13px 16px;
-  border: 2px solid transparent;
-  border-radius: 40px;
-  background: #f4e9d8;
+  border-radius: 100px;
   color: var(--muted);
   font-size: 15px;
   font-weight: 900;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .map-tab.is-active {
-  background: var(--gold);
   color: var(--ink);
-  border-color: var(--ink);
-}
-
-.map-tab:not(.is-active):hover {
-  background: #f8d971;
-  color: var(--ink);
+  border-color: #fff;
 }
 
 .map-sort-row {
-  padding: 0 14px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 18px 10px;
 }
 
-.map-sort-btn {
-  display: inline-flex;
-  align-items: center;
+.map-chips {
+  display: flex;
   gap: 6px;
-  padding: 7px 12px;
-  border: none;
-  border-radius: 16px;
-  background: transparent;
+  flex-wrap: wrap;
+}
+
+.map-chip {
+  padding: 6px 13px;
+  border-radius: 100px;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-chip.is-active {
+  color: var(--ink);
+  border-color: #b9895e;
+}
+
+.map-count {
+  min-width: 26px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: rgba(67, 32, 21, 0.08);
   color: var(--muted);
   font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.map-sort-btn:hover {
-  color: var(--ink);
+  font-weight: 800;
+  text-align: center;
 }
 
 .map-list {
   flex: 1;
-  overflow-y: auto;
-  padding: 4px 14px 20px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 4px 14px 20px;
+  overflow-y: auto;
   scrollbar-width: thin;
+  scrollbar-color: rgba(67, 32, 21, 0.25) transparent;
 }
 
 .map-card {
@@ -97,33 +171,24 @@
   align-items: center;
   gap: 14px;
   width: 100%;
+  flex-shrink: 0;
   padding: 12px 14px;
-  border: 2px solid transparent;
+  border-width: 2px;
   border-radius: 22px;
-  background: #f8f1e6;
-  color: var(--ink);
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.map-card:hover {
-  background: #f4e9d8;
-  transform: translateY(-1px);
 }
 
 .map-card.is-selected {
-  border-color: var(--ink);
-  background: #fff8ee;
-  box-shadow: 0 4px 14px rgba(67, 32, 21, 0.08);
+  border-color: #b9895e;
 }
 
 .map-card__img {
   width: 52px;
   height: 52px;
+  flex-shrink: 0;
   border-radius: 14px;
   object-fit: cover;
-  flex-shrink: 0;
   background: #e7dbce;
 }
 
@@ -133,28 +198,29 @@
 
 .map-card__info h3 {
   margin: 0 0 4px;
+  overflow: hidden;
   font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.2px;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .map-card__info p {
   margin: 0;
+  color: var(--soft);
   font-size: 12px;
-  color: var(--muted);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .map-card__star {
-  color: #c58a29;
-  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  margin-left: 6px;
+  color: #c58a29;
+  font-weight: 800;
 }
 
 .map-empty {
@@ -164,36 +230,71 @@
 
 .map-empty p {
   margin: 0 0 16px;
-  font-size: 15px;
   color: var(--muted);
+  font-size: 15px;
 }
 
 .map-empty button {
   padding: 12px 22px;
-  border: none;
-  border-radius: 25px;
-  background: var(--gold);
-  color: var(--ink);
+  border-radius: 100px;
   font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.map-empty button:hover {
-  background: #ffc643;
-}
+/* ---------- Xarita maydoni ---------- */
 
 .map-area {
   position: relative;
-  background: var(--paper);
-  border-radius: 30px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
   min-height: 560px;
-  z-index: 1;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: #f3ece0;
+  box-shadow: 0 12px 30px rgba(67, 32, 21, 0.07);
 }
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* chetlari saytning krem rangiga singadi */
+.map-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+  border-radius: 30px;
+  box-shadow: inset 0 0 70px rgba(255, 244, 224, 0.6);
+}
+
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+}
+
+.map .leaflet-container {
+  background: #f3ece0;
+  font-family: Arial, Helvetica, sans-serif;
+  outline: none;
+}
+
+/* iliq krem-jigarrang ton */
+.map .leaflet-tile-pane {
+  filter: sepia(0.3) saturate(0.9) hue-rotate(-8deg) brightness(1.03) contrast(0.96);
+}
+
+/* Leaflet'ning o'z yozuvi va boshqaruvlari yashirilgan */
+.map .leaflet-control-container {
+  display: none;
+}
+
+/* ---------- Yuqori panel ---------- */
 
 .map-toolbar {
   position: absolute;
@@ -207,21 +308,20 @@
 
 .map-search {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
   height: 52px;
-  padding: 0 20px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--paper);
-  color: #978b80;
-  box-shadow: 0 4px 16px rgba(67, 32, 21, 0.08);
-  transition: outline 0.15s ease;
+  padding: 0 14px 0 20px;
+  border-radius: 100px;
+  color: #725a48;
 }
 
 .map-search input {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -231,134 +331,246 @@
 }
 
 .map-search input::placeholder {
-  color: #978b80;
+  color: #796451;
 }
 
-.map-search:focus-within {
-  outline: 2px solid #c58a29;
-  outline-offset: 2px;
+.map-search input::-webkit-search-cancel-button {
+  display: none;
 }
 
-.map-refresh {
-  width: 52px;
-  height: 52px;
+.map-search__clear {
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
   border-radius: 50%;
-  background: var(--paper);
+  background: rgba(67, 32, 21, 0.08);
   color: var(--muted);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(67, 32, 21, 0.08);
-  transition: all 0.2s ease;
 }
 
-.map-refresh:hover {
-  background: var(--gold);
-  color: var(--ink);
-  transform: rotate(30deg);
-}
-
-.map-canvas {
-  width: 100%;
-  height: 100%;
-  min-height: 560px;
-}
-
-.leaflet-map {
-  width: 100%;
-  height: 100%;
-  border-radius: 30px;
-}
-
-.price-marker,
-.seller-marker,
-.dot-marker,
-.user-marker {
-  background: transparent !important;
-  border: none !important;
-}
-
-.price-pill {
-  padding: 7px 14px;
-  border-radius: 20px;
-  background: var(--gold);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(67, 32, 21, 0.18);
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.price-pill.is-selected {
-  background: #ffc643;
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px rgba(244, 180, 27, 0.4);
-}
-
-.seller-pill {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 900;
+.map-round {
   display: grid;
   place-items: center;
-  border: 2px solid #fff;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease;
-}
-
-.seller-pill.is-selected {
-  transform: scale(1.15);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.35);
-}
-
-.map-dot {
-  width: 10px;
-  height: 10px;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 0 3px rgba(79, 157, 117, 0.3);
+  color: var(--soft);
+  cursor: pointer;
 }
 
-.marker-me {
-  width: 48px;
-  height: 48px;
-  border-radius: 50% 50% 50% 0;
-  background: var(--green);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 900;
+/* ---------- Boshqaruv tugmalari ---------- */
+
+.map-controls {
+  position: absolute;
+  top: 86px;
+  right: 18px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.map-controls .map-round {
+  width: 44px;
+  height: 44px;
+}
+
+.map-zoom {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.map-zoom button {
   display: grid;
   place-items: center;
-  transform: rotate(-45deg);
-  box-shadow: 0 4px 16px rgba(79, 157, 117, 0.45);
-  border: 3px solid #fff;
-  line-height: 1;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 160ms ease;
 }
+
+.map-zoom button + button {
+  border-top: 1px solid var(--line);
+}
+
+.map-zoom button:hover {
+  background: rgba(244, 180, 27, 0.25);
+}
+
+/* ---------- Mualliflik ma'lumoti ---------- */
+
+.map-credits {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.map-credits__btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.map-credits__panel {
+  padding: 7px 12px;
+  border-radius: 100px;
+  color: var(--soft);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.map-credits__panel a {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ---------- Tanlangan element kartochkasi ---------- */
 
 .map-detail {
   position: absolute;
-  bottom: 90px;
+  bottom: 56px;
   left: 20px;
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 18px;
-  border-radius: 22px;
-  background: var(--paper);
-  box-shadow: 0 8px 28px rgba(67, 32, 21, 0.12);
-  min-width: 280px;
-  border: 1px solid rgba(67, 32, 21, 0.08);
-  animation: slideUp 0.25s ease;
+  gap: 14px;
+  min-width: 340px;
+  padding: 14px 44px 14px 14px;
+  border-radius: 26px;
+  animation: mapSlideUp 0.25s ease;
 }
 
-@keyframes slideUp {
+.map-detail__img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 18px;
+  object-fit: cover;
+  background: #e7dbce;
+}
+
+.map-detail__info h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.map-detail__info p {
+  margin: 0 0 2px;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.map-detail__info .map-card__star {
+  margin-left: 0;
+  font-size: 12px;
+}
+
+.map-detail__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.map-detail__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(67, 32, 21, 0.08);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.map-btn {
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.map .map-btn--dark {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--gold);
+}
+
+/* ---------- "Рядом со мной" ---------- */
+
+.map-near {
+  position: absolute;
+  bottom: 24px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.map .map-near.is-active {
+  border-color: #6d9460;
+  background: linear-gradient(135deg, rgba(245, 255, 241, 0.9), rgba(165, 205, 151, 0.66));
+  color: #294e2c;
+}
+
+.map-near:disabled,
+.map-round:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.map-geo-error {
+  position: absolute;
+  bottom: 84px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 280px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  animation: mapSlideUp 0.25s ease;
+}
+
+@keyframes mapSlideUp {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -369,123 +581,187 @@
   }
 }
 
-.map-detail__info h3 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--ink);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+/* ---------- Markerlar ---------- */
+
+.map .map-marker {
+  border: none !important;
+  background: transparent !important;
 }
 
-.map-detail__info p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.map-detail__actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.map-btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 900;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.map-btn--dark {
-  background: var(--ink);
-  color: var(--gold);
-}
-
-.map-btn--dark:hover {
-  background: #5a2e1a;
-}
-
-.map-btn--light {
-  background: var(--gold);
-  color: var(--ink);
-}
-
-.map-btn--light:hover {
-  background: #ffc643;
-}
-
-.map-near {
+.map .price-pill {
   position: absolute;
-  bottom: 90px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  border: 2px solid var(--ink);
-  border-radius: 40px;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, calc(-100% - 9px));
+  padding: 7px 13px;
+  border: 1.5px solid #fff;
+  border-radius: 100px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(67, 32, 21, 0.35);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.map .price-pill::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  border-bottom-right-radius: 3px;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.map .price-pill.is-selected {
+  border-color: var(--ink);
   background: var(--gold);
   color: var(--ink);
+  transform: translate(-50%, calc(-100% - 9px)) scale(1.12);
+  box-shadow: 0 8px 20px rgba(244, 180, 27, 0.5);
+}
+
+.map .price-pill.is-selected::after {
+  border-color: var(--ink);
+}
+
+.map .seller-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  color: #fff;
   font-size: 14px;
   font-weight: 900;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(67, 32, 21, 0.12);
-  transition: all 0.2s ease;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 12px rgba(67, 32, 21, 0.35);
+  transition: transform 0.18s ease;
 }
 
-.map-near:hover {
-  background: #ffc643;
-  transform: translateY(-2px);
+.map .seller-pill.is-selected {
+  transform: translate(-50%, -50%) scale(1.2);
 }
 
-.map-near.is-active {
-  background: var(--green);
-  border-color: #3d805e;
-  color: #fff;
-}
-
-.map-near.is-loading {
-  opacity: 0.85;
-  cursor: wait;
-  pointer-events: none;
-}
-
-.map-near:disabled {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.map-geo-error {
+.map .user-dot {
   position: absolute;
-  bottom: 150px;
-  right: 20px;
-  z-index: 1000;
-  padding: 10px 16px;
-  border-radius: 16px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 13px;
-  font-weight: 700;
-  animation: slideUp 0.25s ease;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
 }
 
-/* Leaflet */
-.leaflet-control-attribution {
-  font-size: 10px !important;
-  background: rgba(255, 252, 247, 0.88) !important;
-  color: var(--muted) !important;
+.map .user-dot__core {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #2f7bff;
+  box-shadow: 0 2px 8px rgba(47, 123, 255, 0.55);
 }
+
+.map .user-dot__pulse {
+  position: absolute;
+  top: -22px;
+  left: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(47, 123, 255, 0.28);
+  animation: mapUserPulse 2s ease-out infinite;
+}
+
+@keyframes mapUserPulse {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* ---------- Hover / active / focus ---------- */
+
+@media (hover: hover) {
+  .map .map-tab:not(.is-active):hover,
+  .map .map-chip:not(.is-active):hover,
+  .map .map-card:hover,
+  .map .map-round:not(:disabled):hover,
+  .map .map-btn--light:hover,
+  .map .map-near:not(:disabled):not(.is-active):hover,
+  .map .map-empty button:hover {
+    background: var(--glass-active);
+    box-shadow: inset 0 2px 3px #fff, 0 8px 22px rgba(78, 49, 25, 0.14);
+  }
+
+  .map .map-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .map .map-btn--dark:hover {
+    background: #5a2e1a;
+  }
+}
+
+.map .map-tab:active,
+.map .map-card:active,
+.map .map-btn:active,
+.map .map-near:not(:disabled):active,
+.map .map-round:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.map button:focus-visible,
+.map a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.map .map-search:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* blur qo'llab-quvvatlanmasa, zichroq fon */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .map .map-search,
+  .map .map-round,
+  .map .map-zoom,
+  .map .map-detail,
+  .map .map-near,
+  .map .map-credits__btn,
+  .map .map-credits__panel {
+    background: rgba(255, 248, 235, 0.96);
+  }
+}
+
+/* ---------- Responsive ---------- */
 
 @media (max-width: 1100px) {
   .map-layout {
     grid-template-columns: 320px 1fr;
+  }
+
+  .map-detail {
+    min-width: 0;
+    right: 20px;
+    bottom: 84px;
+    flex-wrap: wrap;
   }
 }
 
@@ -495,33 +771,29 @@
     min-height: auto;
   }
 
-  .map-sidebar {
-    max-height: 340px;
-  }
-
-  .map-area,
-  .map-canvas {
+  /* telefonda xarita tepada, ro'yxat pastda */
+  .map-area {
+    order: -1;
     min-height: 480px;
   }
 
-  .map-detail,
-  .map-near {
-    bottom: 100px;
-  }
-
-  .map-geo-error {
-    bottom: 160px;
+  .map-sidebar {
+    max-height: 360px;
   }
 }
 
 @media (max-width: 600px) {
   .map-tabs {
-    padding: 14px 14px 6px;
+    padding: 14px 14px 8px;
   }
 
   .map-tab {
     padding: 11px 12px;
     font-size: 13px;
+  }
+
+  .map-sort-row {
+    padding: 2px 14px 8px;
   }
 
   .map-card {
@@ -545,30 +817,39 @@
 
   .map-search {
     height: 46px;
-    padding: 0 16px;
+    padding: 0 10px 0 16px;
   }
 
   .map-search input {
     font-size: 13px;
   }
 
-  .map-refresh {
+  .map-toolbar .map-round {
     width: 46px;
     height: 46px;
   }
 
-  .map-detail {
-    left: 14px;
+  .map-controls {
+    top: 72px;
     right: 14px;
-    bottom: 110px;
-    flex-direction: column;
-    align-items: flex-start;
+  }
+
+  .map-detail {
+    right: 14px;
+    bottom: 70px;
+    left: 14px;
     gap: 12px;
+    padding: 12px 40px 12px 12px;
+  }
+
+  .map-detail__img {
+    width: 52px;
+    height: 52px;
   }
 
   .map-detail__actions {
-    margin-left: 0;
     width: 100%;
+    margin-left: 0;
   }
 
   .map-btn {
@@ -576,289 +857,136 @@
   }
 
   .map-near {
-    bottom: 110px;
+    bottom: 14px;
     right: 14px;
     padding: 12px 16px;
     font-size: 12px;
   }
 
   .map-geo-error {
-    bottom: 170px;
     right: 14px;
+    bottom: 66px;
+  }
+
+  .map-credits {
+    bottom: 14px;
+    left: 14px;
   }
 }
-/* Стеклянное оформление страницы карты */
 
-.map {
-  --map-glass: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.64),
-    rgba(255, 244, 224, 0.32)
-  );
+/* ---------- Hudud (radius) ---------- */
 
-  --map-glass-active: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.82),
-    rgba(245, 208, 146, 0.46)
-  );
-
-  --map-glass-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 2px rgba(255, 255, 255, 0.3),
-    0 6px 20px rgba(78, 49, 25, 0.09);
+.map-radius {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 18px 8px;
+  padding: 8px 10px;
+  border-radius: 20px;
+  background: rgba(79, 157, 117, 0.1);
+  border: 1px solid rgba(79, 157, 117, 0.25);
 }
 
-/* Панель слева */
-
-.map .map-sidebar {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.4),
-    rgba(255, 245, 228, 0.18)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.8);
-
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  backdrop-filter: blur(20px) saturate(140%);
-
-  box-shadow: var(--map-glass-shadow);
+.map-radius__label {
+  margin-right: 4px;
+  color: #3d6b52;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-/* Общая стеклянная поверхность */
-
-.map .map-tab,
-.map .map-sort-btn,
-.map .map-card,
-.map .map-search,
-.map .map-refresh,
-.map .map-detail,
-.map .map-btn,
-.map .map-near,
-.map .map-empty button,
-.map .price-pill {
-  background: var(--map-glass);
-  border-color: rgba(255, 255, 255, 0.9);
-  border-style: solid;
-  border-width: 1px;
-  color: var(--ink);
-
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  backdrop-filter: blur(16px) saturate(140%);
-
-  box-shadow: var(--map-glass-shadow);
-
-  transition:
-    background 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease,
-    transform 180ms ease;
-}
-
-/* Переключатели */
-
-.map .map-tab {
+.map-zone {
+  position: absolute;
+  top: 82px;
+  left: 18px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 100px;
-}
-
-.map .map-tab.is-active {
-  background: var(--map-glass-active);
-  border-color: #fff;
-  color: #432015;
-
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 1),
-    inset 0 -2px 5px rgba(213, 162, 87, 0.12),
-    0 5px 14px rgba(78, 49, 25, 0.12);
-}
-
-.map .map-sort-btn {
-  margin-top: 5px;
-  border-radius: 100px;
-  color: #715746;
-}
-
-/* Карточки товаров */
-
-.map .map-card {
-  flex-shrink: 0;
-  border-width: 2px;
-}
-
-.map .map-card.is-selected {
-  background: var(--map-glass-active);
-  border-color: #b9895e;
-
-  box-shadow:
-    inset 0 1px 3px rgba(255, 255, 255, 0.95),
-    0 5px 16px rgba(78, 49, 25, 0.11);
-}
-
-.map .map-card__info p,
-.map .map-detail__info p {
-  color: #715a49;
-}
-
-/* Поиск над картой */
-
-.map .map-search {
-  min-width: 0;
-  border-radius: 100px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.82),
-    rgba(255, 246, 229, 0.62)
-  );
-  color: #725a48;
-}
-
-.map .map-search input {
-  min-width: 0;
-  width: 100%;
-  background: transparent;
-  color: #432015;
-}
-
-.map .map-search input::placeholder {
-  color: #796451;
-}
-
-.map .map-refresh {
-  flex-shrink: 0;
-  border-radius: 50%;
-}
-
-/* Карточка выбранного товара */
-
-.map .map-detail {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.82),
-    rgba(255, 244, 224, 0.62)
-  );
-}
-
-.map .map-btn {
-  min-height: 42px;
-  border-radius: 100px;
-}
-
-.map .map-btn--dark {
-  background: var(--map-glass-active);
-  color: #432015;
-}
-
-.map .map-btn--light {
-  background: var(--map-glass);
-  color: #432015;
-}
-
-/* Геолокация */
-
-.map .map-near {
-  border-radius: 100px;
-  background: var(--map-glass-active);
-}
-
-.map .map-near.is-active {
-  background: linear-gradient(
-    135deg,
-    rgba(245, 255, 241, 0.88),
-    rgba(165, 205, 151, 0.62)
-  );
-  border-color: #6d9460;
+  background: linear-gradient(135deg, rgba(245, 255, 241, 0.92), rgba(190, 220, 176, 0.72));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--glass-shadow);
   color: #294e2c;
+  font-size: 12px;
+  font-weight: 800;
+  animation: mapSlideUp 0.25s ease;
 }
 
-/* Ценники: плотнее фон, чтобы читались на карте */
+.map-zone__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(79, 157, 117, 0.25);
+}
 
-.map .price-pill {
-  box-sizing: border-box;
+.map-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 4px;
+}
+
+.map-card__title h3 {
+  min-width: 0;
+  margin: 0;
+}
+
+.map-card__tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
   border-radius: 100px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.86),
-    rgba(255, 239, 206, 0.68)
-  );
-  color: #432015;
-  box-shadow:
-    inset 0 1px 2px #fff,
-    0 3px 10px rgba(67, 32, 21, 0.18);
+  background: rgba(79, 157, 117, 0.16);
+  color: #2f6a4a;
+  font-size: 10px;
+  font-weight: 800;
 }
 
-.map .price-pill.is-selected {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 250, 235, 0.96),
-    rgba(244, 204, 133, 0.86)
-  );
-  border-color: #956137;
-  transform: scale(1.08);
-  box-shadow:
-    inset 0 1px 2px #fff,
-    0 5px 14px rgba(67, 32, 21, 0.22);
+.map .user-dot__label {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #fff;
+  color: #2f7bff;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(67, 32, 21, 0.2);
 }
 
-/* Наведение */
+@media (max-width: 600px) {
+  .map-radius {
+    margin: 0 14px 8px;
+  }
 
-@media (hover: hover) {
-  .map .map-tab:hover,
-  .map .map-sort-btn:hover,
-  .map .map-card:hover,
-  .map .map-refresh:hover,
-  .map .map-btn:hover,
-  .map .map-near:not(:disabled):hover,
-  .map .map-empty button:hover {
-    background: var(--map-glass-active);
-    color: var(--ink);
-
-    box-shadow:
-      inset 0 2px 3px rgba(255, 255, 255, 1),
-      0 8px 22px rgba(78, 49, 25, 0.13);
+  .map-zone {
+    top: 68px;
+    left: 14px;
   }
 }
 
-/* Нажатие */
-
-.map .map-tab:active,
-.map .map-card:active,
-.map .map-btn:active,
-.map .map-near:not(:disabled):active,
-.map .map-refresh:active {
-  transform: translateY(1px);
-}
-
-/* Управление клавиатурой */
-
-.map button:focus-visible {
-  outline: 2px solid #956137;
-  outline-offset: 3px;
-}
-
-.map .map-search:focus-within {
-  outline: 2px solid #956137;
-  outline-offset: 3px;
-}
-
-/* Без размытия — более плотный фон */
-
-@supports not (
-  (backdrop-filter: blur(1px)) or
-  (-webkit-backdrop-filter: blur(1px))
-) {
-  .map .map-search,
-  .map .map-detail,
-  .map .map-refresh,
-  .map .map-near,
-  .map .price-pill {
-    background: rgba(255, 248, 235, 0.96);
-  }
-}
+/* ---------- Harakatni kamaytirish ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .map button,
   .map .price-pill,
-  .map .map-detail {
+  .map .seller-pill,
+  .map .map-detail,
+  .map .map-geo-error {
     transition: none;
     animation: none;
+  }
+
+  .map .user-dot__pulse {
+    animation: none;
+    opacity: 0.5;
   }
 }
