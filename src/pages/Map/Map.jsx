@@ -733,7 +733,7 @@ export default function MapPage() {
             aria-pressed={nearMe}
           >
             <Navigation size={15} strokeWidth={2.2} />
-            {loadingGeo ? "Определяем..." : "Рядом со мной"}
+            {loadingGeo ? "Определяем.." : "Рядом со мной"}
           </button>
 
           {geoError && (
