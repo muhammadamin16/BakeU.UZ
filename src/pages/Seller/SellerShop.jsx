@@ -648,7 +648,7 @@ export default function SellerShop({ shopId }) {
             />
 
             <button type="submit" className="shop-route-button">
-              Отправить отзыв
+              Отправить отзыв.
             </button>
           </form>
         </div>
