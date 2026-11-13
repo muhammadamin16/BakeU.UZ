@@ -8,7 +8,7 @@
   z-index: 1000;
 
   left: 50%;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 
   transform: translateX(-50%);
 
