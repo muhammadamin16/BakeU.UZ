@@ -1,0 +1,652 @@
+/* =================================
+   BakeU Register — Professional CSS
+   ================================= */
+
+.bakeu-register-page {
+  --auth-ink: #432015;
+  --auth-muted: #8b7364;
+  --auth-line: #e9ded3;
+  --auth-accent: #a8754e;
+  --auth-bg: #fffcf7;
+  --auth-input-bg: #f8f5f1;
+  --auth-error: #c24141;
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--auth-bg);
+  color: var(--auth-ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bakeu-register-page *,
+.bakeu-register-page *::before,
+.bakeu-register-page *::after {
+  box-sizing: border-box;
+}
+
+/* Layout */
+.bakeu-register-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 44%) minmax(0, 56%);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ===== BRAND SIDE ===== */
+.bakeu-register-brand {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(24px, 3.5vw, 52px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 85% 10%, rgba(255, 255, 255, 0.34), transparent 45%),
+    linear-gradient(145deg, #ecd2b4 0%, #ddb58d 54%, #c89b74 100%);
+}
+
+.bakeu-register-brand::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -22%;
+  bottom: -23%;
+  width: 66%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 68px rgba(255, 255, 255, 0.055),
+    0 0 0 136px rgba(255, 255, 255, 0.028);
+  pointer-events: none;
+}
+
+.bakeu-register-brand-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bakeu-register-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--auth-ink);
+  text-decoration: none;
+  font-size: 27px;
+  font-weight: 850;
+  letter-spacing: -1.3px;
+}
+
+.bakeu-register-symbol {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.bakeu-register-logo-u {
+  color: #fffaf4;
+}
+
+.bakeu-register-tag {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #68462f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.bakeu-register-brand-center {
+  width: 100%;
+  max-width: 420px;
+  margin: auto 0;
+}
+
+.bakeu-register-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #754a30;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  margin-bottom: 16px;
+}
+
+.bakeu-register-brand-center h2 {
+  margin: 0 0 18px;
+  font-size: clamp(34px, 4vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+  font-weight: 850;
+}
+
+.bakeu-register-brand-center h2 em {
+  font-style: normal;
+  color: #fffaf4;
+}
+
+.bakeu-register-brand-center p {
+  max-width: 340px;
+  margin: 0;
+  color: #684831;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.bakeu-register-emoji-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+  font-size: 26px;
+}
+
+.bakeu-register-brand-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #704b34;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ===== FORM SIDE ===== */
+.bakeu-register-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(20px, 3.5vw, 48px);
+  background: var(--auth-bg);
+  overflow-y: auto;
+}
+
+.bakeu-register-content {
+  width: 100%;
+  max-width: 460px;
+  padding: 10px 0;
+}
+
+.bakeu-register-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 22px;
+  color: #947d6d;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.bakeu-register-back:hover {
+  color: var(--auth-ink);
+  transform: translateX(-3px);
+}
+
+.bakeu-register-mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 20px;
+  font-size: 21px;
+  font-weight: 850;
+}
+
+/* Progress */
+.bakeu-register-progress {
+  margin-bottom: 26px;
+}
+
+.bakeu-register-progress-caption {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  color: #ad9888;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.bakeu-register-progress-track {
+  height: 4px;
+  border-radius: 99px;
+  background: #efe6dc;
+  overflow: hidden;
+}
+
+.bakeu-register-progress-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #c89b74, #a8754e);
+  border-radius: 99px;
+  transition: width 0.35s ease;
+}
+
+/* Heading */
+.bakeu-register-heading {
+  margin-bottom: 24px;
+}
+
+.bakeu-register-kicker {
+  display: block;
+  color: var(--auth-accent);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.7px;
+  margin-bottom: 10px;
+}
+
+.bakeu-register-heading h1 {
+  margin: 0 0 10px;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.bakeu-register-heading p {
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Role selection */
+.bakeu-register-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.bakeu-register-role {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 16px 16px 14px;
+  border: 1.5px solid var(--auth-line);
+  border-radius: 14px;
+  background: #fffaf5;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.bakeu-register-role:hover {
+  border-color: #d5bda9;
+  background: #fff;
+}
+
+.bakeu-register-role.selected {
+  border-color: #b88864;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(184, 136, 100, 0.1);
+}
+
+.bakeu-register-role-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f3ebe3;
+  color: #6b4a35;
+}
+
+.bakeu-register-role.selected .bakeu-register-role-icon {
+  background: #efe0d1;
+  color: var(--auth-ink);
+}
+
+.bakeu-register-role-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.bakeu-register-role-text strong {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.bakeu-register-role-text span {
+  color: var(--auth-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.bakeu-register-role-check {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: white;
+}
+
+.bakeu-register-role.selected .bakeu-register-role-check {
+  background: var(--auth-ink);
+}
+
+/* Change role button */
+.bakeu-register-change-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #947d6d;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.bakeu-register-change-role:hover:not(:disabled) {
+  color: var(--auth-ink);
+}
+
+.bakeu-register-change-role:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Form fields */
+.bakeu-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bakeu-register-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bakeu-register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bakeu-register-field label {
+  color: var(--auth-ink);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.bakeu-register-input {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  height: 50px;
+  padding: 0 14px;
+  border: 1.5px solid var(--auth-line);
+  border-radius: 12px;
+  background: var(--auth-input-bg);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.bakeu-register-input:hover {
+  border-color: #d5bda9;
+}
+
+.bakeu-register-input:focus-within {
+  background: white;
+  border-color: #b88864;
+  box-shadow: 0 0 0 4px rgba(184, 136, 100, 0.1);
+}
+
+.bakeu-register-input.is-invalid {
+  border-color: var(--auth-error);
+  background: #fffafa;
+}
+
+.bakeu-register-input > svg {
+  flex-shrink: 0;
+  color: #a38a78;
+}
+
+.bakeu-register-input input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--auth-ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.bakeu-register-input input::placeholder {
+  color: #b2a092;
+}
+
+.bakeu-register-error {
+  color: var(--auth-error);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.bakeu-register-eye {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #947d6d;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.bakeu-register-eye:hover {
+  background: #eee5dc;
+  color: var(--auth-ink);
+}
+
+/* Submit */
+.bakeu-register-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  margin-top: 6px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--auth-ink);
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.bakeu-register-submit:hover:not(:disabled) {
+  background: #5b3020;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(67, 32, 21, 0.17);
+}
+
+.bakeu-register-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Alert */
+.bakeu-register-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #f0cbc7;
+  border-radius: 11px;
+  background: #fff0ee;
+  color: #b23a32;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.bakeu-register-alert svg {
+  flex-shrink: 0;
+}
+
+/* Footer texts */
+.bakeu-register-switch {
+  margin: 22px 0 0;
+  text-align: center;
+  color: var(--auth-muted);
+  font-size: 13px;
+}
+
+.bakeu-register-switch a {
+  color: var(--auth-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bakeu-register-switch a:hover {
+  text-decoration: underline;
+}
+
+.bakeu-register-note {
+  margin: 14px 0 0;
+  text-align: center;
+  color: #a38c7c;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.bakeu-register-spinner {
+  animation: bakeuRegisterSpin 0.8s linear infinite;
+}
+
+@keyframes bakeuRegisterSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Focus */
+.bakeu-register-page a:focus-visible,
+.bakeu-register-page button:focus-visible {
+  outline: 3px solid #b88864;
+  outline-offset: 3px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 980px) {
+  .bakeu-register-layout {
+    grid-template-columns: 40% 60%;
+  }
+  .bakeu-register-brand {
+    padding: 24px;
+  }
+  .bakeu-register-panel {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 720px) {
+  .bakeu-register-layout {
+    display: block;
+  }
+  .bakeu-register-brand {
+    display: none;
+  }
+  .bakeu-register-panel {
+    width: 100%;
+    height: 100%;
+    padding: 18px 20px 28px;
+  }
+  .bakeu-register-content {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .bakeu-register-mobile-brand {
+    display: flex;
+  }
+  .bakeu-register-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 700px) {
+  .bakeu-register-heading {
+    margin-bottom: 16px;
+  }
+  .bakeu-register-form {
+    gap: 12px;
+  }
+  .bakeu-register-input,
+  .bakeu-register-submit {
+    height: 46px;
+  }
+  .bakeu-register-role {
+    padding: 13px;
+  }
+}
+
+@media (max-height: 580px) {
+  .bakeu-register-emoji-row,
+  .bakeu-register-brand-bottom,
+  .bakeu-register-note {
+    display: none;
+  }
+  .bakeu-register-heading h1 {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-register-page *,
+  .bakeu-register-page *::before,
+  .bakeu-register-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

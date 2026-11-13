@@ -1,0 +1,511 @@
+
+/* ==========================================
+   BAKEU — PREMIUM MINIMAL AUTH MODAL
+   Subtle Glass / Clean Cream Design
+========================================== */
+
+.bakeu-auth-overlay,
+.bakeu-auth-overlay * {
+  box-sizing: border-box;
+}
+
+.bakeu-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+
+  background: rgba(30, 22, 17, 0.48);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+
+  overflow: hidden;
+
+  animation: bakeuOverlayIn 0.3s ease both;
+}
+
+/* MAIN MODAL */
+
+.bakeu-auth-modal {
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  max-width: 430px;
+
+  padding: 32px 30px 24px;
+
+  border-radius: 26px;
+
+  background: rgba(255, 252, 247, 0.97);
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 25px 75px rgba(30, 20, 12, 0.22),
+    0 5px 18px rgba(30, 20, 12, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  overflow: hidden;
+
+  color: #432015;
+
+  text-align: center;
+
+  animation: bakeuModalIn 0.42s
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* CLOSE */
+
+.bakeu-auth-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(67, 32, 21, 0.07);
+  border-radius: 50%;
+
+  background: rgba(67, 32, 21, 0.045);
+  color: #76594a;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bakeu-auth-close:hover {
+  background: #432015;
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* LOGO */
+
+.bakeu-auth-logo {
+  width: 65px;
+  height: 65px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 auto 16px;
+
+  background: linear-gradient(
+    145deg,
+    #fff8ed,
+    #f4e0c8
+  );
+
+  border: 1px solid #f2ddc5;
+  border-radius: 20px;
+
+  box-shadow:
+    0 7px 20px rgba(67, 32, 21, 0.06);
+
+  font-size: 34px;
+}
+
+/* EYEBROW */
+
+.bakeu-auth-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  margin-bottom: 13px;
+
+  color: #a5744c;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+/* HEADING */
+
+.bakeu-auth-modal h2 {
+  margin: 0;
+
+  color: #432015;
+
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.9px;
+}
+
+.bakeu-auth-modal h2 span {
+  color: #bd8558;
+}
+
+/* DESCRIPTION */
+
+.bakeu-auth-description {
+  max-width: 340px;
+
+  margin: 13px auto 0;
+
+  color: #8b7364;
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* FEATURES */
+
+.bakeu-auth-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+
+  margin-top: 23px;
+}
+
+.bakeu-auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  min-width: 0;
+  padding: 11px;
+
+  text-align: left;
+
+  background: #f8f0e7;
+
+  border: 1px solid #f1e4d7;
+  border-radius: 14px;
+}
+
+.bakeu-auth-feature-icon {
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fffaf4;
+  border-radius: 10px;
+
+  color: #b57c50;
+}
+
+.bakeu-auth-feature > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bakeu-auth-feature strong {
+  font-size: 10.5px;
+  font-weight: 750;
+  color: #432015;
+}
+
+.bakeu-auth-feature span {
+  font-size: 10px;
+  color: #9a8170;
+}
+
+/* ACTIONS */
+
+.bakeu-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  margin-top: 23px;
+}
+
+.bakeu-auth-primary,
+.bakeu-auth-secondary {
+  width: 100%;
+  min-height: 47px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border-radius: 12px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.bakeu-auth-primary {
+  border: none;
+
+  background: #432015;
+  color: #fff;
+
+  box-shadow:
+    0 6px 16px rgba(67, 32, 21, 0.15);
+}
+
+.bakeu-auth-primary:hover {
+  background: #5b3020;
+  transform: translateY(-2px);
+}
+
+.bakeu-auth-secondary {
+  border: 1px solid #e9d9c8;
+
+  background: #fffaf5;
+  color: #432015;
+}
+
+.bakeu-auth-secondary:hover {
+  background: #f7ebdd;
+  transform: translateY(-2px);
+}
+
+.bakeu-auth-primary:active,
+.bakeu-auth-secondary:active {
+  transform: scale(0.98);
+}
+
+/* SKIP */
+
+.bakeu-auth-skip {
+  margin-top: 16px;
+  padding: 5px 8px;
+
+  border: none;
+  background: transparent;
+
+  color: #9a8170;
+
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.bakeu-auth-skip:hover {
+  color: #432015;
+  text-decoration: underline;
+}
+
+/* FOOTER */
+
+.bakeu-auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  margin-top: 20px;
+  padding-top: 15px;
+
+  border-top: 1px solid #efe4d9;
+
+  color: #9b8575;
+  font-size: 10.5px;
+}
+
+/* ANIMATIONS */
+
+@keyframes bakeuOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bakeuModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bakeuOverlayOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bakeuModalOut {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+.bakeu-auth-overlay.is-closing {
+  animation: bakeuOverlayOut 0.22s ease forwards;
+}
+
+.bakeu-auth-overlay.is-closing
+.bakeu-auth-modal {
+  animation: bakeuModalOut 0.22s ease forwards;
+}
+
+/* FOCUS */
+
+.bakeu-auth-modal button:focus-visible {
+  outline: 3px solid rgba(181, 124, 80, 0.55);
+  outline-offset: 3px;
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .bakeu-auth-overlay {
+    padding: 12px;
+  }
+
+  .bakeu-auth-modal {
+    max-width: 390px;
+    padding: 27px 19px 20px;
+    border-radius: 22px;
+  }
+
+  .bakeu-auth-logo {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 13px;
+    font-size: 30px;
+  }
+
+  .bakeu-auth-modal h2 {
+    font-size: 23px;
+  }
+
+  .bakeu-auth-description {
+    font-size: 12px;
+  }
+
+  .bakeu-auth-features {
+    margin-top: 18px;
+  }
+
+  .bakeu-auth-feature {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .bakeu-auth-feature-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .bakeu-auth-feature strong {
+    font-size: 9.5px;
+  }
+
+  .bakeu-auth-feature span {
+    font-size: 9px;
+  }
+
+  .bakeu-auth-actions {
+    margin-top: 18px;
+  }
+
+  .bakeu-auth-footer {
+    margin-top: 16px;
+  }
+}
+
+/* SHORT SCREENS */
+
+@media (max-height: 650px) {
+  .bakeu-auth-modal {
+    padding-top: 20px;
+    padding-bottom: 16px;
+  }
+
+  .bakeu-auth-logo {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 9px;
+    font-size: 26px;
+  }
+
+  .bakeu-auth-eyebrow {
+    margin-bottom: 8px;
+  }
+
+  .bakeu-auth-description {
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .bakeu-auth-features,
+  .bakeu-auth-actions {
+    margin-top: 12px;
+  }
+
+  .bakeu-auth-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+}
+
+/* VERY SHORT SCREENS */
+
+@media (max-height: 520px) {
+  .bakeu-auth-logo,
+  .bakeu-auth-features,
+  .bakeu-auth-footer {
+    display: none;
+  }
+
+  .bakeu-auth-modal {
+    padding: 18px;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-auth-overlay,
+  .bakeu-auth-modal,
+  .bakeu-auth-overlay.is-closing,
+  .bakeu-auth-overlay.is-closing
+  .bakeu-auth-modal {
+    animation: none;
+  }
+
+  .bakeu-auth-modal button {
+    transition: none;
+  }
+}

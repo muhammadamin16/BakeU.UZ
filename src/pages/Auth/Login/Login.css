@@ -1,0 +1,704 @@
+/* ================================
+   BakeU Login — Professional CSS
+   ================================ */
+
+.bakeu-login-page {
+  --auth-ink: #432015;
+  --auth-muted: #8b7364;
+  --auth-line: #e9ded3;
+  --auth-accent: #a8754e;
+  --auth-bg: #fffcf7;
+  --auth-input-bg: #f8f5f1;
+  --auth-error: #c24141;
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--auth-bg);
+  color: var(--auth-ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bakeu-login-page *,
+.bakeu-login-page *::before,
+.bakeu-login-page *::after {
+  box-sizing: border-box;
+}
+
+/* Layout */
+.bakeu-login-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 46%) minmax(0, 54%);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ===== BRAND SIDE ===== */
+.bakeu-login-brand {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(24px, 3.5vw, 56px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 85% 10%, rgba(255, 255, 255, 0.34), transparent 45%),
+    linear-gradient(145deg, #ecd2b4 0%, #ddb58d 54%, #c89b74 100%);
+}
+
+.bakeu-login-brand::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -22%;
+  bottom: -23%;
+  width: 66%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 68px rgba(255, 255, 255, 0.055),
+    0 0 0 136px rgba(255, 255, 255, 0.028);
+  pointer-events: none;
+}
+
+.bakeu-login-brand-top,
+.bakeu-login-brand-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bakeu-login-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--auth-ink);
+  text-decoration: none;
+  font-size: 29px;
+  font-weight: 850;
+  letter-spacing: -1.4px;
+}
+
+.bakeu-login-symbol {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.bakeu-login-logo-u {
+  color: #fffaf4;
+}
+
+.bakeu-login-tag {
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #68462f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.bakeu-login-brand-center {
+  width: 100%;
+  max-width: 480px;
+  margin: auto 0;
+  padding: 10px 0;
+}
+
+.bakeu-login-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #754a30;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.bakeu-login-eyebrow > span {
+  width: 25px;
+  height: 1px;
+  background: currentColor;
+}
+
+.bakeu-login-brand-center h2 {
+  margin: 18px 0;
+  font-size: clamp(36px, 4.3vw, 69px);
+  line-height: 1.07;
+  letter-spacing: -0.055em;
+  font-weight: 850;
+}
+
+.bakeu-login-brand-center h2 em {
+  font-style: normal;
+  color: #fffaf4;
+}
+
+.bakeu-login-brand-copy {
+  max-width: 380px;
+  margin: 0;
+  color: #684831;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.bakeu-login-features {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(11px, 2.2vh, 21px);
+  margin-top: clamp(19px, 4vh, 39px);
+}
+
+.bakeu-login-feature {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.bakeu-login-feature-icon {
+  flex-shrink: 0;
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #65412c;
+}
+
+.bakeu-login-feature-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bakeu-login-feature-copy strong {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.bakeu-login-feature-copy small {
+  color: #77563e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.bakeu-login-brand-bottom {
+  color: #704b34;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bakeu-login-brand-bottom > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== FORM SIDE ===== */
+.bakeu-login-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(22px, 4vw, 60px);
+  background: var(--auth-bg);
+  overflow: hidden;
+}
+
+.bakeu-login-content {
+  width: 100%;
+  max-width: 425px;
+}
+
+.bakeu-login-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: clamp(22px, 4.4vh, 48px);
+}
+
+.bakeu-login-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #947d6d;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.bakeu-login-back:hover {
+  color: var(--auth-ink);
+  transform: translateX(-3px);
+}
+
+.bakeu-login-top-label {
+  color: #ad9888;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.bakeu-login-mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 24px;
+  font-size: 22px;
+  font-weight: 850;
+}
+
+.bakeu-login-heading {
+  margin-bottom: clamp(20px, 3.8vh, 34px);
+}
+
+.bakeu-login-kicker {
+  color: var(--auth-accent);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.8px;
+}
+
+.bakeu-login-heading h1 {
+  margin: 12px 0;
+  color: var(--auth-ink);
+  font-size: clamp(27px, 2.8vw, 38px);
+  font-weight: 850;
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+}
+
+.bakeu-login-heading p {
+  max-width: 365px;
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* Form */
+.bakeu-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(15px, 2.5vh, 22px);
+}
+
+.bakeu-login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bakeu-login-field label {
+  color: var(--auth-ink);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.bakeu-login-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 53px;
+  padding: 0 15px;
+  border: 1.5px solid var(--auth-line);
+  border-radius: 13px;
+  background: var(--auth-input-bg);
+  color: #a38a78;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.bakeu-login-input:hover {
+  border-color: #d5bda9;
+}
+
+.bakeu-login-input:focus-within {
+  background: white;
+  border-color: #b88864;
+  box-shadow: 0 0 0 4px rgba(184, 136, 100, 0.1);
+}
+
+.bakeu-login-input.is-invalid {
+  border-color: var(--auth-error);
+  background: #fffafa;
+}
+
+.bakeu-login-input > svg {
+  flex-shrink: 0;
+  color: #a38a78;
+}
+
+.bakeu-login-input input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--auth-ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.bakeu-login-input input::placeholder {
+  color: #b2a092;
+}
+
+.bakeu-login-error {
+  color: var(--auth-error);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.bakeu-login-eye {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #947d6d;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.bakeu-login-eye:hover {
+  background: #eee5dc;
+  color: var(--auth-ink);
+}
+
+.bakeu-login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  height: 53px;
+  margin-top: 5px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--auth-ink);
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.bakeu-login-submit:hover:not(:disabled) {
+  background: #5b3020;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(67, 32, 21, 0.17);
+}
+
+.bakeu-login-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.bakeu-login-divider {
+  position: relative;
+  margin: clamp(19px, 3.2vh, 31px) 0 20px;
+  text-align: center;
+}
+
+.bakeu-login-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--auth-line);
+}
+
+.bakeu-login-divider span {
+  position: relative;
+  padding: 0 14px;
+  background: var(--auth-bg);
+  color: #a38c7c;
+  font-size: 11px;
+}
+
+.bakeu-login-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 51px;
+  border: 1.5px solid #e7d9cc;
+  border-radius: 13px;
+  background: #fffaf5;
+  color: var(--auth-ink);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.bakeu-login-create:hover {
+  background: #f5e8dc;
+  border-color: #cda98b;
+}
+
+.bakeu-login-note {
+  max-width: 340px;
+  margin: 20px auto 0;
+  color: #a38c7c;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.bakeu-login-panel-footer {
+  position: absolute;
+  bottom: 19px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  color: #ad9888;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.bakeu-login-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #f0cbc7;
+  border-radius: 11px;
+  background: #fff0ee;
+  color: #b23a32;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.bakeu-login-alert svg {
+  flex-shrink: 0;
+}
+
+.bakeu-login-spinner {
+  animation: bakeuLoginSpin 0.8s linear infinite;
+}
+
+@keyframes bakeuLoginSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Focus */
+.bakeu-login-page a:focus-visible,
+.bakeu-login-page button:focus-visible {
+  outline: 3px solid #b88864;
+  outline-offset: 3px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1050px) {
+  .bakeu-login-layout {
+    grid-template-columns: 43% 57%;
+  }
+  .bakeu-login-brand {
+    padding: 28px;
+  }
+  .bakeu-login-panel {
+    padding: 28px;
+  }
+  .bakeu-login-brand-center h2 {
+    font-size: clamp(34px, 4vw, 51px);
+  }
+}
+
+@media (max-width: 780px) {
+  .bakeu-login-layout {
+    grid-template-columns: 40% 60%;
+  }
+  .bakeu-login-brand {
+    padding: 20px;
+  }
+  .bakeu-login-panel {
+    padding: 22px;
+  }
+  .bakeu-login-tag {
+    display: none;
+  }
+  .bakeu-login-brand-center h2 {
+    font-size: 34px;
+  }
+  .bakeu-login-feature-copy small {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 650px) {
+  .bakeu-login-layout {
+    display: block;
+  }
+  .bakeu-login-brand {
+    display: none;
+  }
+  .bakeu-login-panel {
+    width: 100%;
+    height: 100%;
+    padding: 16px 22px;
+  }
+  .bakeu-login-content {
+    max-width: 420px;
+  }
+  .bakeu-login-topbar {
+    margin-bottom: 22px;
+  }
+  .bakeu-login-top-label {
+    display: none;
+  }
+  .bakeu-login-mobile-brand {
+    display: flex;
+  }
+  .bakeu-login-heading h1 {
+    font-size: 28px;
+  }
+  .bakeu-login-heading p {
+    font-size: 12px;
+  }
+  .bakeu-login-panel-footer {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .bakeu-login-topbar {
+    margin-bottom: 17px;
+  }
+  .bakeu-login-heading {
+    margin-bottom: 17px;
+  }
+  .bakeu-login-form {
+    gap: 12px;
+  }
+  .bakeu-login-input,
+  .bakeu-login-submit {
+    height: 47px;
+  }
+  .bakeu-login-divider {
+    margin: 16px 0;
+  }
+  .bakeu-login-create {
+    height: 47px;
+  }
+  .bakeu-login-features {
+    margin-top: 18px;
+    gap: 10px;
+  }
+  .bakeu-login-panel-footer {
+    display: none;
+  }
+}
+
+@media (max-height: 640px) {
+  .bakeu-login-brand-copy,
+  .bakeu-login-feature:nth-child(3),
+  .bakeu-login-note {
+    display: none;
+  }
+  .bakeu-login-brand-center h2 {
+    margin: 10px 0;
+    font-size: 35px;
+  }
+  .bakeu-login-heading p {
+    line-height: 1.45;
+  }
+}
+
+@media (max-height: 540px) {
+  .bakeu-login-features,
+  .bakeu-login-brand-bottom,
+  .bakeu-login-heading p {
+    display: none;
+  }
+  .bakeu-login-heading {
+    margin-bottom: 10px;
+  }
+  .bakeu-login-heading h1 {
+    margin: 5px 0;
+    font-size: 24px;
+  }
+  .bakeu-login-topbar {
+    margin-bottom: 10px;
+  }
+  .bakeu-login-field {
+    gap: 4px;
+  }
+  .bakeu-login-input,
+  .bakeu-login-submit {
+    height: 40px;
+  }
+  .bakeu-login-create {
+    height: 40px;
+  }
+  .bakeu-login-divider {
+    margin: 9px 0;
+  }
+  .bakeu-login-mobile-brand {
+    display: none;
+  }
+}
+
+@media (max-height: 420px) {
+  .bakeu-login-kicker,
+  .bakeu-login-divider,
+  .bakeu-login-note {
+    display: none;
+  }
+  .bakeu-login-create {
+    margin-top: 8px;
+  }
+  .bakeu-login-panel {
+    padding-block: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-login-page *,
+  .bakeu-login-page *::before,
+  .bakeu-login-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
