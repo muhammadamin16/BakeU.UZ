@@ -522,7 +522,7 @@ export default function MapPage() {
                   aria-pressed={radiusKm === r}
                   onClick={() => setRadiusKm(r)}
                 >
-                  {r} км
+                  {r} км.
                 </button>
               ))}
             </div>
