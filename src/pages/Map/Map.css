@@ -1069,6 +1069,54 @@
   }
 }
 
+/* ---------- Geolokatsiya: ma'lumot varianti va texnik tafsilot ---------- */
+
+.map .map-geo-error.is-info {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--glass-shadow);
+  color: var(--ink);
+}
+
+.map .map-geo-error.is-info .map-geo-error__btn {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.map .map-geo-error.is-info .map-geo-error__btn.is-primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--gold);
+}
+
+.map-geo-error__debug {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.map-geo-error__debug summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.map-geo-error__debug code {
+  display: block;
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.5;
+  word-break: break-word;
+  user-select: all;
+}
+
+.map .map-round.is-on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--gold);
+}
+
 /* ---------- Harakatni kamaytirish ---------- */
 
 @media (prefers-reduced-motion: reduce) {

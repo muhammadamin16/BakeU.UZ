@@ -17,6 +17,7 @@ import {
   Plus,
   Minus,
   LocateFixed,
+  MapPin,
   Info,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
@@ -172,37 +173,88 @@ function getOnce(options) {
   });
 }
 
-/* Xato turlari: unsupported | insecure | denied | unavailable | timeout */
-async function requestPosition() {
+/* 1-qadam: GPS / Wi-Fi orqali (eng aniq) */
+async function requestGps() {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
-    throw { reason: "unsupported" };
+    throw { reason: "unsupported", detail: "navigator.geolocation yo'q" };
   }
   if (typeof window !== "undefined" && window.isSecureContext === false) {
-    throw { reason: "insecure" };
+    throw { reason: "insecure", detail: "isSecureContext = false" };
   }
 
+  const wrap = (e) => ({
+    reason:
+      e?.code === 1 ? "denied" : e?.code === 3 ? "timeout" : "unavailable",
+    code: e?.code,
+    detail: e?.message,
+  });
+
   try {
-    /* 1-urinish: tez, kam aniqlikda (Wi-Fi / tarmoq orqali) */
     return await getOnce({
       enableHighAccuracy: false,
       timeout: 10000,
       maximumAge: 60000,
     });
-  } catch (err) {
-    if (err?.code === 1) throw { reason: "denied" };
+  } catch (e1) {
+    if (e1?.code === 1) throw wrap(e1);
     try {
-      /* 2-urinish: GPS bilan, aniqroq */
       return await getOnce({
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 0,
       });
-    } catch (err2) {
-      throw {
-        reason:
-          err2?.code === 1 ? "denied" : err2?.code === 3 ? "timeout" : "unavailable",
-      };
+    } catch (e2) {
+      throw wrap(e2);
     }
+  }
+}
+
+/* 2-qadam: tarmoq (IP) orqali taxminiy joylashuv. GPS ishlamaganda zaxira */
+const IP_SERVICES = [
+  {
+    url: "https://get.geojs.io/v1/ip/geo.json",
+    parse: (d) => ({ lat: parseFloat(d.latitude), lng: parseFloat(d.longitude) }),
+  },
+  {
+    url: "https://ipapi.co/json/",
+    parse: (d) => ({ lat: Number(d.latitude), lng: Number(d.longitude) }),
+  },
+  {
+    url: "https://ipwho.is/",
+    parse: (d) => ({ lat: Number(d.latitude), lng: Number(d.longitude) }),
+  },
+];
+
+async function requestByIp() {
+  for (const svc of IP_SERVICES) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    try {
+      const res = await fetch(svc.url, { signal: ctrl.signal });
+      if (!res.ok) continue;
+      const pos = svc.parse(await res.json());
+      if (Number.isFinite(pos.lat) && Number.isFinite(pos.lng)) return pos;
+    } catch {
+      /* keyingi xizmatga o'tamiz */
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new Error("ip-lookup-failed");
+}
+
+/* Natija: { lat, lng, source: "gps" | "ip" } yoki { reason, code, detail } xatosi */
+async function requestPosition({ allowApprox = false } = {}) {
+  try {
+    return { ...(await requestGps()), source: "gps" };
+  } catch (err) {
+    /* Foydalanuvchi ruxsatni o'zi rad etgan bo'lsa, IP bilan aylanib o'tmaymiz */
+    if (allowApprox && err?.reason !== "denied") {
+      try {
+        return { ...(await requestByIp()), source: "ip" };
+      } catch {}
+    }
+    throw err;
   }
 }
 
@@ -221,6 +273,14 @@ const GEO_MESSAGES = {
   unavailable:
     "Не удалось определить местоположение. Проверьте, что на устройстве включены службы геолокации и интернет.",
   timeout: "Определение заняло слишком много времени. Попробуйте ещё раз.",
+  approx:
+    "Точное местоположение определить не удалось, поэтому мы показываем его приблизительно (по сети). Для точности разрешите геолокацию или укажите место на карте.",
+};
+
+const USER_LABELS = {
+  gps: "Вы здесь",
+  ip: "Примерно здесь",
+  manual: "Ваша точка",
 };
 
 /* =====================================================
@@ -243,12 +303,13 @@ const sellerIcon = (badge, color, selected) =>
     iconAnchor: [0, 0],
   });
 
-const userIcon = L.divIcon({
-  className: "map-marker",
-  html: `<div class="user-dot"><span class="user-dot__pulse"></span><span class="user-dot__core"></span><span class="user-dot__label">Вы здесь</span></div>`,
-  iconSize: [0, 0],
-  iconAnchor: [0, 0],
-});
+const makeUserIcon = (label) =>
+  L.divIcon({
+    className: "map-marker",
+    html: `<div class="user-dot"><span class="user-dot__pulse"></span><span class="user-dot__core"></span><span class="user-dot__label">${label}</span></div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
 
 /* =====================================================
    Xarita ichidagi yordamchi komponentlar
@@ -298,11 +359,23 @@ export default function MapPage() {
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [geoError, setGeoError] = useState("");
   const [pickMode, setPickMode] = useState(false);
+  const [geoDebug, setGeoDebug] = useState("");
   const [sortBy, setSortBy] = useState("distance");
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [mapInstance, setMapInstance] = useState(null);
 
   const cardRefs = useRef({});
+  const posRef = useRef(null);
+
+  const posSource = userPos?.source || "gps";
+  const userIcon = useMemo(
+    () => makeUserIcon(USER_LABELS[posSource] || USER_LABELS.gps),
+    [posSource]
+  );
+
+  useEffect(() => {
+    posRef.current = userPos;
+  }, [userPos]);
 
   /* Saqlangan oxirgi joylashuv (brauzer ruxsat so'ramaydi) */
   useEffect(() => {
@@ -314,17 +387,42 @@ export default function MapPage() {
 
   /* Joylashuvni aniqlash (kerak bo'lsa ruxsat so'raydi) */
   const ensurePosition = useCallback(async ({ silent = false } = {}) => {
+    /* Jimgina yangilash qo'lda belgilangan nuqtani buzmasligi kerak */
+    if (silent && posRef.current?.source === "manual") return null;
+
     if (!silent) {
       setGeoError("");
+      setGeoDebug("");
       setLoadingGeo(true);
     }
     try {
-      const coords = await requestPosition();
+      const coords = await requestPosition({ allowApprox: !silent });
       setUserPos(coords);
       saveLastPos(coords);
+      if (!silent && coords.source === "ip") setGeoError("approx");
       return coords;
     } catch (err) {
-      if (!silent) setGeoError(err?.reason || "unavailable");
+      if (!silent) {
+        setGeoError(err?.reason || "unavailable");
+
+        let perm = "n/a";
+        try {
+          perm = (await navigator.permissions.query({ name: "geolocation" }))
+            .state;
+        } catch {}
+        setGeoDebug(
+          [
+            `reason: ${err?.reason || "unknown"}`,
+            err?.code != null && `code: ${err.code}`,
+            err?.detail && `message: ${err.detail}`,
+            `secure: ${String(window.isSecureContext)}`,
+            `permission: ${perm}`,
+            `origin: ${window.location.origin}`,
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        );
+      }
       return null;
     } finally {
       if (!silent) setLoadingGeo(false);
@@ -372,20 +470,23 @@ export default function MapPage() {
     const pos = await ensurePosition();
     if (pos && mapInstance) {
       setSelectedId(null);
-      mapInstance.flyTo([pos.lat, pos.lng], 16, { duration: 0.85 });
+      mapInstance.flyTo([pos.lat, pos.lng], pos.source === "ip" ? 13 : 16, {
+        duration: 0.85,
+      });
     }
   }, [ensurePosition, mapInstance]);
 
   /* Qo'lda belgilash: avtomatik aniqlash ishlamasa */
   const startPick = () => {
     setGeoError("");
+    setGeoDebug("");
     setSelectedId(null);
     setPickMode(true);
   };
 
   const handleMapClick = (latlng) => {
     if (pickMode && latlng) {
-      const coords = { lat: latlng.lat, lng: latlng.lng };
+      const coords = { lat: latlng.lat, lng: latlng.lng, source: "manual" };
       setUserPos(coords);
       saveLastPos(coords);
       setNearMe(true);
@@ -623,6 +724,7 @@ export default function MapPage() {
             <div className="map-zone" aria-live="polite">
               <span className="map-zone__dot" />
               Ваша зона · {radiusKm} км · найдено {filtered.length}
+              {posSource === "ip" && " · примерно"}
             </div>
           )}
 
@@ -734,6 +836,15 @@ export default function MapPage() {
             >
               <LocateFixed size={19} strokeWidth={2} />
             </button>
+            <button
+              type="button"
+              className={`map-round ${pickMode ? "is-on" : ""}`}
+              onClick={pickMode ? () => setPickMode(false) : startPick}
+              aria-label="Указать место на карте"
+              aria-pressed={pickMode}
+            >
+              <MapPin size={19} strokeWidth={2} />
+            </button>
           </div>
 
           {/* Mualliflik ma'lumoti: litsenziya talabi, bosilganda ochiladi */}
@@ -824,22 +935,31 @@ export default function MapPage() {
           )}
 
           {geoError && (
-            <div className="map-geo-error" role="alert">
+            <div
+              className={`map-geo-error ${geoError === "approx" ? "is-info" : ""}`}
+              role="alert"
+            >
               <p>{GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable}</p>
+              {geoDebug && geoError !== "approx" && (
+                <details className="map-geo-error__debug">
+                  <summary>Технические детали.</summary>
+                  <code>{geoDebug}</code>
+                </details>
+              )}
               <div className="map-geo-error__actions">
                 <button
                   type="button"
                   className="map-geo-error__btn is-primary"
                   onClick={startPick}
                 >
-                  Указать на карте
+                  {geoError === "approx" ? "Указать точнее" : "Указать на карте"}
                 </button>
                 <button
                   type="button"
                   className="map-geo-error__btn"
                   onClick={() => setGeoError("")}
                 >
-                  Закрыть
+                  {geoError === "approx" ? "Ок" : "Закрыть"}
                 </button>
               </div>
             </div>
