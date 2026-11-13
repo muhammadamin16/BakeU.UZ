@@ -469,7 +469,7 @@ export default function Register() {
                           size={19}
                           className="bakeu-register-spinner"
                         />
-                        Создаём аккаунт..
+                        Создаём аккаунт....
                       </>
                     ) : (
                       <>
