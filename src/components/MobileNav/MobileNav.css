@@ -254,7 +254,7 @@
   .bottom-nav {
     width: calc(100% - 24px);
     padding: 6px;
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .bottom-nav__link {
