@@ -1,3 +1,4 @@
+import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Store, Star, ArrowUpRight, Plus } from "lucide-react";
@@ -35,6 +36,7 @@ export function ProductCard({ product, quantity, onAdd }) {
     <article className="seller-product">
       <div className="seller-product__image">
         <img src={product.image} alt={product.name} loading="lazy" width="400" height="350" />
+        <FavoriteButton product={product} />
         {quantity > 0 && <span className="seller-product__count">В корзине: {quantity}</span>}
       </div>
       <div className="seller-product__body">

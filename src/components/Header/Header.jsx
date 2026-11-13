@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
 import { useCartStore } from "../../store/cartStore";
 import "./Header.css";
+import { useFavoriteStore } from "../../store/favoriteStore";
 
 export default function Header() {
   const [language, setLanguage] = useState("ru");
   const [scrolled, setScrolled] = useState(false);
 
+  const favoriteCount = useFavoriteStore(s => Object.keys(s.items).length);
   const items = useCartStore((state) => state.items);
 
   const count = Object.values(items ?? {}).reduce(
@@ -76,9 +78,10 @@ export default function Header() {
           <Link
             to="/favorites"
             className="bakeu-header__favorites"
-            aria-label="Избранное"
+            aria-label={`Избранное: ${favoriteCount}`}
           >
             <Heart size={23} strokeWidth={1.8} />
+            {favoriteCount > 0 && <span className="bakeu-header__count">{favoriteCount}</span>}
           </Link>
 
           <Link

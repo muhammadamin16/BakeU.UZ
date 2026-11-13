@@ -7,6 +7,7 @@ import Footer from "../components/Footer/Footer";
 import AuthModal from "../components/AuthModal/AuthModal";
 
 import Cart from "../pages/Cart/Cart";
+import Favorites from "../pages/Favorites/Favorites";
 import Home from "../pages/Home/Home";
 import Map from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
@@ -32,6 +33,7 @@ export default function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/map" element={<Map />} />
           <Route path="/ai" element={<AiAssistant />} />
           <Route path="/messages" element={<Chat />} />

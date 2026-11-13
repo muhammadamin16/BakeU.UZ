@@ -1026,3 +1026,53 @@
     background: rgba(255, 248, 235, 0.85);
   }
 }
+/* Дополнение Home: исходный hero выше сохранён. */
+.bu-home{padding-bottom:110px}
+.bu-home .bu-search:focus-within{border-color:#b77b4b;box-shadow:0 0 0 3px #b77b4b1a}
+.bu-home .bu-search input,.bu-home .bu-search input:focus,.bu-home .bu-search input:focus-visible{border:0!important;outline:none!important;box-shadow:none!important;background:transparent;min-width:0;font-size:16px}
+.bu-home .bu-map{background:linear-gradient(120deg,#ffffff65,#fff9ef30);border:1px solid #ffffffa3;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.bu-home .bu-product{background:linear-gradient(135deg,#ffffff9c,#fff8ef61);border:1px solid #ffffffdf;box-shadow:inset 0 1px 0 #fff,0 7px 20px #43201507}
+.bu-all-products{display:inline-flex;gap:9px;align-items:center;color:var(--bu-ink);font-size:13px;font-weight:700;margin:5px 0 9px;border-bottom:1px solid #b37d444d;padding-bottom:5px}
+.bu-subtitle{font-size:12px;color:var(--bu-muted);line-height:1.7;margin:4px 0}
+.bu-demo{font-size:11px;color:var(--bu-muted);margin:10px 0}
+.bu-shop-link{display:block;color:var(--bu-muted);font-size:11px;margin-bottom:7px}
+.bu-discover{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:30px;margin:42px 0 50px;padding:32px 24px;border-top:1px solid #ffffff9c;border-bottom:1px solid #ffffff9c}
+.bu-discover h2{font-size:clamp(30px,3.5vw,46px);line-height:1.12;letter-spacing:-1.4px;margin:18px 0}
+.bu-discover h2 span{color:var(--bu-accent)}
+.bu-discover p{max-width:320px;font-size:14px;line-height:1.8;color:var(--bu-muted);margin:0 0 22px}
+.bu-slider{min-width:0;width:100%}
+.bu-slider__deck{position:relative;height:320px;isolation:isolate;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.bu-slide{position:absolute;top:24px;left:50%;width:47%;height:260px;overflow:hidden;border:7px solid #f2d19c;border-radius:26px;background:#edcfaa;box-shadow:0 12px 22px #4320151f;transform-origin:50% 85%;transition:transform 850ms cubic-bezier(.22,1,.36,1),z-index 0s 320ms;will-change:transform;-webkit-touch-callout:none}
+.bu-slide--0{z-index:3;transform:translateX(-8%) rotate(8deg) scale(1)}
+.bu-slide--1{z-index:1;transform:translateX(-94%) rotate(-10deg) scale(.91)}
+.bu-slide--2{z-index:2;transform:translateX(-51%) rotate(-3deg) scale(.96)}
+.bu-slide:nth-child(2){border-color:#e9dfac;background:#e9dfac}.bu-slide:nth-child(3){border-color:#b6d7d4;background:#b6d7d4}
+.bu-slide img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.bu-slide>span{position:absolute;inset:50% 0 0;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;padding:12px;background:linear-gradient(transparent,#2e1a10bd);color:white;pointer-events:none}
+.bu-slide small{font-size:10px}.bu-slide strong{font-size:14px}
+.bu-slider__controls{display:flex;justify-content:center;align-items:center;gap:17px;margin-top:3px}
+.bu-slider__controls button{display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #fff;border-radius:50%;background:#ffffff61;color:var(--bu-ink);box-shadow:inset 0 1px 0 #fff}
+.bu-slider__controls span{font-size:12px;font-weight:700}.bu-slider__controls i{font-style:normal;font-weight:400;color:var(--bu-muted)}
+.bu-makers{margin-bottom:24px}.bu-makers__heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
+.bu-makers h2{font-size:28px;margin:10px 0 0;letter-spacing:-.7px}.bu-makers__heading>a{display:flex;align-items:center;gap:8px;color:var(--bu-ink);font-size:12px;white-space:nowrap}
+.bu-makers__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.bu-maker{display:flex;align-items:center;gap:12px;min-width:0;padding:17px;border:1px solid #ffffffda;border-radius:23px;background:linear-gradient(135deg,#ffffff7d,#fff7eb3d);box-shadow:inset 0 1px 0 #fff,0 7px 18px #43201506;color:var(--bu-ink);transition:transform .2s,box-shadow .2s}
+.bu-maker:hover{transform:translateY(-3px);box-shadow:0 9px 20px #43201512}.bu-maker__avatar{display:grid;place-items:center;width:45px;height:48px;flex-shrink:0;border:1px solid #fff;border-radius:15px;font-family:Georgia,serif;font-size:19px;font-weight:700}
+.bu-maker__info{display:grid;gap:7px;flex:1;min-width:0}.bu-maker__info strong{font-size:14px}.bu-maker__info>span{font-size:11px;color:var(--bu-muted);line-height:1.6}.bu-maker__info small{font-size:10px;color:#a2683b}.bu-maker>img{width:54px;height:66px;border-radius:12px;object-fit:cover}
+.bu-helper{display:flex;align-items:center;gap:17px;padding:22px;border:1px solid #ffffffd9;border-radius:23px;background:linear-gradient(120deg,#eee1f585,#ffffff47);color:var(--bu-ink);margin-bottom:20px}.bu-helper__icon{display:grid;place-items:center;width:45px;height:45px;border-radius:15px;background:#ffffff70;font-size:27px;color:#906ea6;flex-shrink:0}.bu-helper>span:nth-child(2){display:grid;gap:7px;flex:1}.bu-helper strong{font-size:16px}.bu-helper small{font-size:12px;color:var(--bu-muted);line-height:1.6}.bu-helper__action{display:flex;align-items:center;gap:10px;font-size:12px}
+@media(max-width:1000px){.bu-maker>img{display:none}.bu-discover{gap:14px;padding:25px 10px}.bu-slide{height:230px}.bu-slider__deck{height:290px}}
+@media(max-width:700px){.bu-discover{grid-template-columns:1fr;margin:28px 0 32px;padding:28px 0}.bu-discover__intro{text-align:center}.bu-discover p{margin:0 auto 20px}.bu-slider{max-width:480px;margin:0 auto}.bu-slider__deck{height:285px}.bu-slide{height:235px}.bu-makers__grid{grid-template-columns:1fr}.bu-maker>img{display:block}.bu-makers h2{font-size:23px}.bu-makers__heading{align-items:flex-start}.bu-makers__heading>a{margin-top:24px;font-size:11px}.bu-makers .bu-overline{font-size:8px}.bu-helper{flex-wrap:wrap;padding:18px}.bu-helper__action{margin-left:62px}.bu-helper strong{font-size:14px}}
+@media(max-width:380px){.bu-slide{height:210px}.bu-slider__deck{height:260px}}
+@media(prefers-reduced-motion:reduce){.bu-home .bu-slide,.bu-home .bu-maker{transition:none;will-change:auto}}
+/* Скролл ишлайди, чизиғи кўринмайди */
+.bu-home .bu-categories {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bu-home .bu-categories::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

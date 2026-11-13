@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useFavoriteStore } from "../../store/favoriteStore";
 import ProductActions from "../../components/ProductActions/ProductActions";
 import ProductImage from "../../components/ProductImage/ProductImage";
-import "../../styles/shopping.css";
+import "./Favorites.css";
 export default function Favorites() {
   const items = useFavoriteStore(s => s.items);
   const clear = useFavoriteStore(s => s.clear);
