@@ -973,6 +973,102 @@
   }
 }
 
+/* ---------- Geolokatsiya xabari va qo'lda belgilash ---------- */
+
+.map .map-geo-error {
+  right: 20px;
+  bottom: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 330px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  line-height: 1.45;
+}
+
+.map .map-geo-error p {
+  margin: 0;
+}
+
+.map-geo-error__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.map-geo-error__btn {
+  flex: 1;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 252, 247, 0.35);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-geo-error__btn.is-primary {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.map .map-pick {
+  position: absolute;
+  top: 82px;
+  left: 18px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 90px);
+  padding: 8px 8px 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 100px;
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--glass-shadow);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  animation: mapSlideUp 0.25s ease;
+}
+
+.map .map-pick button {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 100px;
+  background: var(--ink);
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map .map-area.is-picking .leaflet-container,
+.map .map-area.is-picking .leaflet-grab,
+.map .map-area.is-picking .leaflet-interactive {
+  cursor: crosshair;
+}
+
+@media (max-width: 600px) {
+  .map .map-geo-error {
+    right: 14px;
+    left: 14px;
+    bottom: 66px;
+    max-width: none;
+  }
+
+  .map .map-pick {
+    top: 68px;
+    left: 14px;
+  }
+}
+
 /* ---------- Harakatni kamaytirish ---------- */
 
 @media (prefers-reduced-motion: reduce) {

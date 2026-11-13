@@ -161,20 +161,67 @@ function getDistance(lat1, lng1, lat2, lng2) {
 const formatDistance = (km) =>
   km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(1)} км`;
 
-function requestPosition() {
+function getOnce(options) {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject({ code: 0 });
-      return;
-    }
     navigator.geolocation.getCurrentPosition(
       (pos) =>
         resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       reject,
-      { enableHighAccuracy: false, timeout: 7000, maximumAge: 300000 }
+      options
     );
   });
 }
+
+/* Xato turlari: unsupported | insecure | denied | unavailable | timeout */
+async function requestPosition() {
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    throw { reason: "unsupported" };
+  }
+  if (typeof window !== "undefined" && window.isSecureContext === false) {
+    throw { reason: "insecure" };
+  }
+
+  try {
+    /* 1-urinish: tez, kam aniqlikda (Wi-Fi / tarmoq orqali) */
+    return await getOnce({
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: 60000,
+    });
+  } catch (err) {
+    if (err?.code === 1) throw { reason: "denied" };
+    try {
+      /* 2-urinish: GPS bilan, aniqroq */
+      return await getOnce({
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      });
+    } catch (err2) {
+      throw {
+        reason:
+          err2?.code === 1 ? "denied" : err2?.code === 3 ? "timeout" : "unavailable",
+      };
+    }
+  }
+}
+
+function saveLastPos(coords) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(coords));
+  } catch {}
+}
+
+const GEO_MESSAGES = {
+  unsupported: "Ваш браузер не поддерживает геолокацию.",
+  insecure:
+    "Геолокация работает только на защищённом сайте (https). Откройте сайт по https:// или через localhost.",
+  denied:
+    "Доступ к геолокации запрещён. Нажмите на значок замка рядом с адресом сайта, выберите «Геолокация» → «Разрешить» и повторите. Если сайт открыт внутри Telegram или Instagram, откройте его в Chrome или Safari.",
+  unavailable:
+    "Не удалось определить местоположение. Проверьте, что на устройстве включены службы геолокации и интернет.",
+  timeout: "Определение заняло слишком много времени. Попробуйте ещё раз.",
+};
 
 /* =====================================================
    Marker ikonlari
@@ -233,7 +280,7 @@ function FitArea({ center, radiusKm }) {
 }
 
 function MapClickHandler({ onMapClick }) {
-  useMapEvents({ click: () => onMapClick?.() });
+  useMapEvents({ click: (e) => onMapClick?.(e.latlng) });
   return null;
 }
 
@@ -250,6 +297,7 @@ export default function MapPage() {
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM);
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [geoError, setGeoError] = useState("");
+  const [pickMode, setPickMode] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [mapInstance, setMapInstance] = useState(null);
@@ -264,54 +312,89 @@ export default function MapPage() {
     } catch {}
   }, []);
 
-  /* Xatolik xabari o'zi yo'qoladi */
-  useEffect(() => {
-    if (!geoError) return;
-    const t = setTimeout(() => setGeoError(""), 4500);
-    return () => clearTimeout(t);
-  }, [geoError]);
-
   /* Joylashuvni aniqlash (kerak bo'lsa ruxsat so'raydi) */
-  const ensurePosition = useCallback(async () => {
-    setGeoError("");
-    setLoadingGeo(true);
+  const ensurePosition = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setGeoError("");
+      setLoadingGeo(true);
+    }
     try {
       const coords = await requestPosition();
       setUserPos(coords);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(coords));
-      } catch {}
+      saveLastPos(coords);
       return coords;
     } catch (err) {
-      setGeoError(
-        err?.code === 1
-          ? "Нет доступа к геолокации. Разрешите его в настройках браузера."
-          : err?.code === 0
-            ? "Геолокация не поддерживается"
-            : "Не удалось определить местоположение"
-      );
+      if (!silent) setGeoError(err?.reason || "unavailable");
       return null;
     } finally {
-      setLoadingGeo(false);
+      if (!silent) setLoadingGeo(false);
     }
   }, []);
+
+  /* Ruxsat avval berilgan bo'lsa, joylashuvni jimgina yangilaymiz */
+  useEffect(() => {
+    if (!navigator.permissions?.query) return;
+    let status;
+    const refresh = () => {
+      if (status?.state === "granted") ensurePosition({ silent: true });
+    };
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((st) => {
+        status = st;
+        refresh();
+        st.onchange = refresh;
+      })
+      .catch(() => {});
+    return () => {
+      if (status) status.onchange = null;
+    };
+  }, [ensurePosition]);
 
   const toggleNearMe = useCallback(async () => {
     if (nearMe) {
       setNearMe(false);
       return;
     }
-    const pos = userPos || (await ensurePosition());
+    setGeoError("");
+    setPickMode(false);
+    if (userPos) {
+      setNearMe(true);
+      ensurePosition({ silent: true }); /* eskirgan nuqtani yangilash */
+      return;
+    }
+    const pos = await ensurePosition();
     if (pos) setNearMe(true);
   }, [nearMe, userPos, ensurePosition]);
 
   const locateMe = useCallback(async () => {
-    const pos = userPos || (await ensurePosition());
+    setPickMode(false);
+    const pos = await ensurePosition();
     if (pos && mapInstance) {
       setSelectedId(null);
       mapInstance.flyTo([pos.lat, pos.lng], 16, { duration: 0.85 });
     }
-  }, [userPos, ensurePosition, mapInstance]);
+  }, [ensurePosition, mapInstance]);
+
+  /* Qo'lda belgilash: avtomatik aniqlash ishlamasa */
+  const startPick = () => {
+    setGeoError("");
+    setSelectedId(null);
+    setPickMode(true);
+  };
+
+  const handleMapClick = (latlng) => {
+    if (pickMode && latlng) {
+      const coords = { lat: latlng.lat, lng: latlng.lng };
+      setUserPos(coords);
+      saveLastPos(coords);
+      setNearMe(true);
+      setPickMode(false);
+      return;
+    }
+    setSelectedId(null);
+    setCreditsOpen(false);
+  };
 
   /* Filtrlangan va tartiblangan ro'yxat */
   const filtered = useMemo(() => {
@@ -505,7 +588,7 @@ export default function MapPage() {
         </aside>
 
         {/* ===== Xarita ===== */}
-        <section className="map-area">
+        <section className={`map-area ${pickMode ? "is-picking" : ""}`}>
           <div className="map-toolbar">
             <label className="map-search">
               <Search size={20} strokeWidth={1.8} />
@@ -536,7 +619,7 @@ export default function MapPage() {
             </button>
           </div>
 
-          {nearMe && userPos && (
+          {nearMe && userPos && !pickMode && (
             <div className="map-zone" aria-live="polite">
               <span className="map-zone__dot" />
               Ваша зона · {radiusKm} км · найдено {filtered.length}
@@ -559,12 +642,7 @@ export default function MapPage() {
             >
               <TileLayer url={TILES} maxZoom={19} />
 
-              <MapClickHandler
-                onMapClick={() => {
-                  setSelectedId(null);
-                  setCreditsOpen(false);
-                }}
-              />
+              <MapClickHandler onMapClick={handleMapClick} />
 
               {filtered.map((item) => {
                 const isSel = selectedId === item.id;
@@ -733,12 +811,37 @@ export default function MapPage() {
             aria-pressed={nearMe}
           >
             <Navigation size={15} strokeWidth={2.2} />
-            {loadingGeo ? "Определяем.." : "Рядом со мной"}
+            {loadingGeo ? "Определяем…" : "Рядом со мной"}
           </button>
+
+          {pickMode && (
+            <div className="map-pick" role="status">
+              <span>Нажмите на карту, чтобы указать, где вы находитесь</span>
+              <button type="button" onClick={() => setPickMode(false)}>
+                Отмена
+              </button>
+            </div>
+          )}
 
           {geoError && (
             <div className="map-geo-error" role="alert">
-              {geoError}
+              <p>{GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable}</p>
+              <div className="map-geo-error__actions">
+                <button
+                  type="button"
+                  className="map-geo-error__btn is-primary"
+                  onClick={startPick}
+                >
+                  Указать на карте
+                </button>
+                <button
+                  type="button"
+                  className="map-geo-error__btn"
+                  onClick={() => setGeoError("")}
+                >
+                  Закрыть
+                </button>
+              </div>
             </div>
           )}
         </section>
