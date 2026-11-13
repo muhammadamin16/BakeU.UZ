@@ -82,7 +82,7 @@ export default function SellerShop({ shopId }) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const addProduct = (product) => {
-    add(product.id);
+    add(product);
     setNotice(`Добавлено в корзину: ${product.name}`);
   };
 

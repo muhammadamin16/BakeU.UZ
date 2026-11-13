@@ -1,3 +1,4 @@
+import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
     import { useState } from "react";
     import { Link } from "react-router-dom";
     import {
@@ -99,7 +100,7 @@
     }
 
     function handleAdd(product) {
-        add(product.id);
+        add(product);
         setNotice(`Добавлено в корзину: ${product.name}`);
     }
 
@@ -293,6 +294,7 @@
                         loading="lazy"
                     />
 
+                    <FavoriteButton product={product} />
                     {quantity > 0 && (
                         <span className="bu-product__quantity">
                         <Check size={13} aria-hidden="true" />

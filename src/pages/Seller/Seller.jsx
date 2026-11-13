@@ -47,7 +47,7 @@ function SellerCatalog({ tab }) {
   };
 
   const addProduct = (product) => {
-    add(product.id);
+    add(product);
     setNotice(`Добавлено в корзину: ${product.name}`);
   };
 
