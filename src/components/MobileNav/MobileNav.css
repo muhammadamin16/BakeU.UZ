@@ -8,7 +8,7 @@
   z-index: 1000;
 
   left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(13px + env(safe-area-inset-bottom, 0px));
 
   transform: translateX(-50%);
 
@@ -254,7 +254,7 @@
   .bottom-nav {
     width: calc(100% - 24px);
     padding: 6px;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
 
   .bottom-nav__link {
