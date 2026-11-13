@@ -1,303 +1,134 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Building2,
-  ChefHat,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  MapPin,
-  Phone,
-  ShoppingBag,
-  Sparkles,
-  Store,
-  UserRound,
-} from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { isEmail, isPhone, registerUser } from "../../utils/auth";
 import "./Auth.css";
 
-const EMPTY = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  password: "",
-  company: "",
-  location: "",
-};
+const ROLES = [
+  { id: "customer", icon: "🧁", title: "Xaridor", text: "Shirinliklarni tanlab, buyurtma beraman" },
+  { id: "seller", icon: "🍰", title: "Sotuvchi", text: "O'z mahsulotlarimni BakeU'da sotaman" },
+];
 
-function Field({
-  label,
-  icon: Icon,
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-  autoComplete,
-}) {
-  return (
-    <label className="ba-field">
-      <span>{label}</span>
-      <div className="ba-input">
-        <Icon size={18} />
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          required
-        />
-      </div>
-    </label>
-  );
-}
+const initial = { firstName: "", lastName: "", phone: "+998", email: "", password: "" };
 
 export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState("client");
-  const [form, setForm] = useState(EMPTY);
-  const [visible, setVisible] = useState(false);
-  const [error, setError] = useState("");
-  const update = (key, value) => {
-    setForm((f) => ({ ...f, [key]: value }));
-    setError("");
+  const [params] = useSearchParams();
+  const preset = ROLES.some((r) => r.id === params.get("role")) ? params.get("role") : "";
+
+  const [role, setRole] = useState(preset);
+  const [step, setStep] = useState(preset ? 2 : 1);
+  const [form, setForm] = useState(initial);
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const onChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+    setServerError("");
   };
 
-  function submit(event) {
-    event.preventDefault();
-    if (
-      !form.firstName.trim() ||
-      !form.lastName.trim() ||
-      !form.phone.trim() ||
-      !form.email.trim() ||
-      !form.password
-    )
-      return setError("Заполните все обязательные поля.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      return setError("Введите корректный email.");
-    if (form.password.length < 8)
-      return setError("Пароль должен содержать минимум 8 символов.");
-    if (role === "seller" && (!form.company.trim() || !form.location.trim()))
-      return setError("Укажите название магазина и местоположение.");
-    // Frontend demo only. Never store passwords or treat this as real authentication.
-    const { password, ...publicData } = form;
-    const profile = { ...publicData, role, demo: true };
-    sessionStorage.setItem("bakeu-demo-profile", JSON.stringify(profile));
-    navigate("/profile", { replace: true });
-  }
+  const validate = () => {
+    const e = {};
+    if (form.firstName.trim().length < 2) e.firstName = "Ismingizni kiriting";
+    if (form.lastName.trim().length < 2) e.lastName = "Familiyangizni kiriting";
+    if (!isPhone(form.phone)) e.phone = "Format: +998 90 123 45 67";
+    if (!isEmail(form.email)) e.email = "To'g'ri email kiriting";
+    if (form.password.length < 6) e.password = "Parol kamida 6 ta belgidan iborat bo'lsin";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const onSubmit = async (ev) => {
+    ev.preventDefault();
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600)); // demo kechikish
+      registerUser({ ...form, role });
+      navigate("/profile");
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Komponent emas, oddiy funksiya: har renderda input fokusini yo'qotmaydi
+  const field = ({ name, label, type = "text", placeholder, autoComplete }) => (
+    <div className={`field ${errors[name] ? "has-error" : ""}`}>
+      <label htmlFor={name}>{label}</label>
+      <input id={name} name={name} type={type} placeholder={placeholder}
+        autoComplete={autoComplete} value={form[name]} onChange={onChange} />
+      {errors[name] && <small>{errors[name]}</small>}
+    </div>
+  );
 
   return (
-    <main className="ba-page">
-      <div className="ba-container">
-        <div className="ba-heading">
-          <span className="ba-eyebrow">
-            <Sparkles size={15} /> BAKEU ACCOUNT
-          </span>
-          <h1>
-            Станьте частью <em>BakeU</em>
-          </h1>
-          <p>Создайте аккаунт покупателя или откройте свой магазин.</p>
-        </div>
-        <div className="ba-layout">
-          <aside className="ba-promo">
-            <div className="ba-brand">
-              <ChefHat size={28} />
-            </div>
-            <span className="ba-promo-tag">ПРИСОЕДИНЯЙТЕСЬ К НАМ</span>
-            <h2>Ваше место в мире вкусных идей.</h2>
-            <p>
-              Покупайте свежую выпечку или предлагайте собственные товары
-              тысячам будущих клиентов.
-            </p>
-            <div className="ba-promo-points">
-              <span>
-                <ShoppingBag size={18} /> Удобные покупки
-              </span>
-              <span>
-                <Store size={18} /> Личный магазин
-              </span>
-              <span>
-                <Sparkles size={18} /> Простое управление
-              </span>
-            </div>
-            <div className="ba-promo-foot">BakeU — вместе вкуснее.</div>
-          </aside>
-          <section className="ba-card">
-            {step === 1 ? (
-              <>
-                <div className="ba-card-head">
-                  <span className="ba-step">ШАГ 1 ИЗ 2</span>
-                  <h2>Выберите тип аккаунта</h2>
-                  <p>Как вы планируете использовать BakeU?</p>
-                </div>
-                <div className="ba-roles">
-                  <button
-                    type="button"
-                    className={`ba-role ${role === "client" ? "selected" : ""}`}
-                    onClick={() => setRole("client")}
-                  >
-                    <span className="ba-role-icon">
-                      <ShoppingBag size={23} />
-                    </span>
-                    <span className="ba-role-text">
-                      <strong>Покупатель</strong>
-                      <small>Покупайте товары и находите любимые рецепты</small>
-                    </span>
-                    <span className="ba-radio" />
-                  </button>
-                  <button
-                    type="button"
-                    className={`ba-role ${role === "seller" ? "selected" : ""}`}
-                    onClick={() => setRole("seller")}
-                  >
-                    <span className="ba-role-icon">
-                      <Store size={23} />
-                    </span>
-                    <span className="ba-role-text">
-                      <strong>Продавец</strong>
-                      <small>
-                        Создайте страницу магазина и продавайте товары
-                      </small>
-                    </span>
-                    <span className="ba-radio" />
-                  </button>
-                </div>
-                <button
-                  className="ba-primary"
-                  type="button"
-                  onClick={() => setStep(2)}
-                >
-                  Продолжить <ArrowRight size={18} />
+    <main className="auth-page">
+      <section className="auth-card auth-card-wide">
+        <Link to="/" className="auth-logo">Bake<span>U</span></Link>
+
+        {step === 1 ? (
+          <>
+            <h1>Akkaunt turini tanlang</h1>
+            <p className="auth-sub">Siz kim sifatida BakeU'dan foydalanmoqchisiz?</p>
+            <div className="role-grid" role="radiogroup" aria-label="Akkaunt turi">
+              {ROLES.map((r) => (
+                <button key={r.id} type="button" role="radio" aria-checked={role === r.id}
+                  className={`role-card ${role === r.id ? "active" : ""}`}
+                  onClick={() => setRole(r.id)}>
+                  <span className="role-icon" aria-hidden="true">{r.icon}</span>
+                  <strong>{r.title}</strong>
+                  <span>{r.text}</span>
                 </button>
-              </>
-            ) : (
-              <>
-                <div className="ba-card-head">
-                  <button
-                    className="ba-back"
-                    type="button"
-                    onClick={() => {
-                      setStep(1);
-                      setError("");
-                    }}
-                  >
-                    <ArrowLeft size={16} /> Назад к выбору
+              ))}
+            </div>
+            <button className="btn btn-primary btn-block" disabled={!role} onClick={() => setStep(2)}>
+              Davom etish
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="back-link" onClick={() => setStep(1)}>← Turini o'zgartirish</button>
+            <h1>{role === "seller" ? "Sotuvchi akkaunti" : "Xaridor akkaunti"}</h1>
+            <p className="auth-sub">Ma'lumotlaringizni kiriting, bir daqiqada tayyor bo'ladi.</p>
+
+            <form onSubmit={onSubmit} noValidate>
+              {serverError && <div className="alert" role="alert">{serverError}</div>}
+
+              <div className="field-row">
+                {field({ name: "firstName", label: "Ism", placeholder: "Aziza", autoComplete: "given-name" })}
+                {field({ name: "lastName", label: "Familiya", placeholder: "Karimova", autoComplete: "family-name" })}
+              </div>
+              {field({ name: "phone", label: "Telefon raqam", type: "tel", placeholder: "+998 90 123 45 67", autoComplete: "tel" })}
+              {field({ name: "email", label: "Gmail", type: "email", placeholder: "siz@gmail.com", autoComplete: "email" })}
+
+              <div className={`field ${errors.password ? "has-error" : ""}`}>
+                <label htmlFor="password">Parol</label>
+                <div className="pass-wrap">
+                  <input id="password" name="password" type={showPass ? "text" : "password"}
+                    autoComplete="new-password" placeholder="Kamida 6 ta belgi"
+                    value={form.password} onChange={onChange} />
+                  <button type="button" className="pass-toggle" onClick={() => setShowPass(!showPass)}>
+                    {showPass ? "Yashirish" : "Ko'rsatish"}
                   </button>
-                  <span className="ba-step">
-                    ШАГ 2 ИЗ 2 · {role === "seller" ? "ПРОДАВЕЦ" : "ПОКУПАТЕЛЬ"}
-                  </span>
-                  <h2>Создать аккаунт</h2>
-                  <p>
-                    {role === "seller"
-                      ? "Расскажите о себе и своём магазине."
-                      : "Заполните данные для регистрации."}
-                  </p>
                 </div>
-                <form className="ba-form" onSubmit={submit} noValidate>
-                  <div className="ba-two">
-                    <Field
-                      label="Имя"
-                      icon={UserRound}
-                      value={form.firstName}
-                      onChange={(v) => update("firstName", v)}
-                      placeholder="Ваше имя"
-                      autoComplete="given-name"
-                    />
-                    <Field
-                      label="Фамилия"
-                      icon={UserRound}
-                      value={form.lastName}
-                      onChange={(v) => update("lastName", v)}
-                      placeholder="Ваша фамилия"
-                      autoComplete="family-name"
-                    />
-                  </div>
-                  <Field
-                    label="Электронная почта"
-                    icon={Mail}
-                    type="email"
-                    value={form.email}
-                    onChange={(v) => update("email", v)}
-                    placeholder="example@gmail.com"
-                    autoComplete="email"
-                  />
-                  <Field
-                    label="Номер телефона"
-                    icon={Phone}
-                    type="tel"
-                    value={form.phone}
-                    onChange={(v) => update("phone", v)}
-                    placeholder="+998 90 123 45 67"
-                    autoComplete="tel"
-                  />
-                  {role === "seller" && (
-                    <>
-                      <Field
-                        label="Название компании / магазина"
-                        icon={Building2}
-                        value={form.company}
-                        onChange={(v) => update("company", v)}
-                        placeholder="Например, Sweet Bakery"
-                      />
-                      <Field
-                        label="Местоположение"
-                        icon={MapPin}
-                        value={form.location}
-                        onChange={(v) => update("location", v)}
-                        placeholder="Город, район или адрес"
-                      />
-                    </>
-                  )}
-                  <label className="ba-field">
-                    <span>Пароль</span>
-                    <div className="ba-input">
-                      <LockKeyhole size={18} />
-                      <input
-                        type={visible ? "text" : "password"}
-                        autoComplete="new-password"
-                        placeholder="Минимум 8 символов"
-                        value={form.password}
-                        onChange={(e) => update("password", e.target.value)}
-                        required
-                        minLength={8}
-                      />
-                      <button
-                        type="button"
-                        className="ba-eye"
-                        onClick={() => setVisible((v) => !v)}
-                        aria-label={
-                          visible ? "Скрыть пароль" : "Показать пароль"
-                        }
-                      >
-                        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </label>
-                  <p className="ba-hint">
-                    Демо-режим: пароль не сохраняется и не отправляется на
-                    сервер.
-                  </p>
-                  {error && (
-                    <p className="ba-error" role="alert">
-                      {error}
-                    </p>
-                  )}
-                  <button className="ba-primary" type="submit">
-                    Создать демо-профиль <ArrowRight size={18} />
-                  </button>
-                </form>
-              </>
-            )}
-            <p className="ba-switch">
-              Уже есть аккаунт? <Link to="/login">Войти</Link>
-            </p>
-          </section>
-        </div>
-      </div>
+                {errors.password && <small>{errors.password}</small>}
+              </div>
+
+              <button className="btn btn-primary btn-block" disabled={loading}>
+                {loading ? "Yaratilmoqda..." : "Akkaunt ochish"}
+              </button>
+            </form>
+          </>
+        )}
+
+        <p className="auth-switch">
+          Akkauntingiz bormi? <Link to="/login">Kirish</Link>
+        </p>
+      </section>
     </main>
   );
 }

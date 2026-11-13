@@ -1,0 +1,630 @@
+
+/* =========================================
+   BAKEU — LIQUID GLASS AUTH MODAL
+   Premium translucent interface
+========================================= */
+
+.bakeu-glass-overlay,
+.bakeu-glass-overlay * {
+  box-sizing: border-box;
+}
+
+.bakeu-glass-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 22px;
+
+  background: rgba(28, 19, 15, 0.32);
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter:
+    blur(18px) saturate(145%);
+
+  animation: glassOverlayIn 0.4s ease both;
+}
+
+/* MAIN GLASS CONTAINER */
+
+.bakeu-glass-modal {
+  --glass-text: #432015;
+  --glass-muted: #765f52;
+
+  position: relative;
+
+  isolation: isolate;
+
+  width: 100%;
+  max-width: 455px;
+  max-height: calc(100dvh - 44px);
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  border-radius: 34px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 248, 237, 0.28) 55%,
+      rgba(255, 255, 255, 0.42)
+    );
+
+  backdrop-filter:
+    blur(45px)
+    saturate(190%)
+    brightness(1.08);
+
+  -webkit-backdrop-filter:
+    blur(45px)
+    saturate(190%)
+    brightness(1.08);
+
+  border: 1px solid rgba(
+    255, 255, 255, 0.76
+  );
+
+  box-shadow:
+    0 30px 90px rgba(40, 20, 10, 0.24),
+    0 10px 35px rgba(40, 20, 10, 0.09),
+    inset 0 1px 1px rgba(255,255,255,0.95),
+    inset 0 -1px 1px rgba(255,255,255,0.3);
+
+  color: var(--glass-text);
+
+  animation: glassModalIn 0.55s
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* GLASS REFLECTION */
+
+.bakeu-glass-shine {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      125deg,
+      rgba(255,255,255,0.48) 0%,
+      rgba(255,255,255,0.08) 32%,
+      transparent 55%,
+      rgba(255,255,255,0.12) 100%
+    );
+}
+
+/* DECORATIVE ORBS */
+
+.bakeu-glass-orb {
+  position: absolute;
+  z-index: -1;
+
+  border-radius: 50%;
+  pointer-events: none;
+
+  filter: blur(8px);
+}
+
+.bakeu-glass-orb.orb-one {
+  width: 220px;
+  height: 220px;
+
+  top: -105px;
+  right: -65px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 204, 135, 0.45),
+      rgba(255, 204, 135, 0)
+    );
+}
+
+.bakeu-glass-orb.orb-two {
+  width: 230px;
+  height: 230px;
+
+  bottom: -110px;
+  left: -100px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.65),
+      transparent 70%
+    );
+}
+
+/* TOP BAR */
+
+.bakeu-glass-topbar {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 23px 27px 10px;
+}
+
+.bakeu-glass-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.bakeu-glass-brand-icon {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.58);
+
+  border: 1px solid rgba(255,255,255,0.85);
+
+  box-shadow:
+    0 5px 18px rgba(67,32,21,0.07),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+
+  font-size: 25px;
+}
+
+.bakeu-glass-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bakeu-glass-brand-text strong {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+.bakeu-glass-brand-text span {
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 2px;
+  color: var(--glass-muted);
+}
+
+/* CLOSE BUTTON */
+
+.bakeu-glass-close {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,0.75);
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.42);
+  color: #654c3e;
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.bakeu-glass-close:hover {
+  background: rgba(255,255,255,0.8);
+  transform: rotate(90deg);
+}
+
+/* CONTENT */
+
+.bakeu-glass-content {
+  position: relative;
+  padding: 18px 29px 25px;
+  text-align: center;
+}
+
+.bakeu-glass-label {
+  width: fit-content;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin: 5px auto 17px;
+  padding: 8px 13px;
+
+  border-radius: 30px;
+
+  background: rgba(255,255,255,0.42);
+  border: 1px solid rgba(255,255,255,0.72);
+
+  color: #78533b;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.bakeu-glass-content h2 {
+  margin: 0;
+
+  color: #432015;
+
+  font-size: clamp(27px, 5vw, 33px);
+  font-weight: 850;
+  line-height: 1.17;
+  letter-spacing: -1.25px;
+}
+
+.bakeu-glass-content h2 span {
+  color: #a36b43;
+}
+
+.bakeu-glass-description {
+  max-width: 360px;
+
+  margin: 16px auto 0;
+
+  color: #725d50;
+
+  font-size: 13.5px;
+  font-weight: 450;
+  line-height: 1.75;
+}
+
+/* FEATURES */
+
+.bakeu-glass-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  margin-top: 25px;
+}
+
+.bakeu-glass-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 0;
+  padding: 13px 11px;
+
+  text-align: left;
+
+  border-radius: 18px;
+
+  background: rgba(255,255,255,0.35);
+
+  border: 1px solid rgba(255,255,255,0.67);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    0 5px 20px rgba(67,32,21,0.035);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.bakeu-glass-feature-icon {
+  flex-shrink: 0;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: rgba(255,255,255,0.55);
+  color: #95623f;
+}
+
+.bakeu-glass-feature > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bakeu-glass-feature strong {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #432015;
+}
+
+.bakeu-glass-feature span {
+  font-size: 10px;
+  line-height: 1.35;
+  color: #826a5a;
+}
+
+/* BUTTONS */
+
+.bakeu-glass-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+
+  margin-top: 26px;
+}
+
+.bakeu-glass-primary,
+.bakeu-glass-secondary {
+  width: 100%;
+  min-height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  border-radius: 17px;
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.bakeu-glass-primary {
+  border: 1px solid rgba(255,255,255,0.16);
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(91,49,30,0.96),
+      rgba(55,27,17,0.97)
+    );
+
+  box-shadow:
+    0 9px 25px rgba(67,32,21,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.20);
+}
+
+.bakeu-glass-primary:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 13px 30px rgba(67,32,21,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.bakeu-glass-primary:active,
+.bakeu-glass-secondary:active {
+  transform: scale(0.98);
+}
+
+.bakeu-glass-secondary {
+  border: 1px solid rgba(255,255,255,0.78);
+
+  background: rgba(255,255,255,0.46);
+  color: #432015;
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    0 5px 16px rgba(67,32,21,0.04);
+}
+
+.bakeu-glass-secondary:hover {
+  background: rgba(255,255,255,0.72);
+  transform: translateY(-2px);
+}
+
+.bakeu-glass-skip {
+  display: block;
+
+  margin: 19px auto 0;
+  padding: 7px 10px;
+
+  border: none;
+  background: transparent;
+
+  color: #755f50;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.bakeu-glass-skip:hover {
+  color: #432015;
+  text-decoration: underline;
+}
+
+/* FOOTER */
+
+.bakeu-glass-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  margin-top: 23px;
+  padding-top: 17px;
+
+  border-top: 1px solid rgba(255,255,255,0.55);
+
+  color: #80695a;
+
+  font-size: 11px;
+}
+
+/* KEYBOARD ACCESSIBILITY */
+
+.bakeu-glass-modal button:focus-visible {
+  outline: 3px solid rgba(156,100,62,0.65);
+  outline-offset: 3px;
+}
+
+/* ANIMATIONS */
+
+@keyframes glassOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glassModalIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(35px)
+      scale(0.94);
+    filter: blur(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+    filter: blur(0);
+  }
+}
+
+/* CLOSING ANIMATIONS */
+
+.bakeu-glass-overlay.is-closing {
+  animation: glassOverlayOut 0.28s ease forwards;
+}
+
+.bakeu-glass-overlay.is-closing
+.bakeu-glass-modal {
+  animation: glassModalOut 0.28s ease forwards;
+}
+
+@keyframes glassOverlayOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes glassModalOut {
+  to {
+    opacity: 0;
+    transform:
+      translateY(16px)
+      scale(0.97);
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .bakeu-glass-overlay {
+    padding: 14px;
+  }
+
+  .bakeu-glass-modal {
+    max-height: calc(100dvh - 28px);
+    border-radius: 28px;
+  }
+
+  .bakeu-glass-topbar {
+    padding: 19px 20px 8px;
+  }
+
+  .bakeu-glass-content {
+    padding: 16px 20px 22px;
+  }
+
+  .bakeu-glass-content h2 {
+    font-size: 27px;
+  }
+
+  .bakeu-glass-description {
+    font-size: 12.5px;
+  }
+
+  .bakeu-glass-features {
+    gap: 8px;
+  }
+
+  .bakeu-glass-feature {
+    padding: 10px 8px;
+    gap: 7px;
+  }
+
+  .bakeu-glass-feature-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .bakeu-glass-feature strong {
+    font-size: 10.5px;
+  }
+
+  .bakeu-glass-feature span {
+    font-size: 9px;
+  }
+}
+
+/* SMALL HEIGHT SCREENS */
+
+@media (max-height: 650px) {
+  .bakeu-glass-content {
+    padding-top: 8px;
+    padding-bottom: 16px;
+  }
+
+  .bakeu-glass-features {
+    margin-top: 16px;
+  }
+
+  .bakeu-glass-actions {
+    margin-top: 17px;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-glass-overlay,
+  .bakeu-glass-modal,
+  .bakeu-glass-overlay.is-closing,
+  .bakeu-glass-overlay.is-closing
+  .bakeu-glass-modal {
+    animation: none;
+  }
+
+  .bakeu-glass-modal button {
+    transition: none;
+  }
+}
