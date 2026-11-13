@@ -252,7 +252,7 @@
 
 @media (max-width: 480px) {
   .bottom-nav {
-    width: calc(100% - 24px);
+    width: calc(100% - 25px);
     padding: 6px;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
@@ -272,7 +272,7 @@
 
 @media (max-width: 350px) {
   .bottom-nav {
-    width: calc(100% - 16px);
+    width: calc(100% - 20px);
     padding: 5px;
   }
 
