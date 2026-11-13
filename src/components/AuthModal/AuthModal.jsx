@@ -16,12 +16,12 @@ import {
   Store,
   Sparkles,
   ShieldCheck,
-  ChevronRight,
 } from "lucide-react";
 
 import "./AuthModal.css";
 
 const MODAL_DELAY = 5000;
+const CLOSE_DURATION = 220;
 
 export default function AuthModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function AuthModal() {
   const closeTimerRef = useRef(null);
   const dismissedRef = useRef(false);
 
-  // Показ через 5 секунд
+  // Открытие через 5 секунд
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!dismissedRef.current) {
@@ -49,7 +49,7 @@ export default function AuthModal() {
     };
   }, []);
 
-  // Плавное закрытие
+  // Закрытие с анимацией
   const closeModal = useCallback((callback) => {
     if (dismissedRef.current) return;
 
@@ -63,15 +63,15 @@ export default function AuthModal() {
       if (typeof callback === "function") {
         callback();
       }
-    }, 280);
+    }, CLOSE_DURATION);
   }, []);
 
-  // Переход на страницу
+  // Навигация
   const handleNavigate = (path) => {
     closeModal(() => navigate(path));
   };
 
-  // Управление фокусом и прокруткой
+  // Фокус и блокировка прокрутки
   useEffect(() => {
     if (!isOpen) return;
 
@@ -89,13 +89,10 @@ export default function AuthModal() {
         closeModal();
       }
 
-      if (
-        event.key === "Tab" &&
-        modalRef.current
-      ) {
+      if (event.key === "Tab" && modalRef.current) {
         const elements = Array.from(
           modalRef.current.querySelectorAll(
-            'button:not([disabled]), a[href], input:not([disabled])'
+            "button:not([disabled]), a[href]"
           )
         );
 
@@ -142,145 +139,118 @@ export default function AuthModal() {
 
   return createPortal(
     <div
-      className={`bakeu-glass-overlay ${
+      className={`bakeu-auth-overlay ${
         isClosing ? "is-closing" : ""
       }`}
       onMouseDown={(event) => {
-        if (
-          event.target === event.currentTarget
-        ) {
+        if (event.target === event.currentTarget) {
           closeModal();
         }
       }}
     >
-      <div
+      <section
         ref={modalRef}
-        className="bakeu-glass-modal"
+        className="bakeu-auth-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="bakeu-glass-title"
-        aria-describedby="bakeu-glass-description"
+        aria-labelledby="bakeu-auth-title"
+        aria-describedby="bakeu-auth-description"
       >
-        {/* Стеклянные блики */}
-        <div className="bakeu-glass-shine" />
-        <div className="bakeu-glass-orb orb-one" />
-        <div className="bakeu-glass-orb orb-two" />
+        {/* Close */}
+        <button
+          type="button"
+          className="bakeu-auth-close"
+          onClick={() => closeModal()}
+          aria-label="Закрыть окно"
+        >
+          <X size={18} />
+        </button>
 
-        {/* Верхняя панель */}
-        <div className="bakeu-glass-topbar">
-          <div className="bakeu-glass-brand">
-            <div className="bakeu-glass-brand-icon">
-              🥐
+        {/* Logo */}
+        <div className="bakeu-auth-logo">
+          <span>🥐</span>
+        </div>
+
+        {/* Eyebrow */}
+        <div className="bakeu-auth-eyebrow">
+          <Sparkles size={13} />
+          <span>BAKEU MARKETPLACE</span>
+        </div>
+
+        {/* Heading */}
+        <h2 id="bakeu-auth-title">
+          Добро пожаловать
+          <span> в BakeU</span>
+        </h2>
+
+        <p
+          id="bakeu-auth-description"
+          className="bakeu-auth-description"
+        >
+          Откройте для себя мир свежей выпечки
+          и любимых десертов. Покупайте,
+          продавайте и вдохновляйтесь вместе с нами.
+        </p>
+
+        {/* Features */}
+        <div className="bakeu-auth-features">
+          <div className="bakeu-auth-feature">
+            <div className="bakeu-auth-feature-icon">
+              <ShoppingBag size={17} />
             </div>
-
-            <div className="bakeu-glass-brand-text">
-              <strong>BakeU</strong>
-              <span>MARKETPLACE</span>
+            <div>
+              <strong>Для покупателей</strong>
+              <span>Вкусное рядом</span>
             </div>
           </div>
+
+          <div className="bakeu-auth-feature">
+            <div className="bakeu-auth-feature-icon">
+              <Store size={17} />
+            </div>
+            <div>
+              <strong>Для продавцов</strong>
+              <span>Развивайте бизнес</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="bakeu-auth-actions">
+          <button
+            ref={primaryRef}
+            type="button"
+            className="bakeu-auth-primary"
+            onClick={() => handleNavigate("/register")}
+          >
+            Создать аккаунт
+            <ArrowRight size={18} />
+          </button>
 
           <button
             type="button"
-            className="bakeu-glass-close"
-            onClick={() => closeModal()}
-            aria-label="Закрыть окно"
+            className="bakeu-auth-secondary"
+            onClick={() => handleNavigate("/login")}
           >
-            <X size={19} strokeWidth={2} />
+            Войти в аккаунт
           </button>
         </div>
 
-        {/* Основной контент */}
-        <div className="bakeu-glass-content">
-          <div className="bakeu-glass-label">
-            <Sparkles size={14} />
-            <span>ДОБРО ПОЖАЛОВАТЬ</span>
-          </div>
+        {/* Skip */}
+        <button
+          type="button"
+          className="bakeu-auth-skip"
+          onClick={() => closeModal()}
+        >
+          Продолжить без регистрации
+        </button>
 
-          <h2 id="bakeu-glass-title">
-            Мир вкусных
-            <span> открытий</span>
-          </h2>
-
-          <p
-            id="bakeu-glass-description"
-            className="bakeu-glass-description"
-          >
-            Находите любимые десерты,
-            заказывайте свежую выпечку
-            или откройте собственный магазин
-            вместе с BakeU.
-          </p>
-
-          {/* Возможности */}
-          <div className="bakeu-glass-features">
-            <div className="bakeu-glass-feature">
-              <div className="bakeu-glass-feature-icon">
-                <ShoppingBag size={19} />
-              </div>
-
-              <div>
-                <strong>Покупателям</strong>
-                <span>Любимые десерты рядом</span>
-              </div>
-            </div>
-
-            <div className="bakeu-glass-feature">
-              <div className="bakeu-glass-feature-icon">
-                <Store size={19} />
-              </div>
-
-              <div>
-                <strong>Продавцам</strong>
-                <span>Ваш магазин онлайн</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Кнопки */}
-          <div className="bakeu-glass-actions">
-            <button
-              ref={primaryRef}
-              type="button"
-              className="bakeu-glass-primary"
-              onClick={() =>
-                handleNavigate("/register")
-              }
-            >
-              <span>Создать аккаунт</span>
-              <ArrowRight size={19} />
-            </button>
-
-            <button
-              type="button"
-              className="bakeu-glass-secondary"
-              onClick={() =>
-                handleNavigate("/login")
-              }
-            >
-              <span>
-                У меня уже есть аккаунт
-              </span>
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="bakeu-glass-skip"
-            onClick={() => closeModal()}
-          >
-            Продолжить без регистрации
-          </button>
-
-          {/* Нижняя панель */}
-          <div className="bakeu-glass-footer">
-            <ShieldCheck size={15} />
-            <span>
-              Комфортные покупки с BakeU
-            </span>
-          </div>
+        {/* Footer */}
+        <div className="bakeu-auth-footer">
+          <ShieldCheck size={14} />
+          <span>Удобные покупки с BakeU</span>
         </div>
-      </div>
+      </section>
     </div>,
     document.body
   );

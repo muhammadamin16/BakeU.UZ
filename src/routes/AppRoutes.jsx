@@ -12,8 +12,8 @@ import Map from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
 import Chat from "../pages/Messages/Chat";
 
-import Login from "../pages/Auth/Login";
-import Register from "../pages/Auth/Register";
+import Login from "../pages/Auth/Login/Login";
+import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
