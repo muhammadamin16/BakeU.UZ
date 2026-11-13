@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Star,
@@ -27,7 +26,13 @@ import { products, getShop, getMapLinks } from "./sellerData";
 import { ProductCard, ShopLogo } from "./SellerParts";
 import { useCartStore } from "../../store/cartStore";
 
+import "./Seller.css";
+import "./SellerShop.css";
+
 export default function SellerShop({ shopId }) {
+  return <ShopProfile key={shopId} shopId={shopId} />;
+}
+function ShopProfile({ shopId }) {
   const shop = getShop(shopId);
 
   const add = useCartStore((s) => s.add);
@@ -44,26 +49,66 @@ export default function SellerShop({ shopId }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Все");
 
+  const chatEnd = useRef(null);
   useEffect(() => {
     try {
-      setSubscribed(
-        localStorage.getItem(`bakeu-sub-${shopId}`) === "true"
+      setSubscribed(localStorage.getItem(`bakeu-sub-${shopId}`) === "true");
+      const saved = JSON.parse(
+        localStorage.getItem(`bakeu-shop-chat-${shopId}`) || "[]",
       );
+      setMessages(
+        Array.isArray(saved)
+          ? saved.filter((m) => typeof m.text === "string")
+          : [],
+      );
+      setReviewText(localStorage.getItem(`bakeu-review-draft-${shopId}`) || "");
     } catch {
-      setSubscribed(false);
+      /* Storage may be disabled. */
     }
   }, [shopId]);
+  useEffect(() => {
+    chatEnd.current?.scrollIntoView({ block: "nearest" });
+  }, [messages, chatOpen]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => {
+    const escape = (e) => {
+      if (e.key === "Escape") {
+        setReviewOpen(false);
+        setChatOpen(false);
+      }
+    };
+    document.addEventListener("keydown", escape);
+    return () => document.removeEventListener("keydown", escape);
+  }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        `bakeu-sub-${shopId}`,
-        String(subscribed)
-      );
-    } catch {
-      // Storage unavailable
-    }
-  }, [subscribed, shopId]);
+    if (!reviewOpen) return;
+    const previous = document.activeElement;
+    const dialog = document.querySelector(".shop-review-modal");
+    const trap = (e) => {
+      if (e.key !== "Tab") return;
+      const nodes = dialog?.querySelectorAll("button, textarea");
+      if (!nodes?.length) return;
+      const first = nodes[0],
+        last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trap);
+    return () => {
+      document.removeEventListener("keydown", trap);
+      previous?.focus();
+    };
+  }, [reviewOpen]);
 
   if (!shop) {
     return (
@@ -71,28 +116,22 @@ export default function SellerShop({ shopId }) {
         <div className="seller-empty">
           <Store size={32} />
           <h2>Магазин не найден</h2>
-          <Link to="?tab=sellers">Все продавцы</Link>
+          <Link to="/seller?tab=sellers">Все продавцы</Link>
         </div>
       </main>
     );
   }
 
-  const shopProducts = products.filter(
-    (p) => p.shopId === shop.id
-  );
+  const shopProducts = products.filter((p) => p.shopId === shop.id);
 
-  const categories = [
-    "Все",
-    ...new Set(shopProducts.map((p) => p.category)),
-  ];
+  const categories = ["Все", ...new Set(shopProducts.map((p) => p.category))];
 
   const visibleProducts = shopProducts.filter((p) => {
     const matchesSearch = p.name
       .toLowerCase()
-      .includes(search.toLowerCase());
+      .includes(search.trim().toLowerCase());
 
-    const matchesCategory =
-      category === "Все" || p.category === category;
+    const matchesCategory = category === "Все" || p.category === category;
 
     return matchesSearch && matchesCategory;
   });
@@ -100,11 +139,15 @@ export default function SellerShop({ shopId }) {
   const mapLinks = getMapLinks(shop);
 
   const toggleSubscribe = () => {
-    setSubscribed((prev) => !prev);
+    try {
+      localStorage.setItem(`bakeu-sub-${shopId}`, String(!subscribed));
+    } catch {
+      setNotice("Не удалось сохранить подписку в браузере");
+      return;
+    }
+    setSubscribed(!subscribed);
     setNotice(
-      subscribed
-        ? "Вы отписались от магазина"
-        : "Вы подписались на магазин!"
+      subscribed ? "Вы отписались от магазина" : "Вы подписались на магазин!",
     );
   };
 
@@ -113,8 +156,8 @@ export default function SellerShop({ shopId }) {
 
     if (!message.trim()) return;
 
-    setMessages((prev) => [
-      ...prev,
+    const updated = [
+      ...messages,
       {
         id: Date.now(),
         text: message.trim(),
@@ -123,8 +166,17 @@ export default function SellerShop({ shopId }) {
           minute: "2-digit",
         }),
       },
-    ]);
-
+    ];
+    try {
+      localStorage.setItem(
+        `bakeu-shop-chat-${shopId}`,
+        JSON.stringify(updated),
+      );
+    } catch {
+      setNotice("Не удалось сохранить сообщение");
+      return;
+    }
+    setMessages(updated);
     setMessage("");
   };
 
@@ -142,8 +194,11 @@ export default function SellerShop({ shopId }) {
         await navigator.clipboard.writeText(url);
         setNotice("Ссылка скопирована!");
       }
-    } catch {
-      // Sharing cancelled
+    } catch (error) {
+      if (error.name !== "AbortError")
+        setNotice(
+          "Не удалось скопировать ссылку. Скопируйте адрес из браузера.",
+        );
     }
   };
 
@@ -152,11 +207,15 @@ export default function SellerShop({ shopId }) {
 
     if (!reviewText.trim()) return;
 
+    try {
+      localStorage.setItem(`bakeu-review-draft-${shopId}`, reviewText.trim());
+    } catch {
+      setNotice("Не удалось сохранить черновик");
+      return;
+    }
     setNotice(
-      "Спасибо! Отзыв принят. Для публикации подключите сервер."
+      "Черновик отзыва сохранён в этом браузере. Он ещё не опубликован.",
     );
-
-    setReviewText("");
     setReviewOpen(false);
   };
 
@@ -183,9 +242,19 @@ export default function SellerShop({ shopId }) {
       title: "Позвонить",
       subtitle: shop.phone,
       icon: Phone,
-      href: `tel:${shop.phone.replace(/\s/g, "")}`,
+      href: `tel:${(shop.phone || "").replace(/[^+0-9]/g, "")}`,
     },
   ];
+
+  const availableContacts = contactItems.filter(
+    (c) =>
+      c.title === "Чат BakeU" ||
+      (c.title === "Telegram"
+        ? shop.telegram
+        : c.title === "Instagram"
+          ? shop.instagram
+          : shop.phone),
+  );
 
   const tabItems = [
     { id: "products", title: "Товары", icon: ShoppingBag },
@@ -196,11 +265,10 @@ export default function SellerShop({ shopId }) {
 
   return (
     <main className="seller-page seller-shop-page">
-
       <div className="shop-breadcrumb">
         <Link to="/">⌂ Главная</Link>
         <span>/</span>
-        <Link to="?tab=sellers">Кондитеры</Link>
+        <Link to="/seller?tab=sellers">Кондитеры</Link>
         <span>/</span>
         <strong>{shop.name}</strong>
       </div>
@@ -210,6 +278,15 @@ export default function SellerShop({ shopId }) {
           className="shop-profile-cover"
           style={{ "--shop-color": shop.color }}
         >
+          <img
+            src={shop.banner || "/images/banners/shop-cover.png"}
+            alt="Домашняя выпечка и приготовление десертов"
+            fetchPriority="high"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/images/banners/shop-cover.png";
+            }}
+          />
           <div className="shop-cover-overlay" />
         </div>
 
@@ -219,16 +296,16 @@ export default function SellerShop({ shopId }) {
           <div className="shop-profile-info">
             <div className="shop-profile-name">
               <h1>{shop.name}</h1>
-              <CheckCircle2
-                size={21}
-                fill="#dc8b27"
-                color="#dc8b27"
-              />
+              {shop.verified && (
+                <CheckCircle2
+                  size={21}
+                  color="#bc6b25"
+                  aria-label="Проверенный магазин"
+                />
+              )}
             </div>
 
-            <span className="shop-username">
-              @{shop.telegram}
-            </span>
+            <span className="shop-username">@{shop.telegram}</span>
 
             <div className="shop-profile-meta">
               <span className="shop-meta-rating">
@@ -265,6 +342,7 @@ export default function SellerShop({ shopId }) {
               className={`shop-subscribe ${subscribed ? "is-subscribed" : ""}`}
               type="button"
               onClick={toggleSubscribe}
+              aria-pressed={subscribed}
             >
               {subscribed ? (
                 <>
@@ -290,7 +368,6 @@ export default function SellerShop({ shopId }) {
 
       <div className="shop-page-grid">
         <div className="shop-page-main">
-
           <nav className="shop-page-nav">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
@@ -300,14 +377,13 @@ export default function SellerShop({ shopId }) {
                   key={tab.id}
                   type="button"
                   className={activeTab === tab.id ? "active" : ""}
+                  aria-current={activeTab === tab.id ? "location" : undefined}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    document
-                      .getElementById(`shop-${tab.id}`)
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
+                    document.getElementById(`shop-${tab.id}`)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }}
                 >
                   <Icon size={18} />
@@ -317,10 +393,7 @@ export default function SellerShop({ shopId }) {
             })}
           </nav>
 
-          <section
-            className="shop-card shop-showcase"
-            id="shop-products"
-          >
+          <section className="shop-card shop-showcase" id="shop-products">
             <div className="shop-section-title">
               <h2>
                 <Store size={20} />
@@ -335,6 +408,7 @@ export default function SellerShop({ shopId }) {
                 <input
                   type="search"
                   placeholder="Поиск по товарам магазина..."
+                  aria-label="Поиск по товарам магазина"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -372,21 +446,15 @@ export default function SellerShop({ shopId }) {
               <div className="shop-no-products">
                 <ShoppingBag size={30} />
                 <strong>Товары не найдены</strong>
-                <span>
-                  Попробуйте изменить поиск или категорию.
-                </span>
+                <span>Попробуйте изменить поиск или категорию.</span>
               </div>
             )}
           </section>
 
-          <section
-            className="shop-card shop-about-card"
-            id="shop-about"
-          >
+          <section className="shop-card shop-about-card" id="shop-about">
             <div className="shop-section-title">
               <h2>
-                <Info size={21} />
-                О магазине
+                <Info size={21} />О магазине
               </h2>
               <span className="shop-decoration">♡</span>
             </div>
@@ -395,20 +463,14 @@ export default function SellerShop({ shopId }) {
             <p>{shop.description}</p>
           </section>
 
-          <section
-            className="shop-card shop-reviews-card"
-            id="shop-reviews"
-          >
+          <section className="shop-card shop-reviews-card" id="shop-reviews">
             <div className="shop-reviews-heading">
               <h2>
                 <Star size={22} />
                 Отзывы покупателей
               </h2>
 
-              <button
-                type="button"
-                onClick={() => setReviewOpen(true)}
-              >
+              <button type="button" onClick={() => setReviewOpen(true)}>
                 <Pencil size={15} />
                 Написать отзыв
               </button>
@@ -421,11 +483,8 @@ export default function SellerShop({ shopId }) {
             </div>
 
             <div className="shop-reviews-list">
-              {shop.reviews.map((review) => (
-                <article
-                  className="shop-review-item"
-                  key={review.id}
-                >
+              {(shop.reviews || []).map((review) => (
+                <article className="shop-review-item" key={review.id}>
                   <div className="shop-review-avatar">
                     {review.author.slice(0, 1)}
                   </div>
@@ -433,24 +492,31 @@ export default function SellerShop({ shopId }) {
                   <div className="shop-review-content">
                     <div className="shop-review-heading">
                       <strong>{review.author}</strong>
-                      <span className="shop-stars">★★★★★</span>
+                      <span
+                        className="shop-stars"
+                        aria-label={`${review.rating} из 5`}
+                      >
+                        {"★".repeat(
+                          Math.max(
+                            0,
+                            Math.min(5, Math.round(review.rating || 0)),
+                          ),
+                        )}
+                      </span>
                     </div>
 
                     <small>{review.date}</small>
                     <p>{review.text}</p>
 
-                    <div className="shop-owner-reply">
-                      <div className="shop-owner-avatar">
-                        {shop.initials}
+                    {review.reply && (
+                      <div className="shop-owner-reply">
+                        <div className="shop-owner-avatar">{shop.initials}</div>
+                        <div>
+                          <strong>Ответ от {shop.name}</strong>
+                          <p>{review.reply}</p>
+                        </div>
                       </div>
-                      <div>
-                        <strong>Ответ от {shop.name}</strong>
-                        <p>
-                          Спасибо за доверие! Будем рады приготовить
-                          для вас снова! 🧡
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </article>
               ))}
@@ -459,18 +525,14 @@ export default function SellerShop({ shopId }) {
         </div>
 
         <aside className="shop-page-aside">
-
-          <section
-            className="shop-card shop-sidebar-card"
-            id="shop-contacts"
-          >
+          <section className="shop-card shop-sidebar-card" id="shop-contacts">
             <h2>
               <Phone size={20} />
               Контакты
             </h2>
 
             <div className="shop-contact-list">
-              {contactItems.map((contact) => {
+              {availableContacts.map((contact) => {
                 const Icon = contact.icon;
 
                 const content = (
@@ -553,29 +615,33 @@ export default function SellerShop({ shopId }) {
 
             <div className="shop-condition">
               <Truck size={20} />
-              <span>Самовывоз и доставка</span>
+              <span>Доставка — уточните у продавца</span>
             </div>
 
             <div className="shop-condition">
               <CalendarDays size={20} />
-              <span>На заказ за 24 часа</span>
+              <span>Срок приготовления — по договорённости</span>
             </div>
 
             <div className="shop-condition">
               <Wallet size={20} />
-              <span>Оплата при получении</span>
+              <span>Способ оплаты — уточните при заказе</span>
             </div>
           </section>
         </aside>
       </div>
 
       {chatOpen && (
-        <div className="shop-chat-window">
+        <div
+          className="shop-chat-window"
+          role="dialog"
+          aria-label={`Чат с ${shop.name}`}
+        >
           <div className="shop-chat-header">
             <ShopLogo shop={shop} />
             <div>
               <strong>Чат с {shop.name}</strong>
-              <span><i /> Онлайн</span>
+              <span>Демо-чат · локальная история</span>
             </div>
             <button
               type="button"
@@ -587,20 +653,18 @@ export default function SellerShop({ shopId }) {
           </div>
 
           <div className="shop-chat-messages">
-            <div className="shop-chat-message shop-chat-received">
-              Здравствуйте! Чем можем помочь?
-              <small>14:32</small>
-            </div>
+            <p className="shop-chat-note">
+              Сообщения сохраняются только в этом браузере. Для связи с
+              магазином используйте Telegram или телефон.
+            </p>
 
             {messages.map((item) => (
-              <div
-                key={item.id}
-                className="shop-chat-message shop-chat-sent"
-              >
+              <div key={item.id} className="shop-chat-message shop-chat-sent">
                 {item.text}
                 <small>{item.time}</small>
               </div>
             ))}
+            <span ref={chatEnd} />
           </div>
 
           <form className="shop-chat-form" onSubmit={sendMessage}>
@@ -608,8 +672,15 @@ export default function SellerShop({ shopId }) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Написать сообщение..."
+              aria-label="Сообщение"
+              maxLength={2000}
+              autoFocus
             />
-            <button type="submit" aria-label="Отправить">
+            <button
+              type="submit"
+              aria-label="Сохранить сообщение"
+              disabled={!message.trim()}
+            >
               <Send size={19} />
             </button>
           </form>
@@ -627,28 +698,35 @@ export default function SellerShop({ shopId }) {
         >
           <form
             className="shop-review-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Черновик отзыва"
             onSubmit={submitReview}
           >
             <button
               type="button"
               className="shop-modal-close"
+              aria-label="Закрыть отзыв"
               onClick={() => setReviewOpen(false)}
             >
               <X size={20} />
             </button>
 
-            <h2>Оставить отзыв</h2>
+            <h2>Черновик отзыва</h2>
             <p>Поделитесь впечатлением о магазине {shop.name}</p>
 
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               placeholder="Ваш отзыв..."
+              aria-label="Текст отзыва"
+              maxLength={2000}
+              autoFocus
               required
             />
 
             <button type="submit" className="shop-route-button">
-              Отправить отзыв..
+              Сохранить черновик
             </button>
           </form>
         </div>
@@ -657,10 +735,7 @@ export default function SellerShop({ shopId }) {
       {notice && (
         <div className="shop-toast" role="status">
           {notice}
-          <button
-            type="button"
-            onClick={() => setNotice("")}
-          >
+          <button type="button" onClick={() => setNotice("")}>
             <X size={15} />
           </button>
         </div>
