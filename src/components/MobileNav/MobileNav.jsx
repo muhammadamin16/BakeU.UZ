@@ -409,7 +409,8 @@ export default function MobileNav() {
     }
   };
 
-  return (
+return (
+  <div className="bottom-nav-shell">
     <nav
       ref={navRef}
       className={`bottom-nav${pressed ? " is-pressed" : ""}`}
@@ -421,7 +422,11 @@ export default function MobileNav() {
       onClickCapture={handleClickCapture}
       onDragStart={(event) => event.preventDefault()}
     >
-      <span ref={indicatorRef} className="bottom-nav__indicator" aria-hidden="true" />
+      <span
+        ref={indicatorRef}
+        className="bottom-nav__indicator"
+        aria-hidden="true"
+      />
 
       {links.map(({ to, label, Icon }, index) => (
         <NavLink
@@ -432,18 +437,41 @@ export default function MobileNav() {
           ref={(element) => {
             linkRefs.current[index] = element;
           }}
-          className={`bottom-nav__link${selectedIndex === index ? " is-active" : ""}`}
+          className={`bottom-nav__link${
+            selectedIndex === index ? " is-active" : ""
+          }`}
+          aria-label={label}
           onClick={() => {
             if (pathname === to) {
-              window.scrollTo({ top: 0, behavior: "instant" });
+              window.scrollTo({
+                top: 0,
+                behavior: "instant",
+              });
             }
           }}
-          aria-label={label}
         >
-          <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
-          <span className="bottom-nav__label">{label}</span>
+          <Icon
+            size={22}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+
+          <span className="bottom-nav__label">
+            {label}
+          </span>
         </NavLink>
       ))}
     </nav>
-  );
+
+    <img
+      className="bottom-nav__mascot"
+      src="/images/bear.png"
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      width={180}
+      height={120}
+    />
+  </div>
+);
 }
