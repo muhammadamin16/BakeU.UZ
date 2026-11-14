@@ -382,10 +382,11 @@
 /* Телефон */
 @media (max-width: 480px) {
   .bottom-nav-shell {
-    width: calc(98% - 0px);
+    width: calc(100% - 0px);
     bottom: calc(
       16px + env(safe-area-inset-bottom, 0px)
     );
+    left: calc(53%);
   }
 
   .bottom-nav-shell .bottom-nav {
