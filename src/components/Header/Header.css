@@ -81,12 +81,13 @@
 
 .bakeu-header__logo-image {
   display: block;
-  width: 155px;
-  height: 48px;
-  object-fit: cover;
-  object-position: bottom;
+  width: 200px;
+  height: 75px;
+  object-fit: contain;
+  object-position: center;
   mix-blend-mode: multiply;
 }
+
 
 /* Правая часть */
 

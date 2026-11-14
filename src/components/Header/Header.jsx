@@ -46,7 +46,7 @@ export default function Header() {
           aria-label="BakeU — главная"
         >
           <img
-            src="/images/logo.png"
+            src="/images/logo-bear.png"
             alt="BakeU"
             className="bakeu-header__logo-image"
           />
