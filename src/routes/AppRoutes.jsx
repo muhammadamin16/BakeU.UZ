@@ -18,10 +18,15 @@ import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
+import { isLoggedIn } from "../store/session";
+
 export default function AppRoutes() {
   const location = useLocation();
 
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
+
+  // Modal faqat bosh sahifada va faqat kirmagan foydalanuvchiga ko'rinadi
+  const showAuthModal = location.pathname === "/" && !isLoggedIn();
 
   return (
     <>
@@ -46,8 +51,7 @@ export default function AppRoutes() {
         </Routes>
       </main>
 
-      {/* Home sahifasida modal */}
-      {location.pathname === "/" && <AuthModal />}
+      {showAuthModal && <AuthModal />}
 
       {!isAuthPage && <MobileNav />}
       {!isAuthPage && <Footer />}
