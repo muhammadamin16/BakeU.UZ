@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Header from "../components/Header/Header";
@@ -6,6 +5,7 @@ import MobileNav from "../components/MobileNav/MobileNav";
 import Footer from "../components/Footer/Footer";
 import AuthModal from "../components/AuthModal/AuthModal";
 
+import Product from "../pages/Product/Product";
 import Cart from "../pages/Cart/Cart";
 import Favorites from "../pages/Favorites/Favorites";
 import Home from "../pages/Home/Home";
@@ -21,9 +21,7 @@ import Seller from "../pages/Seller/Seller";
 export default function AppRoutes() {
   const location = useLocation();
 
-  const isAuthPage = ["/login", "/register"].includes(
-    location.pathname
-  );
+  const isAuthPage = ["/login", "/register"].includes(location.pathname);
 
   return (
     <>
@@ -32,6 +30,7 @@ export default function AppRoutes() {
       <main className="container">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/map" element={<Map />} />
@@ -43,10 +42,7 @@ export default function AppRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
 
-          <Route
-            path="*"
-            element={<Navigate to="/" replace />}
-          />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 

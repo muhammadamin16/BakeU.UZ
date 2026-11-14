@@ -57,8 +57,19 @@ export default function Cart() {
                 <article className="bu-row" key={id}>
                   <ProductImage src={p.image} name={p.name} />
                   <div className="bu-row-info">
-                    <h2>{p.name}</h2>
-                    <p>{money(p.price)} / шт.</p>
+                    <h2>
+                      <Link
+                        to={
+                          "/product/" + encodeURIComponent(p.productId || p.id)
+                        }
+                      >
+                        {p.name}
+                      </Link>
+                    </h2>
+                    {p.variantLabel && <p>{p.variantLabel}</p>}
+                    <p>
+                      {money(p.price)} / {p.unit || "шт."}
+                    </p>
                     <div className="bu-quantity">
                       <button
                         aria-label={`Уменьшить количество: ${p.name}`}

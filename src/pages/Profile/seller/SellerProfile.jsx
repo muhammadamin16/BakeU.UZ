@@ -1,3 +1,7 @@
+import ProductFields, {
+  validateProductDetails,
+} from "../../Product/ProductFields";
+import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
 import { Orders, Reviews, Sales } from "../Activity";
 import { useWorkspace, setAutoReply } from "../../../store/workspaceStore";
@@ -150,6 +154,11 @@ export default function SellerProfile({ account, onLogout }) {
   }
   function submitProduct(e) {
     e.preventDefault();
+    const detailError = validateProductDetails(editor);
+    if (detailError) {
+      setNotice(detailError);
+      return;
+    }
     if (
       !editor.name.trim() ||
       !Number.isFinite(Number(editor.price)) ||
@@ -164,7 +173,12 @@ export default function SellerProfile({ account, onLogout }) {
         ...editor,
         id: editor.id || `product-${crypto.randomUUID()}`,
         shopId: id,
-        price: Number(editor.price),
+        price: Number(editor.variants?.[0]?.price || editor.price),
+        variants: (editor.variants || []).map((v, i) => ({
+          ...v,
+          id: i === 0 ? "base" : v.id === "base" ? crypto.randomUUID() : v.id,
+          price: Number(v.price),
+        })),
       });
       setEditor(null);
       setNotice("Товар сохранён.");
@@ -333,11 +347,9 @@ export default function SellerProfile({ account, onLogout }) {
                         setEditor((p) => ({ ...p, category: e.target.value }))
                       }
                     >
-                      {["Торты", "Печенье", "Хлеб", "Самса", "Десерты"].map(
-                        (c) => (
-                          <option key={c}>{c}</option>
-                        ),
-                      )}
+                      {PRODUCT_CATEGORIES.map((c) => (
+                        <option key={c}>{c}</option>
+                      ))}
                     </select>
                   </label>
                   <label className="bw-field">
@@ -366,6 +378,11 @@ export default function SellerProfile({ account, onLogout }) {
                     }
                   />
                 </label>
+                <ProductFields
+                  value={editor}
+                  onChange={setEditor}
+                  onError={setNotice}
+                />
                 <div className="bw-actions">
                   <button className="bw-btn primary">Сохранить товар</button>
                   <button

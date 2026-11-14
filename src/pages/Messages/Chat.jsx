@@ -12,12 +12,20 @@ export default function Chat() {
   } catch {}
   if (!account || !["client", "seller"].includes(account.role))
     return <Navigate to="/login" replace />;
+  const targetShop = params.get("seller");
+  const buyingFromAnotherShop =
+    targetShop &&
+    account.role === "seller" &&
+    targetShop !== shopIdFor(account);
+  const chatAccount = buyingFromAnotherShop
+    ? { ...account, role: "client" }
+    : account;
   return (
     <main className="bw-page">
       <h1>Сообщения</h1>
       <ProfileChat
-        account={account}
-        ownerId={account.role === "seller" ? shopIdFor(account) : undefined}
+        account={chatAccount}
+        ownerId={chatAccount.role === "seller" ? shopIdFor(account) : undefined}
         initialShop={params.get("seller")}
       />
     </main>

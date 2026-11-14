@@ -1,3 +1,4 @@
+import { PRODUCT_CATEGORIES } from "../Product/productDetails";
 import { useShopStore } from "../../store/shopStore";
 export const products = [
   {
@@ -138,7 +139,7 @@ export const shops = [
   },
 ];
 
-export const categories = ["Все", "Торты", "Печенье", "Хлеб", "Самса"];
+export const categories = ["Все", ...PRODUCT_CATEGORIES];
 
 export const getShop = (id) =>
   useShopStore.getState().shops[id] || shops.find((s) => s.id === id);

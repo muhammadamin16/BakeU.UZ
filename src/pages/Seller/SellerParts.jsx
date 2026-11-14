@@ -10,7 +10,11 @@ export const shopUrl = (id) => `?shop=${encodeURIComponent(id)}`;
 export function ShopLogo({ shop }) {
   const [failed, setFailed] = useState(false);
   return (
-    <span className="seller-shop__logo" style={{ "--shop-color": shop.color }} aria-hidden="true">
+    <span
+      className="seller-shop__logo"
+      style={{ "--shop-color": shop.color }}
+      aria-hidden="true"
+    >
       {shop.logo && !failed ? (
         <img src={shop.logo} alt="" onError={() => setFailed(true)} />
       ) : (
@@ -35,16 +39,33 @@ export function ProductCard({ product, quantity, onAdd }) {
   return (
     <article className="seller-product">
       <div className="seller-product__image">
-        <img src={product.image} alt={product.name} loading="lazy" width="400" height="350" />
+        <Link to={"/product/" + encodeURIComponent(product.id)}>
+          <img
+            src={product.image}
+            alt={product.name}
+            loading="lazy"
+            width="400"
+            height="350"
+          />
+        </Link>
         <FavoriteButton product={product} />
-        {quantity > 0 && <span className="seller-product__count">В корзине: {quantity}</span>}
+        {quantity > 0 && (
+          <span className="seller-product__count">В корзине: {quantity}</span>
+        )}
       </div>
       <div className="seller-product__body">
-        <Link to={shopUrl(product.shopId)} className="seller-product__shop">
+        <Link
+          to={"/seller" + shopUrl(product.shopId)}
+          className="seller-product__shop"
+        >
           <Store size={13} aria-hidden="true" />
           {shop?.name}
         </Link>
-        <h2>{product.name}</h2>
+        <h2>
+          <Link to={"/product/" + encodeURIComponent(product.id)}>
+            {product.name}
+          </Link>
+        </h2>
         <div className="seller-product__bottom">
           <strong>{formatPrice(product.price)}</strong>
           <button
@@ -73,7 +94,11 @@ export function ShopCard({ shop }) {
           <h2>{shop.name}</h2>
           <ShopRating shop={shop} />
         </div>
-        <ArrowUpRight className="seller-shop__arrow" size={18} aria-hidden="true" />
+        <ArrowUpRight
+          className="seller-shop__arrow"
+          size={18}
+          aria-hidden="true"
+        />
       </Link>
 
       <p className="seller-shop__description">{shop.description}</p>
@@ -85,7 +110,11 @@ export function ShopCard({ shop }) {
 
       <div className="seller-shop__previews">
         {shopProducts.slice(0, 3).map((p) => (
-          <Link key={p.id} to={shopUrl(shop.id)} className="seller-shop__preview">
+          <Link
+            key={p.id}
+            to={"/product/" + encodeURIComponent(p.id)}
+            className="seller-shop__preview"
+          >
             <img src={p.image} alt="" loading="lazy" width="100" height="76" />
             <strong>{formatPrice(p.price)}</strong>
           </Link>
