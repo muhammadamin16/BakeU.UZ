@@ -1,5 +1,5 @@
 import HeroSlider from "./components/HeroSlider";
-import { demoProducts, demoSubscriptions, eligibleProducts } from "./homeData";
+import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";

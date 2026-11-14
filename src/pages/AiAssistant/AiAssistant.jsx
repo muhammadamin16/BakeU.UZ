@@ -1,5 +1,28 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Sparkles, RotateCcw, X } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ArrowUp,
+  History,
+  MessageSquarePlus,
+  RotateCcw,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
+
+import {
+  createId,
+  groupChats,
+  loadChats,
+  makeTitle,
+  saveChats,
+} from "../../store/aiHistory";
 import "./AiAssistant.css";
 
 const SUGGESTIONS = [
@@ -9,54 +32,109 @@ const SUGGESTIONS = [
   "Что вкусного рядом со мной?",
 ];
 
-const INITIAL_MESSAGE = {
-  id: 1,
-  role: "assistant",
-  text: "Здравствуйте! Что ищем: торт на праздник, выпечку к чаю или хлеб на каждый день?",
-};
+const GREETING =
+  "Здравствуйте! Что ищем: торт на праздник, выпечку к чаю или хлеб на каждый день?";
+
+/** Демо-ответы. Здесь позже подключается настоящий API. */
+async function getAiReply(userText) {
+  await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 500));
+
+  const lower = userText.toLowerCase();
+
+  if (lower.includes("торт") || lower.includes("праздник")) {
+    return "Отлично! Для торта уточните: сколько гостей, бюджет и есть ли аллергии (орехи, глютен и т.д.)? Могу сразу предложить варианты от 180 000 до 450 000 сум.";
+  }
+  if (lower.includes("самса") || lower.includes("ужин")) {
+    return "Самса — отличный выбор! У нас есть классическая с мясом и куриная. Сколько штук нужно и в каком районе забрать?";
+  }
+  if (lower.includes("орех") || lower.includes("аллерг")) {
+    return "Да, есть торты и десерты без орехов. Могу показать варианты с маркировкой «без орехов». Какой повод и на сколько человек?";
+  }
+  if (lower.includes("рядом") || lower.includes("близко")) {
+    return "Сейчас посмотрю мастеров рядом с вами. Разрешите геолокацию или напишите район — подберу ближайшие варианты.";
+  }
+  return "Понял вас. Расскажите чуть подробнее: бюджет, количество гостей, повод и район — подберу самые подходящие варианты на BakeU.";
+}
+
+const formatTime = (timestamp) =>
+  new Date(timestamp).toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 export default function AiAssistant() {
-  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+  const [chats, setChats] = useState(loadChats);
+  const [activeId, setActiveId] = useState(null); // null = новый чат
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [pendingId, setPendingId] = useState(null); // чат, который ждёт ответа
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [confirmId, setConfirmId] = useState(null); // "all" или id чата
 
-  const messagesContainerRef = useRef(null);
+  const messagesRef = useRef(null);
   const inputRef = useRef(null);
+  const confirmTimer = useRef(null);
 
-  const scrollToBottom = useCallback(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, []);
+  const activeChat = useMemo(
+    () => chats.find((chat) => chat.id === activeId) || null,
+    [chats, activeId],
+  );
+  const messages = activeChat ? activeChat.messages : [];
+  const isTyping = pendingId !== null && pendingId === activeId;
+  const isNewChat = messages.length === 0;
 
+  // Сохранение истории
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+    saveChats(chats);
+  }, [chats]);
 
-  const getAiReply = useCallback(async (userText) => {
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 500));
+  useEffect(() => () => clearTimeout(confirmTimer.current), []);
 
-    const lower = userText.toLowerCase();
+  // Прокрутка вниз при новых сообщениях
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (!container) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: reduced ? "auto" : "smooth",
+    });
+  }, [messages.length, isTyping, activeId]);
 
-    if (lower.includes("торт") || lower.includes("праздник")) {
-      return "Отлично! Для торта уточните: сколько гостей, бюджет и есть ли аллергии (орехи, глютен и т.д.)? Могу сразу предложить варианты от 180 000 до 450 000 сум.";
-    }
-    if (lower.includes("самса") || lower.includes("ужин")) {
-      return "Самса — отличный выбор! У нас есть классическая с мясом и куриная. Сколько штук нужно и в каком районе забрать?";
-    }
-    if (lower.includes("орех") || lower.includes("аллерг")) {
-      return "Да, есть торты и десерты без орехов. Могу показать варианты с маркировкой «без орехов». Какой повод и на сколько человек?";
-    }
-    if (lower.includes("рядом") || lower.includes("близко")) {
-      return "Сейчас посмотрю мастеров рядом с вами. Разрешите геолокацию или напишите район — подберу ближайшие варианты.";
-    }
+  // Авто-высота поля ввода
+  useEffect(() => {
+    const field = inputRef.current;
+    if (!field) return;
+    field.style.height = "auto";
+    field.style.height = `${Math.min(field.scrollHeight, 120)}px`;
+  }, [input]);
 
-    return "Понял вас. Расскажите чуть подробнее: бюджет, количество гостей, повод и район — подберу самые подходящие варианты на BakeU.";
+  // Escape закрывает панель истории
+  useEffect(() => {
+    if (!historyOpen) return;
+    const onKey = (event) => event.key === "Escape" && setHistoryOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [historyOpen]);
+
+  const askConfirm = (id) => {
+    setConfirmId(id);
+    clearTimeout(confirmTimer.current);
+    confirmTimer.current = setTimeout(() => setConfirmId(null), 3000);
+  };
+
+  const appendMessage = useCallback((chatId, message) => {
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              updatedAt: message.time,
+              messages: [...chat.messages, message],
+            }
+          : chat,
+      ),
+    );
   }, []);
 
   const handleSend = useCallback(
@@ -64,156 +142,326 @@ export default function AiAssistant() {
       const value = (text ?? input).trim();
       if (!value || isTyping) return;
 
-      const userMessage = {
-        id: Date.now(),
-        role: "user",
-        text: value,
-      };
+      const time = Date.now();
+      const userMessage = { id: createId(), role: "user", text: value, time };
+      let chatId = activeId;
 
-      setMessages((prev) => [...prev, userMessage]);
+      if (!chatId) {
+        chatId = createId();
+        const created = {
+          id: chatId,
+          title: makeTitle(value),
+          createdAt: time,
+          updatedAt: time,
+          messages: [userMessage],
+        };
+        setChats((prev) => [created, ...prev]);
+        setActiveId(chatId);
+      } else {
+        appendMessage(chatId, userMessage);
+      }
+
       setInput("");
-      setShowSuggestions(false);
-      setIsTyping(true);
+      setPendingId(chatId);
 
       try {
         const replyText = await getAiReply(value);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 1,
-            role: "assistant",
-            text: replyText,
-          },
-        ]);
+        appendMessage(chatId, {
+          id: createId(),
+          role: "assistant",
+          text: replyText,
+          time: Date.now(),
+        });
       } finally {
-        setIsTyping(false);
+        setPendingId((current) => (current === chatId ? null : current));
         inputRef.current?.focus();
       }
     },
-    [input, isTyping, getAiReply]
+    [input, isTyping, activeId, appendMessage],
   );
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     handleSend();
   };
 
-  const handleReset = () => {
-    setMessages([INITIAL_MESSAGE]);
-    setInput("");
-    setShowSuggestions(true);
-    setIsTyping(false);
-    inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
       handleSend();
     }
   };
 
+  const startNewChat = () => {
+    setActiveId(null);
+    setInput("");
+    setHistoryOpen(false);
+    inputRef.current?.focus();
+  };
+
+  const openChat = (id) => {
+    setActiveId(id);
+    setHistoryOpen(false);
+    setConfirmId(null);
+  };
+
+  const deleteChat = (id) => {
+    if (confirmId !== id) return askConfirm(id);
+    setChats((prev) => prev.filter((chat) => chat.id !== id));
+    if (activeId === id) setActiveId(null);
+    setConfirmId(null);
+  };
+
+  const clearAll = () => {
+    if (confirmId !== "all") return askConfirm("all");
+    setChats([]);
+    setActiveId(null);
+    setConfirmId(null);
+  };
+
+  const groups = useMemo(() => {
+    const needle = search.trim().toLocaleLowerCase("ru-RU");
+    const list = needle
+      ? chats.filter(
+          (chat) =>
+            chat.title.toLocaleLowerCase("ru-RU").includes(needle) ||
+            chat.messages.some((m) =>
+              m.text.toLocaleLowerCase("ru-RU").includes(needle),
+            ),
+        )
+      : chats;
+    return groupChats(list);
+  }, [chats, search]);
+
   return (
     <div className="ai">
       <div className="ai__card">
-        <header className="ai__header">
-          <div className="ai__header-top">
-            <div className="ai__badge">
-              <Sparkles size={15} strokeWidth={2.2} />
-              <span>YORDAMCHI BAKEU</span>
+        {/* ===== История ===== */}
+        <aside
+          className={`ai-history ${historyOpen ? "is-open" : ""}`}
+          aria-label="История чатов"
+        >
+          <div className="ai-history__top">
+            <h2>История</h2>
+            <button
+              type="button"
+              className="ai-icon-btn ai-history__close"
+              onClick={() => setHistoryOpen(false)}
+              aria-label="Закрыть историю"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <button type="button" className="ai-new" onClick={startNewChat}>
+            <MessageSquarePlus size={17} />
+            Новый чат
+          </button>
+
+          {chats.length > 0 && (
+            <div className="ai-search">
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Поиск по чатам"
+                aria-label="Поиск по истории"
+              />
+            </div>
+          )}
+
+          <div className="ai-history__list">
+            {chats.length === 0 && (
+              <p className="ai-history__empty">
+                Здесь появятся ваши разговоры с помощником. Задайте первый
+                вопрос.
+              </p>
+            )}
+
+            {chats.length > 0 && groups.length === 0 && (
+              <p className="ai-history__empty">Ничего не найдено.</p>
+            )}
+
+            {groups.map((group) => (
+              <section key={group.label} className="ai-group">
+                <h3>{group.label}</h3>
+                <ul>
+                  {group.items.map((chat) => (
+                    <li
+                      key={chat.id}
+                      className={chat.id === activeId ? "is-active" : ""}
+                    >
+                      <button
+                        type="button"
+                        className="ai-chat"
+                        onClick={() => openChat(chat.id)}
+                        aria-current={chat.id === activeId ? "true" : undefined}
+                      >
+                        <span className="ai-chat__title">{chat.title}</span>
+                        <span className="ai-chat__meta">
+                          {chat.messages.length}{" "}
+                          {chat.messages.length === 1 ? "сообщение" : "сообщ."} ·{" "}
+                          {formatTime(chat.updatedAt)}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`ai-chat__delete ${
+                          confirmId === chat.id ? "is-confirm" : ""
+                        }`}
+                        onClick={() => deleteChat(chat.id)}
+                        aria-label={
+                          confirmId === chat.id
+                            ? "Подтвердить удаление"
+                            : `Удалить чат: ${chat.title}`
+                        }
+                      >
+                        {confirmId === chat.id ? (
+                          "Удалить?"
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+
+          {chats.length > 0 && (
+            <button
+              type="button"
+              className={`ai-clear-all ${confirmId === "all" ? "is-confirm" : ""}`}
+              onClick={clearAll}
+            >
+              <Trash2 size={15} />
+              {confirmId === "all" ? "Точно очистить всё?" : "Очистить историю"}
+            </button>
+          )}
+        </aside>
+
+        {historyOpen && (
+          <button
+            type="button"
+            className="ai-backdrop"
+            onClick={() => setHistoryOpen(false)}
+            aria-label="Закрыть историю"
+            tabIndex={-1}
+          />
+        )}
+
+        {/* ===== Чат ===== */}
+        <section className="ai-chatpane">
+          <header className="ai__header">
+            <button
+              type="button"
+              className="ai-icon-btn ai__history-btn"
+              onClick={() => setHistoryOpen(true)}
+              aria-label="Открыть историю чатов"
+            >
+              <History size={18} />
+              {chats.length > 0 && <span className="ai__count">{chats.length}</span>}
+            </button>
+
+            <div className="ai__title">
+              <span className="ai__badge" aria-hidden="true">
+                <Sparkles size={16} strokeWidth={2.2} />
+              </span>
+              <div>
+                <h1>Помощник BakeU</h1>
+                <p>
+                  {activeChat
+                    ? activeChat.title
+                    : "Бюджет, повод, гости, район — обычными словами"}
+                </p>
+              </div>
             </div>
 
             <button
               type="button"
-              className="ai__reset"
-              onClick={handleReset}
-              aria-label="Начать заново"
-              title="Начать заново"
+              className="ai-icon-btn"
+              onClick={startNewChat}
+              aria-label="Начать новый чат"
+              title="Новый чат"
             >
-              <RotateCcw size={15} />
+              <RotateCcw size={17} />
             </button>
+          </header>
+
+          <div
+            className="ai__messages"
+            role="log"
+            aria-live="polite"
+            ref={messagesRef}
+          >
+            <div className="ai-bubble ai-bubble--assistant">
+              <p>{GREETING}</p>
+            </div>
+
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`ai-bubble ai-bubble--${message.role}`}
+              >
+                <p>{message.text}</p>
+                <time dateTime={new Date(message.time).toISOString()}>
+                  {formatTime(message.time)}
+                </time>
+              </div>
+            ))}
+
+            {isTyping && (
+              <div
+                className="ai-bubble ai-bubble--assistant ai-bubble--typing"
+                aria-label="Помощник печатает"
+              >
+                <span className="ai-dot" />
+                <span className="ai-dot" />
+                <span className="ai-dot" />
+              </div>
+            )}
           </div>
 
-          <p className="ai__desc">
-            Бюджет, повод, гости, район и дата — расскажите обычными словами.
-          </p>
-        </header>
-
-        <div
-          className="ai__messages"
-          role="log"
-          aria-live="polite"
-          ref={messagesContainerRef}
-        >
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`ai-bubble ai-bubble--${msg.role}`}
-            >
-              <p>{msg.text}</p>
-            </div>
-          ))}
-
-          {isTyping && (
-            <div className="ai-bubble ai-bubble--assistant ai-bubble--typing">
-              <span className="ai-dot" />
-              <span className="ai-dot" />
-              <span className="ai-dot" />
+          {isNewChat && !isTyping && (
+            <div className="ai__suggestions">
+              {SUGGESTIONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className="ai-chip"
+                  onClick={() => handleSend(item)}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
           )}
-        </div>
 
-        {showSuggestions && !isTyping && (
-          <div className="ai__suggestions">
-            {SUGGESTIONS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="ai-chip"
-                onClick={() => handleSend(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <form className="ai__form" onSubmit={handleSubmit}>
-          <div className="ai__input-wrap">
-            <input
+          <form className="ai__form" onSubmit={handleSubmit}>
+            <textarea
               ref={inputRef}
-              type="text"
+              rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Напишите, что нужно…"
               aria-label="Сообщение помощнику"
               disabled={isTyping}
               autoComplete="off"
+              maxLength={1000}
             />
-
-            {input && (
-              <button
-                type="button"
-                className="ai__clear"
-                onClick={() => setInput("")}
-                aria-label="Очистить"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className="ai__send"
-            disabled={!input.trim() || isTyping}
-            aria-label="Отправить"
-          >
-            <span>ОТПРАВИТЬ</span>
-            <Send size={15} strokeWidth={2.3} />
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="ai__send"
+              disabled={!input.trim() || isTyping}
+              aria-label="Отправить"
+            >
+              <ArrowUp size={19} strokeWidth={2.6} />
+            </button>
+          </form>
+        </section>
       </div>
     </div>
   );
