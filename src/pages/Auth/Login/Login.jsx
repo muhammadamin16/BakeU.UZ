@@ -1,19 +1,21 @@
-import { loginLocal } from "../../../store/localAccount";
-import { isLoggedIn } from "../../../store/session";
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
-  ChefHat,
-  Mail,
-  LockKeyhole,
+  ArrowRight,
   Eye,
   EyeOff,
-  ArrowRight,
-  ShoppingBag,
-  Store,
-  Sparkles,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  TriangleAlert,
 } from "lucide-react";
+
+import { loginLocal } from "../../../store/localAccount";
+import { isLoggedIn } from "../../../store/session";
+import AuthShell from "../AuthShell";
 import "../Auth.css";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,19 +24,25 @@ export default function Login() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Allaqachon kirgan foydalanuvchi login sahifasini ko'rmaydi
   if (isLoggedIn()) return <Navigate to="/profile" replace />;
+
+  const update = (key) => (event) => {
+    setForm((f) => ({ ...f, [key]: event.target.value }));
+    setError("");
+  };
 
   async function submit(event) {
     event.preventDefault();
     if (busy) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) || !form.password) {
+
+    if (!EMAIL_RE.test(form.email.trim()) || !form.password) {
       setError("Введите корректную почту и пароль.");
       return;
     }
+
     setBusy(true);
     try {
-      await loginLocal(form.email, form.password);
+      await loginLocal(form.email.trim(), form.password);
       navigate("/profile", { replace: true });
     } catch (e) {
       setError(e.message || "Не удалось войти");
@@ -44,114 +52,81 @@ export default function Login() {
   }
 
   return (
-    <main className="ba-page">
-      <div className="ba-container">
-        <div className="ba-heading">
-          <span className="ba-eyebrow">
-            <Sparkles size={15} /> BAKEU ACCOUNT
-          </span>
-          <h1>
-            С возвращением в <em>BakeU</em>
-          </h1>
-          <p>Войдите, чтобы продолжить покупки и управлять своим профилем.</p>
+    <AuthShell>
+      <header className="bk-head">
+        <h1>С возвращением</h1>
+        <p>Войдите, чтобы продолжить покупки и управлять профилем.</p>
+      </header>
+
+      <form className="bk-form" onSubmit={submit} noValidate>
+        <div className="bk-field">
+          <label htmlFor="login-email">Электронная почта</label>
+          <div className="bk-input">
+            <Mail size={18} />
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="email"
+              placeholder="example@gmail.com"
+              value={form.email}
+              onChange={update("email")}
+              aria-invalid={Boolean(error)}
+              required
+            />
+          </div>
         </div>
-        <div className="ba-layout">
-          <aside className="ba-promo">
-            <div className="ba-brand">
-              <ChefHat size={28} />
-            </div>
-            <span className="ba-promo-tag">BAKEU MARKETPLACE</span>
-            <h2>Вкусные идеи начинаются здесь.</h2>
-            <p>
-              Открывайте рецепты, находите любимую выпечку и развивайте свой
-              магазин.
-            </p>
-            <div className="ba-promo-points">
-              <span>
-                <ShoppingBag size={18} /> Покупайте с удовольствием
-              </span>
-              <span>
-                <Store size={18} /> Продавайте с BakeU
-              </span>
-              <span>
-                <Sparkles size={18} /> Вдохновляйтесь каждый день
-              </span>
-            </div>
-            <div className="ba-promo-foot">BakeU — приготовлено с любовью.</div>
-          </aside>
-          <section className="ba-card">
-            <div className="ba-card-head">
-              <span className="ba-step">ЛИЧНЫЙ КАБИНЕТ</span>
-              <h2>Вход в аккаунт</h2>
-              <p>
-                Локальный демо-вход: аккаунт доступен только в этом браузере.
-              </p>
-            </div>
-            <form className="ba-form" onSubmit={submit} noValidate>
-              <label className="ba-field">
-                <span>Электронная почта</span>
-                <div className="ba-input">
-                  <Mail size={18} />
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    placeholder="example@gmail.com"
-                    value={form.email}
-                    onChange={(e) => {
-                      setForm((f) => ({ ...f, email: e.target.value }));
-                      setError("");
-                    }}
-                    required
-                  />
-                </div>
-              </label>
-              <label className="ba-field">
-                <span>Пароль</span>
-                <div className="ba-input">
-                  <LockKeyhole size={18} />
-                  <input
-                    type={visible ? "text" : "password"}
-                    autoComplete="current-password"
-                    placeholder="Введите пароль"
-                    value={form.password}
-                    onChange={(e) => {
-                      setForm((f) => ({ ...f, password: e.target.value }));
-                      setError("");
-                    }}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="ba-eye"
-                    onClick={() => setVisible((v) => !v)}
-                    aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
-                  >
-                    {visible ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </label>
-              {error && (
-                <p className="ba-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button className="ba-primary" type="submit" disabled={busy}>
-                Войти <ArrowRight size={18} />
-              </button>
-            </form>
-            <p className="ba-switch">
-              Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
-            </p>
+
+        <div className="bk-field">
+          <label htmlFor="login-password">Пароль</label>
+          <div className="bk-input">
+            <LockKeyhole size={18} />
+            <input
+              id="login-password"
+              type={visible ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Введите пароль"
+              value={form.password}
+              onChange={update("password")}
+              aria-invalid={Boolean(error)}
+              required
+            />
             <button
-              className="ba-demo-link"
               type="button"
-              onClick={() => navigate("/register")}
+              className="bk-eye"
+              onClick={() => setVisible((v) => !v)}
+              aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
             >
-              Создать демо-профиль
+              {visible ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
-          </section>
+          </div>
         </div>
-      </div>
-    </main>
+
+        {error && (
+          <p className="bk-alert" role="alert">
+            <TriangleAlert size={16} />
+            {error}
+          </p>
+        )}
+
+        <button className="bk-primary" type="submit" disabled={busy}>
+          {busy ? (
+            <>
+              <Loader2 size={18} className="bk-spin" /> Входим…
+            </>
+          ) : (
+            <>
+              Войти <ArrowRight size={18} />
+            </>
+          )}
+        </button>
+      </form>
+
+      <p className="bk-switch">
+        Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+      </p>
+      <p className="bk-note">
+        Демо-вход: аккаунт хранится только в этом браузере.
+      </p>
+    </AuthShell>
   );
 }
