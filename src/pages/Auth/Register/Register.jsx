@@ -1,498 +1,313 @@
-import { useState, useRef } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { registerLocal } from "../../../store/localAccount";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
-  UserRound,
-  Store,
-  Mail,
-  Phone,
-  LockKeyhole,
+  Building2,
+  ChefHat,
   Eye,
   EyeOff,
-  Check,
-  ShieldCheck,
-  LoaderCircle,
-  AlertCircle,
-  Building2,
+  LockKeyhole,
+  Mail,
+  MapPin,
+  Phone,
+  ShoppingBag,
   Sparkles,
-  ChefHat,
+  Store,
+  UserRound,
 } from "lucide-react";
-import { isEmail, isPhone, registerUser } from "../../../utils/auth";
-import "./Register.css";
+import "../Auth.css";
 
-const ROLES = [
-  {
-    id: "customer",
-    title: "Покупатель",
-    description: "Выбирайте десерты и заказывайте любимую выпечку",
-    icon: UserRound,
-  },
-  {
-    id: "seller",
-    title: "Продавец",
-    description: "Размещайте товары и находите новых покупателей",
-    icon: Store,
-  },
-];
-
-const INITIAL_FORM = {
+const EMPTY = {
   firstName: "",
   lastName: "",
-  phone: "+998",
   email: "",
+  phone: "",
   password: "",
-  shopName: "",
+  company: "",
+  location: "",
 };
 
-function RegisterField({
-  name,
+function Field({
   label,
-  placeholder,
-  type = "text",
-  autoComplete,
-  Icon = UserRound,
+  icon: Icon,
   value,
-  error,
   onChange,
+  type = "text",
+  placeholder,
+  autoComplete,
 }) {
-  const id = `register-${name}`;
-
   return (
-    <div className="bakeu-register-field">
-      <label htmlFor={id}>{label}</label>
-
-      <div className={`bakeu-register-input ${error ? "is-invalid" : ""}`}>
-        <Icon size={17} aria-hidden="true" />
+    <label className="ba-field">
+      <span>{label}</span>
+      <div className="ba-input">
+        <Icon size={18} />
         <input
-          id={id}
-          name={name}
           type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          value={value}
-          onChange={onChange}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
+          required
         />
       </div>
-
-      {error && (
-        <small id={`${id}-error`} className="bakeu-register-error" role="alert">
-          {error}
-        </small>
-      )}
-    </div>
+    </label>
   );
 }
 
 export default function Register() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const submittingRef = useRef(false);
-
-  const presetRole = ROLES.some((item) => item.id === searchParams.get("role"))
-    ? searchParams.get("role")
-    : "";
-
-  const [role, setRole] = useState(presetRole);
-  const [step, setStep] = useState(presetRole ? 2 : 1);
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-    setServerError("");
+  const [step, setStep] = useState(1);
+  const [role, setRole] = useState("client");
+  const [form, setForm] = useState(EMPTY);
+  const [visible, setVisible] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const update = (key, value) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setError("");
   };
 
-  const validateForm = () => {
-    const nextErrors = {};
-
-    if (form.firstName.trim().length < 2) {
-      nextErrors.firstName = "Введите имя (минимум 2 символа)";
-    }
-    if (form.lastName.trim().length < 2) {
-      nextErrors.lastName = "Введите фамилию (минимум 2 символа)";
-    }
-    if (!isPhone(form.phone)) {
-      nextErrors.phone = "Формат: +998 90 123 45 67";
-    }
-    if (!isEmail(form.email.trim())) {
-      nextErrors.email = "Введите корректный email";
-    }
-    if (form.password.length < 8) {
-      nextErrors.password = "Пароль должен содержать минимум 8 символов";
-    }
-    if (role === "seller" && !form.shopName.trim()) {
-      nextErrors.shopName = "Введите название магазина";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSubmit = async (event) => {
+  async function submit(event) {
     event.preventDefault();
-    if (submittingRef.current || !role) return;
-    if (!validateForm()) return;
-
-    submittingRef.current = true;
-    setLoading(true);
-    setServerError("");
-
+    if (busy) return;
+    if (
+      !form.firstName.trim() ||
+      !form.lastName.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.password
+    )
+      return setError("Заполните все обязательные поля.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      return setError("Введите корректный email.");
+    if (form.password.length < 8)
+      return setError("Пароль должен содержать минимум 8 символов.");
+    if (role === "seller" && (!form.company.trim() || !form.location.trim()))
+      return setError("Укажите название магазина и местоположение.");
+    setBusy(true);
     try {
-      await registerUser({
-        ...form,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
-        shopName: role === "seller" ? form.shopName.trim() : "",
-        role,
-      });
-
+      await registerLocal(form, role);
       navigate("/profile", { replace: true });
-    } catch (error) {
-      setServerError(
-        error instanceof Error
-          ? error.message
-          : "Не удалось создать аккаунт. Попробуйте ещё раз."
-      );
+    } catch (e) {
+      setError(e.message || "Не удалось создать аккаунт");
     } finally {
-      submittingRef.current = false;
-      setLoading(false);
+      setBusy(false);
     }
-  };
-
-  const goToNextStep = () => {
-    if (!role) return;
-    setStep(2);
-    setServerError("");
-  };
-
-  const goToPreviousStep = () => {
-    setStep(1);
-    setServerError("");
-    setErrors({});
-  };
+  }
 
   return (
-    <div className="bakeu-register-page">
-      <div className="bakeu-register-layout">
-        {/* ===== BRAND SIDE ===== */}
-        <aside className="bakeu-register-brand" aria-label="О BakeU">
-          <div className="bakeu-register-brand-top">
-            <Link to="/" className="bakeu-register-brand-logo">
-              <span className="bakeu-register-symbol">
-                <ChefHat size={22} strokeWidth={1.8} />
+    <main className="ba-page">
+      <div className="ba-container">
+        <div className="ba-heading">
+          <span className="ba-eyebrow">
+            <Sparkles size={15} /> BAKEU ACCOUNT
+          </span>
+          <h1>
+            Станьте частью <em>BakeU</em>
+          </h1>
+          <p>
+            Демо: создайте локальный аккаунт покупателя или продавца в этом
+            браузере.
+          </p>
+        </div>
+        <div className="ba-layout">
+          <aside className="ba-promo">
+            <div className="ba-brand">
+              <ChefHat size={28} />
+            </div>
+            <span className="ba-promo-tag">ПРИСОЕДИНЯЙТЕСЬ К НАМ</span>
+            <h2>Ваше место в мире вкусных идей.</h2>
+            <p>
+              Покупайте свежую выпечку или предлагайте собственные товары
+              тысячам будущих клиентов.
+            </p>
+            <div className="ba-promo-points">
+              <span>
+                <ShoppingBag size={18} /> Удобные покупки
               </span>
               <span>
-                Bake<span className="bakeu-register-logo-u">U</span>
+                <Store size={18} /> Личный магазин
               </span>
-            </Link>
-            <span className="bakeu-register-tag">MARKETPLACE</span>
-          </div>
-
-          <div className="bakeu-register-brand-center">
-            <span className="bakeu-register-eyebrow">
-              <Sparkles size={14} />
-              ПРИСОЕДИНЯЙТЕСЬ К НАМ
-            </span>
-
-            <h2>
-              Ваше место
-              <br />
-              в мире
-              <br />
-              <em>вкуса.</em>
-            </h2>
-
-            <p>
-              Станьте частью BakeU — пространства для любителей домашней
-              выпечки и талантливых кондитеров.
-            </p>
-
-            <div className="bakeu-register-emoji-row" aria-hidden="true">
-              <span>🍰</span>
-              <span>🥐</span>
-              <span>🧁</span>
+              <span>
+                <Sparkles size={18} /> Простое управление
+              </span>
             </div>
-          </div>
-
-          <div className="bakeu-register-brand-bottom">
-            <ShieldCheck size={17} />
-            <span>Создано для вашего удобства</span>
-          </div>
-        </aside>
-
-        {/* ===== FORM SIDE ===== */}
-        <main className="bakeu-register-panel">
-          <div className="bakeu-register-content">
-            <Link to="/" className="bakeu-register-back">
-              <ArrowLeft size={16} />
-              На главную
-            </Link>
-
-            <div className="bakeu-register-mobile-brand">
-              <ChefHat size={22} />
-              <strong>BakeU</strong>
-            </div>
-
-            {/* Progress */}
-            <div className="bakeu-register-progress">
-              <div className="bakeu-register-progress-caption">
-                <span>РЕГИСТРАЦИЯ</span>
-                <span>ШАГ {step} ИЗ 2</span>
-              </div>
-              <div className="bakeu-register-progress-track">
-                <span style={{ width: step === 1 ? "50%" : "100%" }} />
-              </div>
-            </div>
-
+            <div className="ba-promo-foot">BakeU — вместе вкуснее.</div>
+          </aside>
+          <section className="ba-card">
             {step === 1 ? (
               <>
-                <header className="bakeu-register-heading">
-                  <span className="bakeu-register-kicker">
-                    НАЧНЁМ ЗНАКОМСТВО
-                  </span>
-                  <h1>Как вы хотите использовать BakeU?</h1>
-                  <p>
-                    Выберите подходящий тип аккаунта для начала работы.
-                  </p>
-                </header>
-
-                <div
-                  className="bakeu-register-roles"
-                  role="group"
-                  aria-label="Тип аккаунта"
-                >
-                  {ROLES.map((item) => {
-                    const Icon = item.icon;
-                    const selected = role === item.id;
-
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`bakeu-register-role ${
-                          selected ? "selected" : ""
-                        }`}
-                        onClick={() => setRole(item.id)}
-                        aria-pressed={selected}
-                      >
-                        <span className="bakeu-register-role-icon">
-                          <Icon size={23} />
-                        </span>
-
-                        <span className="bakeu-register-role-text">
-                          <strong>{item.title}</strong>
-                          <span>{item.description}</span>
-                        </span>
-
-                        <span className="bakeu-register-role-check">
-                          {selected && <Check size={14} />}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className="ba-card-head">
+                  <span className="ba-step">ШАГ 1 ИЗ 2</span>
+                  <h2>Выберите тип аккаунта</h2>
+                  <p>Как вы планируете использовать BakeU?</p>
                 </div>
-
+                <div className="ba-roles">
+                  <button
+                    type="button"
+                    className={`ba-role ${role === "client" ? "selected" : ""}`}
+                    onClick={() => setRole("client")}
+                  >
+                    <span className="ba-role-icon">
+                      <ShoppingBag size={23} />
+                    </span>
+                    <span className="ba-role-text">
+                      <strong>Покупатель</strong>
+                      <small>Покупайте товары и находите любимые рецепты</small>
+                    </span>
+                    <span className="ba-radio" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`ba-role ${role === "seller" ? "selected" : ""}`}
+                    onClick={() => setRole("seller")}
+                  >
+                    <span className="ba-role-icon">
+                      <Store size={23} />
+                    </span>
+                    <span className="ba-role-text">
+                      <strong>Продавец</strong>
+                      <small>
+                        Создайте страницу магазина и продавайте товары
+                      </small>
+                    </span>
+                    <span className="ba-radio" />
+                  </button>
+                </div>
                 <button
+                  className="ba-primary"
                   type="button"
-                  className="bakeu-register-submit"
-                  disabled={!role}
-                  onClick={goToNextStep}
+                  onClick={() => setStep(2)}
                 >
-                  Продолжить
-                  <ArrowRight size={19} />
+                  Продолжить <ArrowRight size={18} />
                 </button>
               </>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="bakeu-register-change-role"
-                  onClick={goToPreviousStep}
-                  disabled={loading}
-                >
-                  <ArrowLeft size={15} />
-                  Изменить тип аккаунта
-                </button>
-
-                <header className="bakeu-register-heading">
-                  <span className="bakeu-register-kicker">
-                    СОЗДАНИЕ АККАУНТА
+                <div className="ba-card-head">
+                  <button
+                    className="ba-back"
+                    type="button"
+                    onClick={() => {
+                      setStep(1);
+                      setError("");
+                    }}
+                  >
+                    <ArrowLeft size={16} /> Назад к выбору
+                  </button>
+                  <span className="ba-step">
+                    ШАГ 2 ИЗ 2 · {role === "seller" ? "ПРОДАВЕЦ" : "ПОКУПАТЕЛЬ"}
                   </span>
-                  <h1>
+                  <h2>Создать аккаунт</h2>
+                  <p>
                     {role === "seller"
-                      ? "Аккаунт продавца"
-                      : "Аккаунт покупателя"}
-                  </h1>
-                  <p>Заполните данные, чтобы начать пользоваться BakeU.</p>
-                </header>
-
-                <form
-                  className="bakeu-register-form"
-                  onSubmit={handleSubmit}
-                  noValidate
-                >
-                  {serverError && (
-                    <div className="bakeu-register-alert" role="alert">
-                      <AlertCircle size={18} />
-                      <span>{serverError}</span>
-                    </div>
-                  )}
-
-                  <div className="bakeu-register-field-row">
-                    <RegisterField
-                      name="firstName"
+                      ? "Расскажите о себе и своём магазине."
+                      : "Заполните данные для регистрации."}
+                  </p>
+                </div>
+                <form className="ba-form" onSubmit={submit} noValidate>
+                  <div className="ba-two">
+                    <Field
                       label="Имя"
-                      placeholder="Александр"
-                      autoComplete="given-name"
+                      icon={UserRound}
                       value={form.firstName}
-                      error={errors.firstName}
-                      onChange={handleChange}
+                      onChange={(v) => update("firstName", v)}
+                      placeholder="Ваше имя"
+                      autoComplete="given-name"
                     />
-                    <RegisterField
-                      name="lastName"
+                    <Field
                       label="Фамилия"
-                      placeholder="Иванов"
-                      autoComplete="family-name"
+                      icon={UserRound}
                       value={form.lastName}
-                      error={errors.lastName}
-                      onChange={handleChange}
+                      onChange={(v) => update("lastName", v)}
+                      placeholder="Ваша фамилия"
+                      autoComplete="family-name"
                     />
                   </div>
-
-                  {role === "seller" && (
-                    <RegisterField
-                      name="shopName"
-                      label="Название магазина"
-                      placeholder="Sweet Bakery"
-                      autoComplete="organization"
-                      Icon={Building2}
-                      value={form.shopName}
-                      error={errors.shopName}
-                      onChange={handleChange}
-                    />
-                  )}
-
-                  <RegisterField
-                    name="phone"
-                    label="Номер телефона"
-                    placeholder="+998 90 123 45 67"
-                    type="tel"
-                    autoComplete="tel"
-                    Icon={Phone}
-                    value={form.phone}
-                    error={errors.phone}
-                    onChange={handleChange}
-                  />
-
-                  <RegisterField
-                    name="email"
+                  <Field
                     label="Электронная почта"
-                    placeholder="example@gmail.com"
+                    icon={Mail}
                     type="email"
-                    autoComplete="email"
-                    Icon={Mail}
                     value={form.email}
-                    error={errors.email}
-                    onChange={handleChange}
+                    onChange={(v) => update("email", v)}
+                    placeholder="example@gmail.com"
+                    autoComplete="email"
                   />
-
-                  {/* Password field */}
-                  <div className="bakeu-register-field">
-                    <label htmlFor="register-password">Пароль</label>
-                    <div
-                      className={`bakeu-register-input ${
-                        errors.password ? "is-invalid" : ""
-                      }`}
-                    >
-                      <LockKeyhole size={17} aria-hidden="true" />
+                  <Field
+                    label="Номер телефона"
+                    icon={Phone}
+                    type="tel"
+                    value={form.phone}
+                    onChange={(v) => update("phone", v)}
+                    placeholder="+998 90 123 45 67"
+                    autoComplete="tel"
+                  />
+                  {role === "seller" && (
+                    <>
+                      <Field
+                        label="Название компании / магазина"
+                        icon={Building2}
+                        value={form.company}
+                        onChange={(v) => update("company", v)}
+                        placeholder="Например, Sweet Bakery"
+                      />
+                      <Field
+                        label="Местоположение"
+                        icon={MapPin}
+                        value={form.location}
+                        onChange={(v) => update("location", v)}
+                        placeholder="Город, район или адрес"
+                      />
+                    </>
+                  )}
+                  <label className="ba-field">
+                    <span>Пароль</span>
+                    <div className="ba-input">
+                      <LockKeyhole size={18} />
                       <input
-                        id="register-password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Минимум 8 символов"
+                        type={visible ? "text" : "password"}
                         autoComplete="new-password"
+                        placeholder="Минимум 8 символов"
                         value={form.password}
-                        onChange={handleChange}
-                        aria-invalid={Boolean(errors.password)}
-                        aria-describedby={
-                          errors.password
-                            ? "register-password-error"
-                            : undefined
-                        }
+                        onChange={(e) => update("password", e.target.value)}
+                        required
+                        minLength={8}
                       />
                       <button
                         type="button"
-                        className="bakeu-register-eye"
-                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="ba-eye"
+                        onClick={() => setVisible((v) => !v)}
                         aria-label={
-                          showPassword ? "Скрыть пароль" : "Показать пароль"
+                          visible ? "Скрыть пароль" : "Показать пароль"
                         }
-                        aria-pressed={showPassword}
                       >
-                        {showPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
+                        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
-                    {errors.password && (
-                      <small
-                        id="register-password-error"
-                        className="bakeu-register-error"
-                        role="alert"
-                      >
-                        {errors.password}
-                      </small>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="bakeu-register-submit"
-                    disabled={loading}
-                    aria-busy={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <LoaderCircle
-                          size={19}
-                          className="bakeu-register-spinner"
-                        />
-                        Создаём аккаунт...
-                      </>
-                    ) : (
-                      <>
-                        Создать аккаунт
-                        <ArrowRight size={19} />
-                      </>
-                    )}
+                  </label>
+                  <p className="ba-hint">
+                    Демо-режим: пароль не сохраняется и не отправляется на
+                    сервер.
+                  </p>
+                  {error && (
+                    <p className="ba-error" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <button className="ba-primary" type="submit" disabled={busy}>
+                    Создать демо-профиль <ArrowRight size={18} />
                   </button>
                 </form>
               </>
             )}
-
-            <p className="bakeu-register-switch">
+            <p className="ba-switch">
               Уже есть аккаунт? <Link to="/login">Войти</Link>
             </p>
-
-            <p className="bakeu-register-note">
-              Создавая аккаунт, вы принимаете правила использования платформы
-              BakeU.
-            </p>
-          </div>
-        </main>
+          </section>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

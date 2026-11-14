@@ -1,309 +1,153 @@
-import { useRef, useState } from "react";
+import { loginLocal } from "../../../store/localAccount";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
   ChefHat,
+  Mail,
+  LockKeyhole,
   Eye,
   EyeOff,
-  // LockKeyRound,
-  Mail,
-  ShieldCheck,
+  ArrowRight,
   ShoppingBag,
   Store,
-  LoaderCircle,
-  AlertCircle,
+  Sparkles,
 } from "lucide-react";
-import { isEmail, loginUser } from "../../../utils/auth";
-import "./Login.css";
-
-const features = [
-  {
-    icon: ShoppingBag,
-    title: "Любимые десерты",
-    description: "Выпечка и сладости в одном месте",
-  },
-  {
-    icon: Store,
-    title: "Местные кондитеры",
-    description: "Откройте новые любимые магазины",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Простой заказ",
-    description: "Выбирайте и заказывайте удобно",
-  },
-];
+import "../Auth.css";
 
 export default function Login() {
   const navigate = useNavigate();
-  const submitting = useRef(false);
-
   const [form, setForm] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState("");
   const [visible, setVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  function change(event) {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-    setServerError("");
-  }
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
-    if (submitting.current) return;
-
-    const nextErrors = {};
-    if (!form.email.trim()) {
-      nextErrors.email = "Введите электронную почту";
-    } else if (!isEmail(form.email.trim())) {
-      nextErrors.email = "Укажите корректный email";
+    if (busy) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) || !form.password) {
+      setError("Введите корректную почту и пароль.");
+      return;
     }
-    if (!form.password) {
-      nextErrors.password = "Введите пароль";
-    }
-
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    submitting.current = true;
-    setLoading(true);
-    setServerError("");
-
+    setBusy(true);
     try {
-      await loginUser({
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-      });
+      await loginLocal(form.email, form.password);
       navigate("/profile", { replace: true });
-    } catch (error) {
-      setServerError(
-        error instanceof Error
-          ? error.message
-          : "Не удалось войти. Попробуйте снова."
-      );
+    } catch (e) {
+      setError(e.message || "Не удалось войти");
     } finally {
-      submitting.current = false;
-      setLoading(false);
+      setBusy(false);
     }
   }
 
   return (
-    <div className="bakeu-login-page">
-      <div className="bakeu-login-layout">
-        {/* ===== LEFT BRAND SIDE ===== */}
-        <aside className="bakeu-login-brand" aria-label="О BakeU">
-          <div className="bakeu-login-brand-top">
-            <Link
-              className="bakeu-login-brand-logo"
-              to="/"
-              aria-label="BakeU — главная"
-            >
-              <span className="bakeu-login-symbol">
-                <ChefHat size={24} strokeWidth={1.8} />
+    <main className="ba-page">
+      <div className="ba-container">
+        <div className="ba-heading">
+          <span className="ba-eyebrow">
+            <Sparkles size={15} /> BAKEU ACCOUNT
+          </span>
+          <h1>
+            С возвращением в <em>BakeU</em>
+          </h1>
+          <p>Войдите, чтобы продолжить покупки и управлять своим профилем.</p>
+        </div>
+        <div className="ba-layout">
+          <aside className="ba-promo">
+            <div className="ba-brand">
+              <ChefHat size={28} />
+            </div>
+            <span className="ba-promo-tag">BAKEU MARKETPLACE</span>
+            <h2>Вкусные идеи начинаются здесь.</h2>
+            <p>
+              Открывайте рецепты, находите любимую выпечку и развивайте свой
+              магазин.
+            </p>
+            <div className="ba-promo-points">
+              <span>
+                <ShoppingBag size={18} /> Покупайте с удовольствием
               </span>
               <span>
-                Bake<span className="bakeu-login-logo-u">U</span>
+                <Store size={18} /> Продавайте с BakeU
               </span>
-            </Link>
-            <span className="bakeu-login-tag">MARKETPLACE</span>
-          </div>
-
-          <div className="bakeu-login-brand-center">
-            <div className="bakeu-login-eyebrow">
-              <span /> ВАШ МИР ВКУСА
+              <span>
+                <Sparkles size={18} /> Вдохновляйтесь каждый день
+              </span>
             </div>
-            <h2>
-              Вкусные моменты
-              <br />
-              <em>начинаются здесь.</em>
-            </h2>
-            <p className="bakeu-login-brand-copy">
-              Домашняя выпечка, авторские десерты и талантливые кондитеры — всё
-              в одном месте.
-            </p>
-
-            <div className="bakeu-login-features">
-              {features.map(({ icon: Icon, title, description }) => (
-                <div className="bakeu-login-feature" key={title}>
-                  <span className="bakeu-login-feature-icon">
-                    <Icon size={19} strokeWidth={1.8} />
-                  </span>
-                  <span className="bakeu-login-feature-copy">
-                    <strong>{title}</strong>
-                    <small>{description}</small>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bakeu-login-brand-bottom">
-            <span>© {new Date().getFullYear()} BakeU</span>
-            <span>
-              <ShieldCheck size={16} /> С заботой о каждом заказе
-            </span>
-          </div>
-        </aside>
-
-        {/* ===== RIGHT FORM SIDE ===== */}
-        <main className="bakeu-login-panel">
-          <div className="bakeu-login-content">
-            <div className="bakeu-login-topbar">
-              <Link to="/" className="bakeu-login-back">
-                <ArrowLeft size={17} /> На главную
-              </Link>
-              <span className="bakeu-login-top-label">ЛИЧНЫЙ КАБИНЕТ</span>
-            </div>
-
-            <div className="bakeu-login-mobile-brand">
-              <ChefHat size={23} /> BakeU
-            </div>
-
-            <header className="bakeu-login-heading">
-              <span className="bakeu-login-kicker">С ВОЗВРАЩЕНИЕМ</span>
-              <h1>Войдите в аккаунт</h1>
+            <div className="ba-promo-foot">BakeU — приготовлено с любовью.</div>
+          </aside>
+          <section className="ba-card">
+            <div className="ba-card-head">
+              <span className="ba-step">ЛИЧНЫЙ КАБИНЕТ</span>
+              <h2>Вход в аккаунт</h2>
               <p>
-                Рады видеть вас снова. Войдите, чтобы продолжить покупки и
-                управлять заказами.
+                Локальный демо-вход: аккаунт доступен только в этом браузере.
               </p>
-            </header>
-
-            <form
-              className="bakeu-login-form"
-              onSubmit={submit}
-              noValidate
-            >
-              {serverError && (
-                <div className="bakeu-login-alert" role="alert">
-                  <AlertCircle size={18} />
-                  <span>{serverError}</span>
-                </div>
-              )}
-
-              {/* Email */}
-              <div className="bakeu-login-field">
-                <label htmlFor="login-email">Электронная почта</label>
-                <div
-                  className={`bakeu-login-input ${
-                    errors.email ? "is-invalid" : ""
-                  }`}
-                >
-                  <Mail size={19} aria-hidden="true" />
+            </div>
+            <form className="ba-form" onSubmit={submit} noValidate>
+              <label className="ba-field">
+                <span>Электронная почта</span>
+                <div className="ba-input">
+                  <Mail size={18} />
                   <input
-                    id="login-email"
-                    name="email"
                     type="email"
-                    inputMode="email"
-                    autoCapitalize="none"
                     autoComplete="email"
                     placeholder="example@gmail.com"
                     value={form.email}
-                    onChange={change}
-                    aria-invalid={Boolean(errors.email)}
-                    aria-describedby={
-                      errors.email ? "login-email-error" : undefined
-                    }
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, email: e.target.value }));
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
-                {errors.email && (
-                  <small
-                    id="login-email-error"
-                    className="bakeu-login-error"
-                    role="alert"
-                  >
-                    {errors.email}
-                  </small>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="bakeu-login-field">
-                <label htmlFor="login-password">Пароль</label>
-                <div
-                  className={`bakeu-login-input ${
-                    errors.password ? "is-invalid" : ""
-                  }`}
-                >
-                  {/* <LockKeyRound size={19} aria-hidden="true" /> */}
+              </label>
+              <label className="ba-field">
+                <span>Пароль</span>
+                <div className="ba-input">
+                  <LockKeyhole size={18} />
                   <input
-                    id="login-password"
-                    name="password"
                     type={visible ? "text" : "password"}
                     autoComplete="current-password"
                     placeholder="Введите пароль"
                     value={form.password}
-                    onChange={change}
-                    aria-invalid={Boolean(errors.password)}
-                    aria-describedby={
-                      errors.password ? "login-password-error" : undefined
-                    }
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, password: e.target.value }));
+                      setError("");
+                    }}
+                    required
                   />
                   <button
                     type="button"
-                    className="bakeu-login-eye"
+                    className="ba-eye"
                     onClick={() => setVisible((v) => !v)}
                     aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
-                    aria-pressed={visible}
                   >
-                    {visible ? <EyeOff size={19} /> : <Eye size={19} />}
+                    {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.password && (
-                  <small
-                    id="login-password-error"
-                    className="bakeu-login-error"
-                    role="alert"
-                  >
-                    {errors.password}
-                  </small>
-                )}
-              </div>
-
-              <button
-                className="bakeu-login-submit"
-                type="submit"
-                disabled={loading}
-                aria-busy={loading}
-              >
-                {loading ? (
-                  <>
-                    <LoaderCircle
-                      className="bakeu-login-spinner"
-                      size={19}
-                    />{" "}
-                    Входим...
-                  </>
-                ) : (
-                  <>
-                    Войти в аккаунт <ArrowRight size={19} />
-                  </>
-                )}
+              </label>
+              {error && (
+                <p className="ba-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <button className="ba-primary" type="submit" disabled={busy}>
+                Войти <ArrowRight size={18} />
               </button>
             </form>
-
-            <div className="bakeu-login-divider">
-              <span>Ещё нет аккаунта?</span>
-            </div>
-
-            <Link className="bakeu-login-create" to="/register">
-              Создать аккаунт <ArrowRight size={17} />
-            </Link>
-
-            <p className="bakeu-login-note">
-              Продолжая, вы принимаете правила использования платформы BakeU.
+            <p className="ba-switch">
+              Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
             </p>
-          </div>
-
-          <div className="bakeu-login-panel-footer">
-            <ShieldCheck size={15} /> Ваши данные под вашим контролем
-          </div>
-        </main>
+            <button
+              className="ba-demo-link"
+              type="button"
+              onClick={() => navigate("/register")}
+            >
+              Создать демо-профиль
+            </button>
+          </section>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Store, ShoppingBag, Search, X } from "lucide-react";
 
 import { useCartStore } from "../../store/cartStore";
-import { products, shops, categories } from "./sellerData";
+import { useCatalog, categories } from "./sellerData";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop";
 import "./Seller.css";
@@ -18,6 +18,7 @@ export default function Seller() {
 }
 
 function SellerCatalog({ tab }) {
+  const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState("");
@@ -37,8 +38,13 @@ function SellerCatalog({ tab }) {
   });
 
   const visibleShops = shops.filter((s) => {
-    const names = products.filter((p) => p.shopId === s.id).map((p) => p.name).join(" ");
-    return `${s.name} ${s.description} ${names}`.toLocaleLowerCase("ru-RU").includes(q);
+    const names = products
+      .filter((p) => p.shopId === s.id)
+      .map((p) => p.name)
+      .join(" ");
+    return `${s.name} ${s.description} ${names}`
+      .toLocaleLowerCase("ru-RU")
+      .includes(q);
   });
 
   const resetFilters = () => {
@@ -54,11 +60,19 @@ function SellerCatalog({ tab }) {
   return (
     <main className="seller-page">
       <nav className="seller-tabs" aria-label="Раздел каталога">
-        <Link to="?tab=sellers" className={showSellers ? "is-active" : ""} aria-current={showSellers ? "page" : undefined}>
+        <Link
+          to="?tab=sellers"
+          className={showSellers ? "is-active" : ""}
+          aria-current={showSellers ? "page" : undefined}
+        >
           <Store size={19} aria-hidden="true" />
           Продавцы
         </Link>
-        <Link to="?tab=products" className={!showSellers ? "is-active" : ""} aria-current={!showSellers ? "page" : undefined}>
+        <Link
+          to="?tab=products"
+          className={!showSellers ? "is-active" : ""}
+          aria-current={!showSellers ? "page" : undefined}
+        >
           <ShoppingBag size={19} aria-hidden="true" />
           Товары
         </Link>
@@ -67,7 +81,9 @@ function SellerCatalog({ tab }) {
       <div className="seller-heading">
         <div>
           <span className="seller-eyebrow">СДЕЛАНО С ЛЮБОВЬЮ</span>
-          <h1>{showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое"}</h1>
+          <h1>
+            {showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое"}
+          </h1>
           <p>
             {showSellers
               ? "Маленькие магазины с большим вниманием к вкусу."
@@ -85,14 +101,20 @@ function SellerCatalog({ tab }) {
             aria-label={showSellers ? "Поиск магазинов" : "Поиск товаров"}
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} aria-label="Очистить поиск">
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Очистить поиск"
+            >
               <X size={16} aria-hidden="true" />
             </button>
           )}
         </label>
       </div>
 
-      <p className="seller-demo">Демо-каталог: магазины, рейтинги и отзывы приведены для примера.</p>
+      <p className="seller-demo">
+        Демо-каталог: магазины, рейтинги и отзывы приведены для примера.
+      </p>
 
       {showSellers ? (
         <section className="seller-shops" aria-label="Продавцы">
@@ -104,7 +126,11 @@ function SellerCatalog({ tab }) {
               <Store size={28} aria-hidden="true" />
               <h2>Магазины не найдены</h2>
               <p>Попробуйте другое название.</p>
-              <button type="button" className="seller-pill" onClick={resetFilters}>
+              <button
+                type="button"
+                className="seller-pill"
+                onClick={resetFilters}
+              >
                 Сбросить поиск
               </button>
             </div>
@@ -137,7 +163,12 @@ function SellerCatalog({ tab }) {
 
           <div className="seller-products">
             {visibleProducts.map((p) => (
-              <ProductCard key={p.id} product={p} quantity={items?.[p.id] ?? 0} onAdd={addProduct} />
+              <ProductCard
+                key={p.id}
+                product={p}
+                quantity={items?.[p.id] ?? 0}
+                onAdd={addProduct}
+              />
             ))}
           </div>
 
@@ -146,7 +177,11 @@ function SellerCatalog({ tab }) {
               <Search size={28} aria-hidden="true" />
               <h2>Товары не найдены</h2>
               <p>Попробуйте другое название или категорию.</p>
-              <button type="button" className="seller-pill" onClick={resetFilters}>
+              <button
+                type="button"
+                className="seller-pill"
+                onClick={resetFilters}
+              >
                 Сбросить фильтры
               </button>
             </div>
@@ -154,7 +189,9 @@ function SellerCatalog({ tab }) {
         </section>
       )}
 
-      <p className="seller-notice" role="status">{notice}</p>
+      <p className="seller-notice" role="status">
+        {notice}
+      </p>
     </main>
   );
 }

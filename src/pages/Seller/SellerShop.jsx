@@ -1,5 +1,7 @@
+import { useWorkspace, followShop } from "../../store/workspaceStore";
+import { accountId } from "../../store/localAccount";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Star,
   MapPin,
@@ -22,7 +24,7 @@ import {
   Search,
 } from "lucide-react";
 
-import { products, getShop, getMapLinks } from "./sellerData";
+import { useCatalog, getShop, getMapLinks } from "./sellerData";
 import { ProductCard, ShopLogo } from "./SellerParts";
 import { useCartStore } from "../../store/cartStore";
 
@@ -34,6 +36,25 @@ export default function SellerShop({ shopId }) {
 }
 function ShopProfile({ shopId }) {
   const shop = getShop(shopId);
+  const { products } = useCatalog();
+  const navigate = useNavigate();
+  let account = null;
+  try {
+    account = JSON.parse(
+      sessionStorage.getItem("bakeu-demo-profile") || "null",
+    );
+  } catch {}
+  const follows = useWorkspace((s) => s.follows);
+  const isFollowing =
+    !!account &&
+    follows.some(
+      (f) => f.buyerId === accountId(account) && f.shopId === shopId,
+    );
+  function openChat() {
+    navigate(
+      account ? `/profile?chat=${encodeURIComponent(shopId)}` : "/login",
+    );
+  }
 
   const add = useCartStore((s) => s.add);
   const items = useCartStore((s) => s.items);
@@ -139,16 +160,20 @@ function ShopProfile({ shopId }) {
   const mapLinks = getMapLinks(shop);
 
   const toggleSubscribe = () => {
-    try {
-      localStorage.setItem(`bakeu-sub-${shopId}`, String(!subscribed));
-    } catch {
-      setNotice("Не удалось сохранить подписку в браузере");
+    if (!account) {
+      navigate("/login");
       return;
     }
-    setSubscribed(!subscribed);
-    setNotice(
-      subscribed ? "Вы отписались от магазина" : "Вы подписались на магазин!",
-    );
+    if (account.role !== "client") {
+      setNotice("Подписаться можно из аккаунта покупателя");
+      return;
+    }
+    try {
+      followShop(account, shopId);
+      setNotice(isFollowing ? "Вы отписались" : "Подписка сохранена");
+    } catch {
+      setNotice("Не удалось сохранить подписку");
+    }
   };
 
   const sendMessage = (e) => {
@@ -332,19 +357,19 @@ function ShopProfile({ shopId }) {
             <button
               className="shop-profile-chat"
               type="button"
-              onClick={() => setChatOpen(true)}
+              onClick={openChat}
             >
               <MessageCircle size={17} />
               Написать в чат
             </button>
 
             <button
-              className={`shop-subscribe ${subscribed ? "is-subscribed" : ""}`}
+              className={`shop-subscribe ${isFollowing ? "is-subscribed" : ""}`}
               type="button"
               onClick={toggleSubscribe}
-              aria-pressed={subscribed}
+              aria-pressed={isFollowing}
             >
-              {subscribed ? (
+              {isFollowing ? (
                 <>
                   <CheckCircle2 size={17} />
                   Вы подписаны
@@ -563,7 +588,7 @@ function ShopProfile({ shopId }) {
                     key={contact.title}
                     type="button"
                     className="shop-contact-item"
-                    onClick={() => setChatOpen(true)}
+                    onClick={openChat}
                   >
                     {content}
                   </button>
@@ -630,62 +655,6 @@ function ShopProfile({ shopId }) {
           </section>
         </aside>
       </div>
-
-      {chatOpen && (
-        <div
-          className="shop-chat-window"
-          role="dialog"
-          aria-label={`Чат с ${shop.name}`}
-        >
-          <div className="shop-chat-header">
-            <ShopLogo shop={shop} />
-            <div>
-              <strong>Чат с {shop.name}</strong>
-              <span>Демо-чат · локальная история</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setChatOpen(false)}
-              aria-label="Закрыть чат"
-            >
-              <X size={19} />
-            </button>
-          </div>
-
-          <div className="shop-chat-messages">
-            <p className="shop-chat-note">
-              Сообщения сохраняются только в этом браузере. Для связи с
-              магазином используйте Telegram или телефон.
-            </p>
-
-            {messages.map((item) => (
-              <div key={item.id} className="shop-chat-message shop-chat-sent">
-                {item.text}
-                <small>{item.time}</small>
-              </div>
-            ))}
-            <span ref={chatEnd} />
-          </div>
-
-          <form className="shop-chat-form" onSubmit={sendMessage}>
-            <input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Написать сообщение..."
-              aria-label="Сообщение"
-              maxLength={2000}
-              autoFocus
-            />
-            <button
-              type="submit"
-              aria-label="Сохранить сообщение"
-              disabled={!message.trim()}
-            >
-              <Send size={19} />
-            </button>
-          </form>
-        </div>
-      )}
 
       {reviewOpen && (
         <div
