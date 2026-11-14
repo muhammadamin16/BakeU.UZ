@@ -34,22 +34,30 @@ export default function AuthModal() {
   const closeTimerRef = useRef(null);
   const dismissedRef = useRef(false);
 
+  // Modal haqiqatan ko'rinishi kerakmi: ochiq va foydalanuvchi kirmagan
+  const visible = isOpen && !isLoggedIn();
+
   // 5 soniyadan keyin ochish (faqat kirmagan foydalanuvchiga)
   useEffect(() => {
-    // Allaqachon kirgan yoki shu sessiyada yopilgan bo'lsa, taymer umuman kerak emas
     if (isLoggedIn() || wasAuthModalDismissed()) return;
 
     const timer = window.setTimeout(() => {
-      // Taymer ishlagan paytda qayta tekshiramiz: foydalanuvchi bu orada kirgan bo'lishi mumkin
-      if (!dismissedRef.current && !isLoggedIn()) {
+      // Taymer ishlagan paytda qayta tekshiramiz
+      if (
+        !dismissedRef.current &&
+        !wasAuthModalDismissed() &&
+        !isLoggedIn()
+      ) {
         setIsOpen(true);
       }
     }, MODAL_DELAY);
 
-    return () => {
-      window.clearTimeout(timer);
-      window.clearTimeout(closeTimerRef.current);
-    };
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  // Unmount bo'lganda yopilish taymerini tozalash
+  useEffect(() => {
+    return () => window.clearTimeout(closeTimerRef.current);
   }, []);
 
   // Animatsiya bilan yopish
@@ -70,14 +78,13 @@ export default function AuthModal() {
     }, CLOSE_DURATION);
   }, []);
 
-  // Navigatsiya
   const handleNavigate = (path) => {
     closeModal(() => navigate(path));
   };
 
-  // Fokus va scrollni bloklash
+  // Fokus, scroll bloklash va klaviatura
   useEffect(() => {
-    if (!isOpen) return;
+    if (!visible) return;
 
     previousFocusRef.current = document.activeElement;
 
@@ -119,10 +126,9 @@ export default function AuthModal() {
       document.body.style.overflow = previousOverflow;
       previousFocusRef.current?.focus?.();
     };
-  }, [isOpen, closeModal]);
+  }, [visible, closeModal]);
 
-  // Kirgan foydalanuvchiga hech qachon ko'rsatilmaydi
-  if (!isOpen || isLoggedIn()) return null;
+  if (!visible) return null;
 
   return createPortal(
     <div
@@ -141,7 +147,6 @@ export default function AuthModal() {
         aria-labelledby="bakeu-auth-title"
         aria-describedby="bakeu-auth-description"
       >
-        {/* Close */}
         <button
           type="button"
           className="bakeu-auth-close"
@@ -151,18 +156,15 @@ export default function AuthModal() {
           <X size={18} />
         </button>
 
-        {/* Logo */}
         <div className="bakeu-auth-logo">
           <span>🥐</span>
         </div>
 
-        {/* Eyebrow */}
         <div className="bakeu-auth-eyebrow">
           <Sparkles size={13} />
           <span>BAKEU MARKETPLACE</span>
         </div>
 
-        {/* Heading */}
         <h2 id="bakeu-auth-title">
           Добро пожаловать
           <span> в BakeU</span>
@@ -173,7 +175,6 @@ export default function AuthModal() {
           продавайте и вдохновляйтесь вместе с нами.
         </p>
 
-        {/* Features */}
         <div className="bakeu-auth-features">
           <div className="bakeu-auth-feature">
             <div className="bakeu-auth-feature-icon">
@@ -196,7 +197,6 @@ export default function AuthModal() {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="bakeu-auth-actions">
           <button
             ref={primaryRef}
@@ -217,7 +217,6 @@ export default function AuthModal() {
           </button>
         </div>
 
-        {/* Skip */}
         <button
           type="button"
           className="bakeu-auth-skip"
@@ -226,7 +225,6 @@ export default function AuthModal() {
           Продолжить без регистрации
         </button>
 
-        {/* Footer */}
         <div className="bakeu-auth-footer">
           <ShieldCheck size={14} />
           <span>Удобные покупки с BakeU</span>

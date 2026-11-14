@@ -1,6 +1,9 @@
 const PROFILE_KEY = "bakeu-demo-profile";
-const MODAL_DISMISSED_KEY = "bakeu-auth-modal-dismissed";
+const CHAT_ROLE_KEY = "bakeu-chat-role";
 const VALID_ROLES = ["client", "seller"];
+
+// Modal shu sahifa yuklanishida yopilganmi? (faqat xotirada, yangilanganda tiklanadi)
+let authModalDismissed = false;
 
 /** sessionStorage'dan joriy profilni xavfsiz o'qiydi. */
 export function getSessionProfile() {
@@ -18,19 +21,21 @@ export function isLoggedIn() {
   return Boolean(profile && VALID_ROLES.includes(profile.role));
 }
 
-/** Modal shu sessiyada yopilganmi? (har safar bosh sahifaga qaytganda bezovta qilmaslik uchun) */
-export function wasAuthModalDismissed() {
+/** Chiqish: sessiya ma'lumotlarini tozalaydi va modal holatini tiklaydi. */
+export function clearSession() {
   try {
-    return sessionStorage.getItem(MODAL_DISMISSED_KEY) === "1";
+    sessionStorage.removeItem(PROFILE_KEY);
+    sessionStorage.removeItem(CHAT_ROLE_KEY);
   } catch {
-    return false;
+    /* sessionStorage mavjud emas */
   }
+  authModalDismissed = false;
+}
+
+export function wasAuthModalDismissed() {
+  return authModalDismissed;
 }
 
 export function markAuthModalDismissed() {
-  try {
-    sessionStorage.setItem(MODAL_DISMISSED_KEY, "1");
-  } catch {
-    /* sessionStorage mavjud emas, e'tibor bermaymiz */
-  }
+  authModalDismissed = true;
 }

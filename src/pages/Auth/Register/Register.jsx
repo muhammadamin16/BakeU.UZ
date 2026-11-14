@@ -1,6 +1,7 @@
 import { registerLocal } from "../../../store/localAccount";
+import { isLoggedIn } from "../../../store/session";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -64,6 +65,10 @@ export default function Register() {
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Allaqachon kirgan foydalanuvchi ro'yxatdan o'tish sahifasini ko'rmaydi
+  if (isLoggedIn()) return <Navigate to="/profile" replace />;
+
   const update = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     setError("");

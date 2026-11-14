@@ -1,6 +1,7 @@
 import { loginLocal } from "../../../store/localAccount";
+import { isLoggedIn } from "../../../store/session";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   ChefHat,
   Mail,
@@ -20,6 +21,9 @@ export default function Login() {
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Allaqachon kirgan foydalanuvchi login sahifasini ko'rmaydi
+  if (isLoggedIn()) return <Navigate to="/profile" replace />;
 
   async function submit(event) {
     event.preventDefault();

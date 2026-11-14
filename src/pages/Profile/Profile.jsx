@@ -3,6 +3,7 @@ import {
   readAccounts,
   accountId,
 } from "../../store/localAccount";
+import { clearSession, getSessionProfile } from "../../store/session";
 import { useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import ClientProfile from "./client/ClientProfile";
@@ -10,14 +11,14 @@ import SellerProfile from "./seller/SellerProfile";
 import SellerShop from "../Seller/SellerShop";
 
 import "./Workspace.css";
+
 export default function Profile() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+
   const [account, setAccount] = useState(() => {
     try {
-      const current = JSON.parse(
-        sessionStorage.getItem("bakeu-demo-profile") || "null",
-      );
+      const current = getSessionProfile();
       return current
         ? readAccounts()[accountId(current)]?.profile || current
         : null;
@@ -25,19 +26,23 @@ export default function Profile() {
       return null;
     }
   });
+
   if (params.get("shop"))
     return <SellerShop key={params.get("shop")} shopId={params.get("shop")} />;
+
   if (!account || !["client", "seller"].includes(account.role))
     return <Navigate to="/login" replace />;
+
   const saveAccount = (next) => {
     const saved = saveLocalProfile(account, next);
     setAccount(saved);
   };
+
   const logout = () => {
-    sessionStorage.removeItem("bakeu-demo-profile");
-    sessionStorage.removeItem("bakeu-chat-role");
+    clearSession();
     navigate("/login", { replace: true });
   };
+
   return (
     <main className="bw-page">
       <p className="bw-demo">
