@@ -382,7 +382,7 @@
 /* Телефон */
 @media (max-width: 480px) {
   .bottom-nav-shell {
-    width: calc(100% - 20px);
+    width: calc(98% - 0px);
     bottom: calc(
       16px + env(safe-area-inset-bottom, 0px)
     );
@@ -394,7 +394,8 @@
   }
 
   .bottom-nav__mascot {
-    right: -4px;
+    right: 21px;
+    top: -35px;
     width: 136px;
     height: 91px;
   }
