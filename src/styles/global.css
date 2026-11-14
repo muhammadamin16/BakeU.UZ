@@ -3,7 +3,8 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #e7dbce;
+  /* --bg: #e7dbce; */
+    --bg: #f7e4e4;
   --paper: #fffcf7;
   --card: #fffcf7;
   --ink: #432015;
