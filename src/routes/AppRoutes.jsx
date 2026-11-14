@@ -26,6 +26,7 @@ export default function AppRoutes() {
 
   return (
     <>
+      {/* Header va Footer auth sahifalarida yashirin */}
       {!isAuthPage && <Header />}
 
       <main className="container">
@@ -50,7 +51,8 @@ export default function AppRoutes() {
       {/* Modal faqat bosh sahifada; kirgan foydalanuvchiga AuthModal o'zi ko'rsatmaydi */}
       {isHome && <AuthModal />}
 
-      {!isAuthPage && <MobileNav />}
+      {/* MobileNav endi hamma sahifada, login/register'da ham */}
+      <MobileNav />
       {!isAuthPage && <Footer />}
     </>
   );
