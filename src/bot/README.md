@@ -1,0 +1,99 @@
+# BakeU Telegram bot + account server
+
+Node.js **24 LTS** or newer is required (built-in SQLite, fetch, env-file support). No bot npm dependencies and no external database service are needed. Run exactly one polling bot process per token.
+
+## What is included
+
+- Six public buttons: BakeU website, Telegram, Instagram, email, support, about.
+- Website opens with a URL button; set `USE_WEB_APP=true` for an HTTPS Telegram Mini App instead.
+- `/start`, `/cancel`, `/id`; numeric-ID-only private admin panel via `/admin`.
+- Admin statistics; paginated server customers and sellers; store applications; approve/reject with a reason; support ticket list and replies.
+- SQLite users, password hashes, sessions, applications, support, Telegram users, conversation state, polling cursor and notification outbox.
+- Server registration/login/profile API, session revocation, validation, request limits, exact-origin CORS and rate limiting.
+- Every server registration queues an admin notification. Seller registration also creates a pending store application. The site profile displays its decision and refreshes it every 30 seconds.
+- Admin notifications and support replies retry with backoff up to 8 attempts. Use admin “Повторить уведомления” after fixing a blocked bot or unreachable recipient. Counters are real database totals.
+- Passwords, session tokens and bot credentials are never included in Telegram notification messages.
+
+## Windows / PowerShell setup
+
+From the repository root:
+
+```powershell
+git switch Amin
+git pull origin Amin
+node --version
+npm install
+Copy-Item src/bot/.env.example src/bot/.env
+Copy-Item .env.example .env.local
+```
+
+Do not overwrite an existing `.env`/`.env.local`; merge the needed values instead. In `src/bot/.env`, fill:
+
+```dotenv
+BOT_TOKEN=your_token_from_BotFather
+ADMIN_IDS=your_numeric_telegram_user_id
+SITE_URL=https://bakeu.uz
+TELEGRAM_URL=https://t.me/your_channel
+INSTAGRAM_URL=https://www.instagram.com/your_account/
+SUPPORT_EMAIL=your_real_email
+```
+
+`ADMIN_IDS` is your personal numeric user ID, not a username, group or channel ID. Obtain it using a trusted Telegram ID tool, or call Bot API getUpdates privately after messaging your bot, before starting polling. Once running, anyone can see their own ID via `/id`; only configured IDs receive admin access. Each admin must open the bot and send `/start` before Telegram permits the bot to send them messages.
+
+Root `.env.local` enables server accounts with `VITE_ACCOUNT_API_URL=/api`. Vite proxies `/api` to `http://127.0.0.1:3001` in development. Set the bot API port to 3001 for this default proxy. Restart Vite after changing frontend env values.
+
+Terminal 1 (repository root):
+
+```powershell
+npm run bot:check
+npm run bot
+```
+
+Terminal 2:
+
+```powershell
+npm run dev
+```
+
+Register at `http://localhost:5173/#/register`. Open `/admin` **in Telegram** to view the new account, store application and messages. The local website URL is for your computer; bot website users require a real publicly hosted HTTPS website. Never set `SITE_URL` to localhost for other users.
+
+`bot:check` validates configuration and opens/migrates the local SQLite schema without contacting Telegram. `npm run bot` validates the token with Telegram, disables an existing webhook without dropping pending updates, then starts polling and the HTTP API. A token cannot be tested before a real token is supplied. Telegram 409 means another process is already polling the same bot.
+
+## Existing site and demo records
+
+Server mode is enabled only when `VITE_ACCOUNT_API_URL` is set. Without it, existing browser-only registration/login behavior is preserved. Existing demo accounts are not silently uploaded or migrated: create a new server account. Server mode uses the API for signup/login/profile edits; the browser cache is for displaying the profile only. Access tokens stay in sessionStorage; SQLite stores only their hashes. Logout revokes the current server session when online. Sessions expire after `SESSION_HOURS`.
+
+The existing website admin, product catalog, seller shop editor, order/payment and chat flows still use the project's browser stores. Telegram's real account/application database is **not** automatically a shared backend for those other features. The Telegram application's decision is shown in the server user's profile, but does not publish a local catalog shop. Website admin links open the existing admin screen and do not grant server permissions or synchronize its local tables. Email button displays a contact address; it does not send email. No SMTP, payment gateway or unsolicited announcements are implemented.
+
+## API (same HTTPS origin recommended)
+
+| Method | Route                | Body / authentication                                                                                      |
+| ------ | -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`            | service readiness                                                                                          |
+| POST   | `/api/auth/register` | firstName, lastName, email, phone, password, role (`client` / `seller`); sellers also company and location |
+| POST   | `/api/auth/login`    | email, password                                                                                            |
+| GET    | `/api/auth/me`       | Authorization: Bearer SESSION_TOKEN                                                                        |
+| PATCH  | `/api/auth/me`       | same authentication; allowlisted profile fields                                                            |
+| POST   | `/api/auth/logout`   | same authentication                                                                                        |
+
+Register/login return `{user, token, application}`. Profile returns `{user, application}`. Application status is `На проверке`, `Одобрено`, or `Отклонено`; rejection includes a reason. Registration validates unique email and Uzbekistan phone (+998 plus 9 digits). The HTTP API never accepts a browser-supplied admin role or Telegram admin identity. Admin-only changes run through Telegram ID checks.
+
+## Production
+
+1. Install Node 24 LTS on a VPS. Place the project at `/opt/BakeU.UZ`; create a dedicated `bakeu` service user. Give that user access to the project and ownership of `src/bot/data`. Protect `.env` with mode 600 and keep it out of Git.
+2. Set `SITE_URL` to the real HTTPS site, exact `ALLOWED_ORIGINS`, `API_HOST=127.0.0.1`; enable `TRUST_PROXY=true` only behind the supplied Nginx configuration which overwrites `X-Real-IP`.
+3. Copy/adjust `deploy/bakeu-bot.service` to systemd. It runs the bot separately from the frontend. Adjust `/usr/bin/node` if your Node installation uses another path. Create the data directory before starting the service. Enable/start with `systemctl enable --now bakeu-bot`.
+4. Build the website with root `VITE_ACCOUNT_API_URL=/api`, then `npm run build`. Serve `dist` using your existing HTTPS Nginx virtual host. Add the locations from `deploy/nginx.conf.example` inside it. HTTPS certificates/domain configuration must already be set up for your host.
+5. Alternatively run `docker compose up -d --build` from `src/bot` after creating `.env`. The named `bot_data` volume persists SQLite; published API is bound to the host loopback interface. Docker mode uses `TRUST_PROXY=false` and therefore a shared proxy IP rate-limit bucket. Use the host/systemd setup with trusted Nginx for per-client production limits.
+6. Back up SQLite regularly. To make a simple filesystem backup, stop the bot first and copy the data directory, then restart; do not copy a live WAL database file on its own. A live backup can use SQLite's backup API. Keep database and token backups private.
+
+The bot uses long polling, so Telegram does not require a public webhook URL. The website API still needs a reachable HTTPS server for public registrations. Static hosting alone cannot run this bot. Rotate a leaked bot token using BotFather; update `.env` and restart. Do not run the same token on your laptop and VPS at once.
+
+## Verification
+
+```powershell
+npm run bot:test
+npm run build
+```
+
+Tests use in-memory SQLite, simulated Telegram calls and a local HTTP server. They never send real Telegram messages. They cover registration, password handling, duplicates, role restrictions, authenticated profile/logout, decision idempotency, support/reply, outbox retry, CORS, config, and main buttons. A live test with your token and real deployment remains necessary.

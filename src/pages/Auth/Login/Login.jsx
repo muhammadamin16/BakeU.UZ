@@ -1,3 +1,4 @@
+import { accountApiEnabled } from "../../../bot/client/accountApi";
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
@@ -125,7 +126,9 @@ export default function Login() {
         Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
       </p>
       <p className="bk-note">
-        Демо-вход: аккаунт хранится только в этом браузере.
+        {accountApiEnabled
+          ? "Вход в серверный аккаунт BakeU."
+          : "Демо-вход: аккаунт хранится только в этом браузере."}
       </p>
     </AuthShell>
   );

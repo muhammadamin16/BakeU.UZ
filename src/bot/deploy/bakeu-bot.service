@@ -1,0 +1,24 @@
+[Unit]
+Description=BakeU Telegram bot and account API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bakeu
+Group=bakeu
+WorkingDirectory=/opt/BakeU.UZ/src/bot
+ExecStart=/usr/bin/node --env-file=.env index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=50
+Environment=NODE_ENV=production
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/BakeU.UZ/src/bot/data
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

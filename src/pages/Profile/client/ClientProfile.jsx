@@ -21,7 +21,6 @@ import {
   Package,
   Mail,
   ShieldCheck,
-  Bell,
   Store,
   ArrowLeft,
 } from "lucide-react";
@@ -84,22 +83,22 @@ export default function ClientProfile({
     );
   }
   const update = (key, value) => setDraft((d) => ({ ...d, [key]: value }));
-  function save(e) {
+  async function save(e) {
     e.preventDefault();
     if (!draft.firstName?.trim()) {
       setNotice("Введите имя.");
       return;
     }
     try {
-      onSave({ ...draft });
+      await onSave({ ...draft });
       setNotice("Профиль сохранён.");
     } catch (error) {
       setNotice(error.message || "Не удалось сохранить профиль.");
     }
   }
-  function saveAddresses(addresses) {
+  async function saveAddresses(addresses) {
     try {
-      onSave({ ...account, addresses });
+      await onSave({ ...account, addresses });
       setDraft((d) => ({ ...d, addresses }));
       setAddress("");
       setNotice("Адреса сохранены.");

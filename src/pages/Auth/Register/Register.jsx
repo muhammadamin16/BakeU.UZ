@@ -1,3 +1,4 @@
+import { accountApiEnabled } from "../../../bot/client/accountApi";
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
@@ -300,7 +301,10 @@ export default function Register() {
                 </>
               ) : (
                 <>
-                  Создать демо-профиль <ArrowRight size={18} />
+                  {accountApiEnabled
+                    ? "Создать аккаунт"
+                    : "Создать демо-профиль"}{" "}
+                  <ArrowRight size={18} />
                 </>
               )}
             </button>
@@ -313,7 +317,9 @@ export default function Register() {
       </p>
       {step === 2 && (
         <p className="bk-note">
-          Демо-режим: пароль не сохраняется и не отправляется на сервер.
+          {accountApiEnabled
+            ? "Аккаунт сохраняется на сервере BakeU. Администратор получит уведомление о регистрации без пароля."
+            : "Демо-режим: аккаунт хранится только в этом браузере."}
         </p>
       )}
     </AuthShell>

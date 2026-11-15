@@ -1,3 +1,9 @@
+import {
+  accountApiEnabled,
+  registerServer,
+  loginServer,
+  saveServerProfile,
+} from "../bot/client/accountApi";
 // Local prototype only; server-side authentication is required for production.
 const KEY = "bakeu-accounts-v2";
 export function readAccounts() {
@@ -35,6 +41,7 @@ async function digest(password, salt) {
   );
 }
 export async function registerLocal(form, role) {
+  if (accountApiEnabled) return registerServer(form, role);
   if (!["client", "seller"].includes(role))
     throw Error("Выберите тип аккаунта.");
   if (!crypto.subtle) throw Error("Откройте сайт через HTTPS или localhost.");
@@ -54,6 +61,7 @@ export async function registerLocal(form, role) {
   return profile;
 }
 export async function loginLocal(email, password) {
+  if (accountApiEnabled) return loginServer(email, password);
   const record = Object.values(readAccounts()).find(
     (r) => r.profile.email.toLowerCase() === email.trim().toLowerCase(),
   );
@@ -65,6 +73,7 @@ export async function loginLocal(email, password) {
   return record.profile;
 }
 export function saveLocalProfile(previous, next) {
+  if (previous.server && accountApiEnabled) return saveServerProfile(next);
   if (next.nickname && !/^[a-zA-Z0-9_.]{3,40}$/.test(next.nickname))
     throw Error("Ник: 3–40 латинских букв, цифр, точек или подчёркиваний.");
   const id = accountId(previous),
