@@ -216,9 +216,7 @@
   #root .bottom-nav-shell.bottom-nav-shell--centered {
     width: calc(96% -   20px);
     left: 48%;
-    bottom: calc(
-      10px + env(safe-area-inset-bottom, 0px)
-    );
+    bottom: 1%;
   }
 
   #root .bottom-nav-shell--centered .bottom-nav {
