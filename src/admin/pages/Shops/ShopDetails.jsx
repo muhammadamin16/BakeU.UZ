@@ -27,7 +27,19 @@ export default function ShopDetails() {
         <h2>Магазин и продавец</h2>
         <dl className="ad-details">
           {[
-            ["Продавец", shop.owner],
+            [
+              "Продавец",
+              shop.sellerId ? (
+                <Link
+                  className="ad-text-link"
+                  to={`/admin/sellers/${encodeURIComponent(shop.sellerId)}`}
+                >
+                  {shop.owner} ↗
+                </Link>
+              ) : (
+                shop.owner
+              ),
+            ],
             ["Телефон", shop.phone],
             ["Адрес", shop.address || "Не указан"],
             ["Тариф", shop.plan],
@@ -41,11 +53,11 @@ export default function ShopDetails() {
         <Badge>{shop.status}</Badge>
       </section>
       {[
-        ["Товары", products.filter((x) => x.shop === shop.name), "products"],
-        ["Заказы", orders.filter((x) => x.shop === shop.name), "orders"],
+        ["Товары", products.filter((x) => x.shopId === shop.id), "products"],
+        ["Заказы", orders.filter((x) => x.shopId === shop.id), "orders"],
         [
           "Подписки",
-          subscriptions.filter((x) => x.shop === shop.name),
+          subscriptions.filter((x) => x.shopId === shop.id),
           "subscriptions",
         ],
       ].map(([title, rows, path]) => (

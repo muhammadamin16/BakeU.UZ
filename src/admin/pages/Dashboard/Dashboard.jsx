@@ -68,6 +68,7 @@ export default function Dashboard() {
     (x) => matches(x) && inPeriod(x),
   );
   const customers = data.customers.filter((x) => matches(x) && inPeriod(x));
+  const sellers = data.sellers.filter(matches);
   const orders = data.orders.filter((x) => matches(x) && inPeriod(x));
   const subs = data.subscriptions.filter(matches);
   const pending = applications.filter((x) => x.status === "На проверке");
@@ -304,9 +305,9 @@ export default function Dashboard() {
               <Users size={23} />
               Покупатели <b>+{customers.length}</b>
             </Link>
-            <Link to="/admin/shops">
+            <Link to="/admin/sellers">
               <Store size={23} />
-              Продавцы <b>+{data.shops.filter(matches).length}</b>
+              Продавцы <b>+{sellers.length}</b>
             </Link>
           </div>
           <div className="ad-table-wrap">
@@ -321,7 +322,14 @@ export default function Dashboard() {
               <tbody>
                 {customers.slice(0, 3).map((c) => (
                   <tr key={c.id}>
-                    <td>{c.name}</td>
+                    <td>
+                      <Link
+                        className="ad-text-link"
+                        to={`/admin/customers/${encodeURIComponent(c.id)}`}
+                      >
+                        {c.name} ↗
+                      </Link>
+                    </td>
                     <td>
                       <span className="ad-badge orange">Покупатель</span>
                     </td>

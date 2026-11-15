@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  normalizeAccounts,
+  upsertAdminRecord,
+  removeAdminRecord,
+  mergeAdminState,
+} from "../utils/accounts";
 const seed = {
   customers: [
     {
@@ -161,15 +167,15 @@ const seed = {
 export const useAdminStore = create(
   persist(
     (set) => ({
-      ...structuredClone(seed),
+      ...normalizeAccounts(structuredClone(seed)),
       save: (key, item) =>
-        set((s) => ({
-          [key]: s[key].some((x) => x.id === item.id)
-            ? s[key].map((x) => (x.id === item.id ? item : x))
-            : [{ ...item, id: item.id || crypto.randomUUID() }, ...s[key]],
-        })),
-      remove: (key, id) =>
-        set((s) => ({ [key]: s[key].filter((x) => x.id !== id) })),
+        set((s) =>
+          upsertAdminRecord(s, key, {
+            ...item,
+            id: item.id || crypto.randomUUID(),
+          }),
+        ),
+      remove: (key, id) => set((s) => removeAdminRecord(s, key, id)),
       markRead: (id) =>
         set((s) => ({
           notifications: s.notifications.map((x) =>
@@ -181,7 +187,8 @@ export const useAdminStore = create(
         set((s) => {
           const a = s.applications.find((x) => x.id === id);
           if (!a || a.status !== "На проверке") return {};
-          return {
+          return normalizeAccounts({
+            ...s,
             applications: s.applications.map((x) =>
               x.id === id ? { ...x, status } : x,
             ),
@@ -211,9 +218,12 @@ export const useAdminStore = create(
               },
               ...s.notifications,
             ],
-          };
+          });
         }),
     }),
-    { name: "bakeu-admin-demo-v1" },
+    {
+      name: "bakeu-admin-demo-v1",
+      merge: mergeAdminState,
+    },
   ),
 );

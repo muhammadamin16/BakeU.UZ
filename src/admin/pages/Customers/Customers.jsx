@@ -1,16 +1,17 @@
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
+import AccountLink from "../../components/AccountLink";
+import { Link } from "react-router-dom";
+import { accountFields } from "../../utils/accountFields";
 import "./Customers.css";
-const fields = [
-  { key: "name", label: "Имя" },
-  { key: "phone", label: "Телефон", type: "tel" },
-  { key: "email", label: "Email", type: "email" },
-  { key: "date", label: "Дата регистрации", type: "date" },
-  { key: "status", label: "Статус", options: ["Активен", "Заблокирован"] },
-];
+const fields = accountFields("customers");
 const columns = [
   { key: "id", label: "ID" },
-  { key: "name", label: "Имя" },
+  {
+    key: "name",
+    label: "Покупатель",
+    render: (row) => <AccountLink person={row} />,
+  },
   { key: "phone", label: "Телефон" },
   { key: "email", label: "Email" },
   { key: "date", label: "Дата регистрации" },
@@ -21,7 +22,7 @@ const columns = [
     ? (r) => money(r[c.key])
     : ["date", "until"].includes(c.key)
       ? (r) => date(r[c.key])
-      : undefined,
+      : c.render,
 }));
 export default function Customers() {
   return (
@@ -30,6 +31,14 @@ export default function Customers() {
       collection="customers"
       fields={fields}
       columns={columns}
+      detailsLink={(row) => (
+        <Link
+          className="ad-btn small"
+          to={`/admin/customers/${encodeURIComponent(row.id)}`}
+        >
+          Профиль ↗
+        </Link>
+      )}
     />
   );
 }

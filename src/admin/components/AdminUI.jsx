@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useAdminStore } from "../store/adminStore";
@@ -81,6 +81,7 @@ export function Modal({ title, onClose, children }) {
 }
 export function RecordForm({ fields, initial = {}, onSave, onClose }) {
   const [values, setValues] = useState(initial);
+  const formId = useId();
   return (
     <form
       className="ad-form"
@@ -94,21 +95,42 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
           {f.label}
           {f.options ? (
             <select
-              required
+              aria-label={f.label}
+              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
+              required={f.required !== false}
               value={values[f.key] || ""}
               onChange={(e) =>
                 setValues({ ...values, [f.key]: e.target.value })
               }
             >
-              <option value="" disabled>
+              <option value="" disabled={f.required !== false}>
                 Выберите
               </option>
-              {f.options.map((o) => (
-                <option key={o}>{o}</option>
-              ))}
+              {f.options.map((o) => {
+                const value = typeof o === "string" ? o : o.value;
+                const label = typeof o === "string" ? o : o.label;
+                return (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                );
+              })}
             </select>
+          ) : f.type === "textarea" ? (
+            <textarea
+              aria-label={f.label}
+              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
+              rows={3}
+              required={f.required !== false}
+              value={values[f.key] ?? ""}
+              onChange={(e) =>
+                setValues({ ...values, [f.key]: e.target.value })
+              }
+            />
           ) : (
             <input
+              aria-label={f.label}
+              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
               autoFocus={f === fields[0]}
               required={f.required !== false}
               type={f.type || "text"}
@@ -124,6 +146,11 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
                 })
               }
             />
+          )}
+          {f.hint && (
+            <small id={`${formId}-${f.key}-hint`} className="ad-field-hint">
+              {f.hint}
+            </small>
           )}
         </label>
       ))}
@@ -144,6 +171,7 @@ export function CollectionPage({
   renderActions,
   detailsLink,
   addLabel = "Добавить",
+  canDelete = () => true,
 }) {
   const rows = useAdminStore((s) => s[collection]);
   const save = useAdminStore((s) => s.save);
@@ -232,6 +260,12 @@ export function CollectionPage({
                       </button>
                       <button
                         className="ad-icon danger"
+                        disabled={!canDelete(row)}
+                        title={
+                          !canDelete(row)
+                            ? "Сначала удалите или переназначьте магазины продавца"
+                            : undefined
+                        }
                         onClick={() => setDeleting(row)}
                         aria-label={`Удалить ${row.name || row.id}`}
                       >

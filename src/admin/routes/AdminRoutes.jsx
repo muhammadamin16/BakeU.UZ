@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Customers from "../pages/Customers/Customers";
+import Sellers from "../pages/Sellers/Sellers";
+import AccountDetails from "../pages/Accounts/AccountDetails";
 import Shops from "../pages/Shops/Shops";
 import ShopDetails from "../pages/Shops/ShopDetails";
 import Applications from "../pages/Applications/Applications";
@@ -16,6 +18,15 @@ export default function AdminRoutes() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="customers" element={<Customers />} />
+        <Route
+          path="customers/:id"
+          element={<AccountDetails key="customer" kind="customers" />}
+        />
+        <Route path="sellers" element={<Sellers />} />
+        <Route
+          path="sellers/:id"
+          element={<AccountDetails key="seller" kind="sellers" />}
+        />
         <Route path="shops" element={<Shops />} />
         <Route path="shops/:id" element={<ShopDetails />} />
         <Route path="applications" element={<Applications />} />

@@ -2,6 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 import {
   BarChart3,
   Users,
+  UserRound,
   Store,
   ClipboardList,
   Package,
@@ -16,6 +17,7 @@ import "./Sidebar.css";
 const links = [
   ["", "Обзор", BarChart3],
   ["customers", "Покупатели", Users],
+  ["sellers", "Продавцы", UserRound],
   ["shops", "Магазины", Store],
   ["applications", "Заявки", ClipboardList],
   ["products", "Товары", Package],
@@ -37,7 +39,12 @@ export default function Sidebar({ open, onClose }) {
       />
       <aside className={`ad-sidebar ${open ? "open" : ""}`}>
         <Link className="ad-brand" to="/" aria-label="BakeU — главная сайта">
-          <img src="/images/logo-bear.png" alt="BakeU" width="160" height="72" />
+          <img
+            src="/images/logo-bear.png"
+            alt="BakeU"
+            width="160"
+            height="72"
+          />
           <small>Панель управления</small>
         </Link>
         <button
