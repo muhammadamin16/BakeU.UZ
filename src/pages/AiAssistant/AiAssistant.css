@@ -1,7 +1,16 @@
 /* =========================================================
    BakeU AI Assistant + История чатов
+   Страница занимает 100% видимой области, без прокрутки страницы.
+   Прокручивается только лента сообщений и список истории.
    Desktop: боковая панель. Mobile: выдвижная панель.
    ========================================================= */
+
+/* Блокировка прокрутки страницы (класс ставит компонент) */
+html.ai-lock,
+html.ai-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
 .ai {
   --ai-ink: #432015;
@@ -14,8 +23,21 @@
   --ai-line: rgb(67 32 21 / 9%);
   --ai-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /*
+    Высота = весь экран − отступ сверху (Header, измеряется в JS) − отступ снизу.
+    --ai-bottom: воздух под карточкой. На телефоне — высота MobileNav.
+    Если MobileNav выше/ниже, поменяйте значение в media-запросе ниже.
+  */
+  --ai-top: 0px;
+  --ai-bottom: 16px;
+  --ai-gap: 0px;
+
   width: 100%;
+  height: calc(100vh - var(--ai-top) - var(--ai-bottom));
+  height: calc(85dvh - var(--ai-top) - var(--ai-bottom));
+  min-height: 0;
   margin: 0 auto;
+  padding-top: var(--ai-gap);
   color: var(--ai-ink);
   font-family: Arial, system-ui, -apple-system, sans-serif;
 }
@@ -65,7 +87,8 @@
   position: relative;
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
-  height: clamp(540px, calc(100dvh - 190px), 780px);
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 90%);
   border-radius: 28px;
@@ -163,6 +186,7 @@
   margin: 0 -6px;
   padding: 2px 6px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgb(67 32 21 / 15%) transparent;
 }
@@ -306,6 +330,7 @@
 
 .ai__header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
@@ -390,7 +415,7 @@
   white-space: nowrap;
 }
 
-/* ================= Messages ================= */
+/* ================= Messages (единственная прокручиваемая зона) ================= */
 
 .ai__messages {
   flex: 1;
@@ -400,6 +425,7 @@
   min-height: 0;
   padding: 22px 22px 12px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--ai-paper);
   scrollbar-width: thin;
   scrollbar-color: rgb(67 32 21 / 15%) transparent;
@@ -457,6 +483,12 @@
   text-align: right;
 }
 
+.ai-bubble--error {
+  border-color: rgb(178 58 50 / 30%);
+  background: rgb(178 58 50 / 7%);
+  color: #8e2e28;
+}
+
 .ai-bubble--typing {
   display: flex;
   align-items: center;
@@ -494,25 +526,65 @@
   }
 }
 
-/* ================= Suggestions ================= */
+/* ================= Welcome (пустой чат) ================= */
 
-.ai__suggestions {
+.ai-welcome {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 4px 22px 14px;
-  background: var(--ai-paper);
-  animation: ai-in 350ms ease both;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  padding: 8px 0;
+  text-align: center;
+  animation: ai-in 380ms var(--ai-ease) both;
+}
+
+.ai-welcome__badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f0e4f5, #e4d0ee);
+  color: var(--ai-violet);
+  box-shadow: 0 6px 20px rgb(123 77 158 / 16%);
+}
+
+.ai-welcome h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ai-welcome p {
+  max-width: 440px;
+  margin-top: 8px;
+  color: var(--ai-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ai-welcome__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 22px;
 }
 
 .ai-chip {
-  padding: 10px 16px;
+  min-height: 56px;
+  padding: 12px 16px;
   border: 1px solid var(--ai-line);
-  border-radius: 100px;
+  border-radius: 16px;
   background: var(--ai-soft);
   color: var(--ai-ink);
   font-size: 13px;
   font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
   transition: background 180ms ease, border-color 180ms ease,
     transform 150ms ease, box-shadow 180ms ease;
 }
@@ -528,6 +600,7 @@
 
 .ai__form {
   display: flex;
+  flex-shrink: 0;
   align-items: flex-end;
   gap: 10px;
   padding: 14px 16px 16px;
@@ -561,10 +634,6 @@
   box-shadow: 0 0 0 3px rgb(244 180 27 / 15%);
 }
 
-.ai__form textarea:disabled {
-  opacity: 0.65;
-}
-
 .ai__send {
   display: grid;
   place-items: center;
@@ -594,9 +663,10 @@
 /* ================= Tablet / Mobile: выдвижная история ================= */
 
 @media (max-width: 860px) {
+
+
   .ai__card {
     grid-template-columns: minmax(0, 1fr);
-    height: clamp(500px, calc(100dvh - 170px), 760px);
     border-radius: 22px;
   }
 
@@ -653,9 +723,13 @@
 }
 
 @media (max-width: 520px) {
+  .ai__card {
+    border-radius: 18px;
+  }
+
   .ai__header {
     gap: 8px;
-    padding: 12px;
+    padding: 10px 12px;
   }
 
   .ai__badge {
@@ -663,7 +737,7 @@
   }
 
   .ai__messages {
-    padding: 16px 14px 8px;
+    padding: 14px 14px 8px;
   }
 
   .ai-bubble {
@@ -671,17 +745,47 @@
     font-size: 14px;
   }
 
-  .ai__suggestions {
-    padding: 2px 14px 12px;
+  .ai-welcome__badge {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+
+  .ai-welcome h2 {
+    font-size: 19px;
+  }
+
+  .ai-welcome p {
+    font-size: 13px;
+  }
+
+  .ai-welcome__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 16px;
   }
 
   .ai-chip {
-    padding: 9px 14px;
+    min-height: 46px;
+    padding: 10px 14px;
     font-size: 12.5px;
   }
 
   .ai__form {
-    padding: 12px;
+    gap: 8px;
+    padding: 10px 12px 12px;
+  }
+}
+
+/* Низкие экраны (ландшафт): компактнее */
+@media (max-height: 560px) {
+  .ai-welcome__badge,
+  .ai-welcome p {
+    display: none;
+  }
+
+  .ai__header {
+    padding-block: 8px;
   }
 }
 

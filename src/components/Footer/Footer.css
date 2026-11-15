@@ -1,7 +1,22 @@
+/* =========================================================
+   BakeU Footer — компактный, стеклянный.
+   Бренд · Навигация · Скачать приложение
+   ========================================================= */
+
 .bake-footer {
-  margin-top: 48px;
-  color: #432b21;
-  font-family: Arial, sans-serif;
+  --ft-ink: #432b21;
+  --ft-muted: #806b5c;
+  --ft-subtle: #8c7867;
+  --ft-icon: #9a7b60;
+  --ft-accent: #b36535;
+  --ft-focus: #a77546;
+  --ft-line: rgb(111 79 51 / 12%);
+  --ft-store-bg: #2a1810;
+  --ft-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  margin-top: 32px;
+  color: var(--ft-ink);
+  font-family: Arial, system-ui, sans-serif;
 }
 
 .bake-footer,
@@ -9,298 +24,320 @@
   box-sizing: border-box;
 }
 
-.bake-footer__inner {
-  width: 100%;
-  margin: 0 auto;
-  padding: 36px 32px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 28px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.4),
-    rgba(255, 247, 232, 0.18)
-  );
-
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.9),
-    0 10px 30px rgba(80, 51, 29, 0.035);
-}
-
 .bake-footer a {
   text-decoration: none;
 }
 
+.bake-footer h3,
+.bake-footer p,
+.bake-footer ul {
+  margin: 0;
+  padding: 0;
+}
+
+.bake-footer ul {
+  list-style: none;
+}
+
+.bake-footer__inner {
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 28px 12px;
+  border: 1px solid rgb(255 255 255 / 75%);
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 45%),
+    rgb(255 247 232 / 22%)
+  );
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 1px 2px rgb(255 255 255 / 90%),
+    0 10px 30px rgb(80 51 29 / 4%);
+}
+
+/* ================= Верхняя часть ================= */
+
 .bake-footer__top {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
-  gap: 30px;
+  grid-template-columns: 1.25fr 0.8fr 0.8fr 1.35fr;
+  gap: 28px;
   align-items: start;
 }
 
-/* Бренд */
+.bake-footer h3 {
+  margin-bottom: 10px;
+  color: var(--ft-ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* ----- Бренд ----- */
 
 .bake-footer__logo {
   display: inline-block;
-  color: #432015;
-  font-size: 36px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -2px;
+  line-height: 0;
 }
 
-.bake-footer__logo span {
-  color: #c68b32;
+.bake-footer__logo img {
+  display: block;
+  width: auto;
+  height: 42px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .bake-footer__brand p {
-  margin: 16px 0 12px;
-  color: #806b5c;
-  font-size: 13px;
-  line-height: 1.8;
+  max-width: 260px;
+  margin-top: 10px;
+  color: var(--ft-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 
-.bake-footer__signature {
-  color: #a17853;
-  font-family: Georgia, serif;
-  font-size: 13px;
-  font-style: italic;
-}
+/* ----- Навигация ----- */
 
-/* Ссылки */
-
-.bake-footer__column {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-}
-
-.bake-footer h3 {
-  margin: 0 0 14px;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.bake-footer__column a {
+.bake-footer__group a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 36px;
-  padding: 6px 0;
-  color: #806b5c;
-  font-size: 12px;
-  line-height: 1.5;
+  min-height: 30px;
+  color: var(--ft-muted);
+  font-size: 13px;
+  line-height: 1.4;
   transition: color 180ms ease;
 }
 
-.bake-footer__column svg {
+.bake-footer__group svg {
   flex-shrink: 0;
-  color: #9a7b60;
+  color: var(--ft-icon);
+  transition: color 180ms ease;
 }
 
-/* Блок карты */
+/* ----- Приложение ----- */
 
-.bake-footer__discover {
-  padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.bake-footer__icon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
+.bake-footer__app p {
   margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.35);
-  color: #6e8059;
+  color: var(--ft-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 
-.bake-footer__discover h3 {
-  margin-bottom: 7px;
+.bake-footer__stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.bake-footer__discover p {
-  margin: 0 0 14px;
-  color: #806b5c;
-  font-size: 12px;
-  line-height: 1.65;
-}
-
-/* Стеклянные кнопки */
-
-.bake-footer__map-link,
-.bake-footer__up {
+.bake-footer__store {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  min-height: 42px;
-  padding: 10px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 100px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.65),
-    rgba(245, 211, 155, 0.24)
-  );
-
-  color: #432b21;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.4;
-
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 1),
-    0 4px 12px rgba(80, 51, 29, 0.06);
-
-  cursor: pointer;
-  transition:
-    background 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
+  min-width: 148px;
+  height: 46px;
+  padding: 0 16px 0 14px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 12px;
+  background: var(--ft-store-bg);
+  color: #fff;
+  box-shadow: 0 4px 14px rgb(42 24 16 / 22%);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 200ms var(--ft-ease), box-shadow 200ms ease,
+    background-color 200ms ease;
 }
 
-/* Нижняя строка */
+.bake-footer__store svg {
+  flex-shrink: 0;
+}
+
+.bake-footer__store-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.bake-footer__store-text small {
+  color: rgb(255 255 255 / 72%);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.bake-footer__store-text strong {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ================= Нижняя строка ================= */
 
 .bake-footer__bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  margin-top: 30px;
-  padding-top: 17px;
-  border-top: 1px solid rgba(111, 79, 51, 0.12);
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ft-line);
 }
 
 .bake-footer__bottom p {
-  flex-shrink: 0;
-  margin: 0;
-  color: #806b5c;
-  font-size: 11px;
-}
-
-.bake-footer__made {
-  color: #8c7867;
-  font-size: 11px;
-  line-height: 1.6;
+  color: var(--ft-subtle);
+  font-size: 11.5px;
 }
 
 .bake-footer__up {
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid rgb(255 255 255 / 95%);
+  border-radius: 100px;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 65%),
+    rgb(245 211 155 / 24%)
+  );
+  color: var(--ft-ink);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow:
+    inset 0 1px 2px #fff,
+    0 3px 10px rgb(80 51 29 / 6%);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 180ms ease, transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
-/* Наведение и фокус */
+/* ================= Hover / active / focus ================= */
 
 @media (hover: hover) {
-  .bake-footer__column a:hover {
-    color: #b36535;
+  .bake-footer__group a:hover {
+    color: var(--ft-accent);
   }
 
-  .bake-footer__map-link:hover,
+  .bake-footer__group a:hover svg {
+    color: var(--ft-accent);
+  }
+
+  .bake-footer__store:hover {
+    background: #3a2318;
+    box-shadow: 0 8px 20px rgb(42 24 16 / 30%);
+    transform: translateY(-2px);
+  }
+
   .bake-footer__up:hover {
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.85),
-      rgba(245, 211, 155, 0.42)
+      rgb(255 255 255 / 85%),
+      rgb(245 211 155 / 42%)
     );
-
     box-shadow:
       inset 0 1px 2px #fff,
-      0 6px 16px rgba(80, 51, 29, 0.1);
-
+      0 5px 14px rgb(80 51 29 / 10%);
     transform: translateY(-2px);
   }
 }
 
-.bake-footer__map-link:active,
+.bake-footer__store:active,
 .bake-footer__up:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.98);
 }
 
 .bake-footer a:focus-visible,
 .bake-footer button:focus-visible {
-  outline: 2px solid #a77546;
-  outline-offset: 4px;
+  outline: 2px solid var(--ft-focus);
+  outline-offset: 3px;
 }
 
-/* Планшет */
+/* ================= Планшет ================= */
 
-@media (max-width: 950px) {
+@media (max-width: 900px) {
   .bake-footer__top {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 28px;
-  }
-}
-
-/* Телефон */
-
-@media (max-width: 540px) {
-  .bake-footer {
-    margin-top: 28px;
-    padding-right: 12px;
-    padding-left: 12px;
-  }
-
-  .bake-footer__inner {
-    /* padding: 24px 20px 16px; */
-    border-radius: 22px;
-  }
-
-  .bake-footer__top {
-    gap: 24px 16px;
+    gap: 22px 24px;
   }
 
   .bake-footer__brand,
-  .bake-footer__discover {
+  .bake-footer__app {
     grid-column: 1 / -1;
   }
 
-  .bake-footer__logo {
-    font-size: 32px;
-  }
-
   .bake-footer__brand p {
-    margin-top: 12px;
+    max-width: none;
+  }
+}
+
+/* ================= Телефон ================= */
+
+@media (max-width: 540px) {
+  .bake-footer {
+    margin-top: 24px;
+    padding-right: 12px;
+    padding-left: 12px;
+    /* Место под нижнюю навигацию (MobileNav), чтобы она не перекрывала футер */
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
-  .bake-footer h3 {
-    font-size: 13px;
+  .bake-footer__inner {
+    padding: 18px 16px 10px;
+    border-radius: 20px;
   }
 
-  .bake-footer__column a {
-    min-height: 42px;
-    font-size: 12px;
+  .bake-footer__logo img {
+    height: 36px;
+  }
+
+  .bake-footer__stores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .bake-footer__store {
+    min-width: 0;
+    height: 44px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .bake-footer__store-text strong {
+    font-size: 13.5px;
+  }
+
+  .bake-footer__group a {
+    min-height: 36px;
   }
 
   .bake-footer__bottom {
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 22px;
+    margin-top: 16px;
   }
+}
 
-  .bake-footer__made {
-    order: 3;
-    width: 100%;
-    font-size: 10px;
+@media (max-width: 360px) {
+  .bake-footer__stores {
+    grid-template-columns: minmax(0, 1fr);
   }
+}
 
-  .bake-footer__up {
-    margin-left: auto;
+/* ================= Fallbacks ================= */
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .bake-footer__inner {
+    background: rgb(255 248 237 / 92%);
   }
 }
 

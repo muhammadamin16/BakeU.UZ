@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -35,6 +36,8 @@ const SUGGESTIONS = [
 const GREETING =
   "Здравствуйте! Что ищем: торт на праздник, выпечку к чаю или хлеб на каждый день?";
 
+const ERROR_TEXT = "Не удалось получить ответ. Попробуйте ещё раз.";
+
 /** Демо-ответы. Здесь позже подключается настоящий API. */
 async function getAiReply(userText) {
   await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 500));
@@ -62,6 +65,37 @@ const formatTime = (timestamp) =>
     minute: "2-digit",
   });
 
+/**
+ * Страница занимает ровно 100% видимой области:
+ *  - блокирует прокрутку самой страницы (прокручивается только лента сообщений);
+ *  - измеряет, сколько места занимает Header, и подгоняет высоту под экран.
+ */
+function useFullViewport(rootRef) {
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    const html = document.documentElement;
+    html.classList.add("ai-lock");
+    window.scrollTo(0, 0);
+
+    const measure = () => {
+      const top = root.getBoundingClientRect().top + window.scrollY;
+      root.style.setProperty("--ai-top", `${Math.max(Math.round(top), 0)}px`);
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      html.classList.remove("ai-lock");
+    };
+  }, [rootRef]);
+}
+
 export default function AiAssistant() {
   const [chats, setChats] = useState(loadChats);
   const [activeId, setActiveId] = useState(null); // null = новый чат
@@ -71,9 +105,12 @@ export default function AiAssistant() {
   const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState(null); // "all" или id чата
 
+  const rootRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const confirmTimer = useRef(null);
+
+  useFullViewport(rootRef);
 
   const activeChat = useMemo(
     () => chats.find((chat) => chat.id === activeId) || null,
@@ -90,7 +127,7 @@ export default function AiAssistant() {
 
   useEffect(() => () => clearTimeout(confirmTimer.current), []);
 
-  // Прокрутка вниз при новых сообщениях
+  // Прокрутка ленты вниз при новых сообщениях
   useEffect(() => {
     const container = messagesRef.current;
     if (!container) return;
@@ -109,9 +146,17 @@ export default function AiAssistant() {
     field.style.height = `${Math.min(field.scrollHeight, 120)}px`;
   }, [input]);
 
+  // Фокус на поле ввода (только на устройствах с мышью, чтобы не вызывать клавиатуру)
+  useEffect(() => {
+    if (isTyping) return;
+    if (window.matchMedia("(hover: hover)").matches) {
+      inputRef.current?.focus();
+    }
+  }, [isTyping, activeId]);
+
   // Escape закрывает панель истории
   useEffect(() => {
-    if (!historyOpen) return;
+    if (!historyOpen) return undefined;
     const onKey = (event) => event.key === "Escape" && setHistoryOpen(false);
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -172,9 +217,16 @@ export default function AiAssistant() {
           text: replyText,
           time: Date.now(),
         });
+      } catch {
+        appendMessage(chatId, {
+          id: createId(),
+          role: "assistant",
+          text: ERROR_TEXT,
+          time: Date.now(),
+          isError: true,
+        });
       } finally {
         setPendingId((current) => (current === chatId ? null : current));
-        inputRef.current?.focus();
       }
     },
     [input, isTyping, activeId, appendMessage],
@@ -210,6 +262,7 @@ export default function AiAssistant() {
     setChats((prev) => prev.filter((chat) => chat.id !== id));
     if (activeId === id) setActiveId(null);
     setConfirmId(null);
+    return undefined;
   };
 
   const clearAll = () => {
@@ -217,6 +270,7 @@ export default function AiAssistant() {
     setChats([]);
     setActiveId(null);
     setConfirmId(null);
+    return undefined;
   };
 
   const groups = useMemo(() => {
@@ -234,7 +288,7 @@ export default function AiAssistant() {
   }, [chats, search]);
 
   return (
-    <div className="ai">
+    <div className="ai" ref={rootRef}>
       <div className="ai__card">
         {/* ===== История ===== */}
         <aside
@@ -391,26 +445,47 @@ export default function AiAssistant() {
           </header>
 
           <div
-            className="ai__messages"
+            className={`ai__messages ${isNewChat ? "is-empty" : ""}`}
             role="log"
             aria-live="polite"
             ref={messagesRef}
           >
-            <div className="ai-bubble ai-bubble--assistant">
-              <p>{GREETING}</p>
-            </div>
+            {isNewChat ? (
+              <div className="ai-welcome">
+                <span className="ai-welcome__badge" aria-hidden="true">
+                  <Sparkles size={26} strokeWidth={2} />
+                </span>
+                <h2>Чем помочь?</h2>
+                <p>{GREETING}</p>
 
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`ai-bubble ai-bubble--${message.role}`}
-              >
-                <p>{message.text}</p>
-                <time dateTime={new Date(message.time).toISOString()}>
-                  {formatTime(message.time)}
-                </time>
+                <div className="ai-welcome__grid">
+                  {SUGGESTIONS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="ai-chip"
+                      onClick={() => handleSend(item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`ai-bubble ai-bubble--${message.role} ${
+                    message.isError ? "ai-bubble--error" : ""
+                  }`}
+                >
+                  <p>{message.text}</p>
+                  <time dateTime={new Date(message.time).toISOString()}>
+                    {formatTime(message.time)}
+                  </time>
+                </div>
+              ))
+            )}
 
             {isTyping && (
               <div
@@ -424,21 +499,6 @@ export default function AiAssistant() {
             )}
           </div>
 
-          {isNewChat && !isTyping && (
-            <div className="ai__suggestions">
-              {SUGGESTIONS.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className="ai-chip"
-                  onClick={() => handleSend(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          )}
-
           <form className="ai__form" onSubmit={handleSubmit}>
             <textarea
               ref={inputRef}
@@ -448,7 +508,6 @@ export default function AiAssistant() {
               onKeyDown={handleKeyDown}
               placeholder="Напишите, что нужно…"
               aria-label="Сообщение помощнику"
-              disabled={isTyping}
               autoComplete="off"
               maxLength={1000}
             />

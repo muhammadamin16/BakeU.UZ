@@ -9,7 +9,7 @@ import Product from "../pages/Product/Product";
 import Cart from "../pages/Cart/Cart";
 import Favorites from "../pages/Favorites/Favorites";
 import Home from "../pages/Home/Home";
-import Map from "../pages/Map/Map";
+import MapPage from "../pages/Map/Map";
 import AiAssistant from "../pages/AiAssistant/AiAssistant";
 import Chat from "../pages/Messages/Chat";
 
@@ -18,15 +18,26 @@ import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
-export default function AppRoutes() {
-  const location = useLocation();
+// Header va Footer ko'rinmaydigan sahifalar
+const AUTH_PATHS = ["/login", "/register"];
 
-  const isAuthPage = ["/login", "/register"].includes(location.pathname);
-  const isHome = location.pathname === "/";
+// Footer ko'rinmaydigan sahifalar (ichki yo'llar ham: /profile/..., /ai/...)
+const NO_FOOTER_PREFIXES = ["/ai", "/profile"];
+
+function matchesPath(pathname, base) {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+export default function AppRoutes() {
+  const { pathname } = useLocation();
+
+  const isAuthPage = AUTH_PATHS.includes(pathname);
+  const isHome = pathname === "/";
+  const showFooter =
+    !isAuthPage && !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
   return (
     <>
-      {/* Header va Footer auth sahifalarida yashirin */}
       {!isAuthPage && <Header />}
 
       <main className="container">
@@ -35,7 +46,7 @@ export default function AppRoutes() {
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/map" element={<Map />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/ai" element={<AiAssistant />} />
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
@@ -51,9 +62,8 @@ export default function AppRoutes() {
       {/* Modal faqat bosh sahifada; kirgan foydalanuvchiga AuthModal o'zi ko'rsatmaydi */}
       {isHome && <AuthModal />}
 
-      {/* MobileNav endi hamma sahifada, login/register'da ham */}
       <MobileNav />
-      {!isAuthPage && <Footer />}
+      {showFooter && <Footer />}
     </>
   );
 }

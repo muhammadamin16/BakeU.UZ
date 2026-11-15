@@ -10,7 +10,7 @@
 
   width: min(1280px, calc(100% - 32px));
   margin: 20px auto 0;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  /* padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); */
   color: var(--seller-ink);
   font-family: Arial, sans-serif;
 }
