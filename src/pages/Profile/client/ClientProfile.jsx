@@ -218,22 +218,24 @@ export default function ClientProfile({
                         </div>
                       </div>
                       <ol className="cu-progress" aria-label="Статус заказа">
-                        {["Принят", "Готовится", "Доставка"].map((label, i) => (
-                          <li
-                            key={label}
-                            className={
-                              i <=
-                              ({ Новый: 0, Готовится: 1, Доставка: 2 }[
-                                currentOrder.status
-                              ] ?? 0)
-                                ? "done"
-                                : ""
-                            }
-                          >
-                            <i />
-                            {label}
-                          </li>
-                        ))}
+                        {["Ожидает", "Готовится", "Доставка"].map(
+                          (label, i) => (
+                            <li
+                              key={label}
+                              className={
+                                i <=
+                                ({ Новый: 0, Готовится: 1, Доставка: 2 }[
+                                  currentOrder.status
+                                ] ?? 0)
+                                  ? "done"
+                                  : ""
+                              }
+                            >
+                              <i />
+                              {label}
+                            </li>
+                          ),
+                        )}
                       </ol>
                       <div className="cu-actions">
                         <button

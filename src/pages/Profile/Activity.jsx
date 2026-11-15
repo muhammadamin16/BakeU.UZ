@@ -2,22 +2,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   useWorkspace,
-  createOrder,
   updateOrder,
   addReview,
   replyReview,
 } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
-import { useCartStore } from "../../store/cartStore";
-import { useCatalog } from "../Seller/sellerData";
 const money = (n) => new Intl.NumberFormat("ru-RU").format(n) + " сум";
 export function Orders({ account, ownerId }) {
   const all = useWorkspace((s) => s.orders),
-    reviews = useWorkspace((s) => s.reviews),
-    cart = useCartStore((s) => s.items),
-    { products } = useCatalog();
-  const [address, setAddress] = useState(account.addresses?.[0] || ""),
-    [notice, setNotice] = useState(""),
+    reviews = useWorkspace((s) => s.reviews);
+  const [notice, setNotice] = useState(""),
     [filter, setFilter] = useState("Все");
   const seller = account.role === "seller",
     orders = all.filter((o) =>
@@ -53,53 +47,14 @@ export function Orders({ account, ownerId }) {
         </select>
       </div>
       {!seller && (
-        <form
-          className="bw-order-create"
-          onSubmit={(e) => {
-            e.preventDefault();
-            run(() => {
-              const lines = Object.entries(cart)
-                .filter(([, q]) => q > 0)
-                .map(([id, quantity]) => {
-                  const p = products.find((p) => String(p.id) === id);
-                  if (!p) throw Error("Товар недоступен. Обновите корзину.");
-                  return {
-                    id: p.id,
-                    name: p.name,
-                    price: p.price,
-                    image: p.image,
-                    shopId: p.shopId,
-                    quantity,
-                  };
-                });
-              createOrder(account, lines, address);
-              useCartStore.getState().clear();
-            });
-          }}
-        >
-          <p>
-            Создать локальный тестовый заказ из текущей корзины. Оплата и
-            реальная доставка не выполняются.
-          </p>
-          <label className="bw-field">
-            Адрес доставки
-            <input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              maxLength={250}
-            />
-          </label>
-          <button
-            className="bw-btn primary"
-            disabled={!Object.values(cart).some((q) => q > 0)}
-          >
-            Создать демо-заказ
-          </button>{" "}
-          <Link to="/cart" className="bw-btn">
-            Корзина
+        <p>
+          <Link to="/checkout" className="bw-btn primary">
+            Оформить заказ из корзины
+          </Link>{" "}
+          <Link to="/orders" className="bw-btn">
+            Все заказы
           </Link>
-        </form>
+        </p>
       )}
       <p role="status">{notice}</p>
       {!orders.length && <p>Заказов пока нет.</p>}
@@ -114,6 +69,9 @@ export function Orders({ account, ownerId }) {
             <small>
               {new Date(o.at).toLocaleDateString("ru-RU")} · {o.buyerName}
             </small>
+            <p>
+              <strong>{seller ? o.buyerName : o.shopName || o.shopId}</strong>
+            </p>
             {o.items.map((p) => (
               <div className="bw-order-line" key={p.id}>
                 {p.image && <img src={p.image} alt="" />}
@@ -123,7 +81,27 @@ export function Orders({ account, ownerId }) {
                 <b>{money(p.price * p.quantity)}</b>
               </div>
             ))}
-            <p>{o.address}</p>
+            <p>
+              {o.fulfillment === "pickup" ? "Самовывоз: " : "Доставка: "}
+              {o.address}
+            </p>
+            {o.schedule && (
+              <p>
+                {o.schedule.date.split("-").reverse().join(".")} в{" "}
+                {o.schedule.time}
+              </p>
+            )}
+            {o.buyerPhone && seller && (
+              <p>
+                <a href={"tel:" + o.buyerPhone}>Позвонить: {o.buyerPhone}</a>
+              </p>
+            )}
+            {o.note && <p>Комментарий: {o.note}</p>}
+            <p>
+              <Link className="bw-btn" to={"/orders/" + o.id}>
+                Подробности заказа
+              </Link>
+            </p>
             <strong>Итого: {money(o.total)}</strong>
             {seller && (
               <div className="bw-actions">

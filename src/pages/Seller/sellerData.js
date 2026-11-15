@@ -39,6 +39,7 @@ export const products = [
 export const shops = [
   {
     id: "shahzoda",
+    demo: true,
     name: "Shahzoda Family",
     initials: "SF",
     logo: "",
@@ -75,6 +76,7 @@ export const shops = [
   },
   {
     id: "sweet-home",
+    demo: true,
     name: "Sweet Home",
     initials: "SH",
     logo: "",
@@ -103,6 +105,7 @@ export const shops = [
   },
   {
     id: "bakeu",
+    demo: true,
     name: "BakeU Bakery",
     initials: "BU",
     logo: "",

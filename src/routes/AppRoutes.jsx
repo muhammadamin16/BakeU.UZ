@@ -8,6 +8,9 @@ import AuthModal from "../components/AuthModal/AuthModal";
 
 import Product from "../pages/Product/Product";
 import Cart from "../pages/Cart/Cart";
+import Checkout from "../pages/Checkout/Checkout";
+import Orders from "../pages/Orders/Orders";
+import OrderDetails from "../pages/Orders/OrderDetails";
 import Favorites from "../pages/Favorites/Favorites";
 import Home from "../pages/Home/Home";
 import MapPage from "../pages/Map/Map";
@@ -21,7 +24,7 @@ import Seller from "../pages/Seller/Seller";
 
 const AUTH_PATHS = ["/login", "/register"];
 
-const NO_FOOTER_PREFIXES = ["/ai", "/profile"];
+const NO_FOOTER_PREFIXES = ["/ai", "/profile", "/checkout", "/orders"];
 
 function matchesPath(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);
@@ -47,6 +50,9 @@ export default function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/ai" element={<AiAssistant />} />

@@ -1,6 +1,7 @@
+import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled } from "../../../bot/client/accountApi";
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -82,6 +83,8 @@ function Field({
 
 export default function Register() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const returnTo = authReturnTo(params);
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("client");
   const [form, setForm] = useState(EMPTY);
@@ -89,7 +92,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (isLoggedIn()) return <Navigate to="/profile" replace />;
+  if (isLoggedIn()) return <Navigate to={returnTo} replace />;
 
   const isSeller = role === "seller";
 
@@ -120,7 +123,7 @@ export default function Register() {
     setBusy(true);
     try {
       await registerLocal(form, role);
-      navigate("/profile", { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (e) {
       setError(e.message || "Не удалось создать аккаунт");
     } finally {
@@ -313,7 +316,7 @@ export default function Register() {
       )}
 
       <p className="bk-switch">
-        Уже есть аккаунт? <Link to="/login">Войти</Link>
+        Уже есть аккаунт? <Link to={authLink("/login", params)}>Войти</Link>
       </p>
       {step === 2 && (
         <p className="bk-note">

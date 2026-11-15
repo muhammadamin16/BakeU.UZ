@@ -107,7 +107,13 @@ export default function Cart() {
               <span>Итого</span>
               <strong>{money(total)}</strong>
             </div>
-            <Link className="bu-button" to="/">
+            <Link className="bu-button" to="/checkout">
+              Перейти к оформлению
+            </Link>
+            <p className="bu-checkout-hint">
+              Телефоны продавцов и согласование времени — на следующем шаге.
+            </p>
+            <Link className="bu-continue" to="/">
               Продолжить покупки
             </Link>
           </aside>

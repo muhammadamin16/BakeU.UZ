@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { accountId } from "./localAccount";
+import { shopIdFor } from "./shopStore";
+import { prepareCheckout } from "./checkout";
 const KEY = "bakeu-workspace-v2";
 const empty = {
   threads: [],
@@ -18,7 +20,13 @@ function read() {
 export const useWorkspace = create(() => read());
 function commit(patch) {
   const next = { ...useWorkspace.getState(), ...patch };
-  localStorage.setItem(KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    throw Error(
+      "Не удалось сохранить данные. Освободите место в браузере или разрешите локальное хранилище. Корзина сохранена.",
+    );
+  }
   useWorkspace.setState(next, true);
 }
 if (typeof window !== "undefined")
@@ -129,33 +137,31 @@ export function setAutoReply(shopId, enabled, text) {
     },
   });
 }
-export function createOrder(account, lines, address) {
-  if (account.role !== "client" || !address.trim() || !lines.length)
-    throw Error("Укажите адрес и товары.");
-  const groups = {};
-  for (const l of lines) {
-    if (
-      !l.shopId ||
-      !Number.isFinite(l.price) ||
-      l.price <= 0 ||
-      !Number.isInteger(l.quantity) ||
-      l.quantity < 1
-    )
-      throw Error("Проверьте товары.");
-    (groups[l.shopId] ??= []).push(l);
-  }
-  const orders = Object.entries(groups).map(([shopId, items]) => ({
-    id: uid(),
+export function submitCheckout(
+  account,
+  cart,
+  details,
+  catalog,
+  shops,
+  checkoutId,
+) {
+  const state = useWorkspace.getState();
+  const result = prepareCheckout(state, {
+    account,
     buyerId: accountId(account),
-    buyerName: account.firstName,
-    shopId,
-    items,
-    address: address.trim(),
-    status: "Новый",
-    at: Date.now(),
-    total: items.reduce((n, p) => n + p.price * p.quantity, 0),
-  }));
-  commit({ orders: [...orders, ...useWorkspace.getState().orders] });
+    ownShopId: account.role === "seller" ? shopIdFor(account) : undefined,
+    cart,
+    details,
+    catalog,
+    shops,
+    checkoutId,
+  });
+  if (!result.repeated)
+    commit({
+      orders: [...result.orders, ...state.orders],
+      threads: result.threads,
+    });
+  return result.orders;
 }
 export function updateOrder(ownerId, id, status) {
   const s = useWorkspace.getState(),
@@ -167,7 +173,20 @@ export function updateOrder(ownerId, id, status) {
   };
   if (!o || o.shopId !== ownerId || !next[o.status]?.includes(status))
     throw Error("Недопустимый статус");
-  commit({ orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)) });
+  commit({
+    orders: s.orders.map((o) =>
+      o.id === id
+        ? {
+            ...o,
+            status,
+            history: [
+              ...(o.history || [{ status: o.status, at: o.at }]),
+              { status, at: Date.now(), note: "Статус изменён продавцом" },
+            ],
+          }
+        : o,
+    ),
+  });
 }
 export function addReview(account, orderId, rating, text) {
   const s = useWorkspace.getState(),
