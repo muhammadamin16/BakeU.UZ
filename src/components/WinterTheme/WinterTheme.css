@@ -564,10 +564,8 @@
   }
 
   [data-season="winter"] .bottom-nav-shell .bottom-nav__mascot {
-    width: 83px;
-    height: 105px;
-    right: 42px;
-    top: -60px;
+
+    top: -46px;
   }
 
   [data-season="winter"] .bottom-nav__link {

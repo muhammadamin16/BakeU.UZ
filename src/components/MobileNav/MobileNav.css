@@ -1,66 +1,80 @@
-/* ==========================================
-   BAKEU — FLOATING GLASS TAB BAR
-   iOS-style: liquid glass lens indicator
-========================================== */
-
-.bottom-nav {
+/* Бутун навбар экраннинг ўртасида туради */
+#root .bottom-nav-shell.bottom-nav-shell--centered {
   position: fixed;
   z-index: 1000;
 
+  top: auto;
+  right: auto;
   left: 50%;
-  bottom: calc(13px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+
+  width: min(560px, calc(100% - 24px));
+  max-width: none;
+  margin: 0;
+  padding: 0;
 
   transform: translateX(-50%);
+  box-sizing: border-box;
+
+  pointer-events: none;
+  overflow: visible;
+}
+
+.bottom-nav-shell--centered,
+.bottom-nav-shell--centered * {
+  box-sizing: border-box;
+}
+
+/* Навбар wrapper кенглигини тўлиқ эгаллайди */
+#root .bottom-nav-shell--centered .bottom-nav {
+  position: relative;
+
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
 
   display: flex;
   align-items: stretch;
 
-  width: min(560px, calc(100% - 24px));
-  padding: 8px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 
-  box-sizing: border-box;
+  /* Ўнгда айиқча учун жой */
+  padding: 8px 86px 8px 8px;
 
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  border-radius: 50px;
+  transform: none;
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
 
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.42),
-    rgba(255, 255, 255, 0.26)
+    150deg,
+    rgba(255, 250, 248, 0.94),
+    rgba(248, 227, 230, 0.88)
   );
 
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    0 10px 30px rgba(67, 32, 21, 0.14),
-    0 2px 6px rgba(67, 32, 21, 0.06);
+    inset 0 1px 0 #fff,
+    0 8px 25px rgba(105, 69, 84, 0.14);
+
+  z-index: 0;
+  isolation: isolate;
+  overflow: visible;
+  pointer-events: auto;
 
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-
-  /* indikator bosilganda navbardan tashqariga chiqishi uchun */
-  overflow: visible;
-  isolation: isolate;
 }
 
-.bottom-nav *,
-.bottom-nav *::before,
-.bottom-nav *::after {
-  box-sizing: border-box;
-}
-
-/* ==========================================
-   GLASS INDICATOR
-   Kengligi, balandligi va joyini JS boshqaradi
-========================================== */
-
-.bottom-nav__indicator {
+/* Ҳаракатланувчи шиша индикатор */
+.bottom-nav-shell--centered .bottom-nav__indicator {
   position: absolute;
   top: 0;
   left: 0;
@@ -72,103 +86,43 @@
   border-radius: 999px;
   pointer-events: none;
 
+  background: linear-gradient(
+    145deg,
+    rgba(255, 247, 225, 0.95),
+    rgba(255, 191, 95, 0.65)
+  );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 3px 7px rgba(255, 255, 255, 0.9),
+    0 3px 10px rgba(130, 87, 38, 0.1);
+
   will-change: transform, width, height;
   backface-visibility: hidden;
 
   transition:
-    opacity 200ms ease,
-    background 260ms ease,
-    box-shadow 260ms ease;
-
-  /* Suyuq shisha: deyarli shaffof, cheti yorug' */
-  background:
-    radial-gradient(
-      120% 90% at 30% 0%,
-      rgba(255, 255, 255, 0.55),
-      transparent 60%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.34),
-      rgba(255, 244, 222, 0.16)
-    );
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
-    inset 2px 3px 6px rgba(255, 255, 255, 0.7),
-    inset -2px -3px 7px rgba(255, 255, 255, 0.28),
-    0 4px 14px rgba(67, 32, 21, 0.1);
+    opacity 180ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
 }
 
-/* Yuqoridagi yaltiroq nur */
-.bottom-nav__indicator::before {
+.bottom-nav-shell--centered .bottom-nav__indicator::before {
   content: "";
-
   position: absolute;
+
   top: 4px;
-  right: 14%;
-  left: 14%;
+  right: 15%;
+  left: 15%;
+  height: 30%;
 
-  height: 34%;
   border-radius: 999px;
-
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0)
-  );
+  background: linear-gradient(#ffffffb3, #ffffff00);
 
   pointer-events: none;
 }
 
-/* Pastdagi aks-yorug'lik */
-.bottom-nav__indicator::after {
-  content: "";
-
-  position: absolute;
-  right: 22%;
-  bottom: 3px;
-  left: 22%;
-
-  height: 18%;
-  border-radius: 999px;
-
-  background: linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.35),
-    rgba(255, 255, 255, 0)
-  );
-
-  pointer-events: none;
-}
-
-/* Bosilganda: deyarli shaffof shisha, cheti porlaydi */
-.bottom-nav.is-pressed .bottom-nav__indicator {
-  background:
-    radial-gradient(
-      120% 90% at 30% 0%,
-      rgba(255, 255, 255, 0.5),
-      transparent 60%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.22),
-      rgba(255, 244, 222, 0.08)
-    );
-
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
-    inset 3px 4px 9px rgba(255, 255, 255, 0.8),
-    inset -3px -4px 10px rgba(255, 255, 255, 0.35),
-    0 14px 30px rgba(67, 32, 21, 0.22),
-    0 3px 8px rgba(67, 32, 21, 0.1);
-}
-
-/* ==========================================
-   LINKS
-========================================== */
-
-.bottom-nav__link {
+/* Меню тугмалари */
+.bottom-nav-shell--centered .bottom-nav__link {
   position: relative;
   z-index: 1;
 
@@ -178,193 +132,71 @@
   align-items: center;
   justify-content: center;
 
-  gap: 5px;
-
   min-width: 0;
-  min-height: 60px;
+  min-height: 54px;
+  padding: 8px 2px;
+  gap: 4px;
 
-  padding: 10px 2px;
-  border-radius: 40px;
+  border-radius: 999px;
 
   color: #4a2a1c;
-
-  font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 11px;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1.3;
-  letter-spacing: 0.01em;
 
   text-align: center;
   text-decoration: none;
 
   touch-action: none;
-  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 
-  transition: color 200ms ease;
+  transition: color 180ms ease;
 }
 
-.bottom-nav__link svg {
+.bottom-nav-shell--centered .bottom-nav__link svg {
   flex-shrink: 0;
-  transition: transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  width: 22px;
+  height: 22px;
+
+  transition: transform 200ms ease;
 }
 
-.bottom-nav__label {
+.bottom-nav-shell--centered .bottom-nav__label {
   display: block;
   max-width: 100%;
 
-  white-space: nowrap;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.bottom-nav__link.is-active {
-  color: #9a5a14;
+.bottom-nav-shell--centered .bottom-nav__link.is-active {
+  color: #a65b0b;
 }
 
-/* Bosilganda tanlangan ikonka sal kattalashadi */
-.bottom-nav.is-pressed .bottom-nav__link.is-active svg {
-  transform: scale(1.12);
+.bottom-nav-shell--centered
+  .bottom-nav.is-pressed
+  .bottom-nav__link.is-active
+  svg {
+  transform: scale(1.1);
 }
 
-/* Klaviatura fokusi */
-.bottom-nav__link:focus-visible {
-  outline: 2px solid #a77546;
+.bottom-nav-shell--centered .bottom-nav__link:focus-visible {
+  outline: 2px solid #a77542;
   outline-offset: -4px;
 }
 
-.bottom-nav.is-pressed,
-.bottom-nav.is-pressed .bottom-nav__link {
-  cursor: grabbing;
-}
-
-@media (hover: hover) {
-  .bottom-nav__link:hover {
-    color: #9a5a14;
-  }
-}
-
-/* ==========================================
-   MOBILE
-========================================== */
-
-@media (max-width: 480px) {
-  .bottom-nav {
-    width: calc(100% - 25px);
-    padding: 6px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .bottom-nav__link {
-    min-height: 56px;
-    padding: 9px 2px;
-    font-size: 10px;
-    gap: 4px;
-  }
-
-  .bottom-nav__link svg {
-    width: 21px;
-    height: 21px;
-  }
-}
-
-@media (max-width: 350px) {
-  .bottom-nav {
-    width: calc(100% - 20px);
-    padding: 5px;
-  }
-
-  .bottom-nav__link {
-    min-height: 52px;
-    font-size: 9px;
-    gap: 3px;
-  }
-
-  .bottom-nav__link svg {
-    width: 19px;
-    height: 19px;
-  }
-}
-
-/* ==========================================
-   FALLBACKS
-========================================== */
-
-@supports not (
-  (backdrop-filter: blur(1px)) or
-  (-webkit-backdrop-filter: blur(1px))
-) {
-  .bottom-nav {
-    background: rgba(255, 252, 247, 0.95);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottom-nav__link,
-  .bottom-nav__link svg,
-  .bottom-nav__indicator {
-    transition: none;
-  }
-}
-/* Навигация ва уни қучоқлаб турган айиқча */
-.bottom-nav-shell {
-  position: fixed;
-  z-index: 1000;
-
-  left: 50%;
-  bottom: calc(13px + env(safe-area-inset-bottom, 0px));
-
-  width: min(640px, calc(100% - 24px));
-  transform: translateX(-50%);
-
-  /* Айиқча орқасидаги элементлар ҳам босилади */
-  pointer-events: none;
-}
-
-/* Аввалги fixed позицияни ташқи контейнер бошқаради */
-.bottom-nav-shell .bottom-nav {
-  position: relative;
-
-  top: auto;
-  right: auto;
-  bottom: auto;
-  left: auto;
-
-  width: calc(100% - 80px);
-  margin: 0;
-  transform: none;
-
-  pointer-events: auto;
-  overflow: visible;
-
-  border: 1px solid rgba(255, 255, 255, 0.85);
-
-  background: linear-gradient(
-    180deg,
-    rgba(255, 253, 249, 0.90),
-    rgba(255, 242, 225, 0.82)
-  );
-
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-  backdrop-filter: blur(22px) saturate(180%);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
-    0 10px 30px rgba(67, 32, 21, 0.10);
-}
-
-/* Панжалар навбарнинг ўнг чети устига тушади */
-.bottom-nav__mascot {
+/* Айиқча навбарнинг ўнг четида */
+#root .bottom-nav-shell--centered .bottom-nav__mascot {
   position: absolute;
+  z-index: 2;
 
-  right: 11px;
-  bottom: 6px;
+  right: -8px;
+  bottom: -5px;
 
-  width: 180px;
-  height: 120px;
+  width: 98px;
+  height: 116px;
   max-width: none;
 
   object-fit: contain;
@@ -373,53 +205,99 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  z-index: 1000 ;
+
   filter: drop-shadow(
-    0 4px 3px rgba(115, 63, 30, 0.12)
+    0 3px 3px rgba(105, 59, 27, 0.12)
   );
 }
 
 /* Телефон */
 @media (max-width: 480px) {
-  .bottom-nav-shell {
-    width: calc(100% - 0px);
+  #root .bottom-nav-shell.bottom-nav-shell--centered {
+    width: calc(96% -   20px);
+    left: 48%;
     bottom: calc(
       16px + env(safe-area-inset-bottom, 0px)
     );
-    left: calc(53%);
   }
 
-  .bottom-nav-shell .bottom-nav {
-    width: calc(100% - 70px);
-    padding: 6px;
+  #root .bottom-nav-shell--centered .bottom-nav {
+    width: 100%;
+    padding: 6px 62px 6px 6px;
   }
 
-  .bottom-nav__mascot {
-    right: 21px;
-    top: -35px;
-    width: 136px;
-    height: 91px;
+  .bottom-nav-shell--centered .bottom-nav__link {
+    min-height: 48px;
+    padding: 7px 1px;
+    font-size: 9px;
+    gap: 4px;
+  }
+
+  .bottom-nav-shell--centered .bottom-nav__link svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  #root .bottom-nav-shell--centered .bottom-nav__mascot {
+    right: -5px;
+    bottom: -4px;
+    width: 66px;
+    height: 88px;
   }
 }
 
-/* Кичик экран */
+/* Кичик телефон */
 @media (max-width: 350px) {
-  .bottom-nav-shell .bottom-nav {
-    padding: 5px;
+  #root .bottom-nav-shell.bottom-nav-shell--centered {
+    width: calc(100% - 16px);
   }
 
-  .bottom-nav__mascot {
-    width: 116px;
-    height: 78px;
+  .bottom-nav-shell--centered .bottom-nav__link {
+    font-size: 8.5px;
   }
 }
 
-/* Blur ишламайдиган браузерлар */
+@media (hover: hover) {
+  .bottom-nav-shell--centered .bottom-nav__link:hover {
+    color: #a65b0b;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-shell--centered .bottom-nav__indicator,
+  .bottom-nav-shell--centered .bottom-nav__link,
+  .bottom-nav-shell--centered .bottom-nav__link svg {
+    transition: none;
+  }
+}
+
 @supports not (
   (backdrop-filter: blur(1px)) or
   (-webkit-backdrop-filter: blur(1px))
 ) {
-  .bottom-nav-shell .bottom-nav {
-    background: #fff7ed;
+  #root .bottom-nav-shell--centered .bottom-nav {
+    background: #fff4ef;
+  }
+}
+#root .bottom-nav-shell--centered .bottom-nav {
+  padding: 8px;
+}
+
+/* Айиқча тугмаларни тўсмай, юқори четда туради */
+#root .bottom-nav-shell--centered .bottom-nav__mascot {
+  right: 0;
+  bottom: calc(100% - 12px);
+  width: 80px;
+  height: 95px;
+}
+
+@media (max-width: 480px) {
+  #root .bottom-nav-shell--centered .bottom-nav {
+    padding: 6px;
+  }
+
+  #root .bottom-nav-shell--centered .bottom-nav__mascot {
+    width: 64px;
+    height: 78px;
   }
 }
