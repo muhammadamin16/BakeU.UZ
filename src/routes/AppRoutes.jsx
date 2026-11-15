@@ -18,10 +18,8 @@ import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
-// Header va Footer ko'rinmaydigan sahifalar
 const AUTH_PATHS = ["/login", "/register"];
 
-// Footer ko'rinmaydigan sahifalar (ichki yo'llar ham: /profile/..., /ai/...)
 const NO_FOOTER_PREFIXES = ["/ai", "/profile"];
 
 function matchesPath(pathname, base) {
@@ -59,7 +57,6 @@ export default function AppRoutes() {
         </Routes>
       </main>
 
-      {/* Modal faqat bosh sahifada; kirgan foydalanuvchiga AuthModal o'zi ko'rsatmaydi */}
       {isHome && <AuthModal />}
 
       <MobileNav />
