@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -36,16 +36,10 @@ export default function Sidebar({ open, onClose }) {
         aria-label="Закрыть меню"
       />
       <aside className={`ad-sidebar ${open ? "open" : ""}`}>
-        <div className="ad-brand">
-          <span>
-            B<span className="ad-brand-bread">♨</span>KEU
-          </span>
-          <small>
-            МАРКЕТПЛЕЙС
-            <br />
-            ДОМАШНЕЙ ВЫПЕЧКИ
-          </small>
-        </div>
+        <Link className="ad-brand" to="/" aria-label="BakeU — главная сайта">
+          <img src="/images/logo-bear.png" alt="BakeU" width="160" height="72" />
+          <small>Панель управления</small>
+        </Link>
         <button
           className="ad-mobile-close ad-icon"
           onClick={onClose}

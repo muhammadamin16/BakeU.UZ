@@ -4,7 +4,9 @@ export default function StatCard({ icon: Icon, label, value, to }) {
   return (
     <Link className="ad-stat" to={to}>
       <span>
-        <Icon size={23} />
+        <span className="ad-stat-icon">
+          <Icon size={21} />
+        </span>
         {label}
       </span>
       <strong>{value.toLocaleString("ru-RU")}</strong>
