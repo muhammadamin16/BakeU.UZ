@@ -1,9 +1,13 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+export class ConfigError extends Error {}
+
 export function readConfig(env = process.env) {
   const token = (env.BOT_TOKEN || "").trim();
   if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(token))
-    throw Error("BOT_TOKEN is missing or invalid. Fill src/bot/.env.");
+    throw new ConfigError(
+      "BOT_TOKEN is missing or invalid. Fill src/bot/.env.",
+    );
   const adminIds = [
     ...new Set(
       (env.ADMIN_IDS || "")
@@ -13,7 +17,7 @@ export function readConfig(env = process.env) {
     ),
   ];
   if (!adminIds.length || adminIds.some((x) => !/^\d{1,20}$/.test(x)))
-    throw Error("ADMIN_IDS must contain numeric Telegram user IDs.");
+    throw new ConfigError("ADMIN_IDS must contain numeric Telegram user IDs.");
   function url(key, fallback = "") {
     const raw = (env[key] || fallback).trim();
     if (!raw) return "";
@@ -21,10 +25,12 @@ export function readConfig(env = process.env) {
     try {
       u = new URL(raw);
     } catch {
-      throw Error(`${key} must be a full HTTP(S) URL.`);
+      throw new ConfigError(`${key} must be a full HTTP(S) URL.`);
     }
     if (!["https:", "http:"].includes(u.protocol) || u.username || u.password)
-      throw Error(`${key} must be an HTTP(S) URL without credentials.`);
+      throw new ConfigError(
+        `${key} must be an HTTP(S) URL without credentials.`,
+      );
     return u.href;
   }
   const siteUrl = url("SITE_URL", "https://bakeu.uz");
@@ -37,29 +43,29 @@ export function readConfig(env = process.env) {
     try {
       parsed = new URL(origin);
     } catch {
-      throw Error("Invalid ALLOWED_ORIGINS.");
+      throw new ConfigError("Invalid ALLOWED_ORIGINS.");
     }
     if (
       !["http:", "https:"].includes(parsed.protocol) ||
       parsed.origin !== origin
     )
-      throw Error(
+      throw new ConfigError(
         "ALLOWED_ORIGINS must contain exact origins without paths or trailing slashes.",
       );
   }
   const port = Number(env.API_PORT || 3001),
     sessionHours = Number(env.SESSION_HOURS || 24);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
-    throw Error("API_PORT must be 1–65535.");
+    throw new ConfigError("API_PORT must be 1–65535.");
   if (!Number.isInteger(sessionHours) || sessionHours < 1 || sessionHours > 720)
-    throw Error("SESSION_HOURS must be 1–720.");
+    throw new ConfigError("SESSION_HOURS must be 1–720.");
   const host = env.API_HOST || "127.0.0.1",
     trustProxy = env.TRUST_PROXY === "true";
   if (trustProxy && !["127.0.0.1", "::1"].includes(host))
-    throw Error("TRUST_PROXY requires a loopback API_HOST.");
+    throw new ConfigError("TRUST_PROXY requires a loopback API_HOST.");
   const supportEmail = (env.SUPPORT_EMAIL || "").trim();
   if (supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail))
-    throw Error("SUPPORT_EMAIL is invalid.");
+    throw new ConfigError("SUPPORT_EMAIL is invalid.");
   const base = fileURLToPath(new URL("../", import.meta.url));
   return {
     token,

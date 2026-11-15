@@ -62,3 +62,22 @@ Botdagi foydalanuvchi tugmalari: sayt, Telegram, Instagram, email, yordam va Bak
 - Saytni Telegram foydalanuvchilari ochishi uchun u haqiqiy HTTPS manzilda joylashtirilgan bo'lishi kerak. `localhost` boshqa foydalanuvchilarda ochilmaydi.
 - Bot noutbuk o'chsa to'xtaydi. Doimiy ishlashi uchun VPS kerak. VPS uchun yo'riqnoma `README.md` va `deploy/` ichida.
 - Bir tokenni bir vaqtning o'zida ikki joyda ishga tushirmang.
+
+## Bot ishga tushmasa
+
+```powershell
+git pull origin Amin
+npm run bot:check
+npm run bot
+```
+
+- `bot:check` Telegram'ga ulanmasdan sozlamalar va SQLite'ni tekshiradi.
+- `TELEGRAM_URL` / `INSTAGRAM_URL`: `@username` emas, to'liq `https://...` havola yozing yoki hozircha bo'sh qoldiring.
+- `SUPPORT_EMAIL`: haqiqiy email yozing yoki bo'sh qoldiring.
+- `ETIMEDOUT` / `ENETUNREACH`: kompyuterdan Telegram API'ga ulanish muammosi.
+- `ENOTFOUND`: DNS muammosi.
+- `401` / `404`: BotFather tokenini tekshiring.
+- `409`: shu token bilan boshqa bot nusxasi ishlayapti.
+- Port bandligi: oldingi bot jarayonini to'xtating.
+
+Yordam so'raganda faqat terminaldagi xato xabarini yuboring. `.env` faylini yoki tokenni yubormang.

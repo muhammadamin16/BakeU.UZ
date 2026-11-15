@@ -1,3 +1,4 @@
+import { formatStartupError } from "./utils/startupError.js";
 import { readConfig } from "./config/index.js";
 import { openDatabase } from "./database/index.js";
 import { createRepository } from "./database/repository.js";
@@ -10,8 +11,10 @@ import { createAuth } from "./services/auth.js";
 import { createApiServer } from "./services/httpServer.js";
 import { createUpdateHandler } from "./handlers/router.js";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let startupStage = "configuration";
 async function main() {
   const config = readConfig();
+  startupStage = "database";
   const db = openDatabase(config.databasePath);
   if (process.argv.includes("--check")) {
     console.log(
@@ -28,6 +31,7 @@ async function main() {
   const handle = createUpdateHandler({ repo, telegram, config, notifications });
   const flush = createOutboxWorker(repo, telegram);
   // Validate token and switch from webhook to polling without discarding pending updates.
+  startupStage = "telegram";
   const me = await telegram.call("getMe");
   await telegram.call("deleteWebhook", { drop_pending_updates: false });
   await telegram.call("setMyCommands", {
@@ -54,6 +58,7 @@ async function main() {
       );
     }
   }
+  startupStage = "api";
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(config.port, config.host, () => {
@@ -64,6 +69,7 @@ async function main() {
   console.log(
     `BakeU bot @${me.username} started. API: http://${config.host}:${config.port}.`,
   );
+  startupStage = "polling";
   let stopping = false;
   let pollController;
   let flushing = null;
@@ -128,17 +134,6 @@ async function main() {
   }
 }
 main().catch((error) => {
-  console.error(
-    error.code
-      ? `Bot stopped: Telegram error ${Number(error.code)}. Check token or duplicate bot processes.`
-      : error.message?.includes("BOT_TOKEN") ||
-          error.message?.includes("ADMIN_IDS") ||
-          error.message?.includes("API_") ||
-          error.message?.includes("ORIGINS") ||
-          error.message?.includes("SESSION_") ||
-          error.message?.includes("TRUST_PROXY")
-        ? error.message
-        : "Bot startup failed. Check configuration, network and database permissions.",
-  );
+  console.error(formatStartupError(error, startupStage));
   process.exitCode = 1;
 });
