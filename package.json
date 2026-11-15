@@ -8,10 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "bot": "npm --prefix src/bot start",
-    "bot:check": "npm --prefix src/bot run check",
+    "bot": "npm --prefix src/bot run miniapp",
+    "bot:check": "npm --prefix src/bot run miniapp:check",
     "bot:test": "npm --prefix src/bot test",
-    "miniapp:test": "node scripts/check-miniapp.mjs"
+    "miniapp:test": "node scripts/check-miniapp.mjs",
+    "bot:website": "npm --prefix src/bot start"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

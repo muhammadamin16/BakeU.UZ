@@ -96,3 +96,19 @@ USE_WEB_APP=true
 Botni qayta yoqing va `/start` bosing. Telegram menyusida ham «BakeU · Магазин» tugmasi paydo bo'ladi. Birinchi ekranda qishki BakeU logotipi va «Magazinga kirish» bor. Kompyuterdagi ko'rinish: `http://localhost:5173/#/miniapp`. Mini App ichidan katalog, savat, profil va qolgan mavjud sahifalar ochiladi. Admin kirishi faqat server tasdiqlagan `ADMIN_IDS` egalariga ko'rinadi. `/admin/telegram` haqiqiy server akkauntlari va arizalarini ko'rsatadi.
 
 Vercel + VPS uchun to'liq yo'riqnoma: `src/miniapp/README.md`. Oddiy Vercel static deploy Node.js bot yoki SQLite serverini ishga tushirmaydi. API doimiy HTTPS serverda ishlashi shart. Telegram hisobi tasdiqlanishi saytning email/telefon akkaunti avtomatik yaratilganini anglatmaydi; sayt akkauntini odatdagi registratsiya orqali ochish mumkin.
+
+## Mini App'ni ishga tushirish — yangilangan buyruq
+
+Endi loyiha rootidan `npm run bot` doim Mini App rejimida ishga tushadi. Asosiy manzil: `https://bake-u-uz-self.vercel.app`. Eski `.env` ichidagi `USE_WEB_APP=false` yoki boshqa `SITE_URL` bu buyruqqa ta'sir qilmaydi. Token, ADMIN_IDS va baza saqlanib qoladi.
+
+```powershell
+git pull origin Amin
+npm run bot:check
+npm run bot
+```
+
+Oldingi botni Ctrl+C bilan to'xtating. Terminalda `Telegram Mini App (web_app)` va ochiladigan manzil chiqadi. Telegram'da `/start` yuborib yangi tugmani bosing. Eski xabardagi tugma o'zgarmaydi; tugma yonidagi belgining ko'rinishi Telegram versiyasiga bog'liq.
+
+Boshqa manzil uchun `.env` ichiga `MINI_APP_URL=https://haqiqiy-sayt-manzili` yozish mumkin. Bo'sh qoldirilsa, yuqoridagi Vercel manzili ishlatiladi. Eski SITE_URL/USE_WEB_APP rejimi kerak bo'lsa `npm run bot:website` mavjud.
+
+Bu tahrir Mini App ochilishini sozlaydi. Admin tasdiqlashi va server akkauntlari uchun API hali ham ommaviy HTTPS backendga ulanishi kerak; localhost avtomatik ravishda internetga ochilmaydi.

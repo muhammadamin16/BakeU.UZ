@@ -19,7 +19,7 @@ Use root `.env.local` with `VITE_ACCOUNT_API_URL=/api` for local Vite proxying t
 
 ## Domain and hosting
 
-Target frontend: **https://www.bakeu.uz**. At the time of implementation the domain returned a Vercel-hosted website; `/api/miniapp/me` returned the same frontend HTML, so API routing was not configured. This repository update alone does not change a Vercel project/domain configuration.
+Default Mini App frontend: **https://bake-u-uz-self.vercel.app**. Optional custom domain: **https://www.bakeu.uz** after connecting it to the correct Vercel project and setting `MINI_APP_URL`. At the time of implementation the domain returned a Vercel-hosted website; `/api/miniapp/me` returned the same frontend HTML, so API routing was not configured. This repository update alone does not change a Vercel project/domain configuration.
 
 Recommended topology:
 
@@ -84,3 +84,11 @@ All routes except session creation require `Authorization: Bearer MINI_APP_SESSI
 ## Verification
 
 `npm run miniapp:test` runs the frontend render/access checks. `npm run bot:test` covers signature tampering, stale/future launch data, duplicate fields, role escalation, expired sessions, admin revocation, API permissions and decisions, alongside the existing bot tests. `npm run build` verifies frontend production compilation. Server-side React render checks verify logo/CTA and guest versus admin visibility. Full Telegram/browser verification requires the deployed HTTPS frontend and backend plus the real bot token; no real Telegram messages were sent by the automated tests.
+
+## Mini App launch update
+
+`npm run bot` now explicitly starts Telegram Mini App mode and uses `https://bake-u-uz-self.vercel.app` by default. Legacy `USE_WEB_APP=false` and an old `SITE_URL` in the private `.env` no longer turn this command into a plain website link. Tokens, admin IDs and the SQLite database are preserved. `npm run bot:check` checks this same launch mode without contacting Telegram. Startup prints the selected public URL and `Telegram Mini App (web_app)`.
+
+If you deploy elsewhere, set optional `MINI_APP_URL=https://your-real-https-site` in `src/bot/.env`. The active Mini App origin is added to the configured CORS allowlist. For the old SITE_URL/USE_WEB_APP behavior, use `npm run bot:website` from the repository root.
+
+After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bot`, and send `/start` to get a fresh button. Existing Telegram messages retain their original keyboards. Button icons vary by Telegram client; use the printed launch mode or the actual opening behavior rather than the arrow glyph to identify the mode. The HTTPS account/admin API still needs a public backend; this launch fix does not deploy or tunnel localhost.

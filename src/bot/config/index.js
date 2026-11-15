@@ -1,8 +1,9 @@
+import { DEFAULT_MINI_APP_URL } from "./public.js";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 export class ConfigError extends Error {}
 
-export function readConfig(env = process.env) {
+export function readConfig(env = process.env, { miniApp = false } = {}) {
   const token = (env.BOT_TOKEN || "").trim();
   if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(token))
     throw new ConfigError(
@@ -19,7 +20,7 @@ export function readConfig(env = process.env) {
   if (!adminIds.length || adminIds.some((x) => !/^\d{1,20}$/.test(x)))
     throw new ConfigError("ADMIN_IDS must contain numeric Telegram user IDs.");
   function url(key, fallback = "") {
-    const raw = (env[key] || fallback).trim();
+    const raw = String(env[key] || "").trim() || fallback;
     if (!raw) return "";
     let u;
     try {
@@ -33,7 +34,16 @@ export function readConfig(env = process.env) {
       );
     return u.href;
   }
-  const siteUrl = url("SITE_URL", "https://bakeu.uz");
+  // The explicit Mini App launcher is independent of legacy SITE_URL / USE_WEB_APP.
+  // MINI_APP_URL is an optional override for a future public deployment.
+  const siteUrl = url(
+    miniApp ? "MINI_APP_URL" : "SITE_URL",
+    DEFAULT_MINI_APP_URL,
+  );
+  if (!siteUrl)
+    throw new ConfigError("SITE_URL / MINI_APP_URL must not be blank.");
+  if (miniApp && !siteUrl.startsWith("https://"))
+    throw new ConfigError("MINI_APP_URL must use HTTPS for Telegram Mini App.");
   const origins = (env.ALLOWED_ORIGINS || new URL(siteUrl).origin)
     .split(",")
     .map((x) => x.trim())
@@ -53,6 +63,8 @@ export function readConfig(env = process.env) {
         "ALLOWED_ORIGINS must contain exact origins without paths or trailing slashes.",
       );
   }
+  if (miniApp && !origins.includes(new URL(siteUrl).origin))
+    origins.push(new URL(siteUrl).origin);
   const port = Number(env.API_PORT || 3001),
     sessionHours = Number(env.SESSION_HOURS || 24);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
@@ -74,7 +86,9 @@ export function readConfig(env = process.env) {
     telegramUrl: url("TELEGRAM_URL"),
     instagramUrl: url("INSTAGRAM_URL"),
     supportEmail,
-    useWebApp: env.USE_WEB_APP === "true" && siteUrl.startsWith("https://"),
+    useWebApp:
+      (miniApp || env.USE_WEB_APP?.trim().toLowerCase() === "true") &&
+      siteUrl.startsWith("https://"),
     origins,
     host,
     port,

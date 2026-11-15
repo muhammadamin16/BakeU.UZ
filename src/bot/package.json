@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env index.js",
     "check": "node --env-file-if-exists=.env index.js --check",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "miniapp": "node --env-file-if-exists=.env index.js --miniapp",
+    "miniapp:check": "node --env-file-if-exists=.env index.js --miniapp --check"
   }
 }

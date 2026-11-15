@@ -14,7 +14,20 @@ import { createUpdateHandler } from "./handlers/router.js";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let startupStage = "configuration";
 async function main() {
-  const config = readConfig();
+  const config = readConfig(process.env, {
+    miniApp: process.argv.includes("--miniapp"),
+  });
+  const publicSite = new URL(config.siteUrl);
+  console.log(
+    `Launch mode: ${config.useWebApp ? "Telegram Mini App (web_app)" : "Website link (url)"}.`,
+  );
+  console.log(
+    `Public site: ${publicSite.origin}${publicSite.pathname}${config.useWebApp ? "?miniapp=1" : ""}`,
+  );
+  if (!config.useWebApp)
+    console.log(
+      "Use npm run bot from the repository root to launch the Mini App.",
+    );
   startupStage = "database";
   const db = openDatabase(config.databasePath);
   if (process.argv.includes("--check")) {

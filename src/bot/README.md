@@ -32,7 +32,7 @@ Do not overwrite an existing `.env`/`.env.local`; merge the needed values instea
 ```dotenv
 BOT_TOKEN=your_token_from_BotFather
 ADMIN_IDS=your_numeric_telegram_user_id
-SITE_URL=https://bakeu.uz
+MINI_APP_URL=https://bake-u-uz-self.vercel.app
 TELEGRAM_URL=https://t.me/your_channel
 INSTAGRAM_URL=https://www.instagram.com/your_account/
 SUPPORT_EMAIL=your_real_email
@@ -107,3 +107,11 @@ Telegram controls button shapes, font, background and emoji rendering. The bot u
 ## Telegram Mini App
 
 See `../miniapp/README.md` for the winter welcome screen, launch setup, Vercel/VPS deployment and server authorization. Set `USE_WEB_APP=true` with a real HTTPS `SITE_URL` to use the Mini App button and bot menu. Mini App sessions validate Telegram's HMAC-signed `initData` and expire after one hour; new launches must be no older than five minutes. Admin permissions are rechecked against `ADMIN_IDS` on every protected server request. Website password sessions cannot be used as Mini App admin sessions. Existing SQLite data is preserved; a new `miniapp_sessions` table is added automatically.
+
+## Mini App launch update
+
+`npm run bot` now explicitly starts Telegram Mini App mode and uses `https://bake-u-uz-self.vercel.app` by default. Legacy `USE_WEB_APP=false` and an old `SITE_URL` in the private `.env` no longer turn this command into a plain website link. Tokens, admin IDs and the SQLite database are preserved. `npm run bot:check` checks this same launch mode without contacting Telegram. Startup prints the selected public URL and `Telegram Mini App (web_app)`.
+
+If you deploy elsewhere, set optional `MINI_APP_URL=https://your-real-https-site` in `src/bot/.env`. The active Mini App origin is added to the configured CORS allowlist. For the old SITE_URL/USE_WEB_APP behavior, use `npm run bot:website` from the repository root.
+
+After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bot`, and send `/start` to get a fresh button. Existing Telegram messages retain their original keyboards. Button icons vary by Telegram client; use the printed launch mode or the actual opening behavior rather than the arrow glyph to identify the mode. The HTTPS account/admin API still needs a public backend; this launch fix does not deploy or tunnel localhost.
