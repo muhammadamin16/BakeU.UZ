@@ -1,14 +1,25 @@
+import { ArrowUpRight } from "lucide-react";
 import { useState, useRef, useEffect, useId } from "react";
-import { useSearchParams } from "react-router-dom";
+import { createPortal } from "react-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useAdminStore } from "../store/adminStore";
+import {
+  deleteRestriction,
+  matchesSearch,
+  scopeRecords,
+} from "../utils/management";
+import ImageField from "./ImageField";
+import OrderItemsField from "./OrderItemsField";
 export function Badge({ children }) {
   const text = String(children);
-  const tone = /Актив|Одобр|Открыт|Опубликован|Доставлен/.test(text)
-    ? "green"
-    : /Отклон|Истек|Заблок|Скрыт|Отмен/.test(text)
-      ? "red"
-      : "orange";
+  const tone = /Заморож|Приостанов/.test(text)
+    ? "blue"
+    : /Актив|Одобр|Открыт|Опубликован|Доставлен/.test(text)
+      ? "green"
+      : /Отклон|Истек|Заблок|Скрыт|Отмен/.test(text)
+        ? "red"
+        : "orange";
   return <span className={`ad-badge ${tone}`}>{children}</span>;
 }
 export function PageTitle({ title, children }) {
@@ -51,7 +62,7 @@ export function Modal({ title, onClose, children }) {
       previous?.focus();
     };
   }, [onClose]);
-  return (
+  return createPortal(
     <div
       className="ad-modal-backdrop"
       onMouseDown={(e) => {
@@ -76,93 +87,219 @@ export function Modal({ title, onClose, children }) {
         </div>
         {children}
       </section>
-    </div>
+    </div>,
+    document.querySelector(".ad-app") || document.body,
   );
 }
 export function RecordForm({ fields, initial = {}, onSave, onClose }) {
   const [values, setValues] = useState(initial);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const formId = useId();
+  const update = (key, value) => {
+    setError("");
+    setValues((previous) => {
+      const next = { ...previous, [key]: value };
+      if (
+        key === "shopId" &&
+        previous.shopId !== value &&
+        Array.isArray(previous.items)
+      ) {
+        next.items = [];
+        next.total = 0;
+      }
+      if (key === "items")
+        next.total = value.reduce(
+          (sum, item) =>
+            sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
+          0,
+        );
+      return next;
+    });
+  };
   return (
     <form
       className="ad-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave(values);
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (busy) return;
+        setError("");
+        setBusy(true);
+        try {
+          await onSave(values);
+        } catch (failure) {
+          setError(failure.message || "Не удалось сохранить запись");
+        } finally {
+          setBusy(false);
+        }
       }}
     >
-      {fields.map((f) => (
-        <label key={f.key}>
-          {f.label}
-          {f.options ? (
-            <select
-              aria-label={f.label}
-              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
-              required={f.required !== false}
-              value={values[f.key] || ""}
-              onChange={(e) =>
-                setValues({ ...values, [f.key]: e.target.value })
-              }
-            >
-              <option value="" disabled={f.required !== false}>
-                Выберите
-              </option>
-              {f.options.map((o) => {
-                const value = typeof o === "string" ? o : o.value;
-                const label = typeof o === "string" ? o : o.label;
-                return (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                );
-              })}
-            </select>
-          ) : f.type === "textarea" ? (
-            <textarea
-              aria-label={f.label}
-              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
-              rows={3}
-              required={f.required !== false}
-              value={values[f.key] ?? ""}
-              onChange={(e) =>
-                setValues({ ...values, [f.key]: e.target.value })
-              }
-            />
-          ) : (
-            <input
-              aria-label={f.label}
-              aria-describedby={f.hint ? `${formId}-${f.key}-hint` : undefined}
-              autoFocus={f === fields[0]}
-              required={f.required !== false}
-              type={f.type || "text"}
-              min={f.type === "number" ? 0 : undefined}
-              value={values[f.key] ?? ""}
-              onChange={(e) =>
-                setValues({
-                  ...values,
-                  [f.key]:
-                    f.type === "number"
-                      ? Number(e.target.value)
-                      : e.target.value,
-                })
-              }
-            />
-          )}
-          {f.hint && (
-            <small id={`${formId}-${f.key}-hint`} className="ad-field-hint">
-              {f.hint}
-            </small>
-          )}
-        </label>
-      ))}
+      {fields.map((field) => {
+        const id = `${formId}-${field.key}`;
+        const common = {
+          id,
+          "aria-label": field.label,
+          "aria-describedby": field.hint ? `${id}-hint` : undefined,
+          disabled: field.disabled || busy,
+        };
+        return (
+          <div className="ad-form-field" key={field.key}>
+            <label htmlFor={id}>{field.label}</label>
+            {field.type === "image" ? (
+              <ImageField
+                id={id}
+                label={field.label}
+                disabled={field.disabled || busy}
+                value={values[field.key]}
+                onChange={(value) => update(field.key, value)}
+                onBusy={setBusy}
+              />
+            ) : field.type === "orderItems" ? (
+              <OrderItemsField
+                id={id}
+                products={field.products}
+                shopId={values.shopId}
+                value={values.items}
+                disabled={field.disabled || busy}
+                onChange={(value) => update(field.key, value)}
+              />
+            ) : field.options ? (
+              <select
+                {...common}
+                required={field.required !== false}
+                value={values[field.key] || ""}
+                onChange={(event) => update(field.key, event.target.value)}
+              >
+                <option value="" disabled={field.required !== false}>
+                  Выберите
+                </option>
+                {field.options.map((option) => {
+                  const value =
+                    typeof option === "string" ? option : option.value;
+                  return (
+                    <option key={value} value={value}>
+                      {typeof option === "string" ? option : option.label}
+                    </option>
+                  );
+                })}
+              </select>
+            ) : field.type === "textarea" ? (
+              <textarea
+                {...common}
+                rows={3}
+                maxLength={4000}
+                required={field.required !== false}
+                value={values[field.key] || ""}
+                onChange={(event) => update(field.key, event.target.value)}
+              />
+            ) : (
+              <input
+                {...common}
+                required={field.required !== false}
+                type={field.type || "text"}
+                min={field.type === "number" ? 0 : undefined}
+                readOnly={field.readOnly?.(values)}
+                value={values[field.key] ?? ""}
+                onChange={(event) =>
+                  update(
+                    field.key,
+                    field.type === "number" && event.target.value !== ""
+                      ? Number(event.target.value)
+                      : event.target.value,
+                  )
+                }
+              />
+            )}
+            {field.hint && (
+              <small id={`${id}-hint`} className="ad-field-hint">
+                {field.hint}
+              </small>
+            )}
+          </div>
+        );
+      })}
+      {error && (
+        <p role="alert" className="ad-form-error">
+          {error}
+        </p>
+      )}
       <div className="ad-form-actions">
         <button type="button" className="ad-btn" onClick={onClose}>
           Отмена
         </button>
-        <button className="ad-btn primary">Сохранить</button>
+        <button className="ad-btn primary" disabled={busy}>
+          {busy ? "Сохранение…" : "Сохранить"}
+        </button>
       </div>
     </form>
   );
 }
+
+export function ConfirmAction({
+  title,
+  description,
+  requireReason = false,
+  confirmLabel = "Подтвердить",
+  onConfirm,
+  onClose,
+  children,
+}) {
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Modal title={title} onClose={onClose}>
+      <form
+        className="ad-form"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setError("");
+          try {
+            await onConfirm(reason.trim());
+            onClose();
+          } catch (failure) {
+            setError(failure.message || "Действие не выполнено");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <p>{description}</p>
+        {children}
+        {requireReason && (
+          <label>
+            Причина
+            <textarea
+              aria-label="Причина"
+              required
+              minLength={3}
+              maxLength={1000}
+              rows={3}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </label>
+        )}
+        {error && (
+          <p role="alert" className="ad-form-error">
+            {error}
+          </p>
+        )}
+        <div className="ad-form-actions">
+          <button type="button" className="ad-btn" onClick={onClose}>
+            Отмена
+          </button>
+          <button className="ad-btn primary" disabled={busy}>
+            {busy ? "Сохранение…" : confirmLabel}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export function CollectionPage({
   title,
   collection,
@@ -172,30 +309,93 @@ export function CollectionPage({
   detailsLink,
   addLabel = "Добавить",
   canDelete = () => true,
+  defaultValues = {},
+  addDisabled = "",
 }) {
-  const rows = useAdminStore((s) => s[collection]);
-  const save = useAdminStore((s) => s.save);
-  const remove = useAdminStore((s) => s.remove);
+  const data = useAdminStore();
+  const { save, remove } = data;
   const [params, setParams] = useSearchParams();
-  const [filter, setFilter] = useState("Все");
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
-  const statuses = [...new Set(rows.map((x) => x.status))];
-  const q = (params.get("q") || "").toLowerCase();
+  const [deleteError, setDeleteError] = useState("");
+  const rows = scopeRecords(data, collection, params);
+  const filter = params.get("status") || "Все";
+  const statuses = [...new Set(rows.map((row) => row.status))];
+  if (filter !== "Все" && !statuses.includes(filter)) statuses.push(filter);
   const filtered = rows.filter(
-    (x) =>
-      (filter === "Все" || x.status === filter) &&
-      Object.values(x).some((v) => String(v).toLowerCase().includes(q)),
+    (row) =>
+      (filter === "Все" || row.status === filter) &&
+      matchesSearch(row, params.get("q") || ""),
   );
+  const scopes = [
+    ["sellerId", "Продавец", "sellers"],
+    ["customerId", "Покупатель", "customers"],
+    ["shopId", "Магазин", "shops"],
+  ].filter(([key]) => params.get(key));
+  const startAdding = () => {
+    const initial =
+      typeof defaultValues === "function"
+        ? defaultValues()
+        : { ...defaultValues };
+    for (const [key] of scopes) initial[key] = params.get(key);
+    if (!initial.shopId && initial.sellerId) {
+      const shops = data.shops.filter(
+        (row) => row.sellerId === initial.sellerId,
+      );
+      if (shops.length === 1) initial.shopId = shops[0].id;
+    }
+    setEditing(initial);
+  };
+  const deletionBlock = (row) =>
+    deleteRestriction(data, collection, row) ||
+    (!canDelete(row) ? "У записи есть связанные данные" : "");
   return (
     <>
       <PageTitle title={title}>
-        <button className="ad-btn primary" onClick={() => setEditing({})}>
+        <button
+          className="ad-btn primary"
+          disabled={Boolean(addDisabled)}
+          title={addDisabled || undefined}
+          onClick={startAdding}
+        >
           <Plus size={17} />
           {addLabel}
         </button>
       </PageTitle>
+      {addDisabled && <p className="ad-page-description">{addDisabled}</p>}
       <section className="ad-panel">
+        {scopes.length > 0 && (
+          <div className="ad-scope-banner">
+            <div>
+              {scopes.map(([key, label, entity]) => (
+                <Link
+                  key={key}
+                  className="ad-btn small"
+                  to={`/admin/${entity}/${encodeURIComponent(params.get(key))}`}
+                >
+                  {label}:{" "}
+                  {data[entity].find((row) => row.id === params.get(key))
+                    ?.name || params.get(key)}{" "}
+                  <ArrowUpRight
+                    size={12}
+                    className="ad-inline-arrow"
+                    aria-hidden="true"
+                  />
+                </Link>
+              ))}
+            </div>
+            <button
+              className="ad-btn small"
+              onClick={() => {
+                const next = new URLSearchParams(params);
+                scopes.forEach(([key]) => next.delete(key));
+                setParams(next);
+              }}
+            >
+              Показать все
+            </button>
+          </div>
+        )}
         <div className="ad-toolbar">
           <div className="ad-input-search">
             <Search size={17} />
@@ -214,7 +414,12 @@ export function CollectionPage({
           <select
             aria-label="Фильтр статуса"
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(event) => {
+              const next = new URLSearchParams(params);
+              if (event.target.value === "Все") next.delete("status");
+              else next.set("status", event.target.value);
+              setParams(next);
+            }}
           >
             <option>Все</option>
             {statuses.map((s) => (
@@ -223,7 +428,12 @@ export function CollectionPage({
           </select>
           <span className="ad-muted">Найдено: {filtered.length}</span>
         </div>
-        <div className="ad-table-wrap">
+        <div
+          className="ad-table-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label={`Таблица: ${title}`}
+        >
           <table className="ad-table">
             <thead>
               <tr>
@@ -260,13 +470,12 @@ export function CollectionPage({
                       </button>
                       <button
                         className="ad-icon danger"
-                        disabled={!canDelete(row)}
-                        title={
-                          !canDelete(row)
-                            ? "Сначала удалите или переназначьте магазины продавца"
-                            : undefined
-                        }
-                        onClick={() => setDeleting(row)}
+                        disabled={Boolean(deletionBlock(row))}
+                        title={deletionBlock(row) || undefined}
+                        onClick={() => {
+                          setDeleteError("");
+                          setDeleting(row);
+                        }}
                         aria-label={`Удалить ${row.name || row.id}`}
                       >
                         <Trash2 size={16} />
@@ -289,7 +498,7 @@ export function CollectionPage({
         >
           <RecordForm
             key={editing.id || "new"}
-            fields={fields}
+            fields={typeof fields === "function" ? fields(editing) : fields}
             initial={editing}
             onClose={() => setEditing(null)}
             onSave={(item) => {
@@ -306,7 +515,15 @@ export function CollectionPage({
       )}
       {deleting && (
         <Modal title="Удалить запись?" onClose={() => setDeleting(null)}>
-          <p>Запись «{deleting.name || deleting.id}» будет удалена.</p>
+          <p>
+            Запись «{deleting.name || deleting.id}» будет удалена. Действие
+            останется в истории.
+          </p>
+          {deleteError && (
+            <p role="alert" className="ad-form-error">
+              {deleteError}
+            </p>
+          )}
           <div className="ad-form-actions">
             <button className="ad-btn" onClick={() => setDeleting(null)}>
               Отмена
@@ -314,8 +531,12 @@ export function CollectionPage({
             <button
               className="ad-btn red"
               onClick={() => {
-                remove(collection, deleting.id);
-                setDeleting(null);
+                try {
+                  remove(collection, deleting.id);
+                  setDeleting(null);
+                } catch (failure) {
+                  setDeleteError(failure.message || "Удаление не выполнено");
+                }
               }}
             >
               Удалить

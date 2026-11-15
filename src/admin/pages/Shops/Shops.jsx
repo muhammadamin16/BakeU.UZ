@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
 import { Link } from "react-router-dom";
@@ -22,7 +23,12 @@ const columns = [
           className="ad-text-link"
           to={`/admin/sellers/${encodeURIComponent(row.sellerId)}`}
         >
-          {row.owner} ↗
+          {row.owner}{" "}
+          <ArrowUpRight
+            size={12}
+            className="ad-inline-arrow"
+            aria-hidden="true"
+          />
         </Link>
       ) : (
         row.owner

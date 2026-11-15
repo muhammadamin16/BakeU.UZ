@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CollectionPage } from "../../components/AdminUI";
 import AccountLink from "../../components/AccountLink";
@@ -36,7 +37,12 @@ export default function Sellers() {
           className="ad-btn small"
           to={`/admin/sellers/${encodeURIComponent(row.id)}`}
         >
-          Профиль ↗
+          Профиль{" "}
+          <ArrowUpRight
+            size={12}
+            className="ad-inline-arrow"
+            aria-hidden="true"
+          />
         </Link>
       )}
     />

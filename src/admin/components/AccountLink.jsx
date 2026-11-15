@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { initials } from "../utils/accounts";
@@ -16,7 +17,14 @@ export default function AccountLink({ person, kind = "customers" }) {
       </span>
       <span>
         <strong>{person.name}</strong>
-        <small>Открыть профиль ↗</small>
+        <small>
+          Открыть профиль{" "}
+          <ArrowUpRight
+            size={12}
+            className="ad-inline-arrow"
+            aria-hidden="true"
+          />
+        </small>
       </span>
     </Link>
   );

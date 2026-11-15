@@ -3,10 +3,40 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, Bell, UserRound, ChevronDown, Menu } from "lucide-react";
 import { useAdminStore } from "../../store/adminStore";
 import "./Header.css";
-export default function Header({ onMenu }) {
+function HeaderSearch() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(
+    () => new URLSearchParams(location.search).get("q") || "",
+  );
+  return (
+    <form
+      className="ad-search"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const params = new URLSearchParams(location.search);
+        if (query.trim()) params.set("q", query.trim());
+        else params.delete("q");
+        const collection = location.pathname.match(
+          /^\/admin\/(customers|sellers|shops|products|orders|subscriptions|applications|notifications|history)/,
+        )?.[1];
+        const path = collection ? `/admin/${collection}` : "/admin";
+        navigate(`${path}${params.toString() ? "?" + params : ""}`);
+      }}
+    >
+      <Search size={17} />
+      <input
+        aria-label="Поиск по имени или ID"
+        placeholder="Найти по имени или ID"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+    </form>
+  );
+}
+
+export default function Header({ onMenu }) {
+  const location = useLocation();
   const count = useAdminStore(
     (s) => s.notifications.filter((x) => !x.read).length,
   );
@@ -27,23 +57,7 @@ export default function Header({ onMenu }) {
         <span>›</span>
         <Link to="/admin">Админ-панель</Link>
       </div>
-      <form
-        className="ad-search"
-        onSubmit={(e) => {
-          e.preventDefault();
-          navigate(
-            `${location.pathname}?q=${encodeURIComponent(query.trim())}`,
-          );
-        }}
-      >
-        <Search size={17} />
-        <input
-          aria-label="Поиск по имени или ID"
-          placeholder="Найти по имени или ID"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </form>
+      <HeaderSearch key={location.pathname + location.search} />
       <Link
         className="ad-notification-bell"
         to="/admin/notifications"

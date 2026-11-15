@@ -12,6 +12,8 @@ import Orders from "../pages/Orders/Orders";
 import Subscriptions from "../pages/Subscriptions/Subscriptions";
 import Notifications from "../pages/Notifications/Notifications";
 import Settings from "../pages/Settings/Settings";
+import RecordDetails from "../pages/Records/RecordDetails";
+import History from "../pages/History/History";
 export default function AdminRoutes() {
   return (
     <Routes>
@@ -31,8 +33,21 @@ export default function AdminRoutes() {
         <Route path="shops/:id" element={<ShopDetails />} />
         <Route path="applications" element={<Applications />} />
         <Route path="products" element={<Products />} />
+        <Route
+          path="products/:id"
+          element={<RecordDetails key="product" kind="products" />}
+        />
         <Route path="orders" element={<Orders />} />
+        <Route
+          path="orders/:id"
+          element={<RecordDetails key="order" kind="orders" />}
+        />
         <Route path="subscriptions" element={<Subscriptions />} />
+        <Route
+          path="subscriptions/:id"
+          element={<RecordDetails key="subscription" kind="subscriptions" />}
+        />
+        <Route path="history" element={<History />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />

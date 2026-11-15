@@ -3,6 +3,7 @@ import {
   BarChart3,
   Users,
   UserRound,
+  History,
   Store,
   ClipboardList,
   Package,
@@ -24,6 +25,7 @@ const links = [
   ["orders", "Заказы", ShoppingCart],
   ["subscriptions", "Подписки", CreditCard],
   ["notifications", "Уведомления", Bell],
+  ["history", "История", History],
   ["settings", "Настройки", Settings],
 ];
 export default function Sidebar({ open, onClose }) {

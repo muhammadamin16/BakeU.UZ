@@ -1,11 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { mergeAdminState } from "../utils/accounts";
 import {
-  normalizeAccounts,
-  upsertAdminRecord,
-  removeAdminRecord,
-  mergeAdminState,
-} from "../utils/accounts";
+  normalizeManagement,
+  saveManagedRecord,
+  removeManagedRecord,
+  changeAccountStatus,
+  changeSubscription,
+  decideApplication,
+} from "../utils/management";
 const seed = {
   customers: [
     {
@@ -70,6 +73,8 @@ const seed = {
       shop: "Сладкий дом",
       price: 180000,
       category: "Торты",
+      image: "/images/products/cake.jpg",
+      description: "Шоколадный торт с клубникой и шоколадным декором.",
       status: "Опубликован",
     },
     {
@@ -78,6 +83,8 @@ const seed = {
       shop: "Домашняя пекарня",
       price: 12000,
       category: "Выпечка",
+      image: "/images/products/somsa.jpg",
+      description: "Домашняя самса с румяной корочкой.",
       status: "Опубликован",
     },
     {
@@ -86,6 +93,8 @@ const seed = {
       shop: "Сладкий дом",
       price: 35000,
       category: "Печенье",
+      image: "/images/products/cookie.jpg",
+      description: "Овсяное печенье для домашнего чаепития.",
       status: "На проверке",
     },
   ],
@@ -95,6 +104,16 @@ const seed = {
       customer: "Дильноза Ахмедова",
       shop: "Сладкий дом",
       total: 180000,
+      items: [
+        {
+          productId: "P101",
+          name: "Шоколадный торт",
+          image: "/images/products/cake.jpg",
+          quantity: 1,
+          unitPrice: 180000,
+          shopId: "S101",
+        },
+      ],
       date: "2026-11-15",
       status: "Новый",
     },
@@ -103,6 +122,16 @@ const seed = {
       customer: "Умид Каримов",
       shop: "Домашняя пекарня",
       total: 72000,
+      items: [
+        {
+          productId: "P102",
+          name: "Домашняя самса",
+          image: "/images/products/somsa.jpg",
+          quantity: 6,
+          unitPrice: 12000,
+          shopId: "S102",
+        },
+      ],
       date: "2026-11-14",
       status: "В работе",
     },
@@ -166,64 +195,104 @@ const seed = {
 };
 export const useAdminStore = create(
   persist(
-    (set) => ({
-      ...normalizeAccounts(structuredClone(seed)),
-      save: (key, item) =>
-        set((s) =>
-          upsertAdminRecord(s, key, {
-            ...item,
-            id: item.id || crypto.randomUUID(),
-          }),
-        ),
-      remove: (key, id) => set((s) => removeAdminRecord(s, key, id)),
-      markRead: (id) =>
-        set((s) => ({
-          notifications: s.notifications.map((x) =>
-            !id || x.id === id ? { ...x, read: true } : x,
+    (set, get) => {
+      // Check persistence before replacing the in-memory state. A quota/storage
+      // error is reported by the form and cannot masquerade as a saved change.
+      const commit = (update) => {
+        const current = get();
+        const next =
+          typeof update === "function"
+            ? update(current)
+            : { ...current, ...update };
+        if (next === current) return;
+        try {
+          localStorage.setItem(
+            "bakeu-admin-demo-v1",
+            JSON.stringify({ state: next, version: 0 }),
+          );
+        } catch {
+          throw Error(
+            "Не удалось сохранить изменения в браузере. Освободите место или разрешите локальное хранилище.",
+          );
+        }
+        set(next);
+      };
+      return {
+        ...normalizeManagement(structuredClone(seed)),
+        save: (key, item) =>
+          commit((state) => saveManagedRecord(state, key, item)),
+        remove: (key, id) =>
+          commit((state) => removeManagedRecord(state, key, id)),
+        freezeAccount: (key, id, reason) =>
+          commit((state) =>
+            changeAccountStatus(state, key, id, "Заморожен", reason),
           ),
-        })),
-      saveSettings: (settings) => set({ settings }),
-      decide: (id, status) =>
-        set((s) => {
-          const a = s.applications.find((x) => x.id === id);
-          if (!a || a.status !== "На проверке") return {};
-          return normalizeAccounts({
-            ...s,
-            applications: s.applications.map((x) =>
-              x.id === id ? { ...x, status } : x,
+        thawAccount: (key, id) =>
+          commit((state) =>
+            changeAccountStatus(
+              state,
+              key,
+              id,
+              "Активен",
+              "Разморожен администратором",
             ),
-            shops:
-              status === "Одобрено"
-                ? [
-                    {
-                      id: `shop-${id}`,
-                      name: a.shop,
-                      owner: a.name,
-                      phone: a.phone,
-                      address: "",
-                      status: "Открыт",
-                      plan: "Без подписки",
-                    },
-                    ...s.shops,
-                  ]
-                : s.shops,
-            notifications: [
-              {
-                id: crypto.randomUUID(),
-                title:
-                  status === "Одобрено" ? "Магазин открыт" : "Заявка отклонена",
-                text: `Магазин «${a.shop}»: ${status.toLowerCase()}`,
-                time: "Только что",
-                read: false,
-              },
-              ...s.notifications,
-            ],
-          });
-        }),
-    }),
+          ),
+        manageSubscription: (id, action, reason) =>
+          commit((state) => changeSubscription(state, id, action, reason)),
+        markRead: (id) =>
+          commit((state) => ({
+            ...state,
+            notifications: state.notifications.map((row) =>
+              !id || row.id === id ? { ...row, read: true } : row,
+            ),
+          })),
+        saveSettings: (settings) =>
+          commit((state) => {
+            const next = { ...state, settings };
+            const changed = ["name", "email", "site", "notifications"].filter(
+              (key) => settings[key] !== state.settings[key],
+            );
+            if (!changed.length) return state;
+            return {
+              ...next,
+              history: [
+                {
+                  id: crypto.randomUUID(),
+                  at: new Date().toISOString(),
+                  actor: state.settings.name,
+                  action: "Настройки изменены",
+                  entity: "settings",
+                  entityId: "admin",
+                  label: "Настройки панели",
+                  changes: changed.map((key) => ({
+                    field: key,
+                    before: String(state.settings[key]),
+                    after: String(settings[key]),
+                  })),
+                },
+                ...state.history,
+              ],
+            };
+          }),
+        decide: (id, status, reason) =>
+          commit((state) =>
+            decideApplication(state, id, status, Date.now(), reason),
+          ),
+        refreshSubscriptions: () =>
+          commit((state) => {
+            const next = normalizeManagement(state);
+            return next.subscriptions.some(
+              (row, index) => row.status !== state.subscriptions[index].status,
+            )
+              ? next
+              : state;
+          }),
+      };
+    },
     {
       name: "bakeu-admin-demo-v1",
-      merge: mergeAdminState,
+      merge: (persisted, current) =>
+        normalizeManagement(mergeAdminState(persisted, current)),
     },
   ),
 );

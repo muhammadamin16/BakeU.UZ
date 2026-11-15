@@ -6,6 +6,7 @@ import {
   AtSign,
   CalendarDays,
   CreditCard,
+  Clock3,
   KeyRound,
   Mail,
   MapPin,
@@ -21,6 +22,10 @@ import {
 } from "lucide-react";
 import { Badge, Modal, PageTitle, RecordForm } from "../../components/AdminUI";
 import { useAdminStore } from "../../store/adminStore";
+import { AccountStatusAction } from "../../components/ManagementActions";
+import HistoryTimeline from "../../components/HistoryTimeline";
+import ProductPhoto from "../../components/ProductPhoto";
+import { historyFor } from "../../utils/management";
 import { accountFields } from "../../utils/accountFields";
 import { initials } from "../../utils/accounts";
 import { date, money } from "../../utils/format";
@@ -40,9 +45,13 @@ function Field({ icon: Icon, label, children }) {
   );
 }
 
-function Metric({ icon: Icon, label, value }) {
+function Metric({ icon: Icon, label, value, to }) {
   return (
-    <div className="ad-profile-metric">
+    <Link
+      className="ad-profile-metric"
+      to={to}
+      title={`Открыть: ${label.toLocaleLowerCase("ru-RU")}`}
+    >
       <span className="ad-stat-icon">
         <Icon size={20} />
       </span>
@@ -50,7 +59,8 @@ function Metric({ icon: Icon, label, value }) {
         <span>{label}</span>
         <strong>{value}</strong>
       </div>
-    </div>
+      <ArrowUpRight className="ad-metric-arrow" size={15} aria-hidden="true" />
+    </Link>
   );
 }
 
@@ -95,16 +105,19 @@ export default function AccountDetails({ kind = "customers" }) {
   const shops = isSeller
     ? data.shops.filter((shop) => shop.sellerId === id)
     : [];
-  const shopIds = new Set(shops.map((shop) => shop.id));
   const orders = data.orders.filter((order) =>
-    isSeller ? shopIds.has(order.shopId) : order.customerId === id,
+    isSeller ? order.sellerId === id : order.customerId === id,
   );
   const products = isSeller
-    ? data.products.filter((row) => shopIds.has(row.shopId))
+    ? data.products.filter((row) => row.sellerId === id)
     : [];
   const subscriptions = isSeller
     ? data.subscriptions.filter((row) => row.sellerId === id)
     : [];
+  const scope = { [isSeller ? "sellerId" : "customerId"]: id };
+  const scopedPath = (entity, extra = {}) =>
+    `/admin/${entity}?${new URLSearchParams({ ...scope, ...extra })}`;
+  const events = historyFor(data, scope);
   const total = orders
     .filter((order) => order.status !== "Отменён")
     .reduce((sum, order) => sum + Number(order.total || 0), 0);
@@ -140,25 +153,53 @@ export default function AccountDetails({ kind = "customers" }) {
             <Pencil size={16} />
             Редактировать профиль
           </button>
+          <AccountStatusAction person={person} kind={kind} />
         </div>
       </section>
 
+      {person.status !== "Активен" && (
+        <p className="ad-restriction-note">
+          <strong>{person.status}.</strong> Новые операции ограничены.{" "}
+          {person.freezeReason && `Причина: ${person.freezeReason}`}
+        </p>
+      )}
       <div className={`ad-profile-metrics ${isSeller ? "seller" : ""}`}>
         {isSeller && (
-          <Metric icon={Store} label="Магазины" value={shops.length} />
+          <Metric
+            icon={Store}
+            label="Магазины"
+            value={shops.length}
+            to={scopedPath("shops")}
+          />
         )}
         {isSeller && (
-          <Metric icon={Package} label="Товары" value={products.length} />
+          <Metric
+            icon={Package}
+            label="Товары"
+            value={products.length}
+            to={scopedPath("products")}
+          />
         )}
-        <Metric icon={ShoppingCart} label="Заказы" value={orders.length} />
+        <Metric
+          icon={ShoppingCart}
+          label="Заказы"
+          value={orders.length}
+          to={scopedPath("orders")}
+        />
         {!isSeller && (
           <Metric
             icon={ShieldCheck}
             label="Доставлено"
+            to={scopedPath("orders", { status: "Доставлен" })}
             value={orders.filter((row) => row.status === "Доставлен").length}
           />
         )}
-        <Metric icon={Wallet} label="Сумма без отмен" value={money(total)} />
+        <Metric
+          icon={Wallet}
+          label="Сумма без отмен"
+          value={money(total)}
+          to={scopedPath("orders", { excludeCancelled: "1" })}
+        />
       </div>
 
       <div className="ad-profile-columns">
@@ -281,9 +322,14 @@ export default function AccountDetails({ kind = "customers" }) {
                   <td>
                     <Link
                       className="ad-text-link"
-                      to={`/admin/orders?q=${encodeURIComponent(order.id)}`}
+                      to={`/admin/orders/${encodeURIComponent(order.id)}`}
                     >
-                      {order.id} ↗
+                      {order.id}{" "}
+                      <ArrowUpRight
+                        size={12}
+                        className="ad-inline-arrow"
+                        aria-hidden="true"
+                      />
                     </Link>
                   </td>
                   <td>
@@ -329,8 +375,9 @@ export default function AccountDetails({ kind = "customers" }) {
               <Link
                 className="ad-profile-list-row"
                 key={product.id}
-                to={`/admin/products?q=${encodeURIComponent(product.id)}`}
+                to={`/admin/products/${encodeURIComponent(product.id)}`}
               >
+                <ProductPhoto src={product.image} alt={product.name} />
                 <div>
                   <strong>{product.name}</strong>
                   <small>
@@ -352,7 +399,7 @@ export default function AccountDetails({ kind = "customers" }) {
               <Link
                 className="ad-profile-list-row"
                 key={subscription.id}
-                to={`/admin/subscriptions?q=${encodeURIComponent(subscription.id)}`}
+                to={`/admin/subscriptions/${encodeURIComponent(subscription.id)}`}
               >
                 <div>
                   <strong>{subscription.plan}</strong>
@@ -371,6 +418,23 @@ export default function AccountDetails({ kind = "customers" }) {
         </div>
       )}
 
+      <section className="ad-panel">
+        <div className="ad-section-heading">
+          <h2>
+            <Clock3 size={21} />
+            История аккаунта
+          </h2>
+          <Link className="ad-btn small" to={scopedPath("history")}>
+            Вся история{" "}
+            <ArrowUpRight
+              size={12}
+              className="ad-inline-arrow"
+              aria-hidden="true"
+            />
+          </Link>
+        </div>
+        <HistoryTimeline events={events.slice(0, 6)} state={data} />
+      </section>
       {editing && (
         <Modal
           title={`Редактировать профиль: ${person.name}`}

@@ -7,6 +7,7 @@ export default function Settings() {
   const save = useAdminStore((s) => s.saveSettings);
   const [form, setForm] = useState(settings);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   return (
     <>
       <PageTitle title="Настройки" />
@@ -16,8 +17,14 @@ export default function Settings() {
           className="ad-form"
           onSubmit={(e) => {
             e.preventDefault();
-            save(form);
-            setSaved(true);
+            try {
+              save(form);
+              setSaved(true);
+              setError("");
+            } catch (failure) {
+              setError(failure.message);
+              setSaved(false);
+            }
           }}
         >
           {[
@@ -50,6 +57,11 @@ export default function Settings() {
             Показывать уведомления на обзоре
           </label>
           <button className="ad-btn primary">Сохранить изменения</button>
+          {error && (
+            <p role="alert" className="ad-form-error">
+              {error}
+            </p>
+          )}
           {saved && (
             <p role="status" className="ad-success">
               Настройки сохранены

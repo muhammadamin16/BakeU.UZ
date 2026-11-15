@@ -131,6 +131,9 @@ export function upsertAdminRecord(state, key, item) {
               ...(collection === "subscriptions" && record.sellerId
                 ? { sellerId: record.sellerId, name: record.owner }
                 : {}),
+              ...(collection === "products" && record.sellerId
+                ? { sellerId: record.sellerId }
+                : {}),
             }
           : row,
       );

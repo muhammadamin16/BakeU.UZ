@@ -16,7 +16,11 @@ export function accountFields(kind) {
     },
     { key: "address", label: "Адрес", required: false },
     { key: "date", label: "Дата регистрации", type: "date", required: false },
-    { key: "status", label: "Статус", options: ["Активен", "Заблокирован"] },
+    {
+      key: "status",
+      label: "Статус",
+      options: ["Активен", "Заморожен", "Заблокирован"],
+    },
     {
       key: "notes",
       label: "Заметка администратора",

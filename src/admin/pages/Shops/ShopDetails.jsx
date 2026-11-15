@@ -1,3 +1,5 @@
+import { ArrowUpRight } from "lucide-react";
+import ProductPhoto from "../../components/ProductPhoto";
 import { money } from "../../utils/format";
 import { Link, useParams } from "react-router-dom";
 import { useAdminStore } from "../../store/adminStore";
@@ -34,7 +36,12 @@ export default function ShopDetails() {
                   className="ad-text-link"
                   to={`/admin/sellers/${encodeURIComponent(shop.sellerId)}`}
                 >
-                  {shop.owner} ↗
+                  {shop.owner}{" "}
+                  <ArrowUpRight
+                    size={12}
+                    className="ad-inline-arrow"
+                    aria-hidden="true"
+                  />
                 </Link>
               ) : (
                 shop.owner
@@ -66,7 +73,7 @@ export default function ShopDetails() {
             <h2>{title}</h2>
             <Link
               className="ad-btn small"
-              to={`/admin/${path}?q=${encodeURIComponent(shop.name)}`}
+              to={`/admin/${path}?shopId=${encodeURIComponent(shop.id)}`}
             >
               Управлять ›
             </Link>
@@ -74,7 +81,20 @@ export default function ShopDetails() {
           {rows.length ? (
             rows.map((r) => (
               <div className="ad-detail-row" key={r.id}>
-                <span>{r.name || r.customer || r.id}</span>
+                <Link
+                  className="ad-text-link"
+                  to={`/admin/${path}/${encodeURIComponent(r.id)}`}
+                >
+                  {path === "products" && (
+                    <ProductPhoto src={r.image} alt={r.name} />
+                  )}
+                  {r.name || r.customer || r.id}{" "}
+                  <ArrowUpRight
+                    size={12}
+                    className="ad-inline-arrow"
+                    aria-hidden="true"
+                  />
+                </Link>
                 <span>
                   {r.price ? money(r.price) : r.total ? money(r.total) : r.plan}
                 </span>

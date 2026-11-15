@@ -1,3 +1,5 @@
+import { ArrowUpRight } from "lucide-react";
+import { matchesSearch } from "../../utils/management";
 import { money, date } from "../../utils/format";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -17,6 +19,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { useAdminStore } from "../../store/adminStore";
+import { ApplicationDecisionActions } from "../../components/ManagementActions";
 import StatCard from "../../components/StatCard/StatCard";
 import { Badge, PageTitle, Modal, RecordForm } from "../../components/AdminUI";
 import "./Dashboard.css";
@@ -58,8 +61,7 @@ export default function Dashboard() {
   const [adding, setAdding] = useState(false);
   const [params] = useSearchParams();
   const q = (params.get("q") || "").toLowerCase();
-  const matches = (row) =>
-    Object.values(row).some((v) => String(v).toLowerCase().includes(q));
+  const matches = (row) => matchesSearch(row, q);
   const inPeriod = (row) =>
     !row.date ||
     new Date(row.date + "T23:59:59").getTime() >=
@@ -173,18 +175,7 @@ export default function Dashboard() {
                     <td>{date(a.date)}</td>
                     <td>
                       <div className="ad-row-actions">
-                        <button
-                          className="ad-btn small green"
-                          onClick={() => data.decide(a.id, "Одобрено")}
-                        >
-                          ✓ Одобрить
-                        </button>
-                        <button
-                          className="ad-btn small red"
-                          onClick={() => data.decide(a.id, "Отклонено")}
-                        >
-                          × Отклонить
-                        </button>
+                        <ApplicationDecisionActions application={a} />
                       </div>
                     </td>
                   </tr>
@@ -327,7 +318,12 @@ export default function Dashboard() {
                         className="ad-text-link"
                         to={`/admin/customers/${encodeURIComponent(c.id)}`}
                       >
-                        {c.name} ↗
+                        {c.name}{" "}
+                        <ArrowUpRight
+                          size={12}
+                          className="ad-inline-arrow"
+                          aria-hidden="true"
+                        />
                       </Link>
                     </td>
                     <td>

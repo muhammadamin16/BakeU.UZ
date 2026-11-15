@@ -1,6 +1,6 @@
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
-import { useAdminStore } from "../../store/adminStore";
+import { ApplicationDecisionActions } from "../../components/ManagementActions";
 import "./Applications.css";
 const allFields = [
   { key: "name", label: "Заявитель" },
@@ -26,31 +26,13 @@ const columns = [
       : undefined,
 }));
 export default function Applications() {
-  const decide = useAdminStore((s) => s.decide);
   return (
     <CollectionPage
       title="Заявки на открытие магазина"
       collection="applications"
       fields={fields}
       columns={columns}
-      renderActions={(row) =>
-        row.status === "На проверке" && (
-          <>
-            <button
-              className="ad-btn small green"
-              onClick={() => decide(row.id, "Одобрено")}
-            >
-              ✓ Одобрить
-            </button>
-            <button
-              className="ad-btn small red"
-              onClick={() => decide(row.id, "Отклонено")}
-            >
-              × Отклонить
-            </button>
-          </>
-        )
-      }
+      renderActions={(row) => <ApplicationDecisionActions application={row} />}
     />
   );
 }
