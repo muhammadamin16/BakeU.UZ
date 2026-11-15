@@ -1,3 +1,4 @@
+import { sectionKeyboard } from "../keyboards/mainKeyboard.js";
 import { isAdmin } from "../middleware/adminOnly.js";
 import { createRateLimiter } from "../middleware/rateLimit.js";
 import { showMain, publicAction } from "./public.js";
@@ -18,7 +19,16 @@ export function createUpdateHandler({ repo, telegram, config, notifications }) {
       return;
     }
     const admin = isAdmin(config, user.id);
-    const ctx = { repo, telegram, config, notifications, chatId, user };
+    const ctx = {
+      repo,
+      telegram,
+      config,
+      notifications,
+      chatId,
+      user,
+      message: msg,
+      callback: Boolean(callback),
+    };
     const data = callback?.data || "";
     if (callback) await telegram.answer(callback.id);
     if (!admin && !allow(chatId)) return;
@@ -44,12 +54,15 @@ export function createUpdateHandler({ repo, telegram, config, notifications }) {
       repo.clearState(chatId);
       return adminAction(ctx, command === "/admin" ? "admin:home" : data);
     }
-    if (callback) return publicAction(ctx, data);
+    if (callback) {
+      repo.clearState(chatId);
+      return publicAction(ctx, data);
+    }
     const state = repo.getState(chatId);
     if (state) {
       if (!text || text.startsWith("/"))
         return telegram.send(chatId, {
-          text: "Отправьте текстовое сообщение. Отмена: /cancel",
+          text: "💬 Отправьте вопрос текстом. Для отмены нажмите /cancel.",
         });
       const max = state.kind === "reject" ? 500 : 2000;
       if (text.length > max)
@@ -65,7 +78,9 @@ export function createUpdateHandler({ repo, telegram, config, notifications }) {
         );
         repo.clearState(chatId);
         return telegram.send(chatId, {
-          text: `✅ Обращение принято. Номер: ${t.id}\nОтвет придёт сюда, в этот чат.`,
+          text: `<b>🤎 Спасибо, мы получили ваш вопрос</b>\n\nОбращение <code>#${t.id.slice(0, 8)}</code> сохранено.\nОтвет поддержки придёт в этот чат.`,
+          parse_mode: "HTML",
+          reply_markup: sectionKeyboard(config),
         });
       }
       if (!admin) {
@@ -89,6 +104,7 @@ export function createUpdateHandler({ repo, telegram, config, notifications }) {
           text: result.missing
             ? "Заявка не найдена."
             : applicationMessage(result.application),
+          parse_mode: "HTML",
           reply_markup: backAdmin,
         });
       }

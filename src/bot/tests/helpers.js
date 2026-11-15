@@ -31,14 +31,27 @@ export function setup() {
 }
 export function mockTelegram() {
   const messages = [];
+  const edits = [];
   return {
     messages,
+    edits,
     send: async (id, payload) => {
       messages.push({ id, ...payload });
       return { message_id: messages.length };
     },
     answer: async () => {},
-    edit: async () => {},
+    edit: async (id, messageId, payload) => {
+      edits.push({ id, messageId, ...payload });
+      return { message_id: messageId };
+    },
+    editCaption: async (id, messageId, payload) => {
+      edits.push({ id, messageId, ...payload });
+      return { message_id: messageId };
+    },
+    photo: async (id, bytes, payload) => {
+      messages.push({ id, type: "photo", ...payload });
+      return { message_id: messages.length };
+    },
   };
 }
 export const message = (id, text) => ({

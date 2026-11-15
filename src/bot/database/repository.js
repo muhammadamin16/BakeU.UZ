@@ -226,7 +226,9 @@ export function createRepository(db) {
         );
         queue(
           t.chatId,
-          { text: `🛟 Ответ поддержки BakeU\nОбращение #${id}\n\n${body}` },
+          {
+            text: `💬 Ответ поддержки BakeU\nОбращение #${id.slice(0, 8)}\n\n${body}`,
+          },
           `reply:${rid}`,
         );
         db.prepare(

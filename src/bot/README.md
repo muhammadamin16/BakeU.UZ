@@ -97,3 +97,9 @@ npm run build
 ```
 
 Tests use in-memory SQLite, simulated Telegram calls and a local HTTP server. They never send real Telegram messages. They cover registration, password handling, duplicates, role restrictions, authenticated profile/logout, decision idempotency, support/reply, outbox retry, CORS, config, and main buttons. A live test with your token and real deployment remains necessary.
+
+## Native Telegram presentation
+
+The main menu now includes an original bundled BakeU PNG banner (`assets/welcome.png`) and HTML captions. Public navigation edits the same message/caption instead of posting duplicate menus. `/start` opens a fresh card; older text-only menus still work. Admins get a management button in addition to the six public buttons. Email has a native copy button; support has a visible cancel button. Leaving support cancels the pending input state. Dynamic account/ticket content is HTML-escaped.
+
+Telegram controls button shapes, font, background and emoji rendering. The bot uses standard supported emoji and native inline buttons, without requiring Premium emoji IDs. Photo upload uses built-in multipart FormData, with no external media host. If a photo is rejected or the file is unavailable, the main menu falls back to text. Existing database, `.env`, tokens, links and permissions are unchanged. Restart the bot after pulling and send `/start` to see the new banner.

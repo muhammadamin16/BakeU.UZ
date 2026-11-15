@@ -17,6 +17,7 @@ export function createNotifications(repo, config) {
       each(
         {
           text: accountMessage(user),
+          parse_mode: "HTML",
           reply_markup: {
             inline_keyboard: [
               [
@@ -37,6 +38,7 @@ export function createNotifications(repo, config) {
         each(
           {
             text: applicationMessage(application),
+            parse_mode: "HTML",
             reply_markup: applicationKeyboard(application.id),
           },
           `application:${application.id}`,
@@ -46,6 +48,7 @@ export function createNotifications(repo, config) {
       each(
         {
           text: ticketMessage(ticket),
+          parse_mode: "HTML",
           reply_markup: ticketKeyboard(ticket.id),
         },
         `ticket:${ticket.id}`,
