@@ -1,0 +1,120 @@
+
+/* MUSIC POSITION */
+
+.bakeu-music {
+  position: fixed;
+  right: 22px;
+  bottom: 200px;
+  z-index: 99999;
+}
+
+/* ROUND MUSIC BUTTON */
+
+.bakeu-music-btn {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  min-height: 62px;
+
+  padding: 0;
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+
+  background: #f4b41b;
+  color: #432015;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 20px rgba(67, 32, 21, 0.18),
+    0 0 15px rgba(244, 180, 27, 0.18);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
+}
+
+/* ICON */
+
+.bakeu-disc {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  transform-origin: center;
+}
+
+/* HOVER */
+
+.bakeu-music-btn:hover {
+  transform: scale(1.07);
+
+  box-shadow:
+    0 8px 25px rgba(67, 32, 21, 0.2),
+    0 0 20px rgba(244, 180, 27, 0.35);
+}
+
+/* MUSIC PLAYING */
+
+.bakeu-music-btn.active {
+  background: #ffbf28;
+
+  box-shadow:
+    0 0 20px rgba(244, 180, 27, 0.45),
+    0 6px 22px rgba(67, 32, 21, 0.16);
+}
+
+/* ROTATING DISC */
+
+.music-spinning {
+  animation: bakeu-disc-spin 3s linear infinite;
+}
+
+@keyframes bakeu-disc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .bakeu-music {
+    right: 16px;
+    bottom: 130px;
+  }
+
+  .bakeu-music-btn {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+
+    border-width: 3px;
+  }
+
+  .bakeu-disc {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .music-spinning {
+    animation: none;
+  }
+}
