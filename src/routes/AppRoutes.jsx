@@ -1,3 +1,6 @@
+import { useMiniApp } from "../miniapp/context";
+import Welcome from "../miniapp/pages/Welcome";
+import AdminGate from "../miniapp/components/AdminGate";
 import AdminRoutes from "../admin/routes/AdminRoutes";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
@@ -32,6 +35,7 @@ function matchesPath(pathname, base) {
 
 export default function AppRoutes() {
   const { pathname } = useLocation();
+  const { isMiniMode } = useMiniApp();
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
@@ -39,7 +43,13 @@ export default function AppRoutes() {
     !isAuthPage &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
-  if (matchesPath(pathname, "/admin")) return <AdminRoutes />;
+  if (matchesPath(pathname, "/miniapp")) return <Welcome />;
+  if (matchesPath(pathname, "/admin"))
+    return (
+      <AdminGate>
+        <AdminRoutes />
+      </AdminGate>
+    );
 
   return (
     <>
@@ -67,7 +77,7 @@ export default function AppRoutes() {
         </Routes>
       </main>
 
-      {isHome && <AuthModal />}
+      {isHome && !isMiniMode && <AuthModal />}
 
       <MobileNav />
       {showFooter && <Footer />}

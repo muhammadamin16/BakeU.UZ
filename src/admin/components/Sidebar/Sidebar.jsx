@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import {
+  Send,
   BarChart3,
   Users,
   UserRound,
@@ -17,6 +18,7 @@ import { useAdminStore } from "../../store/adminStore";
 import "./Sidebar.css";
 const links = [
   ["", "Обзор", BarChart3],
+  ["telegram", "Telegram · Аккаунты", Send],
   ["customers", "Покупатели", Users],
   ["sellers", "Продавцы", UserRound],
   ["shops", "Магазины", Store],

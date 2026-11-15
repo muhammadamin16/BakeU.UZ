@@ -1,4 +1,4 @@
-import { siteAdminLink } from "../utils/formatMessage.js";
+import { siteAdminLink, miniAppUrl } from "../utils/formatMessage.js";
 export const backAdmin = {
   inline_keyboard: [
     [{ text: "‹ Панель управления", callback_data: "admin:home" }],
@@ -17,7 +17,14 @@ export function adminKeyboard(config) {
         { text: "💬 Обращения", callback_data: "admin:tickets:0" },
         { text: "🔄 Повторить отправку", callback_data: "admin:retry" },
       ],
-      [{ text: "↗ Открыть админ сайта", url: siteAdminLink(config) }],
+      [
+        {
+          text: "↗ Открыть админ сайта",
+          ...(config.useWebApp
+            ? { web_app: { url: miniAppUrl(config, "admin") } }
+            : { url: siteAdminLink(config) }),
+        },
+      ],
       [{ text: "‹ Главное меню", callback_data: "main" }],
     ],
   };

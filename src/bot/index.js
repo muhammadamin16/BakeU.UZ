@@ -1,3 +1,4 @@
+import { miniAppUrl } from "./utils/formatMessage.js";
 import { formatStartupError } from "./utils/startupError.js";
 import { readConfig } from "./config/index.js";
 import { openDatabase } from "./database/index.js";
@@ -40,6 +41,15 @@ async function main() {
       { command: "id", description: "Мой Telegram ID" },
       { command: "cancel", description: "Отменить ввод" },
     ],
+  });
+  await telegram.call("setChatMenuButton", {
+    menu_button: config.useWebApp
+      ? {
+          type: "web_app",
+          text: "BakeU · Магазин",
+          web_app: { url: miniAppUrl(config) },
+        }
+      : { type: "commands" },
   });
   for (const chatId of config.adminIds) {
     try {

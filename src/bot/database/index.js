@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS replies(id TEXT PRIMARY KEY,ticket_id TEXT NOT NULL R
 CREATE TABLE IF NOT EXISTS bot_state(chat_id TEXT PRIMARY KEY,payload TEXT NOT NULL,updated_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,chat_id TEXT NOT NULL,payload TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,next_at INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'pending',dedupe TEXT UNIQUE);
 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS miniapp_sessions(token_hash TEXT PRIMARY KEY,telegram_id TEXT NOT NULL,profile TEXT NOT NULL,expires_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_miniapp_expiry ON miniapp_sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_outbox_pending ON outbox(status,next_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
 `);

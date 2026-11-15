@@ -81,3 +81,18 @@ npm run bot
 - Port bandligi: oldingi bot jarayonini to'xtating.
 
 Yordam so'raganda faqat terminaldagi xato xabarini yuboring. `.env` faylini yoki tokenni yubormang.
+
+## Telegram Mini App
+
+Yangi kodni saytga ham deploy qilish kerak — faqat kompyuterda `git pull` yetarli emas.
+
+Bot `.env` faylida:
+
+```dotenv
+SITE_URL=https://www.bakeu.uz
+USE_WEB_APP=true
+```
+
+Botni qayta yoqing va `/start` bosing. Telegram menyusida ham «BakeU · Магазин» tugmasi paydo bo'ladi. Birinchi ekranda qishki BakeU logotipi va «Magazinga kirish» bor. Kompyuterdagi ko'rinish: `http://localhost:5173/#/miniapp`. Mini App ichidan katalog, savat, profil va qolgan mavjud sahifalar ochiladi. Admin kirishi faqat server tasdiqlagan `ADMIN_IDS` egalariga ko'rinadi. `/admin/telegram` haqiqiy server akkauntlari va arizalarini ko'rsatadi.
+
+Vercel + VPS uchun to'liq yo'riqnoma: `src/miniapp/README.md`. Oddiy Vercel static deploy Node.js bot yoki SQLite serverini ishga tushirmaydi. API doimiy HTTPS serverda ishlashi shart. Telegram hisobi tasdiqlanishi saytning email/telefon akkaunti avtomatik yaratilganini anglatmaydi; sayt akkauntini odatdagi registratsiya orqali ochish mumkin.

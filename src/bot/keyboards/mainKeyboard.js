@@ -1,7 +1,8 @@
+import { miniAppUrl } from "../utils/formatMessage.js";
 const siteButton = (config) => ({
   text: "🥐 Открыть BakeU",
   ...(config.useWebApp
-    ? { web_app: { url: config.siteUrl } }
+    ? { web_app: { url: miniAppUrl(config) } }
     : { url: config.siteUrl }),
 });
 export function mainKeyboard(config, { admin = false } = {}) {

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "bot": "npm --prefix src/bot start",
     "bot:check": "npm --prefix src/bot run check",
-    "bot:test": "npm --prefix src/bot test"
+    "bot:test": "npm --prefix src/bot test",
+    "miniapp:test": "node scripts/check-miniapp.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

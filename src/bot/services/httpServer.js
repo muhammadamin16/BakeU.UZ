@@ -1,3 +1,4 @@
+import { createMiniAppAuth } from "./miniAppAuth.js";
 import { createServer } from "node:http";
 import { createRateLimiter } from "../middleware/rateLimit.js";
 import { HttpError } from "./auth.js";
@@ -28,6 +29,8 @@ async function readJson(req) {
 export function createApiServer({ auth, repo, config }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 15 * 60000 });
   let concurrentAuth = 0;
+  const miniAuth = createMiniAppAuth(repo, config);
+  const allowMini = createRateLimiter({ limit: 60, windowMs: 60000 });
   return createServer(
     { requestTimeout: 20000, headersTimeout: 10000 },
     async (req, res) => {
@@ -63,6 +66,79 @@ export function createApiServer({ auth, repo, config }) {
         const path = new URL(req.url, "http://localhost").pathname;
         if (path === "/health" && req.method === "GET")
           return send(200, { ok: true, service: "bakeu-bot-api" });
+        if (path === "/api/miniapp/session" && req.method === "POST") {
+          const ip = config.trustProxy
+            ? String(req.headers["x-real-ip"] || req.socket.remoteAddress)
+            : req.socket.remoteAddress;
+          if (!allowMini(ip))
+            throw new HttpError(
+              429,
+              "Слишком много попыток входа. Подождите минуту.",
+            );
+          const data = await readJson(req);
+          return send(200, miniAuth.open(data.initData));
+        }
+        if (path === "/api/miniapp/me" && req.method === "GET") {
+          const session = miniAuth.authenticate(req.headers.authorization);
+          return send(200, {
+            user: session.user,
+            isAdmin: session.isAdmin,
+            links: session.links,
+            expiresAt: session.expiresAt,
+          });
+        }
+        if (path.startsWith("/api/miniapp/admin/")) {
+          const session = miniAuth.requireAdmin(req.headers.authorization);
+          if (path === "/api/miniapp/admin/overview" && req.method === "GET")
+            return send(200, { stats: repo.stats() });
+          const collection = path.match(
+            /^\/api\/miniapp\/admin\/(customers|sellers|applications)$/,
+          )?.[1];
+          if (collection && req.method === "GET") {
+            const page = Number(
+              new URL(req.url, "http://localhost").searchParams.get("page") ||
+                0,
+            );
+            if (!Number.isInteger(page) || page < 0 || page > 100000)
+              throw new HttpError(400, "Некорректная страница.");
+            const rows =
+              collection === "applications"
+                ? repo.listApplications(page)
+                : repo.listUsers(
+                    collection === "customers" ? "client" : "seller",
+                    page,
+                  );
+            return send(200, {
+              rows: rows.slice(0, 5),
+              hasNext: rows.length > 5,
+              page,
+            });
+          }
+          const applicationId = path.match(
+            /^\/api\/miniapp\/admin\/applications\/([a-f0-9-]{36})\/decision$/,
+          )?.[1];
+          if (applicationId && req.method === "POST") {
+            const body = await readJson(req);
+            if (!["Одобрено", "Отклонено"].includes(body.status))
+              throw new HttpError(400, "Выберите решение по заявке.");
+            const reason =
+              typeof body.reason === "string" ? body.reason.trim() : "";
+            if (reason.length > 500 || (body.status === "Отклонено" && !reason))
+              throw new HttpError(
+                400,
+                "Укажите причину отказа: до 500 символов.",
+              );
+            const result = repo.decide(
+              applicationId,
+              body.status,
+              session.user.id,
+              reason,
+            );
+            if (result.missing) throw new HttpError(404, "Заявка не найдена.");
+            return send(200, result);
+          }
+          throw new HttpError(404, "Маршрут не найден.");
+        }
         if (
           ["/api/auth/register", "/api/auth/login"].includes(path) &&
           req.method === "POST"

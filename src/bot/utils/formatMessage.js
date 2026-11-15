@@ -25,3 +25,11 @@ export function siteAdminLink(config, path = "") {
   u.hash = "/admin" + path;
   return u.href;
 }
+
+export function miniAppUrl(config, screen = "") {
+  const url = new URL(config.siteUrl);
+  url.hash = "";
+  url.searchParams.set("miniapp", "1");
+  if (screen) url.searchParams.set("screen", screen);
+  return url.href;
+}

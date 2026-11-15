@@ -1,3 +1,4 @@
+import ServerAdmin from "../../miniapp/pages/ServerAdmin";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Dashboard/Dashboard";
@@ -19,6 +20,7 @@ export default function AdminRoutes() {
     <Routes>
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
+        <Route path="telegram" element={<ServerAdmin />} />
         <Route path="customers" element={<Customers />} />
         <Route
           path="customers/:id"
