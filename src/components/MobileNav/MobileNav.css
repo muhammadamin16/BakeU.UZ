@@ -217,7 +217,7 @@
     width: calc(96% -   20px);
     left: 48%;
     bottom: calc(
-      16px + env(safe-area-inset-bottom, 0px)
+      10px + env(safe-area-inset-bottom, 0px)
     );
   }
 
