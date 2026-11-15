@@ -1,1 +1,3 @@
-/* Applications styles */
+.ad-applications .ad-table td:first-child {
+  min-width: 170px;
+}

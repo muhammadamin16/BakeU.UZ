@@ -1,1 +1,3 @@
-/* Orders styles */
+.ad-row-actions .ad-btn {
+  flex-shrink: 0;
+}

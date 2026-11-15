@@ -1,1 +1,3 @@
-/* Products styles */
+.ad-table td:has(.ad-badge) {
+  vertical-align: middle;
+}

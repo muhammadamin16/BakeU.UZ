@@ -1,1 +1,3 @@
-/* Customers styles */
+.ad-panel .ad-table td:has(a) {
+  font-weight: 600;
+}

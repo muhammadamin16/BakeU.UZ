@@ -1,1 +1,124 @@
-/* Dashboard styles */
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 13px;
+}
+.ad-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 0 12px;
+  align-items: stretch;
+}
+.ad-minis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.ad-mini {
+  border-radius: 7px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 8px;
+  background: linear-gradient(110deg, #fff2de, #fcebd6);
+  color: #b6661d;
+  min-width: 0;
+}
+.ad-mini.green {
+  background: linear-gradient(110deg, #f0f5e5, #e8efda);
+  color: #4b7e2c;
+}
+.ad-mini.red {
+  background: linear-gradient(110deg, #fff0ec, #f9dedd);
+  color: #c34d43;
+}
+.ad-mini span {
+  display: block;
+  font-size: 10px;
+  color: #4c3025;
+  white-space: nowrap;
+}
+.ad-mini strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #4b2218;
+  margin-top: 2px;
+}
+.ad-mini:last-child strong {
+  font-size: 17px;
+}
+.ad-mini:last-child svg {
+  width: 21px;
+}
+.ad-dashboard-notes .ad-notice {
+  padding: 7px 0;
+}
+.ad-user-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.ad-user-summary a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #f0f4e4;
+  padding: 10px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+.ad-user-summary a:nth-child(2) {
+  background: #fff0dc;
+}
+.ad-user-summary svg {
+  color: #ae6127;
+}
+.ad-user-summary b {
+  margin-left: auto;
+  background: #d9eac4;
+  color: #45712a;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+.ad-user-summary a:nth-child(2) b {
+  background: #ffdbb4;
+  color: #b66a26;
+}
+@media (max-width: 1150px) {
+  .ad-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .ad-minis {
+    gap: 8px;
+  }
+  .ad-dashboard-notes .ad-notice {
+    padding: 10px 0;
+  }
+}
+@media (max-width: 900px) {
+  .ad-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .ad-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ad-minis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ad-section-heading h2 {
+    font-size: 15px;
+  }
+  .ad-user-summary a {
+    padding: 8px;
+    font-size: 10px;
+  }
+  .ad-user-summary svg {
+    width: 18px;
+  }
+}

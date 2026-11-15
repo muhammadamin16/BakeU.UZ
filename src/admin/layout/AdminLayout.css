@@ -1,1 +1,11 @@
-/* AdminLayout styles */
+.ad-app .ad-main {
+  display: flex;
+  flex-direction: column;
+}
+.ad-app .ad-content {
+  width: 100%;
+  flex: 1;
+}
+.ad-app .ad-footer {
+  flex-shrink: 0;
+}

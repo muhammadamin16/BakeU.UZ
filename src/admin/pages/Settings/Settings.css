@@ -1,1 +1,3 @@
-/* Settings styles */
+.ad-settings .ad-form > .ad-btn {
+  justify-self: start;
+}

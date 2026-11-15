@@ -1,1 +1,43 @@
-/* StatCard styles */
+.ad-stat {
+  border: 1px solid #f0ddcc;
+  background: linear-gradient(130deg, #fffefa, #fcf6f1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 3px #ac5b1806;
+  min-width: 0;
+  transition: transform 0.15s;
+}
+.ad-stat:hover {
+  transform: translateY(-2px);
+  border-color: #dba878;
+}
+.ad-stat > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.ad-stat svg {
+  color: #ac581c;
+}
+.ad-stat strong {
+  display: block;
+  font-size: 29px;
+  line-height: 1.2;
+  margin-top: 7px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+@media (max-width: 1000px) {
+  .ad-stat {
+    padding: 12px;
+  }
+  .ad-stat > span {
+    white-space: normal;
+    font-size: 11px;
+  }
+  .ad-stat strong {
+    font-size: 25px;
+  }
+}

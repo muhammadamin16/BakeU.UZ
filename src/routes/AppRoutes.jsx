@@ -1,3 +1,4 @@
+import AdminRoutes from "../admin/routes/AdminRoutes";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Header from "../components/Header/Header";
@@ -32,7 +33,10 @@ export default function AppRoutes() {
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
   const showFooter =
-    !isAuthPage && !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
+    !isAuthPage &&
+    !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
+
+  if (matchesPath(pathname, "/admin")) return <AdminRoutes />;
 
   return (
     <>

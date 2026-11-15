@@ -1,1 +1,3 @@
-/* ShopDetails styles */
+.ad-details dd {
+  overflow-wrap: anywhere;
+}
