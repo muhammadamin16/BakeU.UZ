@@ -46,7 +46,7 @@ export default function AppRoutes() {
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
   if (matchesPath(pathname, "/admin"))
     return (
-      <AdminGate>
+      <AdminGate allowLocalPreview>
         <AdminRoutes />
       </AdminGate>
     );

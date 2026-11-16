@@ -17,11 +17,11 @@ try {
   const { MiniAppContext } = await vite.ssrLoadModule(
     "/src/miniapp/context.js",
   );
-  const render = (component, state) =>
+  const render = (component, state, path = "/admin") =>
     renderToString(
       React.createElement(
         MemoryRouter,
-        null,
+        { initialEntries: [path] },
         React.createElement(
           MiniAppContext.Provider,
           {
@@ -68,6 +68,53 @@ try {
       isAdmin: true,
     }).includes("SECRET_ADMIN"),
   );
+  const windowDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "window",
+  );
+  try {
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: { location: { hostname: "127.0.0.1" } },
+    });
+    const preview = () =>
+      React.createElement(Gate, { allowLocalPreview: true }, child);
+    assert.ok(render(preview(), {}).includes("SECRET_ADMIN"));
+    assert.ok(
+      !render(preview(), {}, "/admin/telegram").includes("SECRET_ADMIN"),
+    );
+    assert.ok(
+      !render(React.createElement(Gate, null, child), {}).includes(
+        "SECRET_ADMIN",
+      ),
+    );
+    assert.ok(
+      !render(preview(), { isMiniMode: true }).includes("SECRET_ADMIN"),
+    );
+    assert.ok(
+      !render(React.createElement(Gate, null, child), {}).includes(
+        "Проверить снова",
+      ),
+    );
+    assert.ok(
+      render(React.createElement(Gate, null, child), {
+        status: "ready",
+        isAdmin: false,
+      }).includes("Нет прав администратора"),
+    );
+    assert.ok(
+      render(React.createElement(Gate, null, child), {
+        status: "error",
+        error: "Test API unavailable",
+      }).includes("Проверить снова"),
+    );
+    globalThis.window.location.hostname = "bakeu.uz";
+    assert.ok(!render(preview(), {}).includes("SECRET_ADMIN"));
+  } finally {
+    if (windowDescriptor)
+      Object.defineProperty(globalThis, "window", windowDescriptor);
+    else delete globalThis.window;
+  }
   const { miniLaunch } = await vite.ssrLoadModule("/src/miniapp/telegram.js");
   const originalFetch = globalThis.fetch;
   const storageDescriptor = Object.getOwnPropertyDescriptor(
@@ -114,7 +161,7 @@ try {
     else delete globalThis.sessionStorage;
   }
   console.log(
-    "PASS: welcome logo, winter artwork, store CTA, verified admin visibility and guest/buyer access denial, account-switch session isolation.",
+    "PASS: welcome logo, winter artwork, store CTA, verified admin visibility and guest/buyer access denial, account-switch session isolation, loopback-only local demo preview and protected server routes.",
   );
 } finally {
   await vite.close();

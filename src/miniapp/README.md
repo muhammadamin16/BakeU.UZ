@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173/#/miniapp` for a **guest** preview. Guests can enter the storefront. Fake Telegram data or query parameters cannot enable admin access. To test genuine Telegram auth, the frontend and API need an HTTPS address reachable by Telegram.
+Open `http://127.0.0.1:3000/#/miniapp` for a **guest** preview. Guests can enter the storefront. Fake Telegram data or query parameters cannot enable admin access. To test genuine Telegram auth, the frontend and API need an HTTPS address reachable by Telegram.
 
 Use root `.env.local` with `VITE_ACCOUNT_API_URL=/api` for local Vite proxying to the bot API on port 3001. Start `npm run bot` in another terminal after configuring the bot token and admin IDs. Existing `.env` files are not overwritten by Git pulls.
 
@@ -47,7 +47,7 @@ Telegram → www.bakeu.uz (Vercel frontend, branch Amin)
 ```dotenv
 SITE_URL=https://www.bakeu.uz
 USE_WEB_APP=true
-ALLOWED_ORIGINS=https://www.bakeu.uz,https://bakeu.uz,http://localhost:5173
+ALLOWED_ORIGINS=https://www.bakeu.uz,https://bakeu.uz,http://localhost:5173,http://localhost:3000,http://127.0.0.1:3000
 ```
 
 Keep the existing real `BOT_TOKEN` and numeric `ADMIN_IDS`. With trusted loopback Nginx use `TRUST_PROXY=true`; otherwise keep false. The bot token stays only on the backend. Stop the laptop bot before starting the same token on the VPS. 4. A successful `GET https://YOUR-BACKEND/api/miniapp/me` **without** a session returns JSON 401. If it returns HTML, the API URL or reverse proxy is wrong. `GET /health` on the bot server returns JSON readiness. 5. Restart the bot. It sets the Telegram menu button to `BakeU · Магазин`; the main menu's website button also opens the Mini App. Send `/start` to get the new button. The bot must be running with `USE_WEB_APP=true` and an HTTPS site URL.
@@ -62,7 +62,7 @@ The SDK loads only for a Telegram launch. It calls ready/expand, integrates Tele
 
 - `POST /api/miniapp/session` accepts the raw signed `initData` string only. The backend verifies HMAC-SHA256, timestamp (5 minutes, 30-second future tolerance), duplicate fields, and numeric user identity. `initDataUnsafe`, client role flags and URL admin parameters never grant authority.
 - Sessions last one hour; SQLite stores token hashes. Permission is recomputed from `ADMIN_IDS` at each protected request, so removing an admin in server config and restarting takes effect on existing sessions.
-- Regular users see the storefront CTA; admins additionally see **Admin panel**. Every `/admin/*` route is behind the Mini App gate. Opening the URL directly does not grant access.
+- Regular users see the storefront CTA; admins additionally see **Admin panel**. In production every `/admin/*` route is behind the Mini App gate. Opening the URL directly does not grant access. Local development may preview browser-only demo pages as described below; the server-backed Telegram page always requires verified admin access.
 - `/admin/telegram` shows real server customers, sellers and store applications, with pagination, approve and reasoned reject. Changes are the same database used by the Telegram bot.
 - Other pre-existing website admin/catalog/order/payment/chat pages still use their existing browser/demo stores. This change does **not** replace them with a complete transactional marketplace backend. The UI gate is not a substitute for backend permissions; all new real-data admin endpoints enforce server permissions separately.
 - Telegram identity is separate from a website email/phone account. Verified Mini App launch does not silently create fake email accounts, migrate browser profiles or grant a seller role. Users can register/login to the website as usual.
@@ -92,3 +92,33 @@ All routes except session creation require `Authorization: Bearer MINI_APP_SESSI
 If you deploy elsewhere, set optional `MINI_APP_URL=https://your-real-https-site` in `src/bot/.env`. The active Mini App origin is added to the configured CORS allowlist. For the old SITE_URL/USE_WEB_APP behavior, use `npm run bot:website` from the repository root.
 
 After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bot`, and send `/start` to get a fresh button. Existing Telegram messages retain their original keyboards. Button icons vary by Telegram client; use the printed launch mode or the actual opening behavior rather than the arrow glyph to identify the mode. The HTTPS account/admin API still needs a public backend; this launch fix does not deploy or tunnel localhost.
+
+## Local admin development
+
+`npm run dev` now binds to `http://127.0.0.1:3000` with a strict port. This avoids
+Windows' reserved 5139–5238 range (including Vite's previous 5173 default) and IPv6
+localhost binding issues. If 3000 is occupied, stop the previous local server or
+select an available port with `npm run dev -- --port 3002`. The API keeps port 3001.
+
+Open `http://127.0.0.1:3000/#/admin` to work on the existing browser demo pages.
+Preview is allowed only by the Vite development build on exact loopback hosts
+(`localhost`, `127.0.0.1`, IPv6 loopback), outside Mini App mode, and only for
+known demo routes. The banner identifies this local mode. It does not set
+`isAdmin`, create a Telegram session, read real server records, or change backend
+permissions. It is unavailable in `npm run build` / `npm run preview`, on public
+hosts, and inside Telegram Mini App launches.
+
+`/#/admin/telegram` requires a verified administrator in every environment. The
+guest screen explains how to launch from Telegram; verified non-admin users see
+a different access-denied message. API errors retain retry, with a loading state.
+A local guest on this server page can return to the demo admin through the link.
+There is no token/query-string switch that grants server access.
+
+For server account testing through port 3000, add exact origins
+`http://127.0.0.1:3000,http://localhost:3000` to your existing
+`src/bot/.env` `ALLOWED_ORIGINS`, preserving the existing public origins, and
+restart the API. Git does not modify your private `.env`. This is unnecessary
+for the standalone local demo; production Telegram authentication still requires
+the real HTTPS API and a Telegram ID listed in server `ADMIN_IDS`.
+
+Check the local access policy with `node --test src/miniapp/adminAccess.test.js`.

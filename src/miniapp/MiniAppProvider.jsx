@@ -6,7 +6,7 @@ import { miniLaunch } from "./telegram";
 import "./miniapp.css";
 export default function MiniAppProvider({ children }) {
   const [state, setState] = useState({
-    status: miniLaunch.isTelegram ? "loading" : "guest",
+    status: "loading",
     user: null,
     isAdmin: false,
     error: "",
@@ -15,6 +15,7 @@ export default function MiniAppProvider({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const retry = useCallback(async () => {
+    setState((previous) => ({ ...previous, status: "loading", error: "" }));
     try {
       const session = await authenticateMiniApp();
       setState(

@@ -439,3 +439,14 @@
   vertical-align: -2px;
   flex-shrink: 0;
 }
+
+.ad-app .ad-local-preview {
+  margin: 0 0 22px;
+  padding: 13px 17px;
+  border: 1px solid #fff;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #fff4dfc9, #fffaf7a6);
+  color: #795337;
+  font-size: 12px;
+  line-height: 1.7;
+}

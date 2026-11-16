@@ -1,6 +1,6 @@
 # BakeU Admin (demo)
 
-Open `http://localhost:5173/#/admin` after `npm install` and `npm run dev`.
+Open `http://127.0.0.1:3000/#/admin` after `npm install` and `npm run dev`.
 
 The admin is a browser-local demo, not a secured production admin. All admin records are independent demo data persisted by Zustand under `bakeu-admin-demo-v1`. They do not modify customer/seller account stores. There is no server authentication or payment processing. Server-side authentication and role checks are required before using real records.
 
@@ -78,3 +78,11 @@ node --test src/admin/utils/*.test.js
 npx eslint src/admin
 npm run build
 ```
+
+## Development access
+
+The local Vite development server allows the browser-only admin demo on loopback
+hosts without Telegram login, with a visible demo banner. The server-backed
+`/admin/telegram` page always requires a verified Telegram admin. Production
+builds and Telegram Mini App launches retain the full admin gate. See
+`../miniapp/README.md` for the exact boundary and server setup.
