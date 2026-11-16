@@ -62,7 +62,7 @@ The SDK loads only for a Telegram launch. It calls ready/expand, integrates Tele
 
 - `POST /api/miniapp/session` accepts the raw signed `initData` string only. The backend verifies HMAC-SHA256, timestamp (5 minutes, 30-second future tolerance), duplicate fields, and numeric user identity. `initDataUnsafe`, client role flags and URL admin parameters never grant authority.
 - Sessions last one hour; SQLite stores token hashes. Permission is recomputed from `ADMIN_IDS` at each protected request, so removing an admin in server config and restarting takes effect on existing sessions.
-- Regular users see the storefront CTA; admins additionally see **Admin panel**. In production every `/admin/*` route is behind the Mini App gate. Opening the URL directly does not grant access. Local development may preview browser-only demo pages as described below; the server-backed Telegram page always requires verified admin access.
+- Regular users see the storefront CTA; admins additionally see **Admin panel**. Ordinary browsers can open the existing browser-only demo pages at `/#/admin`, including the deployed Vercel production build. This preview never grants a Telegram session or server permissions. Inside Telegram Mini App mode the admin gate remains active. The server-backed `/admin/telegram` page always requires verified admin access, in every environment.
 - `/admin/telegram` shows real server customers, sellers and store applications, with pagination, approve and reasoned reject. Changes are the same database used by the Telegram bot.
 - Other pre-existing website admin/catalog/order/payment/chat pages still use their existing browser/demo stores. This change does **not** replace them with a complete transactional marketplace backend. The UI gate is not a substitute for backend permissions; all new real-data admin endpoints enforce server permissions separately.
 - Telegram identity is separate from a website email/phone account. Verified Mini App launch does not silently create fake email accounts, migrate browser profiles or grant a seller role. Users can register/login to the website as usual.
@@ -101,17 +101,19 @@ localhost binding issues. If 3000 is occupied, stop the previous local server or
 select an available port with `npm run dev -- --port 3002`. The API keeps port 3001.
 
 Open `http://127.0.0.1:3000/#/admin` to work on the existing browser demo pages.
-Preview is allowed only by the Vite development build on exact loopback hosts
-(`localhost`, `127.0.0.1`, IPv6 loopback), outside Mini App mode, and only for
-known demo routes. The banner identifies this local mode. It does not set
-`isAdmin`, create a Telegram session, read real server records, or change backend
-permissions. It is unavailable in `npm run build` / `npm run preview`, on public
-hosts, and inside Telegram Mini App launches.
+The same browser-only demo is available at
+`https://bake-u-uz-self.vercel.app/#/admin` after deploying this version. It works
+in development and production builds without a localhost restriction. Only the
+explicitly allowlisted demo routes are accessible outside Mini App mode. The
+banner identifies the demonstration data: changes belong to the current browser,
+not a shared server database. The preview does not set `isAdmin`, create a
+Telegram session, fetch real server records, or change backend permissions.
+Telegram Mini App launches retain their admin gate.
 
 `/#/admin/telegram` requires a verified administrator in every environment. The
 guest screen explains how to launch from Telegram; verified non-admin users see
 a different access-denied message. API errors retain retry, with a loading state.
-A local guest on this server page can return to the demo admin through the link.
+A browser guest on this server page can return to the demo admin through the link.
 There is no token/query-string switch that grants server access.
 
 For server account testing through port 3000, add exact origins
@@ -121,4 +123,22 @@ restart the API. Git does not modify your private `.env`. This is unnecessary
 for the standalone local demo; production Telegram authentication still requires
 the real HTTPS API and a Telegram ID listed in server `ADMIN_IDS`.
 
-Check the local access policy with `node --test src/miniapp/adminAccess.test.js`.
+Check the demo/server access boundary with `node --test src/miniapp/adminAccess.test.js`.
+
+### Vercel production update
+
+The earlier local-preview fix was intentionally limited to Vite development on
+loopback, so the same `/#/admin` link still showed a Telegram gate on Vercel.
+The public deployment now permits the existing browser-only demo routes too.
+`/admin/telegram` has both the outer access check and its own verified-admin
+boundary, and its backend endpoints continue checking Telegram permissions.
+Opening a demo page must never trigger `/api/miniapp/admin/*` requests. Unknown
+admin routes do not inherit demo access; Telegram Mini App mode does not inherit
+it either. Guest and verified-admin authentication state is unchanged by preview.
+
+Push the update to branch `Amin` and let the connected Vercel project rebuild it.
+If that project is configured for another production branch, select/deploy the
+commit from `Amin` in Vercel. Git push alone cannot verify an external deployment
+or configure its API. Production-build browser checks verify demo navigation,
+local edits, denied server access for guests/non-admins, and unchanged verified
+admin access without sending real Telegram messages.

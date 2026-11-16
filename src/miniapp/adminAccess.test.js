@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canPreviewLocalAdmin } from "./adminAccess.js";
+import { canPreviewAdminDemo } from "./adminAccess.js";
 
-const local = { development: true, hostname: "127.0.0.1", pathname: "/admin" };
-test("local development can preview only the existing browser demo routes", () => {
+const demo = { pathname: "/admin" };
+test("ordinary browsers can preview only the existing browser demo routes", () => {
   const paths = [
     "/admin",
     "/admin/",
@@ -19,15 +19,22 @@ test("local development can preview only the existing browser demo routes", () =
     "/admin/history",
     "/admin/settings/",
   ];
-  for (const hostname of ["localhost", "127.0.0.1", "::1", "[::1]"])
+  for (const hostname of [
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "[::1]",
+    "bake-u-uz-self.vercel.app",
+    "www.bakeu.uz",
+  ])
     for (const pathname of paths)
       assert.equal(
-        canPreviewLocalAdmin({ ...local, hostname, pathname }),
+        canPreviewAdminDemo({ ...demo, hostname, pathname }),
         true,
         hostname + pathname,
       );
 });
-test("the server-backed Telegram route and unknown routes never get local preview access", () => {
+test("the server-backed Telegram route and unknown routes never get demo preview access", () => {
   for (const pathname of [
     "/admin/telegram",
     "/admin/telegram/",
@@ -41,20 +48,25 @@ test("the server-backed Telegram route and unknown routes never get local previe
     "/",
     "/miniapp",
   ])
-    assert.equal(canPreviewLocalAdmin({ ...local, pathname }), false, pathname);
+    assert.equal(canPreviewAdminDemo({ ...demo, pathname }), false, pathname);
 });
-test("production builds and public development hosts cannot use local admin preview", () => {
-  assert.equal(canPreviewLocalAdmin({ ...local, development: false }), false);
-  for (const hostname of [
-    "bakeu.uz",
-    "localhost.attacker.test",
-    "127.0.0.1.attacker.test",
-    "192.168.1.10",
-    "0.0.0.0",
-    "",
-  ])
-    assert.equal(canPreviewLocalAdmin({ ...local, hostname }), false, hostname);
+test("the deployed production site can show browser-only demo data without granting server permissions", () => {
+  for (const hostname of ["bake-u-uz-self.vercel.app", "bakeu.uz", "127.0.0.1"])
+    for (const development of [false, true]) {
+      assert.equal(
+        canPreviewAdminDemo({ ...demo, hostname, development }),
+        true,
+      );
+      assert.equal(
+        canPreviewAdminDemo({
+          pathname: "/admin/telegram",
+          hostname,
+          development,
+        }),
+        false,
+      );
+    }
 });
-test("Telegram Mini App launches still require verified admin permissions in development", () => {
-  assert.equal(canPreviewLocalAdmin({ ...local, miniMode: true }), false);
+test("Telegram Mini App launches still require verified admin permissions for demo routes", () => {
+  assert.equal(canPreviewAdminDemo({ ...demo, miniMode: true }), false);
 });

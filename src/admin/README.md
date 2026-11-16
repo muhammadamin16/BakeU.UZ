@@ -1,8 +1,8 @@
 # BakeU Admin (demo)
 
-Open `http://127.0.0.1:3000/#/admin` after `npm install` and `npm run dev`.
+Open `http://127.0.0.1:3000/#/admin` after `npm install` and `npm run dev`, or open `https://bake-u-uz-self.vercel.app/#/admin` once this version is deployed.
 
-The admin is a browser-local demo, not a secured production admin. All admin records are independent demo data persisted by Zustand under `bakeu-admin-demo-v1`. They do not modify customer/seller account stores. There is no server authentication or payment processing. Server-side authentication and role checks are required before using real records.
+The admin is a browser-local demo, not a secured production admin. All admin records are independent demo data persisted by Zustand under `bakeu-admin-demo-v1`. They do not modify customer/seller account stores. These demo collections do not authenticate against the server or process payments. The separate `/admin/telegram` page requires verified server authorization. Server-side authentication and role checks are required before using real records.
 
 Pages: dashboard, customers, sellers, shops, account/shop details, applications, products, orders, subscriptions, notifications, history, settings. Collection pages support search, status filter, create, edit, and confirmed delete. Approving a pending application creates one shop; repeated decisions are ignored. Counts use actual demo records rather than static screenshot totals. Date period filters apply to dated customers, applications, and orders; inventory and current subscription totals show current state.
 
@@ -79,10 +79,12 @@ npx eslint src/admin
 npm run build
 ```
 
-## Development access
+## Browser demo and server access
 
-The local Vite development server allows the browser-only admin demo on loopback
-hosts without Telegram login, with a visible demo banner. The server-backed
-`/admin/telegram` page always requires a verified Telegram admin. Production
-builds and Telegram Mini App launches retain the full admin gate. See
-`../miniapp/README.md` for the exact boundary and server setup.
+Known demo pages open at `/#/admin` in ordinary browsers, including the Vercel
+production build, without Telegram login. A visible banner states that changes
+are stored only in the current browser. This does not grant `isAdmin`, a Telegram
+session, or access to actual registrations. The server-backed `/admin/telegram`
+page always requires a verified Telegram admin; unknown admin routes and Telegram
+Mini App launches retain their gate. See `../miniapp/README.md` for the exact
+boundary and server setup.

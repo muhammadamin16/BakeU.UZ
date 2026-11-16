@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, LoaderCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { useAdminAccess } from "../useAdminAccess";
-export default function AdminGate({ children, allowLocalPreview = false }) {
-  const { status, verifiedAdmin, localPreview, canPreviewDemo, retry, error } =
+export default function AdminGate({ children, allowDemoPreview = false }) {
+  const { status, verifiedAdmin, demoPreview, canPreviewDemo, retry, error } =
     useAdminAccess();
-  if (verifiedAdmin || (allowLocalPreview && localPreview)) return children;
+  if (verifiedAdmin || (allowDemoPreview && demoPreview)) return children;
   const loading = status === "loading";
   const denied = status === "ready";
   return (
@@ -34,7 +34,7 @@ export default function AdminGate({ children, allowLocalPreview = false }) {
       </p>
       {canPreviewDemo && !loading && (
         <Link className="mini-secondary" to="/admin">
-          Открыть локальную демо-админку
+          Открыть демо-админку
         </Link>
       )}
       {!loading && (status === "error" || denied) && (

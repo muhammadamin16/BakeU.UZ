@@ -1,16 +1,7 @@
-// Local preview exposes browser-only demo pages, never server-backed admin data.
-export function canPreviewLocalAdmin({
-  development,
-  hostname,
-  pathname,
-  miniMode = false,
-}) {
-  if (
-    !development ||
-    miniMode ||
-    !["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
-  )
-    return false;
+// Browser demo routes use only this browser's data, including on the public site.
+// Server-backed admin pages must always use verified Telegram authorization.
+export function canPreviewAdminDemo({ pathname, miniMode = false }) {
+  if (miniMode) return false;
   return (
     /^\/admin\/?$/.test(pathname) ||
     /^\/admin\/(customers|sellers|shops|products|orders|subscriptions)(\/[^/]+)?\/?$/.test(

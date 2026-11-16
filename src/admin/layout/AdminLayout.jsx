@@ -9,7 +9,7 @@ import "./AdminManagement.css";
 import { useAdminStore } from "../store/adminStore";
 import { useAdminAccess } from "../../miniapp/useAdminAccess";
 export default function AdminLayout() {
-  const { localPreview } = useAdminAccess();
+  const { demoPreview } = useAdminAccess();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const { pathname } = useLocation();
@@ -45,11 +45,11 @@ export default function AdminLayout() {
       <div className="ad-main">
         <Header onMenu={() => setOpen(true)} />
         <main className="ad-content">
-          {localPreview && (
-            <p className="ad-local-preview" role="status">
-              <strong>Локальная демо-админка.</strong> Данные сохраняются в этом
-              браузере. Серверные аккаунты и заявки требуют входа через
-              Telegram.
+          {demoPreview && (
+            <p className="ad-demo-preview" role="status">
+              <strong>Демонстрационная админка.</strong> Изменения сохраняются
+              только в этом браузере. Серверные аккаунты и заявки требуют входа
+              через Telegram.
             </p>
           )}
           {error && (
