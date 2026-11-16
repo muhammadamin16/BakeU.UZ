@@ -517,7 +517,7 @@ export function CollectionPage({
         <Modal title="Удалить запись?" onClose={() => setDeleting(null)}>
           <p>
             Запись «{deleting.name || deleting.id}» будет удалена. Действие
-            останется в истории.
+            останется в истории
           </p>
           {deleteError && (
             <p role="alert" className="ad-form-error">
