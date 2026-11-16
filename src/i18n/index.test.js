@@ -26,13 +26,13 @@ test("language changes translate full phrases and dynamic counts without changin
   assert.equal(translateText("По-домашнему."), "Uydagidek.");
   assert.equal(
     translateText("Добавлено в корзину: Шоколадный торт"),
-    "Savatga qo‘shildi: Shokoladli tort",
+    "Savatga qöşildi: Şokoladli tort",
   );
   assert.equal(
     translateText("Корзина, товаров: 12"),
     "Savatdagi mahsulotlar: 12",
   );
-  assert.equal(translateText("180 000 сум"), "180 000 so‘m");
+  assert.equal(translateText("180 000 сум"), "180 000 söm");
   assert.deepEqual(translateText(["Торты", 2, null]), ["Tortlar", 2, null]);
   const element = { type: "strong", props: { children: "Торты" } };
   assert.equal(translateText(element), element);

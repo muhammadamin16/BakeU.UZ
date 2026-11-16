@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../../i18n/alphabet.js";
 import { translateText } from "../../../i18n/index.js";
 import { useSearchParams, Link } from "react-router-dom";
 import { PageTitle } from "../../components/AdminUI";
@@ -23,9 +24,17 @@ export default function History() {
   const events = historyFor(state, scope).filter(
     (entry) =>
       (!params.get("entity") || entry.entity === params.get("entity")) &&
-      `${entry.action} ${entry.label} ${entry.actor} ${entry.entityId} ${entry.reason || ""}`
-        .toLocaleLowerCase("ru-RU")
-        .includes((params.get("q") || "").toLocaleLowerCase("ru-RU")),
+      normalizeSearch(
+        [
+          entry.action,
+          entry.label,
+          entry.actor,
+          entry.entityId,
+          entry.reason || "",
+        ]
+          .map((value) => value + " " + translateText(value))
+          .join(" "),
+      ).includes(normalizeSearch(params.get("q"))),
   );
   const update = (key, value) => {
     const next = new URLSearchParams(params);

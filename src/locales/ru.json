@@ -31,5 +31,6 @@
   "Boshlanish": "Начало",
   "Serverga ulanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.": "Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.",
   "Server javobi noto‘g‘ri. Bot va sayt serverini tekshiring.": "Некорректный ответ сервера. Проверьте сервер бота и сайта.",
-  "So‘rov bajarilmadi.": "Запрос не выполнен."
+  "So‘rov bajarilmadi.": "Запрос не выполнен.",
+  "O‘zbekcha": "Özbekça"
 }

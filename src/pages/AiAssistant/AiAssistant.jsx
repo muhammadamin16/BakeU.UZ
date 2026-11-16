@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale } from "../../i18n/index.js";
 import { translateText } from "../../i18n/index.js";
 import {
@@ -46,7 +47,7 @@ async function getAiReply(userText) {
     setTimeout(resolve, 800 + Math.random() * 500),
   );
 
-  const lower = userText.toLowerCase();
+  const lower = normalizeSearch(userText);
 
   if (
     lower.includes("торт") ||
@@ -303,14 +304,12 @@ export default function AiAssistant() {
   };
 
   const groups = useMemo(() => {
-    const needle = search.trim().toLocaleLowerCase("ru-RU");
+    const needle = normalizeSearch(search);
     const list = needle
       ? chats.filter(
           (chat) =>
-            chat.title.toLocaleLowerCase("ru-RU").includes(needle) ||
-            chat.messages.some((m) =>
-              m.text.toLocaleLowerCase("ru-RU").includes(needle),
-            ),
+            normalizeSearch(chat.title).includes(needle) ||
+            chat.messages.some((m) => normalizeSearch(m.text).includes(needle)),
         )
       : chats;
     return groupChats(list);
