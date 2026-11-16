@@ -191,9 +191,7 @@
 #root .bottom-nav-shell--centered .bottom-nav__mascot {
   position: absolute;
   z-index: 2;
-
-  right: -8px;
-  bottom: -5px;
+top:-66px ;
 
   width: 98px;
   height: 116px;
