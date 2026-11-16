@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Store, ShoppingBag, Search, X } from "lucide-react";
 
 import { useCartStore } from "../../store/cartStore";
-import { useCatalog, categories } from "./sellerData";
+import { useCatalog, categories } from "../../store/sellerData";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop";
 import "./Seller.css";

@@ -24,7 +24,7 @@ import {
   Search,
 } from "lucide-react";
 
-import { useCatalog, getShop, getMapLinks } from "./sellerData";
+import { useCatalog, getShop, getMapLinks } from "../../store/sellerData";
 import { ProductCard, ShopLogo } from "./SellerParts";
 import { useCartStore } from "../../store/cartStore";
 

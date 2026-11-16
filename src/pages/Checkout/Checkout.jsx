@@ -14,7 +14,7 @@ import { useCartStore } from "../../store/cartStore";
 import { submitCheckout } from "../../store/workspaceStore";
 import { getSessionProfile } from "../../store/session";
 import { accountId } from "../../store/localAccount";
-import { useCatalog } from "../Seller/sellerData";
+import { useCatalog } from "../../store/sellerData";
 import {
   checkoutGroups,
   checkoutMoney,

@@ -13,7 +13,7 @@ import {
   Star,
   Store,
 } from "lucide-react";
-import { useCatalog } from "../Seller/sellerData";
+import { useCatalog } from "../../store/sellerData";
 import { useShopStore } from "../../store/shopStore";
 import { useCartStore } from "../../store/cartStore";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
