@@ -1,0 +1,47 @@
+{
+  "name": "bakeu-backend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "lint": "eslint . --max-warnings 0",
+    "test": "npm run build && node --test test/*.test.cjs",
+    "check": "npm run lint && npm test",
+    "db:generate": "drizzle-kit generate",
+    "db:validate": "drizzle-kit check",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.5.0",
+    "@nestjs/core": "12.5.0",
+    "@nestjs/platform-express": "12.5.0",
+    "@nestjs/config": "12.1.1",
+    "@nestjs/swagger": "12.1.2",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "dotenv": "18.0.10",
+    "helmet": "8.3.0",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "12.0.13",
+    "@nestjs/testing": "12.5.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "8.23.1",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "drizzle-kit": "0.31.11"
+  }
+}

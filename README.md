@@ -79,3 +79,12 @@ separate. The root Vite dependency scan targets its own `index.html` so it does
 not treat the nested mobile app as a second website entry.
 
 The root linter skips `mobile/`; use `npm --prefix mobile run check` for its own TypeScript, lint and build checks.
+
+## Backend foundation
+
+A separate [backend/](backend/README.md) contains the NestJS + TypeScript +
+PostgreSQL + Drizzle foundation. The new API uses port 4000 and `/api/v1`.
+Health/readiness and API documentation are implemented; business endpoints and
+frontend integration are not implemented yet. The existing Telegram/SQLite API
+on 3001 is preserved and does not migrate automatically. See the backend README
+for setup, Docker and the next implementation stages.
