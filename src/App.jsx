@@ -11,13 +11,14 @@ function AppContent() {
   const { pathname } = useLocation();
   const { isMiniMode } = useMiniApp();
   const isWelcome = pathname === "/miniapp";
+  const isAuth = pathname === "/login" || pathname === "/register";
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   return (
     <>
       {!isAdmin && !isWelcome && <WinterTheme />}
       {!isAdmin && !isWelcome && <MiniAppBar />}
       <AppRoutes />
-      {!isAdmin && !isWelcome && !isMiniMode && <BackgroundMusic />}
+      {!isAdmin && !isWelcome && !isAuth && !isMiniMode && <BackgroundMusic />}
     </>
   );
 }

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
 
 import { useCartStore } from "../../store/cartStore";
+import { isLoggedIn } from "../../store/session";
 import { useFavoriteStore } from "../../store/favoriteStore";
 import "./Header.css";
 
@@ -79,7 +80,21 @@ export default function Header() {
           />
         </Link>
 
+        <nav
+          className="bakeu-header__nav"
+          aria-label={translateText("Навигация магазина")}
+        >
+          <Link to="/seller?tab=products">{translateText("Каталог")}</Link>
+          <Link to="/seller?tab=sellers">{translateText("Кондитеры")}</Link>
+          <Link to="/map">{translateText("Карта")}</Link>
+        </nav>
         <div className="bakeu-header__actions">
+          <Link
+            className="bakeu-header__login"
+            to={isLoggedIn() ? "/profile" : "/login"}
+          >
+            {translateText(isLoggedIn() ? "Мой профиль" : "Войти")}
+          </Link>
           <div
             className={`bakeu-header__languages is-${language}`}
             role="group"
