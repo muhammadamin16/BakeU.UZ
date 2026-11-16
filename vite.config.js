@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
   );
   return {
     plugins: [react(), devPortPlugin()],
+    optimizeDeps: { entries: ["index.html"] },
     server: {
       host: "127.0.0.1",
       port: readDevPort(env.VITE_DEV_PORT),

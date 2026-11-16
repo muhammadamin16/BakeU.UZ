@@ -61,3 +61,21 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Mobile app structure
+
+A separate React + TypeScript + Capacitor project lives in [mobile/](mobile/README.md).
+It has its own dependencies, build and Android/iOS projects. This is a runnable
+structure-only scaffold; product features and the backend are not connected yet.
+
+```sh
+cd mobile
+npm ci
+npm run dev
+```
+
+The mobile web preview uses `http://127.0.0.1:4300/`. Root website commands remain
+separate. The root Vite dependency scan targets its own `index.html` so it does
+not treat the nested mobile app as a second website entry.
+
+The root linter skips `mobile/`; use `npm --prefix mobile run check` for its own TypeScript, lint and build checks.

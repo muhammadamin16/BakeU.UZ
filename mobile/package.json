@@ -1,0 +1,46 @@
+{
+  "name": "bakeu-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc -b",
+    "lint": "eslint . --max-warnings 0",
+    "build": "tsc -b && vite build",
+    "check": "npm run lint && npm run build",
+    "preview": "vite preview",
+    "sync": "npm run build && cap sync",
+    "sync:android": "npm run build && cap sync android",
+    "sync:ios": "npm run build && cap sync ios",
+    "android": "npm run sync:android && cap open android",
+    "ios": "npm run sync:ios && cap open ios",
+    "doctor": "cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/ios": "8.6.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "6.30.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2",
+    "@eslint/js": "10.0.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.8",
+    "globals": "17.14.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.8"
+  }
+}

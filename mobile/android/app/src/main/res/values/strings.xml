@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BakeU</string>
+    <string name="title_activity_main">BakeU</string>
+    <string name="package_name">uz.bakeu.mobile</string>
+    <string name="custom_url_scheme">uz.bakeu.mobile</string>
+</resources>
