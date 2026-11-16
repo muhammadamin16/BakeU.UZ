@@ -233,15 +233,7 @@ top:-66px ;
     width: 20px;
     height: 20px;
   }
-
-  #root .bottom-nav-shell--centered .bottom-nav__mascot {
-    right: -5px;
-    bottom: -4px;
-    width: 66px;
-    height: 88px;
-  }
 }
-
 /* Кичик телефон */
 @media (max-width: 350px) {
   #root .bottom-nav-shell.bottom-nav-shell--centered {
@@ -295,5 +287,7 @@ top:-66px ;
   #root .bottom-nav-shell--centered .bottom-nav__mascot {
     width: 64px;
     height: 78px;
+    top: -54px;
+    right: -7px;
   }
 }
