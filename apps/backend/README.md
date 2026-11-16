@@ -17,7 +17,7 @@ OpenAPI/Swagger, подключение PostgreSQL и начальная миг�
 Из корня BakeU.UZ:
 
 ```powershell
-cd backend
+cd apps/backend
 npm ci
 Copy-Item .env.example .env
 ```
@@ -25,7 +25,7 @@ Copy-Item .env.example .env
 На Mac вместо `Copy-Item` используйте `cp .env.example .env`. Если `.env` уже
 существует, сохраните его настройки и не перезаписывайте файл шаблоном.
 
-Затем внутри `backend/`:
+Затем внутри `apps/backend/`:
 
 ```sh
 docker compose up -d postgres
@@ -81,7 +81,7 @@ backend готов принимать бизнес-операции. Остан�
 ## Структура
 
 ```text
-backend/
+apps/backend/
 ├── src/
 │   ├── main.ts                   # запуск
 │   ├── bootstrap.ts              # HTTP, CORS, validation, Swagger

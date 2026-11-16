@@ -62,14 +62,27 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
+## Application folders
+
+The backend and mobile app share the `apps/` directory:
+
+```text
+apps/
+├── backend/   # NestJS + PostgreSQL API
+└── mobile/    # React + Capacitor Android/iOS app
+```
+
+See [apps/README.md](apps/README.md) for commands. Each project keeps its own
+package.json and lockfile; the website remains in the repository root.
+
 ## Mobile app structure
 
-A separate React + TypeScript + Capacitor project lives in [mobile/](mobile/README.md).
+A separate React + TypeScript + Capacitor project lives in [apps/mobile/](apps/mobile/README.md).
 It has its own dependencies, build and Android/iOS projects. This is a runnable
 structure-only scaffold; product features and the backend are not connected yet.
 
 ```sh
-cd mobile
+cd apps/mobile
 npm ci
 npm run dev
 ```
@@ -78,11 +91,11 @@ The mobile web preview uses `http://127.0.0.1:4300/`. Root website commands rema
 separate. The root Vite dependency scan targets its own `index.html` so it does
 not treat the nested mobile app as a second website entry.
 
-The root linter skips `mobile/`; use `npm --prefix mobile run check` for its own TypeScript, lint and build checks.
+The root linter skips `apps/`; use `npm --prefix apps/mobile run check` for its own TypeScript, lint and build checks.
 
 ## Backend foundation
 
-A separate [backend/](backend/README.md) contains the NestJS + TypeScript +
+A separate [apps/backend/](apps/backend/README.md) contains the NestJS + TypeScript +
 PostgreSQL + Drizzle foundation. The new API uses port 4000 and `/api/v1`.
 Health/readiness and API documentation are implemented; business endpoints and
 frontend integration are not implemented yet. The existing Telegram/SQLite API
