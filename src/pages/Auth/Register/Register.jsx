@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled } from "../../../bot/client/accountApi";
 import { useState } from "react";
@@ -64,7 +65,7 @@ function Field({
 }) {
   return (
     <div className="bk-field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{translateText(label)}</label>
       <div className="bk-input">
         <Icon size={18} />
         <input
@@ -72,7 +73,7 @@ function Field({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={translateText(placeholder)}
           autoComplete={autoComplete}
           required
         />
@@ -141,11 +142,15 @@ export default function Register() {
       {step === 1 ? (
         <>
           <header className="bk-head">
-            <h1>Создать аккаунт</h1>
-            <p>Как вы планируете использовать BakeU?</p>
+            <h1>{translateText("Создать аккаунт")}</h1>
+            <p>{translateText("Как вы планируете использовать BakeU?")}</p>
           </header>
 
-          <div className="bk-roles" role="radiogroup" aria-label="Тип аккаунта">
+          <div
+            className="bk-roles"
+            role="radiogroup"
+            aria-label={translateText("Тип аккаунта")}
+          >
             {ROLES.map(({ id, icon: Icon, title, text }) => (
               <button
                 key={id}
@@ -159,8 +164,8 @@ export default function Register() {
                   <Icon size={20} />
                 </span>
                 <span className="bk-role__text">
-                  <strong>{title}</strong>
-                  <small>{text}</small>
+                  <strong>{translateText(title)}</strong>
+                  <small>{translateText(text)}</small>
                 </span>
                 <span className="bk-role__check">
                   <Check size={13} strokeWidth={3} />
@@ -174,7 +179,8 @@ export default function Register() {
             type="button"
             onClick={() => setStep(2)}
           >
-            Продолжить <ArrowRight size={18} />
+            {translateText("Продолжить ")}
+            <ArrowRight size={18} />
           </button>
         </>
       ) : (
@@ -188,38 +194,43 @@ export default function Register() {
                 setError("");
               }}
             >
-              <ArrowLeft size={15} /> Назад
+              <ArrowLeft size={15} />
+              {translateText(" Назад")}
             </button>
-            <h1>{isSeller ? "Данные продавца" : "Ваши данные"}</h1>
+            <h1>
+              {translateText(isSeller ? "Данные продавца" : "Ваши данные")}
+            </h1>
             <p>
-              {isSeller
-                ? "Расскажите о себе и своём магазине."
-                : "Заполните данные для регистрации."}
+              {translateText(
+                isSeller
+                  ? "Расскажите о себе и своём магазине."
+                  : "Заполните данные для регистрации.",
+              )}
             </p>
           </header>
 
           <form className="bk-form bk-form--grid" onSubmit={submit} noValidate>
             <Field
               id="reg-first"
-              label="Имя"
+              label={translateText("Имя")}
               icon={UserRound}
               value={form.firstName}
               onChange={(v) => update("firstName", v)}
-              placeholder="Ваше имя"
+              placeholder={translateText("Ваше имя")}
               autoComplete="given-name"
             />
             <Field
               id="reg-last"
-              label="Фамилия"
+              label={translateText("Фамилия")}
               icon={UserRound}
               value={form.lastName}
               onChange={(v) => update("lastName", v)}
-              placeholder="Ваша фамилия"
+              placeholder={translateText("Ваша фамилия")}
               autoComplete="family-name"
             />
             <Field
               id="reg-email"
-              label="Почта"
+              label={translateText("Почта")}
               icon={Mail}
               type="email"
               value={form.email}
@@ -229,7 +240,7 @@ export default function Register() {
             />
             <Field
               id="reg-phone"
-              label="Телефон"
+              label={translateText("Телефон")}
               icon={Phone}
               type="tel"
               value={form.phone}
@@ -242,7 +253,7 @@ export default function Register() {
               <>
                 <Field
                   id="reg-company"
-                  label="Магазин"
+                  label={translateText("Магазин")}
                   icon={Building2}
                   value={form.company}
                   onChange={(v) => update("company", v)}
@@ -251,25 +262,25 @@ export default function Register() {
                 />
                 <Field
                   id="reg-location"
-                  label="Местоположение"
+                  label={translateText("Местоположение")}
                   icon={MapPin}
                   value={form.location}
                   onChange={(v) => update("location", v)}
-                  placeholder="Город, район"
+                  placeholder={translateText("Город, район")}
                   autoComplete="street-address"
                 />
               </>
             )}
 
             <div className="bk-field bk-field--wide">
-              <label htmlFor="reg-password">Пароль</label>
+              <label htmlFor="reg-password">{translateText("Пароль")}</label>
               <div className="bk-input">
                 <LockKeyhole size={18} />
                 <input
                   id="reg-password"
                   type={visible ? "text" : "password"}
                   autoComplete="new-password"
-                  placeholder="Минимум 8 символов"
+                  placeholder={translateText("Минимум 8 символов")}
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}
                   minLength={8}
@@ -279,7 +290,9 @@ export default function Register() {
                   type="button"
                   className="bk-eye"
                   onClick={() => setVisible((v) => !v)}
-                  aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
+                  aria-label={translateText(
+                    visible ? "Скрыть пароль" : "Показать пароль",
+                  )}
                 >
                   {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -289,7 +302,7 @@ export default function Register() {
             {error && (
               <p className="bk-alert bk-field--wide" role="alert">
                 <TriangleAlert size={16} />
-                {error}
+                {translateText(error)}
               </p>
             )}
 
@@ -300,13 +313,16 @@ export default function Register() {
             >
               {busy ? (
                 <>
-                  <Loader2 size={18} className="bk-spin" /> Создаём…
+                  <Loader2 size={18} className="bk-spin" />
+                  {translateText(" Создаём…")}
                 </>
               ) : (
                 <>
-                  {accountApiEnabled
-                    ? "Создать аккаунт"
-                    : "Создать демо-профиль"}{" "}
+                  {translateText(
+                    accountApiEnabled
+                      ? "Создать аккаунт"
+                      : "Создать демо-профиль",
+                  )}{" "}
                   <ArrowRight size={18} />
                 </>
               )}
@@ -316,13 +332,16 @@ export default function Register() {
       )}
 
       <p className="bk-switch">
-        Уже есть аккаунт? <Link to={authLink("/login", params)}>Войти</Link>
+        {translateText("Уже есть аккаунт? ")}
+        <Link to={authLink("/login", params)}>{translateText("Войти")}</Link>
       </p>
       {step === 2 && (
         <p className="bk-note">
-          {accountApiEnabled
-            ? "Аккаунт сохраняется на сервере BakeU. Администратор получит уведомление о регистрации без пароля."
-            : "Демо-режим: аккаунт хранится только в этом браузере."}
+          {translateText(
+            accountApiEnabled
+              ? "Аккаунт сохраняется на сервере BakeU. Администратор получит уведомление о регистрации без пароля."
+              : "Демо-режим: аккаунт хранится только в этом браузере.",
+          )}
         </p>
       )}
     </AuthShell>

@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
@@ -28,7 +29,7 @@ const columns = [
 export default function Customers() {
   return (
     <CollectionPage
-      title="Покупатели"
+      title={translateText("Покупатели")}
       collection="customers"
       fields={fields}
       columns={columns}
@@ -37,7 +38,7 @@ export default function Customers() {
           className="ad-btn small"
           to={`/admin/customers/${encodeURIComponent(row.id)}`}
         >
-          Профиль{" "}
+          {translateText("Профиль")}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"

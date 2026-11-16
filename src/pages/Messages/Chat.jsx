@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { getSessionProfile } from "../../store/session";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import ProfileChat from "../Profile/ProfileChat";
@@ -27,10 +28,10 @@ export default function Chat() {
     <main className="bw-page">
       {params.get("checkout") === "1" && (
         <Link className="bw-btn" to="/checkout">
-          Вернуться к оформлению
+          {translateText("Вернуться к оформлению")}
         </Link>
       )}
-      <h1>Сообщения</h1>
+      <h1>{translateText("Сообщения")}</h1>
       <ProfileChat
         account={chatAccount}
         ownerId={chatAccount.role === "seller" ? shopIdFor(account) : undefined}

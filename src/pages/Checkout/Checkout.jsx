@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -155,27 +156,31 @@ export default function Checkout() {
   return (
     <div className="ck-page">
       <Link to="/cart" className="ck-back">
-        <ArrowLeft size={17} />В корзину
+        <ArrowLeft size={17} />
+        {translateText("В корзину")}
       </Link>
       <header className="ck-page-heading">
-        <span className="ck-eyebrow">ВАША ВЫПЕЧКА · ВАШЕ ВРЕМЯ</span>
-        <h1>Оформление заказа</h1>
+        <span className="ck-eyebrow">
+          {translateText("ВАША ВЫПЕЧКА · ВАШЕ ВРЕМЯ")}
+        </span>
+        <h1>{translateText("Оформление заказа")}</h1>
         <p>
-          Свяжитесь с каждым продавцом и согласуйте детали. Мы разделим корзину
-          на отдельные заявки.
+          {translateText(
+            "Свяжитесь с каждым продавцом и согласуйте детали. Мы разделим корзину на отдельные заявки.",
+          )}
         </p>
       </header>
       {!Object.keys(cart.items).length ? (
         <section className="ck-card ck-empty">
           <ShoppingBag size={36} />
-          <h2>В корзине пока пусто</h2>
-          <p>Выберите выпечку, чтобы оформить заказ.</p>
+          <h2>{translateText("В корзине пока пусто")}</h2>
+          <p>{translateText("Выберите выпечку, чтобы оформить заказ.")}</p>
           <Link className="ck-button primary" to="/">
-            Выбрать вкусное
+            {translateText("Выбрать вкусное")}
             <ArrowRight size={17} />
           </Link>
           <Link className="ck-button" to="/orders">
-            Мои заказы
+            {translateText("Мои заказы")}
           </Link>
         </section>
       ) : (
@@ -185,33 +190,44 @@ export default function Checkout() {
               <div className="ck-step-heading">
                 <span>1</span>
                 <div>
-                  <h2>Ваши контакты</h2>
-                  <p>Продавец сможет уточнить детали по этому номеру.</p>
+                  <h2>{translateText("Ваши контакты")}</h2>
+                  <p>
+                    {translateText(
+                      "Продавец сможет уточнить детали по этому номеру.",
+                    )}
+                  </p>
                 </div>
                 <UserRound size={21} />
               </div>
               {!account && (
                 <p className="ck-notice">
-                  Можно проверить заказ и связаться с продавцами сейчас. Для
-                  сохранения заявки{" "}
-                  <Link to="/login?next=%2Fcheckout">войдите</Link> или{" "}
-                  <Link to="/register?next=%2Fcheckout">создайте аккаунт</Link>.
+                  {translateText(
+                    "Можно проверить заказ и связаться с продавцами сейчас. Для сохранения заявки",
+                  )}{" "}
+                  <Link to="/login?next=%2Fcheckout">
+                    {translateText("войдите")}
+                  </Link>
+                  {translateText(" или")}{" "}
+                  <Link to="/register?next=%2Fcheckout">
+                    {translateText("создайте аккаунт")}
+                  </Link>
+                  .
                 </p>
               )}
               <div className="ck-fields">
                 <label className="ck-field">
-                  Имя и фамилия
+                  {translateText("Имя и фамилия")}
                   <input
                     autoComplete="name"
                     value={draft.name}
                     onChange={(e) => update({ name: e.target.value })}
                     maxLength={100}
-                    placeholder="Как к вам обращаться"
+                    placeholder={translateText("Как к вам обращаться")}
                     required
                   />
                 </label>
                 <label className="ck-field">
-                  Ваш телефон
+                  {translateText("Ваш телефон")}
                   <input
                     type="tel"
                     autoComplete="tel"
@@ -226,12 +242,12 @@ export default function Checkout() {
               </div>
               {delivery && (
                 <label className="ck-field">
-                  Адрес доставки
+                  {translateText("Адрес доставки")}
                   <input
                     autoComplete="street-address"
                     value={draft.address}
                     onChange={(e) => update({ address: e.target.value })}
-                    placeholder="Город, улица, дом, квартира"
+                    placeholder={translateText("Город, улица, дом, квартира")}
                     maxLength={300}
                     required
                     list="ck-addresses"
@@ -245,33 +261,38 @@ export default function Checkout() {
               )}
               {draftError && (
                 <p role="status" className="ck-notice">
-                  {draftError}
+                  {translateText(draftError)}
                 </p>
               )}
             </section>
             <div className="ck-step-heading ck-section-heading">
               <span>2</span>
               <div>
-                <h2>Договоритесь с продавцами</h2>
-                <p>Отдельное время и способ получения для каждого магазина.</p>
+                <h2>{translateText("Договоритесь с продавцами")}</h2>
+                <p>
+                  {translateText(
+                    "Отдельное время и способ получения для каждого магазина.",
+                  )}
+                </p>
               </div>
             </div>
             {issues.length > 0 && (
               <section className="ck-card ck-error" role="alert">
-                <h2>Нужно обновить корзину</h2>
+                <h2>{translateText("Нужно обновить корзину")}</h2>
                 {issues.map((issue) => (
                   <p key={issue.id}>
-                    <strong>{issue.name}.</strong> {issue.reason}{" "}
+                    <strong>{translateText(issue.name)}.</strong>{" "}
+                    {translateText(issue.reason)}{" "}
                     <button
                       type="button"
                       className="ck-text-button"
                       onClick={() => cart.remove(issue.id)}
                     >
-                      Удалить
+                      {translateText("Удалить")}
                     </button>
                   </p>
                 ))}
-                <Link to="/cart">Вернуться в корзину</Link>
+                <Link to="/cart">{translateText("Вернуться в корзину")}</Link>
               </section>
             )}
             {groups.map((group, index) => {
@@ -294,7 +315,7 @@ export default function Checkout() {
                 <section
                   className="ck-card ck-seller"
                   key={group.shop.id}
-                  aria-label={"Заказ у " + group.shop.name}
+                  aria-label={translateText("Заказ у " + group.shop.name)}
                 >
                   <header className="ck-seller-heading">
                     <span className="ck-shop-icon">
@@ -302,7 +323,10 @@ export default function Checkout() {
                     </span>
                     <div>
                       <small>
-                        ПРОДАВЕЦ {index + 1} ИЗ {groups.length}
+                        {translateText("ПРОДАВЕЦ ")}
+                        {translateText(index + 1)}
+                        {translateText(" ИЗ ")}
+                        {groups.length}
                       </small>
                       <h2>
                         <Link
@@ -310,7 +334,7 @@ export default function Checkout() {
                             "/profile?shop=" + encodeURIComponent(group.shop.id)
                           }
                         >
-                          {group.shop.name}
+                          {translateText(group.shop.name)}
                         </Link>
                       </h2>
                     </div>
@@ -318,12 +342,12 @@ export default function Checkout() {
                       {isAgreed ? (
                         <>
                           <Check size={14} />
-                          Согласовано вами
+                          {translateText("Согласовано вами")}
                         </>
                       ) : (
                         <>
                           <Clock3 size={14} />
-                          Уточните время
+                          {translateText("Уточните время")}
                         </>
                       )}
                     </span>
@@ -336,29 +360,35 @@ export default function Checkout() {
                           <Link
                             to={"/product/" + encodeURIComponent(p.productId)}
                           >
-                            {p.name}
+                            {translateText(p.name)}
                           </Link>
-                          {p.variantLabel && <small>{p.variantLabel}</small>}
+                          {p.variantLabel && (
+                            <small>{translateText(p.variantLabel)}</small>
+                          )}
                           <small>
-                            {p.quantity} × {checkoutMoney(p.price)}
+                            {translateText(p.quantity)} ×{" "}
+                            {translateText(checkoutMoney(p.price))}
                           </small>
                         </div>
-                        <strong>{checkoutMoney(p.price * p.quantity)}</strong>
+                        <strong>
+                          {translateText(checkoutMoney(p.price * p.quantity))}
+                        </strong>
                       </div>
                     ))}
                   </div>
                   {group.priceChanged && (
                     <p className="ck-notice">
-                      Цена обновилась. В оформлении указана текущая цена из
-                      каталога — проверьте её с продавцом.
+                      {translateText(
+                        "Цена обновилась. В оформлении указана текущая цена из каталога — проверьте её с продавцом.",
+                      )}
                     </p>
                   )}
                   <div className="ck-group-total">
-                    <span>Товары у этого продавца</span>
-                    <strong>{checkoutMoney(group.total)}</strong>
+                    <span>{translateText("Товары у этого продавца")}</span>
+                    <strong>{translateText(checkoutMoney(group.total))}</strong>
                   </div>
                   <fieldset className="ck-methods">
-                    <legend>Способ получения</legend>
+                    <legend>{translateText("Способ получения")}</legend>
                     {[
                       ["pickup", "Самовывоз"],
                       ["delivery", "Доставка по договорённости"],
@@ -376,27 +406,32 @@ export default function Checkout() {
                             })
                           }
                         />
-                        {label}
+                        {translateText(label)}
                       </label>
                     ))}
                   </fieldset>
                   {slot.method === "pickup" ? (
                     <p className="ck-location">
                       <MapPin size={16} />
-                      {group.shop.address ||
-                        "Место самовывоза уточните у продавца"}
+                      {translateText(
+                        group.shop.address ||
+                          "Место самовывоза уточните у продавца",
+                      )}
                     </p>
                   ) : (
                     <p className="ck-muted">
-                      Возможность, стоимость и время доставки согласуйте с этим
-                      продавцом отдельно.
+                      {translateText(
+                        "Возможность, стоимость и время доставки согласуйте с этим продавцом отдельно.",
+                      )}
                     </p>
                   )}
                   <div className="ck-fields">
                     <label className="ck-field">
-                      Дата получения
+                      {translateText("Дата получения")}
                       <input
-                        aria-label={"Дата для " + group.shop.name}
+                        aria-label={translateText(
+                          "Дата для " + group.shop.name,
+                        )}
                         type="date"
                         min={localDay()}
                         value={slot.date}
@@ -410,9 +445,11 @@ export default function Checkout() {
                       />
                     </label>
                     <label className="ck-field">
-                      Время получения
+                      {translateText("Время получения")}
                       <input
-                        aria-label={"Время для " + group.shop.name}
+                        aria-label={translateText(
+                          "Время для " + group.shop.name,
+                        )}
                         type="time"
                         value={slot.time}
                         onChange={(e) =>
@@ -426,16 +463,20 @@ export default function Checkout() {
                     </label>
                   </div>
                   <label className="ck-field">
-                    Комментарий продавцу
+                    {translateText("Комментарий продавцу")}
                     <textarea
-                      aria-label={"Комментарий для " + group.shop.name}
+                      aria-label={translateText(
+                        "Комментарий для " + group.shop.name,
+                      )}
                       value={slot.note}
                       onChange={(e) =>
                         updateSeller(group.shop.id, { note: e.target.value })
                       }
                       maxLength={1000}
                       rows={2}
-                      placeholder="Начинка, надпись на торте, детали получения…"
+                      placeholder={translateText(
+                        "Начинка, надпись на торте, детали получения…",
+                      )}
                     />
                   </label>
                   <SellerContact shop={group.shop} order={preview} draft />
@@ -444,7 +485,9 @@ export default function Checkout() {
                   >
                     <input
                       type="checkbox"
-                      aria-label={"Согласовано с " + group.shop.name}
+                      aria-label={translateText(
+                        "Согласовано с " + group.shop.name,
+                      )}
                       checked={isAgreed}
                       onChange={(e) =>
                         updateSeller(group.shop.id, {
@@ -453,8 +496,9 @@ export default function Checkout() {
                       }
                     />
                     <span>
-                      Я согласовал с продавцом наличие, дату, время и способ
-                      получения.
+                      {translateText(
+                        "Я согласовал с продавцом наличие, дату, время и способ получения.",
+                      )}
                     </span>
                   </label>
                 </section>
@@ -465,38 +509,45 @@ export default function Checkout() {
             <div className="ck-step-heading">
               <span>3</span>
               <div>
-                <h2>Проверьте заказ</h2>
-                <p>{groups.length} отдельных заявок продавцам</p>
+                <h2>{translateText("Проверьте заказ")}</h2>
+                <p>
+                  {groups.length}
+                  {translateText(" отдельных заявок продавцам")}
+                </p>
               </div>
             </div>
             <dl>
               {groups.map((g) => (
                 <div key={g.shop.id}>
-                  <dt>{g.shop.name}</dt>
-                  <dd>{checkoutMoney(g.total)}</dd>
+                  <dt>{translateText(g.shop.name)}</dt>
+                  <dd>{translateText(checkoutMoney(g.total))}</dd>
                 </div>
               ))}
             </dl>
             <div className="ck-grand-total">
-              <span>За товары</span>
-              <strong>{checkoutMoney(total)}</strong>
+              <span>{translateText("За товары")}</span>
+              <strong>{translateText(checkoutMoney(total))}</strong>
             </div>
             <p className="ck-muted">
-              Доставка не включена. Оплата напрямую продавцу после согласования;
-              сейчас деньги не списываются.
+              {translateText(
+                "Доставка не включена. Оплата напрямую продавцу после согласования; сейчас деньги не списываются.",
+              )}
             </p>
             <p className="ck-progress">
               <Check size={17} />
-              Согласовано: {agreed} из {groups.length}
+              {translateText("Согласовано: ")}
+              {translateText(agreed)}
+              {translateText(" из ")}
+              {groups.length}
             </p>
             <p className="ck-notice">
-              Заявки и чат сохранятся в этом браузере. Чтобы передать заказ
-              продавцу на другой телефон, отправьте подготовленный SMS или
-              скопированный текст.
+              {translateText(
+                "Заявки и чат сохранятся в этом браузере. Чтобы передать заказ продавцу на другой телефон, отправьте подготовленный SMS или скопированный текст.",
+              )}
             </p>
             {error && (
               <p className="ck-error" ref={errorRef} role="alert" tabIndex={-1}>
-                {error}
+                {translateText(error)}
               </p>
             )}
             {account ? (
@@ -505,17 +556,17 @@ export default function Checkout() {
                 type="submit"
                 disabled={busy || !!issues.length || !groups.length}
               >
-                {busy ? "Сохраняем…" : "Сохранить заявки"}
+                {translateText(busy ? "Сохраняем…" : "Сохранить заявки")}
                 <ArrowRight size={17} />
               </button>
             ) : (
               <Link className="ck-button primary" to="/login?next=%2Fcheckout">
-                Войти и продолжить
+                {translateText("Войти и продолжить")}
                 <ArrowRight size={17} />
               </Link>
             )}
             <Link to="/cart" className="ck-text-button">
-              Изменить корзину
+              {translateText("Изменить корзину")}
             </Link>
           </aside>
         </form>

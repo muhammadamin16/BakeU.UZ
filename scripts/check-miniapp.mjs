@@ -39,7 +39,7 @@ try {
       ),
     );
   const guest = render(React.createElement(Welcome), {});
-  assert.ok(guest.includes("Magazinga kirish"));
+  assert.ok(guest.includes("Войти в магазин"));
   assert.ok(guest.includes("/images/logo-bear.png"));
   assert.ok(guest.includes("/images/winter/bear-gift.png"));
   assert.ok(!guest.includes("mini-admin-entry"));

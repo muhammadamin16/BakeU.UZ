@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -43,11 +44,7 @@ export default function AuthModal() {
 
     const timer = window.setTimeout(() => {
       // Taymer ishlagan paytda qayta tekshiramiz
-      if (
-        !dismissedRef.current &&
-        !wasAuthModalDismissed() &&
-        !isLoggedIn()
-      ) {
+      if (!dismissedRef.current && !wasAuthModalDismissed() && !isLoggedIn()) {
         setIsOpen(true);
       }
     }, MODAL_DELAY);
@@ -101,7 +98,7 @@ export default function AuthModal() {
 
       if (event.key === "Tab" && modalRef.current) {
         const elements = Array.from(
-          modalRef.current.querySelectorAll("button:not([disabled]), a[href]")
+          modalRef.current.querySelectorAll("button:not([disabled]), a[href]"),
         );
 
         if (!elements.length) return;
@@ -151,7 +148,7 @@ export default function AuthModal() {
           type="button"
           className="bakeu-auth-close"
           onClick={() => closeModal()}
-          aria-label="Закрыть окно"
+          aria-label={translateText("Закрыть окно")}
         >
           <X size={18} />
         </button>
@@ -166,13 +163,14 @@ export default function AuthModal() {
         </div>
 
         <h2 id="bakeu-auth-title">
-          Добро пожаловать
-          <span> в BakeU</span>
+          {translateText("Добро пожаловать")}
+          <span>{translateText(" в BakeU")}</span>
         </h2>
 
         <p id="bakeu-auth-description" className="bakeu-auth-description">
-          Откройте для себя мир свежей выпечки и любимых десертов. Покупайте,
-          продавайте и вдохновляйтесь вместе с нами.
+          {translateText(
+            "Откройте для себя мир свежей выпечки и любимых десертов. Покупайте, продавайте и вдохновляйтесь вместе с нами.",
+          )}
         </p>
 
         <div className="bakeu-auth-features">
@@ -181,8 +179,8 @@ export default function AuthModal() {
               <ShoppingBag size={17} />
             </div>
             <div>
-              <strong>Для покупателей</strong>
-              <span>Вкусное рядом</span>
+              <strong>{translateText("Для покупателей")}</strong>
+              <span>{translateText("Вкусное рядом")}</span>
             </div>
           </div>
 
@@ -191,8 +189,8 @@ export default function AuthModal() {
               <Store size={17} />
             </div>
             <div>
-              <strong>Для продавцов</strong>
-              <span>Развивайте бизнес</span>
+              <strong>{translateText("Для продавцов")}</strong>
+              <span>{translateText("Развивайте бизнес")}</span>
             </div>
           </div>
         </div>
@@ -204,7 +202,7 @@ export default function AuthModal() {
             className="bakeu-auth-primary"
             onClick={() => handleNavigate("/register")}
           >
-            Создать аккаунт
+            {translateText("Создать аккаунт")}
             <ArrowRight size={18} />
           </button>
 
@@ -213,7 +211,7 @@ export default function AuthModal() {
             className="bakeu-auth-secondary"
             onClick={() => handleNavigate("/login")}
           >
-            Войти в аккаунт
+            {translateText("Войти в аккаунт")}
           </button>
         </div>
 
@@ -222,15 +220,15 @@ export default function AuthModal() {
           className="bakeu-auth-skip"
           onClick={() => closeModal()}
         >
-          Продолжить без регистрации
+          {translateText("Продолжить без регистрации")}
         </button>
 
         <div className="bakeu-auth-footer">
           <ShieldCheck size={14} />
-          <span>Удобные покупки с BakeU</span>
+          <span>{translateText("Удобные покупки с BakeU")}</span>
         </div>
       </section>
     </div>,
-    document.body
+    document.body,
   );
 }

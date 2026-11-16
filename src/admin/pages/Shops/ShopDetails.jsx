@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import ProductPhoto from "../../components/ProductPhoto";
 import { money } from "../../utils/format";
@@ -14,19 +15,19 @@ export default function ShopDetails() {
   if (!shop)
     return (
       <>
-        <PageTitle title="Магазин не найден" />
-        <Link to="/admin/shops">Вернуться к магазинам</Link>
+        <PageTitle title={translateText("Магазин не найден")} />
+        <Link to="/admin/shops">{translateText("Вернуться к магазинам")}</Link>
       </>
     );
   return (
     <>
-      <PageTitle title={shop.name}>
+      <PageTitle title={translateText(shop.name)}>
         <Link className="ad-btn" to="/admin/shops">
-          ← Все магазины
+          {translateText("← Все магазины")}
         </Link>
       </PageTitle>
       <section className="ad-panel">
-        <h2>Магазин и продавец</h2>
+        <h2>{translateText("Магазин и продавец")}</h2>
         <dl className="ad-details">
           {[
             [
@@ -36,7 +37,7 @@ export default function ShopDetails() {
                   className="ad-text-link"
                   to={`/admin/sellers/${encodeURIComponent(shop.sellerId)}`}
                 >
-                  {shop.owner}{" "}
+                  {translateText(shop.owner)}{" "}
                   <ArrowUpRight
                     size={12}
                     className="ad-inline-arrow"
@@ -52,12 +53,12 @@ export default function ShopDetails() {
             ["Тариф", shop.plan],
           ].map(([k, v]) => (
             <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+              <dt>{translateText(k)}</dt>
+              <dd>{translateText(v)}</dd>
             </div>
           ))}
         </dl>
-        <Badge>{shop.status}</Badge>
+        <Badge>{translateText(shop.status)}</Badge>
       </section>
       {[
         ["Товары", products.filter((x) => x.shopId === shop.id), "products"],
@@ -70,12 +71,12 @@ export default function ShopDetails() {
       ].map(([title, rows, path]) => (
         <section className="ad-panel" key={path}>
           <div className="ad-section-heading">
-            <h2>{title}</h2>
+            <h2>{translateText(title)}</h2>
             <Link
               className="ad-btn small"
               to={`/admin/${path}?shopId=${encodeURIComponent(shop.id)}`}
             >
-              Управлять ›
+              {translateText("Управлять ›")}
             </Link>
           </div>
           {rows.length ? (
@@ -86,9 +87,9 @@ export default function ShopDetails() {
                   to={`/admin/${path}/${encodeURIComponent(r.id)}`}
                 >
                   {path === "products" && (
-                    <ProductPhoto src={r.image} alt={r.name} />
+                    <ProductPhoto src={r.image} alt={translateText(r.name)} />
                   )}
-                  {r.name || r.customer || r.id}{" "}
+                  {translateText(r.name || r.customer || r.id)}{" "}
                   <ArrowUpRight
                     size={12}
                     className="ad-inline-arrow"
@@ -96,13 +97,19 @@ export default function ShopDetails() {
                   />
                 </Link>
                 <span>
-                  {r.price ? money(r.price) : r.total ? money(r.total) : r.plan}
+                  {translateText(
+                    r.price
+                      ? money(r.price)
+                      : r.total
+                        ? money(r.total)
+                        : r.plan,
+                  )}
                 </span>
-                <Badge>{r.status}</Badge>
+                <Badge>{translateText(r.status)}</Badge>
               </div>
             ))
           ) : (
-            <p className="ad-muted">Записей пока нет</p>
+            <p className="ad-muted">{translateText("Записей пока нет")}</p>
           )}
         </section>
       ))}

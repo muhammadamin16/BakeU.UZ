@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChefHat } from "lucide-react";
@@ -57,7 +58,11 @@ export default function AuthShell({ wide = false, children }) {
   return (
     <main className="bk-auth" ref={rootRef}>
       <div className={`bk-card ${wide ? "bk-card--wide" : ""}`}>
-        <Link to="/" className="bk-logo" aria-label="BakeU, на главную">
+        <Link
+          to="/"
+          className="bk-logo"
+          aria-label={translateText("BakeU, на главную")}
+        >
           <span className="bk-logo__mark">
             <ChefHat size={20} />
           </span>

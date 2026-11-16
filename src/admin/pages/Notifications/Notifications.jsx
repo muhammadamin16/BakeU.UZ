@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -26,15 +27,15 @@ export default function Notifications() {
   );
   return (
     <>
-      <PageTitle title="Уведомления">
+      <PageTitle title={translateText("Уведомления")}>
         <button className="ad-btn primary" onClick={() => read()}>
           <CheckCheck size={17} />
-          Прочитать все
+          {translateText("Прочитать все")}
         </button>
       </PageTitle>
       {error && (
         <p role="alert" className="ad-form-error">
-          {error}
+          {translateText(error)}
         </p>
       )}
       <section className="ad-panel">
@@ -49,7 +50,7 @@ export default function Notifications() {
               setParams(next);
             }}
           />
-          Только непрочитанные
+          {translateText("Только непрочитанные")}
         </label>
         {rows.map((n) => (
           <div className={`ad-notice ${n.read ? "read" : ""}`} key={n.id}>
@@ -57,20 +58,22 @@ export default function Notifications() {
               <Bell size={21} />
             </span>
             <div>
-              <strong>{n.title}</strong>
-              <p>{n.text}</p>
-              <small>{n.time}</small>
+              <strong>{translateText(n.title)}</strong>
+              <p>{translateText(n.text)}</p>
+              <small>{translateText(n.time)}</small>
             </div>
             <button
               className="ad-btn small"
               disabled={n.read}
               onClick={() => read(n.id)}
             >
-              {n.read ? "Прочитано" : "Прочитать"}
+              {translateText(n.read ? "Прочитано" : "Прочитать")}
             </button>
           </div>
         ))}
-        {!rows.length && <p className="ad-empty">Уведомлений нет</p>}
+        {!rows.length && (
+          <p className="ad-empty">{translateText("Уведомлений нет")}</p>
+        )}
       </section>
     </>
   );

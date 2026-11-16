@@ -1,6 +1,7 @@
+import { translateText } from "../../i18n/index.js";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Star,
@@ -43,7 +44,9 @@ function ShopProfile({ shopId }) {
     account = JSON.parse(
       sessionStorage.getItem("bakeu-demo-profile") || "null",
     );
-  } catch {}
+  } catch {
+    /* A missing browser profile means guest access. */
+  }
   const follows = useWorkspace((s) => s.follows);
   const isFollowing =
     !!account &&
@@ -52,44 +55,26 @@ function ShopProfile({ shopId }) {
     );
   function openChat() {
     navigate(
-      account ? `/profile?chat=${encodeURIComponent(shopId)}` : "/login",
+      account ? `/messages?seller=${encodeURIComponent(shopId)}` : "/login",
     );
   }
 
   const add = useCartStore((s) => s.add);
   const items = useCartStore((s) => s.items);
 
-  const [subscribed, setSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState("products");
-  const [chatOpen, setChatOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [reviewText, setReviewText] = useState("");
+  const [reviewText, setReviewText] = useState(() => {
+    try {
+      return localStorage.getItem(`bakeu-review-draft-${shopId}`) || "";
+    } catch {
+      return "";
+    }
+  });
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Все");
 
-  const chatEnd = useRef(null);
-  useEffect(() => {
-    try {
-      setSubscribed(localStorage.getItem(`bakeu-sub-${shopId}`) === "true");
-      const saved = JSON.parse(
-        localStorage.getItem(`bakeu-shop-chat-${shopId}`) || "[]",
-      );
-      setMessages(
-        Array.isArray(saved)
-          ? saved.filter((m) => typeof m.text === "string")
-          : [],
-      );
-      setReviewText(localStorage.getItem(`bakeu-review-draft-${shopId}`) || "");
-    } catch {
-      /* Storage may be disabled. */
-    }
-  }, [shopId]);
-  useEffect(() => {
-    chatEnd.current?.scrollIntoView({ block: "nearest" });
-  }, [messages, chatOpen]);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(""), 4500);
@@ -99,7 +84,6 @@ function ShopProfile({ shopId }) {
     const escape = (e) => {
       if (e.key === "Escape") {
         setReviewOpen(false);
-        setChatOpen(false);
       }
     };
     document.addEventListener("keydown", escape);
@@ -136,8 +120,8 @@ function ShopProfile({ shopId }) {
       <main className="seller-page">
         <div className="seller-empty">
           <Store size={32} />
-          <h2>Магазин не найден</h2>
-          <Link to="/seller?tab=sellers">Все продавцы</Link>
+          <h2>{translateText("Магазин не найден")}</h2>
+          <Link to="/seller?tab=sellers">{translateText("Все продавцы")}</Link>
         </div>
       </main>
     );
@@ -148,7 +132,7 @@ function ShopProfile({ shopId }) {
   const categories = ["Все", ...new Set(shopProducts.map((p) => p.category))];
 
   const visibleProducts = shopProducts.filter((p) => {
-    const matchesSearch = p.name
+    const matchesSearch = (p.name + " " + translateText(p.name))
       .toLowerCase()
       .includes(search.trim().toLowerCase());
 
@@ -174,35 +158,6 @@ function ShopProfile({ shopId }) {
     } catch {
       setNotice("Не удалось сохранить подписку");
     }
-  };
-
-  const sendMessage = (e) => {
-    e.preventDefault();
-
-    if (!message.trim()) return;
-
-    const updated = [
-      ...messages,
-      {
-        id: Date.now(),
-        text: message.trim(),
-        time: new Date().toLocaleTimeString("ru-RU", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ];
-    try {
-      localStorage.setItem(
-        `bakeu-shop-chat-${shopId}`,
-        JSON.stringify(updated),
-      );
-    } catch {
-      setNotice("Не удалось сохранить сообщение");
-      return;
-    }
-    setMessages(updated);
-    setMessage("");
   };
 
   const shareShop = async () => {
@@ -291,11 +246,11 @@ function ShopProfile({ shopId }) {
   return (
     <main className="seller-page seller-shop-page">
       <div className="shop-breadcrumb">
-        <Link to="/">⌂ Главная</Link>
+        <Link to="/">{translateText("⌂ Главная")}</Link>
         <span>/</span>
-        <Link to="/seller?tab=sellers">Кондитеры</Link>
+        <Link to="/seller?tab=sellers">{translateText("Кондитеры")}</Link>
         <span>/</span>
-        <strong>{shop.name}</strong>
+        <strong>{translateText(shop.name)}</strong>
       </div>
 
       <section className="shop-profile-hero">
@@ -305,7 +260,7 @@ function ShopProfile({ shopId }) {
         >
           <img
             src={shop.banner || "/images/banners/shop-cover.png"}
-            alt="Домашняя выпечка и приготовление десертов"
+            alt={translateText("Домашняя выпечка и приготовление десертов")}
             fetchPriority="high"
             onError={(e) => {
               e.currentTarget.onerror = null;
@@ -320,35 +275,40 @@ function ShopProfile({ shopId }) {
 
           <div className="shop-profile-info">
             <div className="shop-profile-name">
-              <h1>{shop.name}</h1>
+              <h1>{translateText(shop.name)}</h1>
               {shop.verified && (
                 <CheckCircle2
                   size={21}
                   color="#bc6b25"
-                  aria-label="Проверенный магазин"
+                  aria-label={translateText("Проверенный магазин")}
                 />
               )}
             </div>
 
-            <span className="shop-username">@{shop.telegram}</span>
+            <span className="shop-username">
+              @{translateText(shop.telegram)}
+            </span>
 
             <div className="shop-profile-meta">
               <span className="shop-meta-rating">
                 <Star size={17} fill="currentColor" />
-                <strong>{shop.rating}</strong>
-                <span>({shop.reviewsCount} отзывов)</span>
+                <strong>{translateText(shop.rating)}</strong>
+                <span>
+                  ({translateText(shop.reviewsCount)}
+                  {translateText(" отзывов)")}
+                </span>
               </span>
 
               <span className="shop-meta-divider">|</span>
 
               <span className="shop-open-status">
                 <i />
-                {shop.hours}
+                {translateText(shop.hours)}
               </span>
 
               <span>
                 <MapPin size={16} />
-                {shop.address}
+                {translateText(shop.address)}
               </span>
             </div>
           </div>
@@ -360,7 +320,7 @@ function ShopProfile({ shopId }) {
               onClick={openChat}
             >
               <MessageCircle size={17} />
-              Написать в чат
+              {translateText("Написать в чат")}
             </button>
 
             <button
@@ -372,10 +332,10 @@ function ShopProfile({ shopId }) {
               {isFollowing ? (
                 <>
                   <CheckCircle2 size={17} />
-                  Вы подписаны
+                  {translateText("Вы подписаны")}
                 </>
               ) : (
-                "Подписаться"
+                translateText("Подписаться")
               )}
             </button>
 
@@ -383,7 +343,7 @@ function ShopProfile({ shopId }) {
               className="shop-share"
               type="button"
               onClick={shareShop}
-              aria-label="Поделиться магазином"
+              aria-label={translateText("Поделиться магазином")}
             >
               <Share2 size={19} />
             </button>
@@ -412,7 +372,7 @@ function ShopProfile({ shopId }) {
                   }}
                 >
                   <Icon size={18} />
-                  {tab.title}
+                  {translateText(tab.title)}
                 </button>
               );
             })}
@@ -422,9 +382,12 @@ function ShopProfile({ shopId }) {
             <div className="shop-section-title">
               <h2>
                 <Store size={20} />
-                Витрина магазина
+                {translateText("Витрина магазина")}
               </h2>
-              <span>{shopProducts.length} товаров</span>
+              <span>
+                {shopProducts.length}
+                {translateText(" товаров")}
+              </span>
             </div>
 
             <div className="shop-product-tools">
@@ -432,8 +395,8 @@ function ShopProfile({ shopId }) {
                 <Search size={17} />
                 <input
                   type="search"
-                  placeholder="Поиск по товарам магазина..."
-                  aria-label="Поиск по товарам магазина"
+                  placeholder={translateText("Поиск по товарам магазина...")}
+                  aria-label={translateText("Поиск по товарам магазина")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -447,7 +410,7 @@ function ShopProfile({ shopId }) {
                     className={category === item ? "active" : ""}
                     onClick={() => setCategory(item)}
                   >
-                    {item}
+                    {translateText(item)}
                   </button>
                 ))}
               </div>
@@ -470,8 +433,10 @@ function ShopProfile({ shopId }) {
             {visibleProducts.length === 0 && (
               <div className="shop-no-products">
                 <ShoppingBag size={30} />
-                <strong>Товары не найдены</strong>
-                <span>Попробуйте изменить поиск или категорию.</span>
+                <strong>{translateText("Товары не найдены")}</strong>
+                <span>
+                  {translateText("Попробуйте изменить поиск или категорию.")}
+                </span>
               </div>
             )}
           </section>
@@ -479,66 +444,77 @@ function ShopProfile({ shopId }) {
           <section className="shop-card shop-about-card" id="shop-about">
             <div className="shop-section-title">
               <h2>
-                <Info size={21} />О магазине
+                <Info size={21} />
+                {translateText("О магазине")}
               </h2>
               <span className="shop-decoration">♡</span>
             </div>
 
-            <p>{shop.about}</p>
-            <p>{shop.description}</p>
+            <p>{translateText(shop.about)}</p>
+            <p>{translateText(shop.description)}</p>
           </section>
 
           <section className="shop-card shop-reviews-card" id="shop-reviews">
             <div className="shop-reviews-heading">
               <h2>
                 <Star size={22} />
-                Отзывы покупателей
+                {translateText("Отзывы покупателей")}
               </h2>
 
               <button type="button" onClick={() => setReviewOpen(true)}>
                 <Pencil size={15} />
-                Написать отзыв
+                {translateText("Написать отзыв")}
               </button>
             </div>
 
             <div className="shop-reviews-summary">
-              <strong>{shop.rating}</strong>
+              <strong>{translateText(shop.rating)}</strong>
               <span className="shop-big-stars">★★★★★</span>
-              <small>({shop.reviewsCount} отзывов)</small>
+              <small>
+                ({translateText(shop.reviewsCount)}
+                {translateText(" отзывов)")}
+              </small>
             </div>
 
             <div className="shop-reviews-list">
               {(shop.reviews || []).map((review) => (
                 <article className="shop-review-item" key={review.id}>
                   <div className="shop-review-avatar">
-                    {review.author.slice(0, 1)}
+                    {translateText(review.author).slice(0, 1)}
                   </div>
 
                   <div className="shop-review-content">
                     <div className="shop-review-heading">
-                      <strong>{review.author}</strong>
+                      <strong>{translateText(review.author)}</strong>
                       <span
                         className="shop-stars"
-                        aria-label={`${review.rating} из 5`}
+                        aria-label={translateText(`${review.rating} из 5`)}
                       >
-                        {"★".repeat(
-                          Math.max(
-                            0,
-                            Math.min(5, Math.round(review.rating || 0)),
+                        {translateText(
+                          "★".repeat(
+                            Math.max(
+                              0,
+                              Math.min(5, Math.round(review.rating || 0)),
+                            ),
                           ),
                         )}
                       </span>
                     </div>
 
-                    <small>{review.date}</small>
-                    <p>{review.text}</p>
+                    <small>{translateText(review.date)}</small>
+                    <p>{translateText(review.text)}</p>
 
                     {review.reply && (
                       <div className="shop-owner-reply">
-                        <div className="shop-owner-avatar">{shop.initials}</div>
+                        <div className="shop-owner-avatar">
+                          {translateText(shop.initials)}
+                        </div>
                         <div>
-                          <strong>Ответ от {shop.name}</strong>
-                          <p>{review.reply}</p>
+                          <strong>
+                            {translateText("Ответ от ")}
+                            {translateText(shop.name)}
+                          </strong>
+                          <p>{translateText(review.reply)}</p>
                         </div>
                       </div>
                     )}
@@ -553,7 +529,7 @@ function ShopProfile({ shopId }) {
           <section className="shop-card shop-sidebar-card" id="shop-contacts">
             <h2>
               <Phone size={20} />
-              Контакты
+              {translateText("Контакты")}
             </h2>
 
             <div className="shop-contact-list">
@@ -566,8 +542,8 @@ function ShopProfile({ shopId }) {
                       <Icon size={19} />
                     </span>
                     <span className="shop-contact-info">
-                      <strong>{contact.title}</strong>
-                      <small>{contact.subtitle}</small>
+                      <strong>{translateText(contact.title)}</strong>
+                      <small>{translateText(contact.subtitle)}</small>
                     </span>
                     <span className="shop-contact-arrow">›</span>
                   </>
@@ -581,7 +557,7 @@ function ShopProfile({ shopId }) {
                     rel="noreferrer"
                     className="shop-contact-item"
                   >
-                    {content}
+                    {translateText(content)}
                   </a>
                 ) : (
                   <button
@@ -590,7 +566,7 @@ function ShopProfile({ shopId }) {
                     className="shop-contact-item"
                     onClick={openChat}
                   >
-                    {content}
+                    {translateText(content)}
                   </button>
                 );
               })}
@@ -600,12 +576,12 @@ function ShopProfile({ shopId }) {
           <section className="shop-card shop-sidebar-card">
             <h2>
               <MapPin size={20} />
-              Где нас найти
+              {translateText("Где нас найти")}
             </h2>
 
             <div className="shop-map">
               <iframe
-                title={`Карта ${shop.name}`}
+                title={translateText(`Карта ${shop.name}`)}
                 src={mapLinks.embed}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
@@ -620,14 +596,14 @@ function ShopProfile({ shopId }) {
               className="shop-route-button"
             >
               <Send size={16} />
-              Построить маршрут
+              {translateText("Построить маршрут")}
             </a>
 
             <div className="shop-hours">
               <Clock size={21} />
               <div>
-                <strong>{shop.hours}</strong>
-                <small>График работы магазина</small>
+                <strong>{translateText(shop.hours)}</strong>
+                <small>{translateText("График работы магазина")}</small>
               </div>
             </div>
           </section>
@@ -635,22 +611,26 @@ function ShopProfile({ shopId }) {
           <section className="shop-card shop-sidebar-card">
             <h2>
               <Package size={20} />
-              Условия заказа
+              {translateText("Условия заказа")}
             </h2>
 
             <div className="shop-condition">
               <Truck size={20} />
-              <span>Доставка — уточните у продавца</span>
+              <span>{translateText("Доставка — уточните у продавца")}</span>
             </div>
 
             <div className="shop-condition">
               <CalendarDays size={20} />
-              <span>Срок приготовления — по договорённости</span>
+              <span>
+                {translateText("Срок приготовления — по договорённости")}
+              </span>
             </div>
 
             <div className="shop-condition">
               <Wallet size={20} />
-              <span>Способ оплаты — уточните при заказе</span>
+              <span>
+                {translateText("Способ оплаты — уточните при заказе")}
+              </span>
             </div>
           </section>
         </aside>
@@ -669,33 +649,36 @@ function ShopProfile({ shopId }) {
             className="shop-review-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Черновик отзыва"
+            aria-label={translateText("Черновик отзыва")}
             onSubmit={submitReview}
           >
             <button
               type="button"
               className="shop-modal-close"
-              aria-label="Закрыть отзыв"
+              aria-label={translateText("Закрыть отзыв")}
               onClick={() => setReviewOpen(false)}
             >
               <X size={20} />
             </button>
 
-            <h2>Черновик отзыва</h2>
-            <p>Поделитесь впечатлением о магазине {shop.name}</p>
+            <h2>{translateText("Черновик отзыва")}</h2>
+            <p>
+              {translateText("Поделитесь впечатлением о магазине ")}
+              {translateText(shop.name)}
+            </p>
 
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Ваш отзыв..."
-              aria-label="Текст отзыва"
+              placeholder={translateText("Ваш отзыв...")}
+              aria-label={translateText("Текст отзыва")}
               maxLength={2000}
               autoFocus
               required
             />
 
             <button type="submit" className="shop-route-button">
-              Сохранить черновик
+              {translateText("Сохранить черновик")}
             </button>
           </form>
         </div>
@@ -703,7 +686,7 @@ function ShopProfile({ shopId }) {
 
       {notice && (
         <div className="shop-toast" role="status">
-          {notice}
+          {translateText(notice)}
           <button type="button" onClick={() => setNotice("")}>
             <X size={15} />
           </button>

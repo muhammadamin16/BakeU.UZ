@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 
 export default function ProductImage({ src, name = "Товар" }) {
@@ -8,9 +9,9 @@ export default function ProductImage({ src, name = "Товар" }) {
       <div
         className="bu-image bu-placeholder"
         role="img"
-        aria-label={name}
+        aria-label={translateText(name)}
       >
-        Фото товара
+        {translateText("Фото товара")}
       </div>
     );
   }
@@ -19,7 +20,7 @@ export default function ProductImage({ src, name = "Товар" }) {
     <img
       className="bu-image"
       src={src}
-      alt={name}
+      alt={translateText(name)}
       loading="lazy"
       onError={() => setFailedSrc(src)}
     />

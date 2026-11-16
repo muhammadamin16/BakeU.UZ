@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { useState, useRef, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
@@ -25,7 +26,7 @@ export function Badge({ children }) {
 export function PageTitle({ title, children }) {
   return (
     <div className="ad-page-title">
-      <h1>{title}</h1>
+      <h1>{translateText(title)}</h1>
       {children}
     </div>
   );
@@ -74,14 +75,18 @@ export function Modal({ title, onClose, children }) {
         className="ad-modal"
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={translateText(title)}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
         }}
       >
         <div className="ad-section-heading">
-          <h2>{title}</h2>
-          <button className="ad-icon" onClick={onClose} aria-label="Закрыть">
+          <h2>{translateText(title)}</h2>
+          <button
+            className="ad-icon"
+            onClick={onClose}
+            aria-label={translateText("Закрыть")}
+          >
             <X />
           </button>
         </div>
@@ -144,11 +149,11 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
         };
         return (
           <div className="ad-form-field" key={field.key}>
-            <label htmlFor={id}>{field.label}</label>
+            <label htmlFor={id}>{translateText(field.label)}</label>
             {field.type === "image" ? (
               <ImageField
                 id={id}
-                label={field.label}
+                label={translateText(field.label)}
                 disabled={field.disabled || busy}
                 value={values[field.key]}
                 onChange={(value) => update(field.key, value)}
@@ -171,14 +176,16 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
                 onChange={(event) => update(field.key, event.target.value)}
               >
                 <option value="" disabled={field.required !== false}>
-                  Выберите
+                  {translateText("Выберите")}
                 </option>
                 {field.options.map((option) => {
                   const value =
                     typeof option === "string" ? option : option.value;
                   return (
                     <option key={value} value={value}>
-                      {typeof option === "string" ? option : option.label}
+                      {translateText(
+                        typeof option === "string" ? option : option.label,
+                      )}
                     </option>
                   );
                 })}
@@ -212,7 +219,7 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
             )}
             {field.hint && (
               <small id={`${id}-hint`} className="ad-field-hint">
-                {field.hint}
+                {translateText(field.hint)}
               </small>
             )}
           </div>
@@ -220,15 +227,15 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
       })}
       {error && (
         <p role="alert" className="ad-form-error">
-          {error}
+          {translateText(error)}
         </p>
       )}
       <div className="ad-form-actions">
         <button type="button" className="ad-btn" onClick={onClose}>
-          Отмена
+          {translateText("Отмена")}
         </button>
         <button className="ad-btn primary" disabled={busy}>
-          {busy ? "Сохранение…" : "Сохранить"}
+          {translateText(busy ? "Сохранение…" : "Сохранить")}
         </button>
       </div>
     </form>
@@ -248,7 +255,7 @@ export function ConfirmAction({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal title={translateText(title)} onClose={onClose}>
       <form
         className="ad-form"
         onSubmit={async (event) => {
@@ -266,13 +273,13 @@ export function ConfirmAction({
           }
         }}
       >
-        <p>{description}</p>
+        <p>{translateText(description)}</p>
         {children}
         {requireReason && (
           <label>
-            Причина
+            {translateText("Причина")}
             <textarea
-              aria-label="Причина"
+              aria-label={translateText("Причина")}
               required
               minLength={3}
               maxLength={1000}
@@ -284,15 +291,15 @@ export function ConfirmAction({
         )}
         {error && (
           <p role="alert" className="ad-form-error">
-            {error}
+            {translateText(error)}
           </p>
         )}
         <div className="ad-form-actions">
           <button type="button" className="ad-btn" onClick={onClose}>
-            Отмена
+            {translateText("Отмена")}
           </button>
           <button className="ad-btn primary" disabled={busy}>
-            {busy ? "Сохранение…" : confirmLabel}
+            {translateText(busy ? "Сохранение…" : confirmLabel)}
           </button>
         </div>
       </form>
@@ -325,7 +332,16 @@ export function CollectionPage({
   const filtered = rows.filter(
     (row) =>
       (filter === "Все" || row.status === filter) &&
-      matchesSearch(row, params.get("q") || ""),
+      (matchesSearch(row, params.get("q") || "") ||
+        matchesSearch(
+          Object.fromEntries(
+            Object.entries(row).map(([key, value]) => [
+              key,
+              translateText(value),
+            ]),
+          ),
+          params.get("q") || "",
+        )),
   );
   const scopes = [
     ["sellerId", "Продавец", "sellers"],
@@ -351,18 +367,20 @@ export function CollectionPage({
     (!canDelete(row) ? "У записи есть связанные данные" : "");
   return (
     <>
-      <PageTitle title={title}>
+      <PageTitle title={translateText(title)}>
         <button
           className="ad-btn primary"
           disabled={Boolean(addDisabled)}
-          title={addDisabled || undefined}
+          title={translateText(addDisabled || undefined)}
           onClick={startAdding}
         >
           <Plus size={17} />
-          {addLabel}
+          {translateText(addLabel)}
         </button>
       </PageTitle>
-      {addDisabled && <p className="ad-page-description">{addDisabled}</p>}
+      {addDisabled && (
+        <p className="ad-page-description">{translateText(addDisabled)}</p>
+      )}
       <section className="ad-panel">
         {scopes.length > 0 && (
           <div className="ad-scope-banner">
@@ -373,9 +391,11 @@ export function CollectionPage({
                   className="ad-btn small"
                   to={`/admin/${entity}/${encodeURIComponent(params.get(key))}`}
                 >
-                  {label}:{" "}
-                  {data[entity].find((row) => row.id === params.get(key))
-                    ?.name || params.get(key)}{" "}
+                  {translateText(label)}:{" "}
+                  {translateText(
+                    data[entity].find((row) => row.id === params.get(key))
+                      ?.name || params.get(key),
+                  )}{" "}
                   <ArrowUpRight
                     size={12}
                     className="ad-inline-arrow"
@@ -392,7 +412,7 @@ export function CollectionPage({
                 setParams(next);
               }}
             >
-              Показать все
+              {translateText("Показать все")}
             </button>
           </div>
         )}
@@ -400,8 +420,8 @@ export function CollectionPage({
           <div className="ad-input-search">
             <Search size={17} />
             <input
-              aria-label="Поиск"
-              placeholder="Поиск по имени или ID…"
+              aria-label={translateText("Поиск")}
+              placeholder={translateText("Поиск по имени или ID…")}
               value={params.get("q") || ""}
               onChange={(e) => {
                 const next = new URLSearchParams(params);
@@ -412,7 +432,7 @@ export function CollectionPage({
             />
           </div>
           <select
-            aria-label="Фильтр статуса"
+            aria-label={translateText("Фильтр статуса")}
             value={filter}
             onChange={(event) => {
               const next = new URLSearchParams(params);
@@ -421,26 +441,31 @@ export function CollectionPage({
               setParams(next);
             }}
           >
-            <option>Все</option>
+            <option value={"Все"}>{translateText("Все")}</option>
             {statuses.map((s) => (
-              <option key={s}>{s}</option>
+              <option value={s} key={s}>
+                {translateText(s)}
+              </option>
             ))}
           </select>
-          <span className="ad-muted">Найдено: {filtered.length}</span>
+          <span className="ad-muted">
+            {translateText("Найдено: ")}
+            {filtered.length}
+          </span>
         </div>
         <div
           className="ad-table-wrap"
           tabIndex={0}
           role="region"
-          aria-label={`Таблица: ${title}`}
+          aria-label={translateText(`Таблица: ${title}`)}
         >
           <table className="ad-table">
             <thead>
               <tr>
                 {columns.map((c) => (
-                  <th key={c.key}>{c.label}</th>
+                  <th key={c.key}>{translateText(c.label)}</th>
                 ))}
-                <th>Действия</th>
+                <th>{translateText("Действия")}</th>
               </tr>
             </thead>
             <tbody>
@@ -449,34 +474,38 @@ export function CollectionPage({
                   {columns.map((c) => (
                     <td key={c.key}>
                       {c.render ? (
-                        c.render(row)
+                        translateText(c.render(row))
                       ) : c.key === "status" ? (
-                        <Badge>{row[c.key]}</Badge>
+                        <Badge>{translateText(row[c.key])}</Badge>
                       ) : (
-                        row[c.key] || "—"
+                        translateText(row[c.key] || "—")
                       )}
                     </td>
                   ))}
                   <td>
                     <div className="ad-row-actions">
-                      {detailsLink?.(row)}
-                      {renderActions?.(row)}
+                      {translateText(detailsLink?.(row))}
+                      {translateText(renderActions?.(row))}
                       <button
                         className="ad-icon"
                         onClick={() => setEditing(row)}
-                        aria-label={`Редактировать ${row.name || row.id}`}
+                        aria-label={translateText(
+                          `Редактировать ${row.name || row.id}`,
+                        )}
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         className="ad-icon danger"
                         disabled={Boolean(deletionBlock(row))}
-                        title={deletionBlock(row) || undefined}
+                        title={translateText(deletionBlock(row) || undefined)}
                         onClick={() => {
                           setDeleteError("");
                           setDeleting(row);
                         }}
-                        aria-label={`Удалить ${row.name || row.id}`}
+                        aria-label={translateText(
+                          `Удалить ${row.name || row.id}`,
+                        )}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -487,13 +516,15 @@ export function CollectionPage({
             </tbody>
           </table>
           {!filtered.length && (
-            <div className="ad-empty">Ничего не найдено</div>
+            <div className="ad-empty">{translateText("Ничего не найдено")}</div>
           )}
         </div>
       </section>
       {editing && (
         <Modal
-          title={editing.id ? "Редактировать запись" : "Новая запись"}
+          title={translateText(
+            editing.id ? "Редактировать запись" : "Новая запись",
+          )}
           onClose={() => setEditing(null)}
         >
           <RecordForm
@@ -514,19 +545,23 @@ export function CollectionPage({
         </Modal>
       )}
       {deleting && (
-        <Modal title="Удалить запись?" onClose={() => setDeleting(null)}>
+        <Modal
+          title={translateText("Удалить запись?")}
+          onClose={() => setDeleting(null)}
+        >
           <p>
-            Запись «{deleting.name || deleting.id}» будет удалена. Действие
-            останется в истории
+            {translateText("Запись «")}
+            {translateText(deleting.name || deleting.id)}
+            {translateText("» будет удалена. Действие останется в истории")}
           </p>
           {deleteError && (
             <p role="alert" className="ad-form-error">
-              {deleteError}
+              {translateText(deleteError)}
             </p>
           )}
           <div className="ad-form-actions">
             <button className="ad-btn" onClick={() => setDeleting(null)}>
-              Отмена
+              {translateText("Отмена")}
             </button>
             <button
               className="ad-btn red"
@@ -539,7 +574,7 @@ export function CollectionPage({
                 }
               }}
             >
-              Удалить
+              {translateText("Удалить")}
             </button>
           </div>
         </Modal>

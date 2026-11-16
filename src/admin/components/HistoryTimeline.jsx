@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Clock3 } from "lucide-react";
@@ -34,33 +36,37 @@ export default function HistoryTimeline({
                 <Clock3 size={16} />
               </span>
               <span>
-                <strong>{entry.action}</strong>
+                <strong>{translateText(entry.action)}</strong>
                 <small>
-                  {entry.label} · {entry.actor || "Администратор"}
+                  {translateText(entry.label)} ·{" "}
+                  {translateText(entry.actor || "Администратор")}
                 </small>
               </span>
               <time dateTime={entry.at}>
-                {new Date(entry.at).toLocaleString("ru-RU", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
+                {translateText(
+                  new Date(entry.at).toLocaleString(getLocale(), {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  }),
+                )}
               </time>
             </summary>
             <div className="ad-history-content">
               {entry.reason && (
                 <p>
-                  <strong>Причина:</strong> {entry.reason}
+                  <strong>{translateText("Причина:")}</strong>{" "}
+                  {translateText(entry.reason)}
                 </p>
               )}
               {entry.changes?.length > 0 && (
                 <dl>
                   {entry.changes.map((change, index) => (
                     <div key={`${change.field}-${index}`}>
-                      <dt>{change.field}</dt>
+                      <dt>{translateText(change.field)}</dt>
                       <dd>
-                        <span>{change.before}</span>
+                        <span>{translateText(change.before)}</span>
                         <span aria-hidden="true">→</span>
-                        <strong>{change.after}</strong>
+                        <strong>{translateText(change.after)}</strong>
                       </dd>
                     </div>
                   ))}
@@ -68,7 +74,7 @@ export default function HistoryTimeline({
               )}
               {(exists || entry.entity === "settings") && (
                 <Link className="ad-text-link" to={target}>
-                  Открыть запись{" "}
+                  {translateText("Открыть запись")}{" "}
                   <ArrowUpRight
                     size={12}
                     className="ad-inline-arrow"
@@ -80,7 +86,7 @@ export default function HistoryTimeline({
           </details>
         );
       })}
-      {!events.length && <p className="ad-empty">{empty}</p>}
+      {!events.length && <p className="ad-empty">{translateText(empty)}</p>}
     </div>
   );
 }

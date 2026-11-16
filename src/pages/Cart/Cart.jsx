@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCartStore } from "../../store/cartStore";
@@ -14,19 +15,19 @@ export default function Cart() {
   return (
     <main className="bu-shopping">
       <div className="bu-heading">
-        <h1>Корзина</h1>
+        <h1>{translateText("Корзина")}</h1>
         {rows.length > 0 && (
           <button className="bu-text" onClick={clear}>
-            Очистить
+            {translateText("Очистить")}
           </button>
         )}
       </div>
       {!rows.length ? (
         <div className="bu-empty">
-          <h2>В корзине пока пусто</h2>
-          <p>Добавьте любимую выпечку из каталога.</p>
+          <h2>{translateText("В корзине пока пусто")}</h2>
+          <p>{translateText("Добавьте любимую выпечку из каталога.")}</p>
           <Link className="bu-button" to="/">
-            Перейти к покупкам
+            {translateText("Перейти к покупкам")}
           </Link>
         </div>
       ) : (
@@ -38,15 +39,17 @@ export default function Cart() {
                 return (
                   <article className="bu-row" key={id}>
                     <div className="bu-row-info">
-                      <h2>Товар недоступен</h2>
+                      <h2>{translateText("Товар недоступен")}</h2>
                       <p>
-                        Добавьте товар заново из каталога. Он не включён в итог.
+                        {translateText(
+                          "Добавьте товар заново из каталога. Он не включён в итог.",
+                        )}
                       </p>
                     </div>
                     <button
                       type="button"
                       className="bu-icon"
-                      aria-label="Удалить недоступный товар"
+                      aria-label={translateText("Удалить недоступный товар")}
                       onClick={() => remove(id)}
                     >
                       <Trash2 size={19} />
@@ -63,23 +66,28 @@ export default function Cart() {
                           "/product/" + encodeURIComponent(p.productId || p.id)
                         }
                       >
-                        {p.name}
+                        {translateText(p.name)}
                       </Link>
                     </h2>
-                    {p.variantLabel && <p>{p.variantLabel}</p>}
+                    {p.variantLabel && <p>{translateText(p.variantLabel)}</p>}
                     <p>
-                      {money(p.price)} / {p.unit || "шт."}
+                      {translateText(money(p.price))} /{" "}
+                      {translateText(p.unit || "шт.")}
                     </p>
                     <div className="bu-quantity">
                       <button
-                        aria-label={`Уменьшить количество: ${p.name}`}
+                        aria-label={translateText(
+                          `Уменьшить количество: ${p.name}`,
+                        )}
                         onClick={() => decrease(id)}
                       >
                         <Minus size={16} />
                       </button>
-                      <span>{qty}</span>
+                      <span>{translateText(qty)}</span>
                       <button
-                        aria-label={`Увеличить количество: ${p.name}`}
+                        aria-label={translateText(
+                          `Увеличить количество: ${p.name}`,
+                        )}
                         onClick={() => increase(id)}
                       >
                         <Plus size={16} />
@@ -87,10 +95,10 @@ export default function Cart() {
                     </div>
                   </div>
                   <div className="bu-row-end">
-                    <strong>{money(p.price * qty)}</strong>
+                    <strong>{translateText(money(p.price * qty))}</strong>
                     <button
                       className="bu-icon"
-                      aria-label={`Удалить ${p.name}`}
+                      aria-label={translateText(`Удалить ${p.name}`)}
                       onClick={() => remove(id)}
                     >
                       <Trash2 size={19} />
@@ -101,20 +109,25 @@ export default function Cart() {
             })}
           </div>
           <aside className="bu-total">
-            <h2>Ваш заказ</h2>
-            <p>Товаров: {rows.reduce((n, [, q]) => n + q, 0)}</p>
+            <h2>{translateText("Ваш заказ")}</h2>
+            <p>
+              {translateText("Товаров: ")}
+              {translateText(rows.reduce((n, [, q]) => n + q, 0))}
+            </p>
             <div>
-              <span>Итого</span>
-              <strong>{money(total)}</strong>
+              <span>{translateText("Итого")}</span>
+              <strong>{translateText(money(total))}</strong>
             </div>
             <Link className="bu-button" to="/checkout">
-              Перейти к оформлению
+              {translateText("Перейти к оформлению")}
             </Link>
             <p className="bu-checkout-hint">
-              Телефоны продавцов и согласование времени — на следующем шаге.
+              {translateText(
+                "Телефоны продавцов и согласование времени — на следующем шаге.",
+              )}
             </p>
             <Link className="bu-continue" to="/">
-              Продолжить покупки
+              {translateText("Продолжить покупки")}
             </Link>
           </aside>
         </div>

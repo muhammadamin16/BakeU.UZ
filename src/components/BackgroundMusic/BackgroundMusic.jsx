@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 
 import { useEffect, useRef, useState } from "react";
 import { Disc3 } from "lucide-react";
@@ -47,26 +48,16 @@ export default function BackgroundMusic() {
 
       <button
         type="button"
-        className={`bakeu-music-btn ${
-          playing ? "active" : ""
-        }`}
+        className={`bakeu-music-btn ${playing ? "active" : ""}`}
         onClick={toggleMusic}
-        aria-label={
-          playing
-            ? "Выключить музыку"
-            : "Включить музыку"
-        }
+        aria-label={translateText(
+          playing ? "Выключить музыку" : "Включить музыку",
+        )}
         aria-pressed={playing}
-        title={
-          playing
-            ? "Выключить музыку"
-            : "Включить музыку"
-        }
+        title={translateText(playing ? "Выключить музыку" : "Включить музыку")}
       >
         <Disc3
-          className={`bakeu-disc ${
-            playing ? "music-spinning" : ""
-          }`}
+          className={`bakeu-disc ${playing ? "music-spinning" : ""}`}
           size={30}
           strokeWidth={2}
         />

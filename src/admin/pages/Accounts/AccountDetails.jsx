@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -38,8 +39,8 @@ function Field({ icon: Icon, label, children }) {
         <Icon size={18} />
       </span>
       <div>
-        <dt>{label}</dt>
-        <dd>{children || "Не указан"}</dd>
+        <dt>{translateText(label)}</dt>
+        <dd>{translateText(children || "Не указан")}</dd>
       </div>
     </div>
   );
@@ -50,14 +51,14 @@ function Metric({ icon: Icon, label, value, to }) {
     <Link
       className="ad-profile-metric"
       to={to}
-      title={`Открыть: ${label.toLocaleLowerCase("ru-RU")}`}
+      title={translateText(`Открыть: ${label.toLocaleLowerCase("ru-RU")}`)}
     >
       <span className="ad-stat-icon">
         <Icon size={20} />
       </span>
       <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
+        <span>{translateText(label)}</span>
+        <strong>{translateText(value)}</strong>
       </div>
       <ArrowUpRight className="ad-metric-arrow" size={15} aria-hidden="true" />
     </Link>
@@ -70,7 +71,7 @@ function Section({ icon: Icon, title, count, children }) {
       <div className="ad-section-heading">
         <h2>
           <Icon size={21} />
-          {title}
+          {translateText(title)}
         </h2>
         {count !== undefined && (
           <span className="ad-profile-count">{count}</span>
@@ -93,10 +94,10 @@ export default function AccountDetails({ kind = "customers" }) {
   if (!person) {
     return (
       <>
-        <PageTitle title={`${role} не найден`} />
+        <PageTitle title={translateText(`${role} не найден`)} />
         <Link className="ad-btn" to={`/admin/${kind}`}>
           <ArrowLeft size={16} />
-          {listTitle}
+          {translateText(listTitle)}
         </Link>
       </>
     );
@@ -124,10 +125,14 @@ export default function AccountDetails({ kind = "customers" }) {
 
   return (
     <div className="ad-account-page">
-      <PageTitle title={isSeller ? "Профиль продавца" : "Профиль покупателя"}>
+      <PageTitle
+        title={translateText(
+          isSeller ? "Профиль продавца" : "Профиль покупателя",
+        )}
+      >
         <Link className="ad-btn" to={`/admin/${kind}`}>
           <ArrowLeft size={16} />
-          {listTitle}
+          {translateText(listTitle)}
         </Link>
       </PageTitle>
 
@@ -136,22 +141,24 @@ export default function AccountDetails({ kind = "customers" }) {
           className={`ad-person-avatar ad-profile-avatar ${isSeller ? "seller" : ""}`}
           aria-hidden="true"
         >
-          {initials(person.name)}
+          {initials(translateText(person.name))}
         </span>
         <div className="ad-profile-heading">
           <span className="ad-profile-overline">
-            {role} · {person.id}
+            {translateText(role)} · {translateText(person.id)}
           </span>
-          <h2>{person.name}</h2>
+          <h2>{translateText(person.name)}</h2>
           <span className="ad-muted">
-            {person.email || person.phone || "Контакты не указаны"}
+            {translateText(
+              person.email || person.phone || "Контакты не указаны",
+            )}
           </span>
         </div>
         <div className="ad-profile-actions">
-          <Badge>{person.status}</Badge>
+          <Badge>{translateText(person.status)}</Badge>
           <button className="ad-btn primary" onClick={() => setEditing(true)}>
             <Pencil size={16} />
-            Редактировать профиль
+            {translateText("Редактировать профиль")}
           </button>
           <AccountStatusAction person={person} kind={kind} />
         </div>
@@ -159,15 +166,18 @@ export default function AccountDetails({ kind = "customers" }) {
 
       {person.status !== "Активен" && (
         <p className="ad-restriction-note">
-          <strong>{person.status}.</strong> Новые операции ограничены.{" "}
-          {person.freezeReason && `Причина: ${person.freezeReason}`}
+          <strong>{translateText(person.status)}.</strong>
+          {translateText(" Новые операции ограничены.")}{" "}
+          {translateText(
+            person.freezeReason && `Причина: ${person.freezeReason}`,
+          )}
         </p>
       )}
       <div className={`ad-profile-metrics ${isSeller ? "seller" : ""}`}>
         {isSeller && (
           <Metric
             icon={Store}
-            label="Магазины"
+            label={translateText("Магазины")}
             value={shops.length}
             to={scopedPath("shops")}
           />
@@ -175,95 +185,104 @@ export default function AccountDetails({ kind = "customers" }) {
         {isSeller && (
           <Metric
             icon={Package}
-            label="Товары"
+            label={translateText("Товары")}
             value={products.length}
             to={scopedPath("products")}
           />
         )}
         <Metric
           icon={ShoppingCart}
-          label="Заказы"
+          label={translateText("Заказы")}
           value={orders.length}
           to={scopedPath("orders")}
         />
         {!isSeller && (
           <Metric
             icon={ShieldCheck}
-            label="Доставлено"
+            label={translateText("Доставлено")}
             to={scopedPath("orders", { status: "Доставлен" })}
             value={orders.filter((row) => row.status === "Доставлен").length}
           />
         )}
         <Metric
           icon={Wallet}
-          label="Сумма без отмен"
+          label={translateText("Сумма без отмен")}
           value={money(total)}
           to={scopedPath("orders", { excludeCancelled: "1" })}
         />
       </div>
 
       <div className="ad-profile-columns">
-        <Section icon={UserRound} title="Личная информация">
+        <Section icon={UserRound} title={translateText("Личная информация")}>
           <dl className="ad-profile-fields">
-            <Field icon={UserRound} label="Имя и фамилия">
-              {person.name}
+            <Field icon={UserRound} label={translateText("Имя и фамилия")}>
+              {translateText(person.name)}
             </Field>
-            <Field icon={Phone} label="Телефон">
+            <Field icon={Phone} label={translateText("Телефон")}>
               {person.phone && (
                 <a href={`tel:${person.phone.replace(/[^\d+]/g, "")}`}>
-                  {person.phone}
+                  {translateText(person.phone)}
                 </a>
               )}
             </Field>
             <Field icon={Mail} label="Email">
               {person.email && (
-                <a href={`mailto:${person.email}`}>{person.email}</a>
+                <a href={`mailto:${person.email}`}>
+                  {translateText(person.email)}
+                </a>
               )}
             </Field>
-            <Field icon={MapPin} label="Адрес">
-              {person.address}
+            <Field icon={MapPin} label={translateText("Адрес")}>
+              {translateText(person.address)}
             </Field>
-            <Field icon={CalendarDays} label="Дата регистрации">
-              {person.date ? date(person.date) : "Нет данных"}
+            <Field
+              icon={CalendarDays}
+              label={translateText("Дата регистрации")}
+            >
+              {translateText(person.date ? date(person.date) : "Нет данных")}
             </Field>
-            <Field icon={StickyNote} label="Заметка администратора">
-              {person.notes || "Заметок пока нет"}
+            <Field
+              icon={StickyNote}
+              label={translateText("Заметка администратора")}
+            >
+              {translateText(person.notes || "Заметок пока нет")}
             </Field>
           </dl>
         </Section>
 
-        <Section icon={ShieldCheck} title="Аккаунт и доступ">
+        <Section icon={ShieldCheck} title={translateText("Аккаунт и доступ")}>
           <dl className="ad-profile-fields">
-            <Field icon={AtSign} label="Логин">
-              {person.login || person.email || "Не задан"}
+            <Field icon={AtSign} label={translateText("Логин")}>
+              {translateText(person.login || person.email || "Не задан")}
             </Field>
-            <Field icon={UserRound} label="ID аккаунта">
-              {person.id}
+            <Field icon={UserRound} label={translateText("ID аккаунта")}>
+              {translateText(person.id)}
             </Field>
-            <Field icon={ShieldCheck} label="Роль">
-              {role}
+            <Field icon={ShieldCheck} label={translateText("Роль")}>
+              {translateText(role)}
             </Field>
-            <Field icon={ShieldCheck} label="Статус карточки">
-              <Badge>{person.status}</Badge>
+            <Field icon={ShieldCheck} label={translateText("Статус карточки")}>
+              <Badge>{translateText(person.status)}</Badge>
             </Field>
-            <Field icon={KeyRound} label="Пароль">
-              Не отображается
+            <Field icon={KeyRound} label={translateText("Пароль")}>
+              {translateText("Не отображается")}
             </Field>
           </dl>
           <div className="ad-access-note">
             <KeyRound size={18} />
             <div>
-              <strong>Управление паролем</strong>
+              <strong>{translateText("Управление паролем")}</strong>
               <p>
-                Карточка хранится в демо-панели. Пароли сайта здесь недоступны.
-                Восстановление через email ещё не подключено.
+                {translateText(
+                  "Карточка хранится в демо-панели. Пароли сайта здесь недоступны. Восстановление через email ещё не подключено.",
+                )}
               </p>
               <button
                 className="ad-btn small"
                 disabled
-                title="Требуется подключение авторизации"
+                title={translateText("Требуется подключение авторизации")}
               >
-                Сбросить пароль
+                {translateText("Сбросить пароль")}
               </button>
             </div>
           </div>
@@ -271,7 +290,11 @@ export default function AccountDetails({ kind = "customers" }) {
       </div>
 
       {isSeller && (
-        <Section icon={Store} title="Магазины продавца" count={shops.length}>
+        <Section
+          icon={Store}
+          title={translateText("Магазины продавца")}
+          count={shops.length}
+        >
           <div className="ad-profile-shops">
             {shops.map((shop) => (
               <Link
@@ -283,37 +306,44 @@ export default function AccountDetails({ kind = "customers" }) {
                   <Store size={22} />
                 </span>
                 <div>
-                  <strong>{shop.name}</strong>
-                  <span>{shop.address || "Адрес магазина не указан"}</span>
+                  <strong>{translateText(shop.name)}</strong>
+                  <span>
+                    {translateText(shop.address || "Адрес магазина не указан")}
+                  </span>
                   <small>
-                    {shop.plan || "Без подписки"} · {shop.id}
+                    {translateText(shop.plan || "Без подписки")} ·{" "}
+                    {translateText(shop.id)}
                   </small>
                 </div>
-                <Badge>{shop.status}</Badge>
+                <Badge>{translateText(shop.status)}</Badge>
                 <ArrowUpRight size={18} />
               </Link>
             ))}
           </div>
           {!shops.length && (
-            <p className="ad-empty">У продавца пока нет магазинов</p>
+            <p className="ad-empty">
+              {translateText("У продавца пока нет магазинов")}
+            </p>
           )}
         </Section>
       )}
 
       <Section
         icon={ShoppingCart}
-        title={isSeller ? "Заказы магазинов" : "Заказы покупателя"}
+        title={translateText(
+          isSeller ? "Заказы магазинов" : "Заказы покупателя",
+        )}
         count={orders.length}
       >
         <div className="ad-table-wrap">
           <table className="ad-table">
             <thead>
               <tr>
-                <th>Заказ</th>
-                <th>{isSeller ? "Покупатель" : "Магазин"}</th>
-                <th>Дата</th>
-                <th>Сумма</th>
-                <th>Статус</th>
+                <th>{translateText("Заказ")}</th>
+                <th>{translateText(isSeller ? "Покупатель" : "Магазин")}</th>
+                <th>{translateText("Дата")}</th>
+                <th>{translateText("Сумма")}</th>
+                <th>{translateText("Статус")}</th>
               </tr>
             </thead>
             <tbody>
@@ -324,7 +354,7 @@ export default function AccountDetails({ kind = "customers" }) {
                       className="ad-text-link"
                       to={`/admin/orders/${encodeURIComponent(order.id)}`}
                     >
-                      {order.id}{" "}
+                      {translateText(order.id)}{" "}
                       <ArrowUpRight
                         size={12}
                         className="ad-inline-arrow"
@@ -339,7 +369,7 @@ export default function AccountDetails({ kind = "customers" }) {
                           className="ad-text-link"
                           to={`/admin/customers/${encodeURIComponent(order.customerId)}`}
                         >
-                          {order.customer}
+                          {translateText(order.customer)}
                         </Link>
                       ) : (
                         order.customer
@@ -349,50 +379,62 @@ export default function AccountDetails({ kind = "customers" }) {
                         className="ad-text-link"
                         to={`/admin/shops/${encodeURIComponent(order.shopId)}`}
                       >
-                        {order.shop}
+                        {translateText(order.shop)}
                       </Link>
                     ) : (
                       order.shop
                     )}
                   </td>
-                  <td>{date(order.date)}</td>
-                  <td>{money(order.total)}</td>
+                  <td>{translateText(date(order.date))}</td>
+                  <td>{translateText(money(order.total))}</td>
                   <td>
-                    <Badge>{order.status}</Badge>
+                    <Badge>{translateText(order.status)}</Badge>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {!orders.length && <p className="ad-empty">Заказов пока нет</p>}
+        {!orders.length && (
+          <p className="ad-empty">{translateText("Заказов пока нет")}</p>
+        )}
       </Section>
 
       {isSeller && (
         <div className="ad-profile-columns">
-          <Section icon={Package} title="Товары" count={products.length}>
+          <Section
+            icon={Package}
+            title={translateText("Товары")}
+            count={products.length}
+          >
             {products.map((product) => (
               <Link
                 className="ad-profile-list-row"
                 key={product.id}
                 to={`/admin/products/${encodeURIComponent(product.id)}`}
               >
-                <ProductPhoto src={product.image} alt={product.name} />
+                <ProductPhoto
+                  src={product.image}
+                  alt={translateText(product.name)}
+                />
                 <div>
-                  <strong>{product.name}</strong>
+                  <strong>{translateText(product.name)}</strong>
                   <small>
-                    {product.shop} · {product.category}
+                    {translateText(product.shop)} ·{" "}
+                    {translateText(product.category)}
                   </small>
                 </div>
-                <span>{money(product.price)}</span>
-                <Badge>{product.status}</Badge>
+                <span>{translateText(money(product.price))}</span>
+                <Badge>{translateText(product.status)}</Badge>
               </Link>
             ))}
-            {!products.length && <p className="ad-empty">Товаров пока нет</p>}
+            {!products.length && (
+              <p className="ad-empty">{translateText("Товаров пока нет")}</p>
+            )}
           </Section>
           <Section
             icon={CreditCard}
-            title="Подписки"
+            title={translateText("Подписки")}
             count={subscriptions.length}
           >
             {subscriptions.map((subscription) => (
@@ -402,17 +444,19 @@ export default function AccountDetails({ kind = "customers" }) {
                 to={`/admin/subscriptions/${encodeURIComponent(subscription.id)}`}
               >
                 <div>
-                  <strong>{subscription.plan}</strong>
+                  <strong>{translateText(subscription.plan)}</strong>
                   <small>
-                    {subscription.shop} · До {date(subscription.until)}
+                    {translateText(subscription.shop)}
+                    {translateText(" · До ")}
+                    {translateText(date(subscription.until))}
                   </small>
                 </div>
-                <span>{money(subscription.paid)}</span>
-                <Badge>{subscription.status}</Badge>
+                <span>{translateText(money(subscription.paid))}</span>
+                <Badge>{translateText(subscription.status)}</Badge>
               </Link>
             ))}
             {!subscriptions.length && (
-              <p className="ad-empty">Подписок пока нет</p>
+              <p className="ad-empty">{translateText("Подписок пока нет")}</p>
             )}
           </Section>
         </div>
@@ -422,10 +466,10 @@ export default function AccountDetails({ kind = "customers" }) {
         <div className="ad-section-heading">
           <h2>
             <Clock3 size={21} />
-            История аккаунта
+            {translateText("История аккаунта")}
           </h2>
           <Link className="ad-btn small" to={scopedPath("history")}>
-            Вся история{" "}
+            {translateText("Вся история")}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -437,7 +481,7 @@ export default function AccountDetails({ kind = "customers" }) {
       </section>
       {editing && (
         <Modal
-          title={`Редактировать профиль: ${person.name}`}
+          title={translateText(`Редактировать профиль: ${person.name}`)}
           onClose={() => setEditing(false)}
         >
           <RecordForm

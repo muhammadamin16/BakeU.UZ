@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import {
   accountApiEnabled,
   getServerProfile,
@@ -61,6 +62,14 @@ export default function Profile() {
   if (!account || !["client", "seller"].includes(account.role))
     return <Navigate to="/login" replace />;
 
+  if (params.get("chat") && account.role === "seller")
+    return (
+      <Navigate
+        to={`/messages?seller=${encodeURIComponent(params.get("chat"))}`}
+        replace
+      />
+    );
+
   const saveAccount = async (next) => {
     const saved = await saveLocalProfile(account, next);
     setAccount(saved);
@@ -75,19 +84,25 @@ export default function Profile() {
     <main className="bw-page">
       {serverApplication && (
         <p className="bw-demo">
-          Заявка магазина «{serverApplication.shop}»: {serverApplication.status}
-          {serverApplication.reason ? ` · ${serverApplication.reason}` : ""}
+          {translateText("Заявка магазина «")}
+          {translateText(serverApplication.shop)}»:{" "}
+          {translateText(serverApplication.status)}
+          {translateText(
+            serverApplication.reason ? ` · ${serverApplication.reason}` : "",
+          )}
         </p>
       )}
       {serverError && (
         <p className="bw-demo" role="status">
-          {serverError}
+          {translateText(serverError)}
         </p>
       )}
       <p className="bw-demo">
-        {account.server
-          ? "Аккаунт хранится на сервере. Заявка магазина проверяется администратором в Telegram. Товары, заказы и чат этого кабинета пока работают локально."
-          : "Демо-кабинет · изменения сохраняются в этом браузере. Чат и заказы работают локально; оплата и доставка сообщений требуют сервера."}
+        {translateText(
+          account.server
+            ? "Аккаунт хранится на сервере. Заявка магазина проверяется администратором в Telegram. Товары, заказы и чат этого кабинета пока работают локально."
+            : "Демо-кабинет · изменения сохраняются в этом браузере. Чат и заказы работают локально; оплата и доставка сообщений требуют сервера.",
+        )}
       </p>
       {account.role === "seller" ? (
         <SellerProfile
@@ -98,6 +113,7 @@ export default function Profile() {
         />
       ) : (
         <ClientProfile
+          key={`${accountId(account)}:${params.get("chat") || ""}`}
           account={account}
           onLogout={logout}
           onSave={saveAccount}

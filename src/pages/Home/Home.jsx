@@ -1,5 +1,11 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import HeroSlider from "./components/HeroSlider";
-import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
+import {
+  demoProducts,
+  demoSubscriptions,
+  eligibleProducts,
+} from "../../store/homeData";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -48,7 +54,7 @@ export default function Home({
   const visibleProducts = featured.filter((product) => {
     const matchesCategory = category === "Все" || product.category === category;
 
-    const matchesQuery = product.name
+    const matchesQuery = (product.name + " " + translateText(product.name))
       .toLocaleLowerCase("ru-RU")
       .includes(query.trim().toLocaleLowerCase("ru-RU"));
 
@@ -90,18 +96,19 @@ export default function Home({
         <div className="bu-hero__content">
           <span className="bu-eyebrow">
             <span aria-hidden="true" />
-            МАЛЕНЬКИЕ РАДОСТИ КАЖДЫЙ ДЕНЬ
+            {translateText("МАЛЕНЬКИЕ РАДОСТИ КАЖДЫЙ ДЕНЬ")}
           </span>
 
           <h1 id="bu-hero-title">
-            По-домашнему.
+            {translateText("По-домашнему.")}
             <br />
-            <span>По вашему вкусу.</span>
+            <span>{translateText("По вашему вкусу.")}</span>
           </h1>
 
           <p className="bu-hero__description">
-            Торты, десерты и выпечка от местных мастеров. Найдите что-нибудь
-            особенное на BakeU.
+            {translateText(
+              "Торты, десерты и выпечка от местных мастеров. Найдите что-нибудь особенное на BakeU.",
+            )}
           </p>
 
           <div className="bu-hero__actions">
@@ -110,13 +117,13 @@ export default function Home({
               className="bu-button bu-button--primary"
               onClick={() => openCatalog()}
             >
-              Выбрать вкусное
+              {translateText("Выбрать вкусное")}
               <ArrowRight size={18} aria-hidden="true" />
             </button>
 
             <Link to="/map" className="bu-button bu-button--secondary">
               <MapPin size={18} aria-hidden="true" />
-              Найти рядом
+              {translateText("Найти рядом")}
             </Link>
           </div>
         </div>
@@ -126,16 +133,16 @@ export default function Home({
             type="button"
             className="bu-feature bu-feature--cake"
             onClick={() => openCatalog("Торты")}
-            aria-label="Посмотреть торты"
+            aria-label={translateText("Посмотреть торты")}
           >
             <img
               src="/images/products/cake.jpg"
-              alt="Шоколадный торт"
+              alt={translateText("Шоколадный торт")}
               fetchPriority="high"
             />
 
             <span className="bu-feature__caption">
-              <span>Для особого повода</span>
+              <span>{translateText("Для особого повода")}</span>
               <ArrowUpRight size={19} aria-hidden="true" />
             </span>
           </button>
@@ -144,17 +151,22 @@ export default function Home({
             type="button"
             className="bu-feature bu-feature--cookie"
             onClick={() => openCatalog("Печенье")}
-            aria-label="Посмотреть печенье"
+            aria-label={translateText("Посмотреть печенье")}
           >
-            <img src="/images/products/cookie.jpg" alt="Домашнее печенье" />
+            <img
+              src="/images/products/cookie.jpg"
+              alt={translateText("Домашнее печенье")}
+            />
 
             <span className="bu-feature__caption">
-              <span>К любимому чаю</span>
+              <span>{translateText("К любимому чаю")}</span>
               <ArrowUpRight size={18} aria-hidden="true" />
             </span>
           </button>
 
-          <span className="bu-hero__note">С любовью к вкусному ♡</span>
+          <span className="bu-hero__note">
+            {translateText("С любовью к вкусному ♡")}
+          </span>
         </div>
       </section>
 
@@ -164,12 +176,14 @@ export default function Home({
         </span>
 
         <span className="bu-map__text">
-          <strong>Вкусное ближе, чем кажется</strong>
-          <span>Откройте карту и найдите мастеров рядом</span>
+          <strong>{translateText("Вкусное ближе, чем кажется")}</strong>
+          <span>
+            {translateText("Откройте карту и найдите мастеров рядом")}
+          </span>
         </span>
 
         <span className="bu-map__action">
-          <span>Открыть карту</span>
+          <span>{translateText("Открыть карту")}</span>
           <ArrowUpRight size={21} aria-hidden="true" />
         </span>
       </Link>
@@ -181,13 +195,16 @@ export default function Home({
       >
         <div className="bu-catalog__top">
           <div>
-            <span className="bu-overline">ВИТРИНА МАСТЕРОВ</span>
-            <h2 id="bu-catalog-title">Топ товары</h2>
+            <span className="bu-overline">
+              {translateText("ВИТРИНА МАСТЕРОВ")}
+            </span>
+            <h2 id="bu-catalog-title">{translateText("Топ товары")}</h2>
             <Link className="bu-all-products" to="/seller?tab=products">
-              Смотреть все товары <ArrowUpRight size={18} aria-hidden="true" />
+              {translateText("Смотреть все товары ")}
+              <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
             <p className="bu-subtitle">
-              Выпечка магазинов с активной подпиской BakeU.
+              {translateText("Выпечка магазинов с активной подпиской BakeU.")}
             </p>
           </div>
 
@@ -198,15 +215,15 @@ export default function Home({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Торт, печенье, хлеб…"
-              aria-label="Поиск товаров"
+              placeholder={translateText("Торт, печенье, хлеб…")}
+              aria-label={translateText("Поиск товаров")}
             />
 
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                aria-label="Очистить поиск"
+                aria-label={translateText("Очистить поиск")}
               >
                 <X size={17} />
               </button>
@@ -214,7 +231,10 @@ export default function Home({
           </div>
         </div>
 
-        <div className="bu-categories" aria-label="Категории товаров">
+        <div
+          className="bu-categories"
+          aria-label={translateText("Категории товаров")}
+        >
           {categories.map((item) => {
             const count = featured.filter(
               (product) =>
@@ -231,8 +251,8 @@ export default function Home({
                 aria-pressed={category === item.name}
                 onClick={() => setCategory(item.name)}
               >
-                <span aria-hidden="true">{item.icon}</span>
-                {item.name}
+                <span aria-hidden="true">{translateText(item.icon)}</span>
+                {translateText(item.name)}
                 <span className="bu-category__count">{count}</span>
               </button>
             );
@@ -241,18 +261,20 @@ export default function Home({
 
         {demo && (
           <p className="bu-demo">
-            Демо-витрина: подписки магазинов показаны для примера.
+            {translateText(
+              "Демо-витрина: подписки магазинов показаны для примера.",
+            )}
           </p>
         )}
         <div className="bu-results">
           <span>
-            {isFiltered ? "Найдено товаров" : "Всего товаров"}:{" "}
+            {translateText(isFiltered ? "Найдено товаров" : "Всего товаров")}:{" "}
             <strong>{visibleProducts.length}</strong>
           </span>
 
           {isFiltered && (
             <button type="button" onClick={resetFilters}>
-              Сбросить фильтры
+              {translateText("Сбросить фильтры")}
               <X size={14} aria-hidden="true" />
             </button>
           )}
@@ -270,19 +292,19 @@ export default function Home({
                 >
                   <Link
                     to={"/product/" + encodeURIComponent(product.id)}
-                    aria-label={"Подробнее: " + product.name}
+                    aria-label={translateText("Подробнее: " + product.name)}
                   >
                     <img
                       src={product.image}
-                      alt={product.name}
+                      alt={translateText(product.name)}
                       loading="lazy"
                     />
                   </Link>
                   <FavoriteButton product={product} />
                   {quantity > 0 && (
                     <span className="bu-product__quantity">
-                      <Check size={13} aria-hidden="true" />В корзине:{" "}
-                      {quantity}
+                      <Check size={13} aria-hidden="true" />
+                      {translateText("В корзине:")} {quantity}
                     </span>
                   )}
                 </div>
@@ -292,29 +314,31 @@ export default function Home({
                     to={`/profile?shop=${encodeURIComponent(product.sellerId)}`}
                     className="bu-shop-link"
                   >
-                    {product.sellerName}
+                    {translateText(product.sellerName)}
                   </Link>
                   <span className="bu-product__category">
-                    {product.category}
+                    {translateText(product.category)}
                   </span>
 
                   <h3>
                     <Link to={"/product/" + encodeURIComponent(product.id)}>
-                      {product.name}
+                      {translateText(product.name)}
                     </Link>
                   </h3>
 
                   <div className="bu-product__bottom">
                     <span className="bu-product__price">
-                      {product.price.toLocaleString("ru-RU")}
-                      <small>сум</small>
+                      {translateText(product.price.toLocaleString(getLocale()))}
+                      <small>{translateText("сум")}</small>
                     </span>
 
                     <button
                       type="button"
                       className="bu-product__add"
                       onClick={() => handleAdd(product)}
-                      aria-label={`Добавить в корзину: ${product.name}`}
+                      aria-label={translateText(
+                        `Добавить в корзину: ${product.name}`,
+                      )}
                     >
                       <Plus size={21} aria-hidden="true" />
                     </button>
@@ -328,15 +352,19 @@ export default function Home({
         {visibleProducts.length === 0 && (
           <div className="bu-empty">
             <Search size={30} aria-hidden="true" />
-            <h3>Пока ничего не нашли</h3>
-            <p>Попробуйте другое название или выберите все категории.</p>
+            <h3>{translateText("Пока ничего не нашли")}</h3>
+            <p>
+              {translateText(
+                "Попробуйте другое название или выберите все категории.",
+              )}
+            </p>
 
             <button
               type="button"
               className="bu-button bu-button--primary"
               onClick={resetFilters}
             >
-              Сбросить фильтры
+              {translateText("Сбросить фильтры")}
             </button>
           </div>
         )}
@@ -350,27 +378,32 @@ export default function Home({
           {notice && (
             <>
               <ShoppingBag size={16} aria-hidden="true" />
-              <span>{notice}</span>
+              <span>{translateText(notice)}</span>
             </>
           )}
         </div>
       </section>
       <section className="bu-discover" aria-labelledby="bu-discover-title">
         <div className="bu-discover__intro">
-          <span className="bu-overline">ВДОХНОВЕНИЕ НА КАЖДЫЙ ДЕНЬ</span>
+          <span className="bu-overline">
+            {translateText("ВДОХНОВЕНИЕ НА КАЖДЫЙ ДЕНЬ")}
+          </span>
           <h2 id="bu-discover-title">
-            Найдите свой
+            {translateText("Найдите свой")}
             <br />
-            <span>любимый вкус.</span>
+            <span>{translateText("любимый вкус.")}</span>
           </h2>
           <p>
-            От хрустящего хлеба до любимого десерта — всё от домашних мастеров.
+            {translateText(
+              "От хрустящего хлеба до любимого десерта — всё от домашних мастеров.",
+            )}
           </p>
           <Link
             to="/seller?tab=products"
             className="bu-button bu-button--primary"
           >
-            Выбрать вкусное <ArrowRight size={18} />
+            {translateText("Выбрать вкусное ")}
+            <ArrowRight size={18} />
           </Link>
         </div>
         <HeroSlider />
@@ -378,11 +411,16 @@ export default function Home({
       <section className="bu-makers" aria-labelledby="bu-makers-title">
         <div className="bu-makers__heading">
           <div>
-            <span className="bu-overline">ЛЮДИ, КОТОРЫЕ ПЕКУТ С ЛЮБОВЬЮ</span>
-            <h2 id="bu-makers-title">Знакомьтесь, кондитеры</h2>
+            <span className="bu-overline">
+              {translateText("ЛЮДИ, КОТОРЫЕ ПЕКУТ С ЛЮБОВЬЮ")}
+            </span>
+            <h2 id="bu-makers-title">
+              {translateText("Знакомьтесь, кондитеры")}
+            </h2>
           </div>
           <Link to="/seller?tab=sellers">
-            Все продавцы <ArrowUpRight size={18} />
+            {translateText("Все продавцы ")}
+            <ArrowUpRight size={18} />
           </Link>
         </div>
         <div className="bu-makers__grid">
@@ -416,18 +454,18 @@ export default function Home({
               key={shop.id}
               className="bu-maker"
               to={`/profile?shop=${shop.id}`}
-              aria-label={`Открыть профиль: ${shop.name}`}
+              aria-label={translateText(`Открыть профиль: ${shop.name}`)}
             >
               <span
                 className="bu-maker__avatar"
                 style={{ background: shop.color }}
               >
-                {shop.initials}
+                {translateText(shop.initials)}
               </span>
               <span className="bu-maker__info">
-                <strong>{shop.name}</strong>
-                <span>{shop.description}</span>
-                <small>Открыть профиль ↗</small>
+                <strong>{translateText(shop.name)}</strong>
+                <span>{translateText(shop.description)}</span>
+                <small>{translateText("Открыть профиль ↗")}</small>
               </span>
               <img
                 src={`/images/products/${shop.image}.jpg`}
@@ -443,11 +481,14 @@ export default function Home({
           ✦
         </span>
         <span>
-          <strong>Не знаете, что выбрать?</strong>
-          <small>Расскажите помощнику BakeU, чего хочется сегодня.</small>
+          <strong>{translateText("Не знаете, что выбрать?")}</strong>
+          <small>
+            {translateText("Расскажите помощнику BakeU, чего хочется сегодня.")}
+          </small>
         </span>
         <span className="bu-helper__action">
-          Спросить помощника <ArrowUpRight size={20} />
+          {translateText("Спросить помощника ")}
+          <ArrowUpRight size={20} />
         </span>
       </Link>
     </main>

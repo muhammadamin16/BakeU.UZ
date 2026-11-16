@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge, CollectionPage } from "../../components/AdminUI";
@@ -27,11 +28,11 @@ export default function Products() {
           className="ad-product-link"
           to={`/admin/products/${encodeURIComponent(row.id)}`}
         >
-          <ProductPhoto src={row.image} alt={row.name} />
+          <ProductPhoto src={row.image} alt={translateText(row.name)} />
           <span>
-            <strong>{row.name}</strong>
+            <strong>{translateText(row.name)}</strong>
             <small>
-              Открыть товар{" "}
+              {translateText("Открыть товар")}{" "}
               <ArrowUpRight
                 size={12}
                 className="ad-inline-arrow"
@@ -51,7 +52,7 @@ export default function Products() {
             className="ad-text-link"
             to={`/admin/shops/${encodeURIComponent(row.shopId)}`}
           >
-            {row.shop}{" "}
+            {translateText(row.shop)}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -69,10 +70,10 @@ export default function Products() {
       label: "Статус",
       render: (row) => (
         <>
-          <Badge>{row.status}</Badge>
+          <Badge>{translateText(row.status)}</Badge>
           {shopRestriction(state, row.shopId) && (
-            <small title={shopRestriction(state, row.shopId)}>
-              Недоступен для новых заказов
+            <small title={translateText(shopRestriction(state, row.shopId))}>
+              {translateText("Недоступен для новых заказов")}
             </small>
           )}
         </>
@@ -81,7 +82,7 @@ export default function Products() {
   ];
   return (
     <CollectionPage
-      title="Товары"
+      title={translateText("Товары")}
       collection="products"
       addDisabled={
         !shops.length ? "Сначала создайте магазин для этого продавца." : ""
@@ -95,7 +96,7 @@ export default function Products() {
           className="ad-btn small"
           to={`/admin/products/${encodeURIComponent(row.id)}`}
         >
-          Открыть{" "}
+          {translateText("Открыть")}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"

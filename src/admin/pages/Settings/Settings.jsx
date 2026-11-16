@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { useState } from "react";
 import { useAdminStore } from "../../store/adminStore";
 import { PageTitle } from "../../components/AdminUI";
@@ -10,9 +11,9 @@ export default function Settings() {
   const [error, setError] = useState("");
   return (
     <>
-      <PageTitle title="Настройки" />
+      <PageTitle title={translateText("Настройки")} />
       <section className="ad-panel ad-settings">
-        <h2>Профиль администратора</h2>
+        <h2>{translateText("Профиль администратора")}</h2>
         <form
           className="ad-form"
           onSubmit={(e) => {
@@ -33,7 +34,7 @@ export default function Settings() {
             ["site", "Название сайта", "text"],
           ].map(([key, label, type]) => (
             <label key={key}>
-              {label}
+              {translateText(label)}
               <input
                 required
                 type={type}
@@ -54,24 +55,27 @@ export default function Settings() {
                 setSaved(false);
               }}
             />
-            Показывать уведомления на обзоре
+            {translateText("Показывать уведомления на обзоре")}
           </label>
-          <button className="ad-btn primary">Сохранить изменения</button>
+          <button className="ad-btn primary">
+            {translateText("Сохранить изменения")}
+          </button>
           {error && (
             <p role="alert" className="ad-form-error">
-              {error}
+              {translateText(error)}
             </p>
           )}
           {saved && (
             <p role="status" className="ad-success">
-              Настройки сохранены
+              {translateText("Настройки сохранены")}
             </p>
           )}
         </form>
       </section>
       <p className="ad-muted">
-        Демо-режим: настройки действуют в этом браузере. Серверная авторизация
-        администратора ещё не подключена.
+        {translateText(
+          "Демо-режим: настройки действуют в этом браузере. Серверная авторизация администратора ещё не подключена.",
+        )}
       </p>
     </>
   );

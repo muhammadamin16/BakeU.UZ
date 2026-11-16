@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import { useLayoutEffect, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Check, Store } from "lucide-react";
@@ -49,50 +51,61 @@ export default function OrderDetails() {
     <div className="ck-page">
       <Link className="ck-back" to={sellerView ? "/profile" : "/orders"}>
         <ArrowLeft size={17} />
-        {sellerView ? "В кабинет продавца" : "Мои заказы"}
+        {translateText(sellerView ? "В кабинет продавца" : "Мои заказы")}
       </Link>
       {!orders.length ? (
         <section className="ck-card ck-empty">
-          <h1>Заказ не найден</h1>
+          <h1>{translateText("Заказ не найден")}</h1>
           <p>
-            Войдите в аккаунт, в котором оформляли заказ, или проверьте номер.
+            {translateText(
+              "Войдите в аккаунт, в котором оформляли заказ, или проверьте номер.",
+            )}
           </p>
           <Link className="ck-button" to="/cart">
-            В корзину
+            {translateText("В корзину")}
           </Link>
         </section>
       ) : (
         <>
           <header className="ck-page-heading">
-            <span className="ck-eyebrow">ДЕТАЛИ ВАШЕГО ЗАКАЗА</span>
+            <span className="ck-eyebrow">
+              {translateText("ДЕТАЛИ ВАШЕГО ЗАКАЗА")}
+            </span>
             <h1>
-              {sellerView
-                ? "Заказ покупателя"
-                : orders.length > 1
-                  ? "Ваши заявки продавцам"
-                  : "Заявка продавцу"}
+              {translateText(
+                sellerView
+                  ? "Заказ покупателя"
+                  : orders.length > 1
+                    ? "Ваши заявки продавцам"
+                    : "Заявка продавцу",
+              )}
             </h1>
             <p>
-              {sellerView
-                ? "Проверьте состав, контакты и время получения. Примите заказ, когда согласуете детали с покупателем."
-                : "Заявки сохранены. Передайте каждой стороне её заказ и дождитесь подтверждения продавца."}
+              {translateText(
+                sellerView
+                  ? "Проверьте состав, контакты и время получения. Примите заказ, когда согласуете детали с покупателем."
+                  : "Заявки сохранены. Передайте каждой стороне её заказ и дождитесь подтверждения продавца.",
+              )}
             </p>
           </header>
           <p className="ck-notice">
             <Check size={16} />{" "}
-            {sellerView
-              ? "Заказ и изменения статуса сохраняются в этом браузере. Свяжитесь с покупателем по указанному телефону."
-              : "Заказы и сообщения сохранены в этом браузере. SMS автоматически не отправляются — откройте подготовленный текст и отправьте его каждому продавцу."}
+            {translateText(
+              sellerView
+                ? "Заказ и изменения статуса сохраняются в этом браузере. Свяжитесь с покупателем по указанному телефону."
+                : "Заказы и сообщения сохранены в этом браузере. SMS автоматически не отправляются — откройте подготовленный текст и отправьте его каждому продавцу.",
+            )}
           </p>
           {params.get("cart") === "kept" && (
             <p className="ck-error" role="alert">
-              Заявки сохранены, но очистить корзину не удалось. Не оформляйте её
-              повторно — удалите заказанные товары вручную.
+              {translateText(
+                "Заявки сохранены, но очистить корзину не удалось. Не оформляйте её повторно — удалите заказанные товары вручную.",
+              )}
             </p>
           )}
           {error && (
             <p role="alert" className="ck-error">
-              {error}
+              {translateText(error)}
             </p>
           )}
           <div className="ck-receipts">
@@ -113,13 +126,18 @@ export default function OrderDetails() {
                       <Store size={23} />
                     </span>
                     <div>
-                      <small>ЗАЯВКА №{order.id.slice(0, 8)}</small>
-                      <h2>{shop.name}</h2>
+                      <small>
+                        {translateText("ЗАЯВКА №")}
+                        {translateText(order.id.slice(0, 8))}
+                      </small>
+                      <h2>{translateText(shop.name)}</h2>
                     </div>
                     <span className="ck-pill">
-                      {order.status === "Новый"
-                        ? "Ожидает подтверждения"
-                        : order.status}
+                      {translateText(
+                        order.status === "Новый"
+                          ? "Ожидает подтверждения"
+                          : order.status,
+                      )}
                     </span>
                   </header>
                   <div className="ck-items">
@@ -127,67 +145,87 @@ export default function OrderDetails() {
                       <div className="ck-item" key={p.id}>
                         <ProductImage src={p.image} name={p.name} />
                         <div>
-                          <strong>{p.name}</strong>
-                          {p.variantLabel && <small>{p.variantLabel}</small>}
+                          <strong>{translateText(p.name)}</strong>
+                          {p.variantLabel && (
+                            <small>{translateText(p.variantLabel)}</small>
+                          )}
                           <small>
-                            {p.quantity} × {checkoutMoney(p.price)}
+                            {translateText(p.quantity)} ×{" "}
+                            {translateText(checkoutMoney(p.price))}
                           </small>
                         </div>
-                        <strong>{checkoutMoney(p.price * p.quantity)}</strong>
+                        <strong>
+                          {translateText(checkoutMoney(p.price * p.quantity))}
+                        </strong>
                       </div>
                     ))}
                   </div>
                   <div className="ck-group-total">
-                    <span>Сумма за товары</span>
-                    <strong>{checkoutMoney(order.total)}</strong>
+                    <span>{translateText("Сумма за товары")}</span>
+                    <strong>{translateText(checkoutMoney(order.total))}</strong>
                   </div>
                   <dl className="ck-receipt-meta">
                     <div>
-                      <dt>Покупатель</dt>
+                      <dt>{translateText("Покупатель")}</dt>
                       <dd>
-                        {order.buyerName}
+                        {translateText(order.buyerName)}
                         {order.buyerPhone && (
                           <>
                             <br />
                             <a href={"tel:" + order.buyerPhone}>
-                              {order.buyerPhone}
+                              {translateText(order.buyerPhone)}
                             </a>
                           </>
                         )}
                       </dd>
                     </div>
                     <div>
-                      <dt>Получение</dt>
+                      <dt>{translateText("Получение")}</dt>
                       <dd>
-                        {order.fulfillment === "pickup"
-                          ? "Самовывоз"
-                          : "Доставка"}
+                        {translateText(
+                          order.fulfillment === "pickup"
+                            ? "Самовывоз"
+                            : "Доставка",
+                        )}
                         <br />
-                        {order.address}
+                        {translateText(order.address)}
                       </dd>
                     </div>
                     <div>
-                      <dt>Дата и время</dt>
+                      <dt>{translateText("Дата и время")}</dt>
                       <dd>
-                        {order.schedule
-                          ? order.schedule.date.split("-").reverse().join(".") +
-                            " в " +
-                            order.schedule.time
-                          : "Уточните у продавца"}
+                        {translateText(
+                          order.schedule
+                            ? order.schedule.date
+                                .split("-")
+                                .reverse()
+                                .join(".") +
+                                " в " +
+                                order.schedule.time
+                            : "Уточните у продавца",
+                        )}
                       </dd>
                     </div>
                     <div>
-                      <dt>Оплата</dt>
-                      <dd>Напрямую продавцу. Онлайн-оплата не проводилась.</dd>
+                      <dt>{translateText("Оплата")}</dt>
+                      <dd>
+                        {translateText(
+                          "Напрямую продавцу. Онлайн-оплата не проводилась.",
+                        )}
+                      </dd>
                     </div>
                   </dl>
                   {order.note && (
-                    <p className="ck-notice">Комментарий: {order.note}</p>
+                    <p className="ck-notice">
+                      {translateText("Комментарий: ")}
+                      {translateText(order.note)}
+                    </p>
                   )}
                   {order.fulfillment === "delivery" && (
                     <p className="ck-muted">
-                      Стоимость доставки уточните у продавца: она не включена в
-                      сумму товаров.
+                      {translateText(
+                        "Стоимость доставки уточните у продавца: она не включена в сумму товаров.",
+                      )}
                     </p>
                   )}
                   {seller ? (
@@ -206,9 +244,11 @@ export default function OrderDetails() {
                             }
                           }}
                         >
-                          {status === "Готовится"
-                            ? "Принять и готовить"
-                            : status}
+                          {translateText(
+                            status === "Готовится"
+                              ? "Принять и готовить"
+                              : status,
+                          )}
                         </button>
                       ))}
                     </div>
@@ -220,7 +260,7 @@ export default function OrderDetails() {
                   )}
                   <details>
                     <summary className="ck-text-button">
-                      История статусов
+                      {translateText("История статусов")}
                     </summary>
                     <ol className="ck-history">
                       {(
@@ -230,11 +270,13 @@ export default function OrderDetails() {
                       ).map((event, index) => (
                         <li key={index}>
                           <div>
-                            <strong>{event.status}</strong>
+                            <strong>{translateText(event.status)}</strong>
                             <small>
-                              {new Date(event.at).toLocaleString("ru-RU")}
+                              {translateText(
+                                new Date(event.at).toLocaleString(getLocale()),
+                              )}
                             </small>
-                            {event.note}
+                            {translateText(event.note)}
                           </div>
                         </li>
                       ))}
@@ -246,10 +288,10 @@ export default function OrderDetails() {
           </div>
           <div className="ck-actions">
             <Link className="ck-button" to="/orders">
-              Все мои заказы
+              {translateText("Все мои заказы")}
             </Link>
             <Link className="ck-button" to="/">
-              Продолжить покупки
+              {translateText("Продолжить покупки")}
             </Link>
           </div>
         </>

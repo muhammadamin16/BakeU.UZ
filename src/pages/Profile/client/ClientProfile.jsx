@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import "./ClientProfile.css";
 import ProfileChat from "../ProfileChat";
 import { Orders, Reviews } from "../Activity";
@@ -76,8 +77,8 @@ export default function ClientProfile({
     return (
       <button type="button" className="cu-row" onClick={action}>
         <Icon size={20} />
-        <span>{label}</span>
-        {extra}
+        <span>{translateText(label)}</span>
+        {translateText(extra)}
         <ChevronRight size={17} />
       </button>
     );
@@ -109,8 +110,8 @@ export default function ClientProfile({
   return (
     <div className="cu-layout">
       <aside className="cu-sidebar">
-        <span className="cu-eyebrow">МОЙ BAKEU</span>
-        <nav aria-label="Разделы покупателя">
+        <span className="cu-eyebrow">{translateText("МОЙ BAKEU")}</span>
+        <nav aria-label={translateText("Разделы покупателя")}>
           {nav.map(([key, label, Icon]) => (
             <button
               type="button"
@@ -120,14 +121,16 @@ export default function ClientProfile({
               onClick={() => setSection(key)}
             >
               <Icon size={21} />
-              <span>{label}</span>
-              {key === "messages" && unread > 0 && <b>{unread}</b>}
+              <span>{translateText(label)}</span>
+              {key === "messages" && unread > 0 && (
+                <b>{translateText(unread)}</b>
+              )}
             </button>
           ))}
         </nav>
         <button className="cu-logout" onClick={onLogout}>
           <LogOut size={20} />
-          Выйти
+          {translateText("Выйти")}
         </button>
       </aside>
       <div className="cu-main">
@@ -135,7 +138,7 @@ export default function ClientProfile({
           <div className="cu-section-head">
             <button className="bw-btn" onClick={() => setSection("overview")}>
               <ArrowLeft size={17} />
-              Мой профиль
+              {translateText("Мой профиль")}
             </button>
           </div>
         )}
@@ -143,20 +146,27 @@ export default function ClientProfile({
           <div className="cu-person">
             <span className="cu-avatar">
               {account.avatar ? (
-                <img src={account.avatar} alt="Моё фото" />
+                <img src={account.avatar} alt={translateText("Моё фото")} />
               ) : (
                 <UserRound size={38} />
               )}
             </span>
             <div>
-              <span className="cu-eyebrow">ПРОФИЛЬ ПОКУПАТЕЛЯ</span>
+              <span className="cu-eyebrow">
+                {translateText("ПРОФИЛЬ ПОКУПАТЕЛЯ")}
+              </span>
               <h1>
-                {account.firstName} {account.lastName}
+                {translateText(account.firstName)}{" "}
+                {translateText(account.lastName)}
               </h1>
-              <p>{account.nickname ? `@${account.nickname}` : account.email}</p>
+              <p>
+                {translateText(
+                  account.nickname ? `@${account.nickname}` : account.email,
+                )}
+              </p>
               <button className="bw-btn" onClick={() => setSection("settings")}>
                 <Pencil size={16} />
-                Редактировать профиль
+                {translateText("Редактировать профиль")}
               </button>
             </div>
           </div>
@@ -164,23 +174,23 @@ export default function ClientProfile({
             <button onClick={() => setSection("orders")}>
               <Package />
               <strong>{orders.length}</strong>
-              <span>Заказов</span>
+              <span>{translateText("Заказов")}</span>
             </button>
             <button onClick={() => setSection("favorites")}>
               <Heart />
-              <strong>{Object.keys(favorites).length}</strong>
-              <span>Избранное</span>
+              <strong>{translateText(Object.keys(favorites).length)}</strong>
+              <span>{translateText("Избранное")}</span>
             </button>
             <button onClick={() => setSection("reviews")}>
               <Star />
               <strong>{reviews.length}</strong>
-              <span>Отзывов</span>
+              <span>{translateText("Отзывов")}</span>
             </button>
           </div>
         </section>
         {notice && (
           <p className="cu-notice" role="status">
-            {notice}
+            {translateText(notice)}
           </p>
         )}
         {section === "overview" && (
@@ -189,10 +199,10 @@ export default function ClientProfile({
               <div className="cu-column">
                 <section className="cu-card cu-current">
                   <div className="cu-card-title">
-                    <h2>Текущий заказ</h2>
+                    <h2>{translateText("Текущий заказ")}</h2>
                     <button
                       onClick={() => setSection("orders")}
-                      aria-label="Все заказы"
+                      aria-label={translateText("Все заказы")}
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -203,21 +213,33 @@ export default function ClientProfile({
                         {currentOrder.items[0]?.image && (
                           <img
                             src={currentOrder.items[0].image}
-                            alt={currentOrder.items[0].name}
+                            alt={translateText(currentOrder.items[0].name)}
                           />
                         )}
                         <div>
-                          <span className="cu-pill">{currentOrder.status}</span>
-                          <h3>Заказ №{currentOrder.id.slice(0, 6)}</h3>
+                          <span className="cu-pill">
+                            {translateText(currentOrder.status)}
+                          </span>
+                          <h3>
+                            {translateText("Заказ №")}
+                            {translateText(currentOrder.id.slice(0, 6))}
+                          </h3>
                           <p>
-                            {currentOrder.items
-                              .map((p) => `${p.name} × ${p.quantity}`)
-                              .join(", ")}
+                            {translateText(
+                              currentOrder.items
+                                .map((p) => `${p.name} × ${p.quantity}`)
+                                .join(", "),
+                            )}
                           </p>
-                          <strong>{money(currentOrder.total)}</strong>
+                          <strong>
+                            {translateText(money(currentOrder.total))}
+                          </strong>
                         </div>
                       </div>
-                      <ol className="cu-progress" aria-label="Статус заказа">
+                      <ol
+                        className="cu-progress"
+                        aria-label={translateText("Статус заказа")}
+                      >
                         {["Ожидает", "Готовится", "Доставка"].map(
                           (label, i) => (
                             <li
@@ -232,7 +254,7 @@ export default function ClientProfile({
                               }
                             >
                               <i />
-                              {label}
+                              {translateText(label)}
                             </li>
                           ),
                         )}
@@ -243,48 +265,63 @@ export default function ClientProfile({
                           onClick={() => setSection("orders")}
                         >
                           <MapPin size={17} />
-                          Статус заказа
+                          {translateText("Статус заказа")}
                         </button>
                         <button
                           className="bw-btn"
                           onClick={() => openConversation(currentOrder.shopId)}
                         >
                           <MessageCircle size={17} />
-                          Написать продавцу
+                          {translateText("Написать продавцу")}
                         </button>
                       </div>
                     </>
                   ) : (
                     <div className="cu-empty">
                       <ShoppingBag size={35} />
-                      <h3>Время выбрать что-нибудь вкусное</h3>
-                      <p>Здесь появится ваш текущий заказ и его статус.</p>
+                      <h3>
+                        {translateText("Время выбрать что-нибудь вкусное")}
+                      </h3>
+                      <p>
+                        {translateText(
+                          "Здесь появится ваш текущий заказ и его статус.",
+                        )}
+                      </p>
                       <Link
                         to="/seller?tab=products"
                         className="bw-btn primary"
                       >
-                        Выбрать выпечку <ChevronRight size={17} />
+                        {translateText("Выбрать выпечку ")}
+                        <ChevronRight size={17} />
                       </Link>
                     </div>
                   )}
                 </section>
                 <section className="cu-card cu-mobile-menu">
-                  {row("Мои заказы", ShoppingBag, () => setSection("orders"))}
-                  {row("Избранное", Heart, () => setSection("favorites"))}
+                  {translateText(
+                    row("Мои заказы", ShoppingBag, () => setSection("orders")),
+                  )}
+                  {translateText(
+                    row("Избранное", Heart, () => setSection("favorites")),
+                  )}
                   {row(
                     "Сообщения",
                     MessageCircle,
                     () => setSection("messages"),
-                    unread > 0 ? <b className="cu-count">{unread}</b> : null,
+                    unread > 0 ? (
+                      <b className="cu-count">{translateText(unread)}</b>
+                    ) : null,
                   )}
-                  {row("Мои отзывы", Star, () => setSection("reviews"))}
+                  {translateText(
+                    row("Мои отзывы", Star, () => setSection("reviews")),
+                  )}
                 </section>
                 <section className="cu-card">
                   <div className="cu-card-title">
-                    <h2>Мои адреса</h2>
+                    <h2>{translateText("Мои адреса")}</h2>
                     <button
                       onClick={() => setSection("addresses")}
-                      aria-label="Изменить адреса"
+                      aria-label={translateText("Изменить адреса")}
                     >
                       <Pencil size={17} />
                     </button>
@@ -298,32 +335,36 @@ export default function ClientProfile({
                       <MapPin size={20} />
                       <span>
                         <strong>
-                          {i === 0 ? "Основной адрес" : "Дополнительный адрес"}
+                          {translateText(
+                            i === 0 ? "Основной адрес" : "Дополнительный адрес",
+                          )}
                         </strong>
-                        <small>{address}</small>
+                        <small>{translateText(address)}</small>
                       </span>
                       <ChevronRight size={17} />
                     </button>
                   ))}
                   {!account.addresses?.length && (
-                    <p>Добавьте адрес для будущих заказов.</p>
+                    <p>
+                      {translateText("Добавьте адрес для будущих заказов.")}
+                    </p>
                   )}
                   <button
                     className="cu-add"
                     onClick={() => setSection("addresses")}
                   >
                     <Plus size={17} />
-                    Добавить адрес
+                    {translateText("Добавить адрес")}
                   </button>
                 </section>
               </div>
               <div className="cu-column">
                 <section className="cu-card cu-recent">
                   <div className="cu-card-title">
-                    <h2>Недавние сообщения</h2>
+                    <h2>{translateText("Недавние сообщения")}</h2>
                     <button
                       onClick={() => setSection("messages")}
-                      aria-label="Все сообщения"
+                      aria-label={translateText("Все сообщения")}
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -342,12 +383,14 @@ export default function ClientProfile({
                         onClick={() => openConversation(t.shopId)}
                       >
                         <span className="cu-thread-avatar">
-                          {t.shopName.slice(0, 1)}
+                          {translateText(t.shopName.slice(0, 1))}
                         </span>
                         <span>
-                          <strong>{t.shopName}</strong>
+                          <strong>{translateText(t.shopName)}</strong>
                           <small>
-                            {t.messages.at(-1)?.text || "Начните разговор"}
+                            {translateText(
+                              t.messages.at(-1)?.text || "Начните разговор",
+                            )}
                           </small>
                         </span>
                         <ChevronRight size={17} />
@@ -356,30 +399,42 @@ export default function ClientProfile({
                   {!threads.length && (
                     <>
                       <p>
-                        Обсудите начинку, оформление и дату заказа с мастером.
+                        {translateText(
+                          "Обсудите начинку, оформление и дату заказа с мастером.",
+                        )}
                       </p>
                       <button
                         className="bw-btn"
                         onClick={() => setSection("messages")}
                       >
                         <MessageCircle size={17} />
-                        Открыть сообщения
+                        {translateText("Открыть сообщения")}
                       </button>
                     </>
                   )}
                 </section>
                 <section className="cu-card cu-settings">
-                  <h2>Настройки аккаунта</h2>
-                  {row("Личные данные", UserRound, () =>
-                    setSection("settings"),
+                  <h2>{translateText("Настройки аккаунта")}</h2>
+                  {translateText(
+                    row("Личные данные", UserRound, () =>
+                      setSection("settings"),
+                    ),
                   )}
-                  {row("Телефон и email", Mail, () => setSection("settings"))}
-                  {row("Любимые магазины", Store, () =>
-                    setSection("following"),
+                  {translateText(
+                    row("Телефон и email", Mail, () => setSection("settings")),
                   )}
-                  {row("Мои отзывы", Star, () => setSection("reviews"))}
-                  {row("Безопасность", ShieldCheck, () =>
-                    setSection("security"),
+                  {translateText(
+                    row("Любимые магазины", Store, () =>
+                      setSection("following"),
+                    ),
+                  )}
+                  {translateText(
+                    row("Мои отзывы", Star, () => setSection("reviews")),
+                  )}
+                  {translateText(
+                    row("Безопасность", ShieldCheck, () =>
+                      setSection("security"),
+                    ),
                   )}
                 </section>
               </div>
@@ -388,10 +443,11 @@ export default function ClientProfile({
               <div className="cu-card-title">
                 <h2>
                   <Heart size={22} />
-                  Избранное
+                  {translateText("Избранное")}
                 </h2>
                 <Link to="/favorites">
-                  Смотреть всё <ChevronRight size={17} />
+                  {translateText("Смотреть всё ")}
+                  <ChevronRight size={17} />
                 </Link>
               </div>
               <div className="cu-favorites">
@@ -399,40 +455,49 @@ export default function ClientProfile({
                   .slice(0, 3)
                   .map((p) => (
                     <Link key={p.id} to="/favorites" className="cu-favorite">
-                      {p.image && <img src={p.image} alt={p.name} />}
+                      {p.image && (
+                        <img src={p.image} alt={translateText(p.name)} />
+                      )}
                       <span>
-                        <strong>{p.name}</strong>
-                        <small>{money(p.price)}</small>
+                        <strong>{translateText(p.name)}</strong>
+                        <small>{translateText(money(p.price))}</small>
                       </span>
                       <Heart size={19} fill="currentColor" />
                     </Link>
                   ))}
               </div>
               {!Object.keys(favorites).length && (
-                <p>Сохраняйте понравившуюся выпечку сердечком в каталоге.</p>
+                <p>
+                  {translateText(
+                    "Сохраняйте понравившуюся выпечку сердечком в каталоге.",
+                  )}
+                </p>
               )}
             </section>
           </>
         )}
         {section === "favorites" && (
           <section className="cu-card">
-            <h2>Избранные товары</h2>
-            <p>Все сохранённые товары доступны в избранном.</p>
+            <h2>{translateText("Избранные товары")}</h2>
+            <p>
+              {translateText("Все сохранённые товары доступны в избранном.")}
+            </p>
             <Link className="bw-btn primary" to="/favorites">
-              Открыть избранное
+              {translateText("Открыть избранное")}
             </Link>
           </section>
         )}
         {section === "security" && (
           <section className="cu-card">
-            <h2>Безопасность</h2>
+            <h2>{translateText("Безопасность")}</h2>
             <p>
-              Это локальный демо-аккаунт. Смена пароля и подтверждение контактов
-              пока не подключены.
+              {translateText(
+                "Это локальный демо-аккаунт. Смена пароля и подтверждение контактов пока не подключены.",
+              )}
             </p>
             <button className="bw-btn" onClick={onLogout}>
               <LogOut size={17} />
-              Выйти из аккаунта
+              {translateText("Выйти из аккаунта")}
             </button>
           </section>
         )}
@@ -447,13 +512,20 @@ export default function ClientProfile({
         )}
         {section === "following" && (
           <section className="bw-card">
-            <h2>Любимые магазины · {follows.length}</h2>
-            <p>Подписки сохраняются отдельно для вашего аккаунта.</p>
+            <h2>
+              {translateText("Любимые магазины · ")}
+              {follows.length}
+            </h2>
+            <p>
+              {translateText(
+                "Подписки сохраняются отдельно для вашего аккаунта.",
+              )}
+            </p>
             {shops.map((shop) => (
               <div className="bw-follow" key={shop.id}>
                 <Link to={`/seller?shop=${shop.id}`}>
-                  <strong>{shop.name}</strong>
-                  <small>{shop.description}</small>
+                  <strong>{translateText(shop.name)}</strong>
+                  <small>{translateText(shop.description)}</small>
                 </Link>
                 <button
                   className="bw-btn"
@@ -466,9 +538,11 @@ export default function ClientProfile({
                     }
                   }}
                 >
-                  {follows.some((f) => f.shopId === shop.id)
-                    ? "Отписаться"
-                    : "Подписаться"}
+                  {translateText(
+                    follows.some((f) => f.shopId === shop.id)
+                      ? "Отписаться"
+                      : "Подписаться",
+                  )}
                 </button>
               </div>
             ))}
@@ -476,11 +550,11 @@ export default function ClientProfile({
         )}
         {section === "addresses" && (
           <section className="bw-card">
-            <h2>Мои адреса</h2>
+            <h2>{translateText("Мои адреса")}</h2>
             {(account.addresses || []).map((a, i) => (
               <div className="bw-address" key={i}>
                 <MapPin size={18} />
-                <span>{a}</span>
+                <span>{translateText(a)}</span>
                 <button
                   className="bw-text"
                   onClick={() =>
@@ -489,7 +563,7 @@ export default function ClientProfile({
                     )
                   }
                 >
-                  Удалить
+                  {translateText("Удалить")}
                 </button>
               </div>
             ))}
@@ -501,27 +575,27 @@ export default function ClientProfile({
               }}
             >
               <label className="bw-field">
-                Новый адрес
+                {translateText("Новый адрес")}
                 <input
                   required
                   maxLength={250}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Город, улица, дом, квартира"
+                  placeholder={translateText("Город, улица, дом, квартира")}
                 />
               </label>
               <button className="bw-btn">
                 <Plus size={17} />
-                Добавить адрес
+                {translateText("Добавить адрес")}
               </button>
             </form>
           </section>
         )}
         {section === "settings" && (
           <form className="bw-card" onSubmit={save}>
-            <h2>Личные данные</h2>
+            <h2>{translateText("Личные данные")}</h2>
             <label className="bw-field">
-              Фотография
+              {translateText("Фотография")}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -536,7 +610,11 @@ export default function ClientProfile({
               />
             </label>
             {draft.avatar && (
-              <img className="bw-preview" src={draft.avatar} alt="Новое фото" />
+              <img
+                className="bw-preview"
+                src={draft.avatar}
+                alt={translateText("Новое фото")}
+              />
             )}
             <div className="bw-fields">
               {[
@@ -547,7 +625,7 @@ export default function ClientProfile({
                 ["Телефон", "phone", "tel"],
               ].map(([label, key, type]) => (
                 <label className="bw-field" key={key}>
-                  {label}
+                  {translateText(label)}
                   <input
                     type={type}
                     required={key === "firstName" || key === "email"}
@@ -566,11 +644,14 @@ export default function ClientProfile({
               ))}
             </div>
             <p>
-              Подтверждение email и телефона, смена пароля и отправка
-              уведомлений будут доступны после подключения сервера.
+              {translateText(
+                "Подтверждение email и телефона, смена пароля и отправка уведомлений будут доступны после подключения сервера.",
+              )}
             </p>
             <div className="bw-actions">
-              <button className="bw-btn primary">Сохранить профиль</button>
+              <button className="bw-btn primary">
+                {translateText("Сохранить профиль")}
+              </button>
               <button
                 type="button"
                 className="bw-btn"
@@ -579,14 +660,14 @@ export default function ClientProfile({
                   setNotice("Изменения отменены.");
                 }}
               >
-                Отмена
+                {translateText("Отмена")}
               </button>
             </div>
           </form>
         )}
         <button className="cu-mobile-logout" onClick={onLogout}>
           <LogOut size={18} />
-          Выйти
+          {translateText("Выйти")}
         </button>
       </div>
     </div>

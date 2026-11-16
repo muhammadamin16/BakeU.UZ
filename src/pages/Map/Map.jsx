@@ -1,3 +1,6 @@
+import { getLocale } from "../../i18n/index.js";
+import { useLanguage } from "../../i18n/useLanguage";
+import { translateText } from "../../i18n/index.js";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   MapContainer,
@@ -144,7 +147,8 @@ const TILES = CARTO_KEY
    Yordamchi funksiyalar
    ===================================================== */
 
-const formatPrice = (n) => `${n.toLocaleString("ru-RU")} сум`;
+const formatPrice = (n) =>
+  translateText(`${n.toLocaleString(getLocale())} сум`);
 
 function getDistance(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -164,10 +168,9 @@ const formatDistance = (km) =>
 function getOnce(options) {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       reject,
-      options
+      options,
     );
   });
 }
@@ -212,7 +215,10 @@ async function requestGps() {
 const IP_SERVICES = [
   {
     url: "https://get.geojs.io/v1/ip/geo.json",
-    parse: (d) => ({ lat: parseFloat(d.latitude), lng: parseFloat(d.longitude) }),
+    parse: (d) => ({
+      lat: parseFloat(d.latitude),
+      lng: parseFloat(d.longitude),
+    }),
   },
   {
     url: "https://ipapi.co/json/",
@@ -251,7 +257,9 @@ async function requestPosition({ allowApprox = false } = {}) {
     if (allowApprox && err?.reason !== "denied") {
       try {
         return { ...(await requestByIp()), source: "ip" };
-      } catch {}
+      } catch {
+        /* Optional browser capability is unavailable. */
+      }
     }
     throw err;
   }
@@ -260,7 +268,9 @@ async function requestPosition({ allowApprox = false } = {}) {
 function saveLastPos(coords) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(coords));
-  } catch {}
+  } catch {
+    /* Optional browser capability is unavailable. */
+  }
 }
 
 const GEO_MESSAGES = {
@@ -372,10 +382,20 @@ function MapClickHandler({ onMapClick }) {
    ===================================================== */
 
 export default function MapPage() {
+  const language = useLanguage();
   const [activeTab, setActiveTab] = useState("products");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
-  const [userPos, setUserPos] = useState(null);
+  const [userPos, setUserPos] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Number.isFinite(saved?.lat) && Number.isFinite(saved?.lng)
+        ? saved
+        : null;
+    } catch {
+      return null;
+    }
+  });
   const [nearMe, setNearMe] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM);
   const [loadingGeo, setLoadingGeo] = useState(false);
@@ -392,21 +412,16 @@ export default function MapPage() {
 
   const posSource = userPos?.source || "gps";
   const userIcon = useMemo(
-    () => makeUserIcon(USER_LABELS[posSource] || USER_LABELS.gps),
-    [posSource]
+    () =>
+      makeUserIcon(
+        translateText(USER_LABELS[posSource] || USER_LABELS.gps, language),
+      ),
+    [posSource, language],
   );
 
   useEffect(() => {
     posRef.current = userPos;
   }, [userPos]);
-
-  /* Saqlangan oxirgi joylashuv (brauzer ruxsat so'ramaydi) */
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.lat && saved?.lng) setUserPos(saved);
-    } catch {}
-  }, []);
 
   /* Joylashuvni aniqlash (kerak bo'lsa ruxsat so'raydi) */
   const ensurePosition = useCallback(async ({ silent = false } = {}) => {
@@ -432,7 +447,9 @@ export default function MapPage() {
         try {
           perm = (await navigator.permissions.query({ name: "geolocation" }))
             .state;
-        } catch {}
+        } catch {
+          /* Optional browser capability is unavailable. */
+        }
         setGeoDebug(
           [
             `reason: ${err?.reason || "unknown"}`,
@@ -443,7 +460,7 @@ export default function MapPage() {
             `origin: ${window.location.origin}`,
           ]
             .filter(Boolean)
-            .join(" · ")
+            .join(" · "),
         );
       }
       return null;
@@ -578,22 +595,27 @@ export default function MapPage() {
       list = list.filter((item) => {
         const extra = activeTab === "products" ? item.seller : item.categories;
         return (
-          item.name.toLowerCase().includes(q) ||
-          extra?.toLowerCase().includes(q)
+          (item.name + " " + translateText(item.name, language))
+            .toLowerCase()
+            .includes(q) ||
+          (extra + " " + translateText(extra, language))
+            .toLowerCase()
+            .includes(q)
         );
       });
     }
 
     list.sort((a, b) => {
       if (sortBy === "rating") return b.rating - a.rating;
-      if (sortBy === "price" && activeTab === "products") return a.price - b.price;
+      if (sortBy === "price" && activeTab === "products")
+        return a.price - b.price;
       if (a.distance == null) return 1;
       if (b.distance == null) return -1;
       return a.distance - b.distance;
     });
 
     return list;
-  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm]);
+  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm, language]);
 
   const selected = filtered.find((i) => i.id === selectedId) || null;
 
@@ -649,13 +671,17 @@ export default function MapPage() {
                 className={`map-tab ${activeTab === id ? "is-active" : ""}`}
                 onClick={() => changeTab(id)}
               >
-                {label}
+                {translateText(label)}
               </button>
             ))}
           </div>
 
           <div className="map-sort-row">
-            <div className="map-chips" role="group" aria-label="Сортировка">
+            <div
+              className="map-chips"
+              role="group"
+              aria-label={translateText("Сортировка")}
+            >
               {SORTS[activeTab].map((s) => (
                 <button
                   key={s.id}
@@ -664,18 +690,24 @@ export default function MapPage() {
                   aria-pressed={sortBy === s.id}
                   onClick={() => setSortBy(s.id)}
                 >
-                  {s.label}
+                  {translateText(s.label)}
                 </button>
               ))}
             </div>
-            <span className="map-count" aria-label="Найдено">
+            <span className="map-count" aria-label={translateText("Найдено")}>
               {filtered.length}
             </span>
           </div>
 
           {nearMe && (
-            <div className="map-radius" role="group" aria-label="Радиус поиска">
-              <span className="map-radius__label">Радиус</span>
+            <div
+              className="map-radius"
+              role="group"
+              aria-label={translateText("Радиус поиска")}
+            >
+              <span className="map-radius__label">
+                {translateText("Радиус")}
+              </span>
               {RADII.map((r) => (
                 <button
                   key={r}
@@ -684,7 +716,8 @@ export default function MapPage() {
                   aria-pressed={radiusKm === r}
                   onClick={() => setRadiusKm(r)}
                 >
-                  {r} км
+                  {translateText(r)}
+                  {translateText(" км")}
                 </button>
               ))}
             </div>
@@ -694,17 +727,21 @@ export default function MapPage() {
             {filtered.length === 0 ? (
               <div className="map-empty">
                 <p>
-                  {nearMe
-                    ? `В радиусе ${radiusKm} км ничего нет`
-                    : "Ничего не найдено"}
+                  {translateText(
+                    nearMe
+                      ? `В радиусе ${radiusKm} км ничего нет`
+                      : "Ничего не найдено",
+                  )}
                 </p>
                 {nearMe && nextRadius ? (
                   <button type="button" onClick={() => setRadiusKm(nextRadius)}>
-                    Увеличить до {nextRadius} км
+                    {translateText("Увеличить до ")}
+                    {nextRadius}
+                    {translateText(" км")}
                   </button>
                 ) : (
                   <button type="button" onClick={reset}>
-                    Сбросить
+                    {translateText("Сбросить")}
                   </button>
                 )}
               </div>
@@ -727,19 +764,21 @@ export default function MapPage() {
                   />
                   <div className="map-card__info">
                     <div className="map-card__title">
-                      <h3>{item.name}</h3>
+                      <h3>{translateText(item.name, language)}</h3>
                       {index === 0 &&
                         sortBy === "distance" &&
                         item.distance != null &&
                         filtered.length > 1 && (
-                          <span className="map-card__tag">Ближайший</span>
+                          <span className="map-card__tag">
+                            {translateText("Ближайший")}
+                          </span>
                         )}
                     </div>
                     <p>
-                      {meta(item)}
+                      {translateText(meta(item))}
                       <span className="map-card__star">
                         <Star size={11} fill="#f4b41b" stroke="#f4b41b" />
-                        {item.rating.toFixed(1)}
+                        {translateText(item.rating.toFixed(1))}
                       </span>
                     </p>
                   </div>
@@ -758,14 +797,14 @@ export default function MapPage() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Искать в этой области"
+                placeholder={translateText("Искать в этой области")}
               />
               {query && (
                 <button
                   type="button"
                   className="map-search__clear"
                   onClick={() => setQuery("")}
-                  aria-label="Очистить"
+                  aria-label={translateText("Очистить")}
                 >
                   <X size={16} strokeWidth={2.2} />
                 </button>
@@ -775,7 +814,7 @@ export default function MapPage() {
               type="button"
               className="map-round"
               onClick={reset}
-              aria-label="Сбросить"
+              aria-label={translateText("Сбросить")}
             >
               <RefreshCw size={18} strokeWidth={2} />
             </button>
@@ -784,8 +823,11 @@ export default function MapPage() {
           {nearMe && userPos && !pickMode && (
             <div className="map-zone" aria-live="polite">
               <span className="map-zone__dot" />
-              Ваша зона · {radiusKm} км · найдено {filtered.length}
-              {posSource === "ip" && " · примерно"}
+              {translateText("Ваша зона · ")}
+              {radiusKm}
+              {translateText(" км · найдено ")}
+              {filtered.length}
+              {translateText(posSource === "ip" && " · примерно")}
             </div>
           )}
 
@@ -876,14 +918,14 @@ export default function MapPage() {
               <button
                 type="button"
                 onClick={() => mapInstance?.zoomIn()}
-                aria-label="Приблизить"
+                aria-label={translateText("Приблизить")}
               >
                 <Plus size={18} strokeWidth={2.2} />
               </button>
               <button
                 type="button"
                 onClick={() => mapInstance?.zoomOut()}
-                aria-label="Отдалить"
+                aria-label={translateText("Отдалить")}
               >
                 <Minus size={18} strokeWidth={2.2} />
               </button>
@@ -893,7 +935,7 @@ export default function MapPage() {
               className="map-round"
               onClick={locateMe}
               disabled={loadingGeo}
-              aria-label="Моё местоположение"
+              aria-label={translateText("Моё местоположение")}
             >
               <LocateFixed size={19} strokeWidth={2} />
             </button>
@@ -906,13 +948,13 @@ export default function MapPage() {
               className="map-credits__btn"
               onClick={() => setCreditsOpen((v) => !v)}
               aria-expanded={creditsOpen}
-              aria-label="Источники карты"
+              aria-label={translateText("Источники карты")}
             >
               <Info size={15} strokeWidth={2.2} />
             </button>
             {creditsOpen && (
               <div className="map-credits__panel">
-                Данные карты ©{" "}
+                {translateText("Данные карты ©")}{" "}
                 <a
                   href="https://www.openstreetmap.org/copyright"
                   target="_blank"
@@ -940,26 +982,26 @@ export default function MapPage() {
             <div className="map-detail">
               <img src={selected.image} alt="" className="map-detail__img" />
               <div className="map-detail__info">
-                <h3>{selected.name}</h3>
-                <p>{meta(selected)}</p>
+                <h3>{translateText(selected.name)}</h3>
+                <p>{translateText(meta(selected))}</p>
                 <span className="map-card__star">
                   <Star size={12} fill="#f4b41b" stroke="#f4b41b" />
-                  {selected.rating.toFixed(1)}
+                  {translateText(selected.rating.toFixed(1))}
                 </span>
               </div>
               <div className="map-detail__actions">
                 <button type="button" className="map-btn map-btn--dark">
-                  Подробнее
+                  {translateText("Подробнее")}
                 </button>
                 <button type="button" className="map-btn map-btn--light">
-                  Написать
+                  {translateText("Написать")}
                 </button>
               </div>
               <button
                 type="button"
                 className="map-detail__close"
                 onClick={() => setSelectedId(null)}
-                aria-label="Закрыть"
+                aria-label={translateText("Закрыть")}
               >
                 <X size={16} strokeWidth={2.2} />
               </button>
@@ -974,14 +1016,18 @@ export default function MapPage() {
             aria-pressed={nearMe}
           >
             <Navigation size={15} strokeWidth={2.2} />
-            {loadingGeo ? "Определяем…" : "Рядом со мной"}
+            {translateText(loadingGeo ? "Определяем…" : "Рядом со мной")}
           </button>
 
           {pickMode && (
             <div className="map-pick" role="status">
-              <span>Нажмите на карту, чтобы указать, где вы находитесь</span>
+              <span>
+                {translateText(
+                  "Нажмите на карту, чтобы указать, где вы находитесь",
+                )}
+              </span>
               <button type="button" onClick={() => setPickMode(false)}>
-                Отмена
+                {translateText("Отмена")}
               </button>
             </div>
           )}
@@ -992,15 +1038,17 @@ export default function MapPage() {
               role="alert"
             >
               <p>
-                {geoError === "denied"
-                  ? `${GEO_MESSAGES.denied} ${deniedHelp()}`
-                  : GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable}
+                {translateText(
+                  geoError === "denied"
+                    ? `${GEO_MESSAGES.denied} ${deniedHelp()}`
+                    : GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable,
+                )}
               </p>
 
               {geoDebug && geoError !== "approx" && (
                 <details className="map-geo-error__debug">
-                  <summary>Технические детали</summary>
-                  <code>{geoDebug}</code>
+                  <summary>{translateText("Технические детали")}</summary>
+                  <code>{translateText(geoDebug)}</code>
                 </details>
               )}
 
@@ -1011,14 +1059,14 @@ export default function MapPage() {
                     className="map-geo-error__btn is-primary"
                     onClick={startPick}
                   >
-                    Указать точнее
+                    {translateText("Указать точнее")}
                   </button>
                   <button
                     type="button"
                     className="map-geo-error__btn"
                     onClick={() => setGeoError("")}
                   >
-                    Ок
+                    {translateText("Ок")}
                   </button>
                 </div>
               ) : (
@@ -1029,16 +1077,18 @@ export default function MapPage() {
                       className="map-geo-error__btn is-primary"
                       onClick={startPick}
                     >
-                      Указать на карте
+                      {translateText("Указать на карте")}
                     </button>
-                    {["denied", "unavailable", "timeout"].includes(geoError) && (
+                    {["denied", "unavailable", "timeout"].includes(
+                      geoError,
+                    ) && (
                       <button
                         type="button"
                         className="map-geo-error__btn"
                         onClick={retryGeo}
                         disabled={loadingGeo}
                       >
-                        Повторить
+                        {translateText("Повторить")}
                       </button>
                     )}
                     <button
@@ -1046,7 +1096,7 @@ export default function MapPage() {
                       className="map-geo-error__btn"
                       onClick={() => setGeoError("")}
                     >
-                      Закрыть
+                      {translateText("Закрыть")}
                     </button>
                   </div>
                   <button
@@ -1055,7 +1105,7 @@ export default function MapPage() {
                     onClick={approxLocate}
                     disabled={loadingGeo}
                   >
-                    Определить примерно по сети.
+                    {translateText("Определить примерно по сети.")}
                   </button>
                 </>
               )}

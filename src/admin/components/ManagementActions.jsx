@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -17,19 +18,19 @@ export function AccountStatusAction({ person, kind }) {
     <>
       <button className="ad-btn" onClick={() => setOpen(true)}>
         {active ? <Snowflake size={16} /> : <Sun size={16} />}
-        {label}
+        {translateText(label)}
       </button>
       {open && (
         <ConfirmAction
-          title={label}
+          title={translateText(label)}
           confirmLabel={active ? "Заморозить" : "Разморозить"}
           requireReason={active}
           onClose={() => setOpen(false)}
-          description={
+          description={translateText(
             active
               ? `Аккаунт «${person.name}»: запретим новые заказы и публикацию товаров в демо-панели. Активные подписки продавца будут приостановлены с сохранением остатка срока.`
-              : `Восстановим операции для «${person.name}». Автоматически возобновятся только подписки, остановленные этой заморозкой.`
-          }
+              : `Восстановим операции для «${person.name}». Автоматически возобновятся только подписки, остановленные этой заморозкой.`,
+          )}
           onConfirm={(reason) =>
             active ? freeze(kind, person.id, reason) : thaw(kind, person.id)
           }
@@ -49,14 +50,14 @@ export function SubscriptionAction({ subscription, onRenew }) {
   if (status === "Истекла")
     return onRenew ? (
       <button className="ad-btn small" onClick={onRenew}>
-        Продлить
+        {translateText("Продлить")}
       </button>
     ) : (
       <Link
         className="ad-btn small"
         to={`/admin/subscriptions/${encodeURIComponent(subscription.id)}?edit=1`}
       >
-        Продлить{" "}
+        {translateText("Продлить")}{" "}
         <ArrowUpRight
           size={12}
           className="ad-inline-arrow"
@@ -69,23 +70,27 @@ export function SubscriptionAction({ subscription, onRenew }) {
       <button
         className="ad-btn small"
         disabled={blocked}
-        title={blocked ? "Сначала разморозьте продавца" : undefined}
+        title={translateText(
+          blocked ? "Сначала разморозьте продавца" : undefined,
+        )}
         onClick={() => setOpen(true)}
       >
         {paused ? <Play size={14} /> : <Pause size={14} />}
-        {paused ? "Возобновить" : "Приостановить"}
+        {translateText(paused ? "Возобновить" : "Приостановить")}
       </button>
       {open && (
         <ConfirmAction
-          title={paused ? "Возобновить подписку" : "Приостановить подписку"}
+          title={translateText(
+            paused ? "Возобновить подписку" : "Приостановить подписку",
+          )}
           confirmLabel={paused ? "Возобновить" : "Приостановить"}
           requireReason={!paused}
           onClose={() => setOpen(false)}
-          description={
+          description={translateText(
             paused
               ? "Вернём доступ и перенесём окончание подписки на сохранённый остаток срока."
-              : "Доступ по тарифу будет остановлен. Неиспользованное время сохранится до возобновления. Банковские списания это действие не изменяет."
-          }
+              : "Доступ по тарифу будет остановлен. Неиспользованное время сохранится до возобновления. Банковские списания это действие не изменяет.",
+          )}
           onConfirm={(reason) =>
             data.manageSubscription(
               subscription.id,
@@ -109,15 +114,19 @@ export function ProductStatusAction({ product }) {
       <button
         className="ad-btn small"
         disabled={Boolean(restriction)}
-        title={restriction || undefined}
+        title={translateText(restriction || undefined)}
         onClick={() => setOpen(true)}
       >
-        {published ? "Скрыть" : "Опубликовать"}
+        {translateText(published ? "Скрыть" : "Опубликовать")}
       </button>
       {open && (
         <ConfirmAction
-          title={published ? "Скрыть товар" : "Опубликовать товар"}
-          description={`Товар «${product.name}»: ${published ? "перестанет быть доступен для новых заказов в демо-панели" : "станет доступен для новых заказов в демо-панели"}.`}
+          title={translateText(
+            published ? "Скрыть товар" : "Опубликовать товар",
+          )}
+          description={translateText(
+            `Товар «${product.name}»: ${published ? "перестанет быть доступен для новых заказов в демо-панели" : "станет доступен для новых заказов в демо-панели"}.`,
+          )}
           onClose={() => setOpen(false)}
           onConfirm={() =>
             data.save("products", {
@@ -147,13 +156,15 @@ export function OrderStatusActions({ order }) {
           className={`ad-btn small ${status === "Отменён" ? "red" : ""}`}
           onClick={() => setTarget(status)}
         >
-          {labels[status]}
+          {translateText(labels[status])}
         </button>
       ))}
       {target && (
         <ConfirmAction
-          title={labels[target]}
-          description={`Заказ ${order.id}: «${order.status}» → «${target}». Изменение будет записано в историю.`}
+          title={translateText(labels[target])}
+          description={translateText(
+            `Заказ ${order.id}: «${order.status}» → «${target}». Изменение будет записано в историю.`,
+          )}
           requireReason={target === "Отменён"}
           onClose={() => setTarget("")}
           onConfirm={(reason) =>
@@ -183,20 +194,22 @@ export function ApplicationDecisionActions({ application }) {
         className="ad-btn small green"
         onClick={() => setDecision("Одобрено")}
       >
-        ✓ Одобрить
+        {translateText("✓ Одобрить")}
       </button>
       <button
         className="ad-btn small red"
         onClick={() => setDecision("Отклонено")}
       >
-        × Отклонить
+        {translateText("× Отклонить")}
       </button>
       {decision && (
         <ConfirmAction
-          title={
-            decision === "Одобрено" ? "Одобрить заявку" : "Отклонить заявку"
-          }
-          description={`Магазин «${application.shop}»: ${decision === "Одобрено" ? "создадим магазин и привяжем продавца" : "заявка будет отклонена"}.`}
+          title={translateText(
+            decision === "Одобрено" ? "Одобрить заявку" : "Отклонить заявку",
+          )}
+          description={translateText(
+            `Магазин «${application.shop}»: ${decision === "Одобрено" ? "создадим магазин и привяжем продавца" : "заявка будет отклонена"}.`,
+          )}
           requireReason={decision === "Отклонено"}
           onClose={() => setDecision("")}
           onConfirm={(reason) => decide(application.id, decision, reason)}

@@ -1,3 +1,4 @@
+import { useLanguage } from "./i18n/useLanguage";
 import MiniAppProvider from "./miniapp/MiniAppProvider";
 import MiniAppBar from "./miniapp/components/MiniAppBar";
 import { useMiniApp } from "./miniapp/context";
@@ -22,6 +23,7 @@ function AppContent() {
 }
 
 export default function App() {
+  useLanguage();
   return (
     <HashRouter>
       <MiniAppProvider>

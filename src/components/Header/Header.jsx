@@ -1,3 +1,6 @@
+import { useLanguage } from "../../i18n/useLanguage";
+import { setLanguage } from "../../i18n/index";
+import { translateText } from "../../i18n/index.js";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
@@ -11,18 +14,7 @@ const LANGUAGES = [
   { code: "ru", label: "RU", name: "Русский" },
 ];
 
-const STORAGE_KEY = "bakeu:language";
 const SCROLL_THRESHOLD = 8;
-
-function getInitialLanguage() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (LANGUAGES.some((item) => item.code === saved)) return saved;
-  } catch {
-    /* localStorage недоступен */
-  }
-  return "ru";
-}
 
 function formatCount(value) {
   return value > 99 ? "99+" : String(value);
@@ -31,11 +23,15 @@ function formatCount(value) {
 /** Круглая кнопка-ссылка со счётчиком */
 function IconLink({ to, label, count, children }) {
   return (
-    <Link to={to} className="bakeu-header__icon" aria-label={label}>
+    <Link
+      to={to}
+      className="bakeu-header__icon"
+      aria-label={translateText(label)}
+    >
       {children}
       {count > 0 && (
         <span className="bakeu-header__count" aria-hidden="true">
-          {formatCount(count)}
+          {translateText(formatCount(count))}
         </span>
       )}
     </Link>
@@ -43,10 +39,12 @@ function IconLink({ to, label, count, children }) {
 }
 
 export default function Header() {
-  const [language, setLanguage] = useState(getInitialLanguage);
+  const language = useLanguage();
   const [scrolled, setScrolled] = useState(false);
 
-  const favoriteCount = useFavoriteStore((s) => Object.keys(s.items ?? {}).length);
+  const favoriteCount = useFavoriteStore(
+    (s) => Object.keys(s.items ?? {}).length,
+  );
   const cartItems = useCartStore((s) => s.items);
 
   const cartCount = useMemo(
@@ -63,20 +61,14 @@ export default function Header() {
     return () => window.removeEventListener("scroll", update);
   }, []);
 
-  // Сохранение языка и атрибут lang у <html>
-  useEffect(() => {
-    document.documentElement.lang = language;
-    try {
-      localStorage.setItem(STORAGE_KEY, language);
-    } catch {
-      /* localStorage недоступен */
-    }
-  }, [language]);
-
   return (
     <header className={`bakeu-header-shell${scrolled ? " is-scrolled" : ""}`}>
       <div className="bakeu-header container">
-        <Link to="/" className="bakeu-header__brand" aria-label="BakeU — главная">
+        <Link
+          to="/"
+          className="bakeu-header__brand"
+          aria-label={translateText("BakeU — главная")}
+        >
           <img
             src="/images/logo-bear.png"
             alt="BakeU"
@@ -91,7 +83,7 @@ export default function Header() {
           <div
             className={`bakeu-header__languages is-${language}`}
             role="group"
-            aria-label="Выбор языка"
+            aria-label={translateText("Выбор языка")}
           >
             <span className="bakeu-header__slider" aria-hidden="true" />
 
@@ -100,19 +92,19 @@ export default function Header() {
                 key={code}
                 type="button"
                 lang={code}
-                title={name}
-                aria-label={name}
+                title={translateText(name)}
+                aria-label={translateText(name)}
                 aria-pressed={language === code}
                 onClick={() => setLanguage(code)}
               >
-                {label}
+                {translateText(label)}
               </button>
             ))}
           </div>
 
           <IconLink
             to="/favorites"
-            label={`Избранное: ${favoriteCount}`}
+            label={translateText(`Избранное: ${favoriteCount}`)}
             count={favoriteCount}
           >
             <Heart size={20} strokeWidth={1.9} aria-hidden="true" />
@@ -120,7 +112,7 @@ export default function Header() {
 
           <IconLink
             to="/cart"
-            label={`Корзина, товаров: ${cartCount}`}
+            label={translateText(`Корзина, товаров: ${cartCount}`)}
             count={cartCount}
           >
             <ShoppingBag size={20} strokeWidth={1.9} aria-hidden="true" />

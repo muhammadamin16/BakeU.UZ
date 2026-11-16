@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import { Link, Navigate } from "react-router-dom";
 import { useState } from "react";
 import { ArrowRight, ShoppingBag } from "lucide-react";
@@ -18,36 +20,41 @@ export default function Orders() {
   return (
     <div className="ck-page">
       <header className="ck-page-heading">
-        <span className="ck-eyebrow">ВАШ BAKEU</span>
-        <h1>Мои заказы</h1>
-        <p>Каждый продавец готовит свою часть заказа отдельно.</p>
+        <span className="ck-eyebrow">{translateText("ВАШ BAKEU")}</span>
+        <h1>{translateText("Мои заказы")}</h1>
+        <p>
+          {translateText("Каждый продавец готовит свою часть заказа отдельно.")}
+        </p>
       </header>
       <div className="ck-actions">
         <Link className="ck-button primary" to="/cart">
           <ShoppingBag size={16} />
-          Корзина
+          {translateText("Корзина")}
         </Link>
         <Link className="ck-button" to="/profile">
-          Мой профиль
+          {translateText("Мой профиль")}
         </Link>
       </div>
       <label className="ck-field">
-        Статус заказов
+        {translateText("Статус заказов")}
         <select
-          aria-label="Статус заказов"
+          aria-label={translateText("Статус заказов")}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
           {["Все", "Новый", "Готовится", "Доставка", "Выполнен", "Отменён"].map(
             (s) => (
-              <option key={s}>{s}</option>
+              <option value={s} key={s}>
+                {translateText(s)}
+              </option>
             ),
           )}
         </select>
       </label>
       <p className="ck-muted">
-        Это заявки из этого браузера. Для подтверждения свяжитесь с продавцом;
-        сохранение заявки не означает её принятие.
+        {translateText(
+          "Это заявки из этого браузера. Для подтверждения свяжитесь с продавцом; сохранение заявки не означает её принятие.",
+        )}
       </p>
       <div className="ck-order-list">
         {orders
@@ -57,21 +64,27 @@ export default function Orders() {
               <div className="ck-seller-heading">
                 <div>
                   <small>
-                    №{o.id.slice(0, 8)} ·{" "}
-                    {new Date(o.at).toLocaleDateString("ru-RU")}
+                    №{translateText(o.id.slice(0, 8))} ·{" "}
+                    {translateText(
+                      new Date(o.at).toLocaleDateString(getLocale()),
+                    )}
                   </small>
-                  <h2>{o.shopName || o.shopId}</h2>
+                  <h2>{translateText(o.shopName || o.shopId)}</h2>
                 </div>
                 <span className="ck-pill">
-                  {o.status === "Новый" ? "Ожидает подтверждения" : o.status}
+                  {translateText(
+                    o.status === "Новый" ? "Ожидает подтверждения" : o.status,
+                  )}
                 </span>
               </div>
               <p>
-                {o.items.map((p) => p.name + " × " + p.quantity).join(", ")}
+                {translateText(
+                  o.items.map((p) => p.name + " × " + p.quantity).join(", "),
+                )}
               </p>
-              <strong>{checkoutMoney(o.total)}</strong>
+              <strong>{translateText(checkoutMoney(o.total))}</strong>
               <Link className="ck-button" to={"/orders/" + o.id}>
-                Подробности и связь с продавцом
+                {translateText("Подробности и связь с продавцом")}
                 <ArrowRight size={16} />
               </Link>
             </article>
@@ -80,9 +93,9 @@ export default function Orders() {
       {!orders.some((o) => filter === "Все" || filter === o.status) && (
         <section className="ck-empty">
           <ShoppingBag size={32} />
-          <h2>Заказов пока нет</h2>
+          <h2>{translateText("Заказов пока нет")}</h2>
           <Link className="ck-button" to="/">
-            Выбрать выпечку
+            {translateText("Выбрать выпечку")}
           </Link>
         </section>
       )}

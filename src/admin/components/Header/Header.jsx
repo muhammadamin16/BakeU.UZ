@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, Bell, UserRound, ChevronDown, Menu } from "lucide-react";
@@ -26,8 +27,8 @@ function HeaderSearch() {
     >
       <Search size={17} />
       <input
-        aria-label="Поиск по имени или ID"
-        placeholder="Найти по имени или ID"
+        aria-label={translateText("Поиск по имени или ID")}
+        placeholder={translateText("Найти по имени или ID")}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
@@ -46,22 +47,22 @@ export default function Header({ onMenu }) {
       <button
         className="ad-icon ad-menu"
         onClick={onMenu}
-        aria-label="Открыть меню"
+        aria-label={translateText("Открыть меню")}
       >
         <Menu />
       </button>
       <div className="ad-breadcrumb">
-        <Link to="/" aria-label="Главная сайта">
+        <Link to="/" aria-label={translateText("Главная сайта")}>
           <Home size={19} />
         </Link>
         <span>›</span>
-        <Link to="/admin">Админ-панель</Link>
+        <Link to="/admin">{translateText("Админ-панель")}</Link>
       </div>
       <HeaderSearch key={location.pathname + location.search} />
       <Link
         className="ad-notification-bell"
         to="/admin/notifications"
-        aria-label={`Уведомления: ${count}`}
+        aria-label={translateText(`Уведомления: ${count}`)}
       >
         <Bell size={22} />
         {count > 0 && <b>{count}</b>}
@@ -70,7 +71,7 @@ export default function Header({ onMenu }) {
         <span className="ad-avatar">
           <UserRound size={18} />
         </span>
-        <span>{name}</span>
+        <span>{translateText(name)}</span>
         <ChevronDown size={15} />
       </Link>
     </header>

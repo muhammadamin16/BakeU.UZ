@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { Link } from "react-router-dom";
 import {
   ArrowUp,
@@ -89,12 +90,12 @@ function StoreBadge({ href, Icon, caption, name }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`${caption} ${name}`}
+      aria-label={translateText(`${caption} ${name}`)}
     >
       <Icon />
       <span className="bake-footer__store-text">
-        <small>{caption}</small>
-        <strong>{name}</strong>
+        <small>{translateText(caption)}</small>
+        <strong>{translateText(name)}</strong>
       </span>
     </a>
   );
@@ -112,7 +113,7 @@ export default function Footer() {
             <Link
               to="/"
               className="bake-footer__logo"
-              aria-label="BakeU — на главную"
+              aria-label={translateText("BakeU — на главную")}
             >
               <img
                 src="/images/logo-bear.png"
@@ -123,19 +124,27 @@ export default function Footer() {
                 decoding="async"
               />
             </Link>
-            <p>Домашние вкусности, которые становятся любимыми.</p>
+            <p>
+              {translateText(
+                "Домашние вкусности, которые становятся любимыми.",
+              )}
+            </p>
           </div>
 
           {/* Навигация */}
           {NAV_GROUPS.map(({ title, links }) => (
-            <nav key={title} className="bake-footer__group" aria-label={title}>
-              <h3>{title}</h3>
+            <nav
+              key={title}
+              className="bake-footer__group"
+              aria-label={translateText(title)}
+            >
+              <h3>{translateText(title)}</h3>
               <ul>
                 {links.map(({ to, label, Icon }) => (
                   <li key={to}>
                     <Link to={to}>
                       <Icon size={14} aria-hidden="true" />
-                      {label}
+                      {translateText(label)}
                     </Link>
                   </li>
                 ))}
@@ -145,8 +154,10 @@ export default function Footer() {
 
           {/* Приложение */}
           <div className="bake-footer__app">
-            <h3>Скачайте BakeU</h3>
-            <p>Заказывайте ещё удобнее — прямо с телефона.</p>
+            <h3>{translateText("Скачайте BakeU")}</h3>
+            <p>
+              {translateText("Заказывайте ещё удобнее — прямо с телефона.")}
+            </p>
 
             <div className="bake-footer__stores">
               <StoreBadge
@@ -166,15 +177,18 @@ export default function Footer() {
         </div>
 
         <div className="bake-footer__bottom">
-          <p>© {year} BakeU. Все права защищены.</p>
+          <p>
+            © {translateText(year)}
+            {translateText(" BakeU. Все права защищены.")}
+          </p>
 
           <button
             type="button"
             className="bake-footer__up"
             onClick={scrollToTop}
-            aria-label="Прокрутить страницу наверх"
+            aria-label={translateText("Прокрутить страницу наверх")}
           >
-            Наверх
+            {translateText("Наверх")}
             <ArrowUp size={14} aria-hidden="true" />
           </button>
         </div>

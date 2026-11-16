@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CollectionPage } from "../../components/AdminUI";
@@ -40,7 +41,7 @@ export default function Orders() {
           className="ad-text-link"
           to={`/admin/orders/${encodeURIComponent(row.id)}`}
         >
-          {row.id}{" "}
+          {translateText(row.id)}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"
@@ -58,7 +59,7 @@ export default function Orders() {
             className="ad-text-link"
             to={`/admin/customers/${encodeURIComponent(row.customerId)}`}
           >
-            {row.customer}{" "}
+            {translateText(row.customer)}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -78,7 +79,7 @@ export default function Orders() {
             className="ad-text-link"
             to={`/admin/shops/${encodeURIComponent(row.shopId)}`}
           >
-            {row.shop}{" "}
+            {translateText(row.shop)}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -95,7 +96,7 @@ export default function Orders() {
   ];
   return (
     <CollectionPage
-      title="Заказы"
+      title={translateText("Заказы")}
       collection="orders"
       addDisabled={addDisabled}
       fields={(existing) => orderFields(scoped, existing?.id ? existing : null)}
@@ -107,7 +108,7 @@ export default function Orders() {
           className="ad-btn small"
           to={`/admin/orders/${encodeURIComponent(row.id)}`}
         >
-          Открыть{" "}
+          {translateText("Открыть")}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"

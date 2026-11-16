@@ -1,3 +1,5 @@
+import { getLocale } from "../../../i18n/index.js";
+import { translateText } from "../../../i18n/index.js";
 import { Link } from "react-router-dom";
 import "./StatCard.css";
 export default function StatCard({ icon: Icon, label, value, to }) {
@@ -7,9 +9,9 @@ export default function StatCard({ icon: Icon, label, value, to }) {
         <span className="ad-stat-icon">
           <Icon size={21} />
         </span>
-        {label}
+        {translateText(label)}
       </span>
-      <strong>{value.toLocaleString("ru-RU")}</strong>
+      <strong>{translateText(value.toLocaleString(getLocale()))}</strong>
     </Link>
   );
 }

@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge, CollectionPage } from "../../components/AdminUI";
@@ -30,7 +31,7 @@ export default function Subscriptions() {
           className="ad-text-link"
           to={`/admin/subscriptions/${encodeURIComponent(row.id)}`}
         >
-          {row.id}{" "}
+          {translateText(row.id)}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"
@@ -48,7 +49,7 @@ export default function Subscriptions() {
             className="ad-text-link"
             to={`/admin/sellers/${encodeURIComponent(row.sellerId)}`}
           >
-            {row.name}{" "}
+            {translateText(row.name)}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -73,17 +74,18 @@ export default function Subscriptions() {
     {
       key: "status",
       label: "Статус",
-      render: (row) => <Badge>{subscriptionStatus(row)}</Badge>,
+      render: (row) => <Badge>{translateText(subscriptionStatus(row))}</Badge>,
     },
   ];
   return (
     <>
       <p className="ad-page-description">
-        Приостановка сохраняет остаток срока. Управление банковскими списаниями
-        не подключено.
+        {translateText(
+          "Приостановка сохраняет остаток срока. Управление банковскими списаниями не подключено.",
+        )}
       </p>
       <CollectionPage
-        title="Подписки"
+        title={translateText("Подписки")}
         collection="subscriptions"
         addDisabled={
           !enabledShops.length
@@ -101,7 +103,7 @@ export default function Subscriptions() {
             className="ad-btn small"
             to={`/admin/subscriptions/${encodeURIComponent(row.id)}`}
           >
-            Открыть{" "}
+            {translateText("Открыть")}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"

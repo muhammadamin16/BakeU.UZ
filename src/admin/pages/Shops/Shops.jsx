@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
@@ -23,7 +24,7 @@ const columns = [
           className="ad-text-link"
           to={`/admin/sellers/${encodeURIComponent(row.sellerId)}`}
         >
-          {row.owner}{" "}
+          {translateText(row.owner)}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"
@@ -62,13 +63,13 @@ export default function Shops() {
   ];
   return (
     <CollectionPage
-      title="Магазины"
+      title={translateText("Магазины")}
       collection="shops"
       fields={shopFields}
       columns={columns}
       detailsLink={(row) => (
         <Link className="ad-btn small" to={`/admin/shops/${row.id}`}>
-          Открыть
+          {translateText("Открыть")}
         </Link>
       )}
     />

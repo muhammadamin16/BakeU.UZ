@@ -1,23 +1,9 @@
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { translateText } from "../../i18n/index.js";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-import {
-  NavLink,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
-import {
-  Store,
-  MapPin,
-  Sparkles,
-  ShoppingBag,
-  UserRound,
-} from "lucide-react";
+import { Store, MapPin, Sparkles, ShoppingBag, UserRound } from "lucide-react";
 
 import "./MobileNav.css";
 
@@ -29,14 +15,13 @@ const links = [
   { to: "/profile", label: "Профиль", Icon: UserRound },
 ];
 
-const clamp = (value, min, max) =>
-  Math.max(min, Math.min(max, value));
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const getActiveIndex = (pathname) =>
   links.findIndex(({ to }) =>
     to === "/"
       ? pathname === "/"
-      : pathname === to || pathname.startsWith(`${to}/`)
+      : pathname === to || pathname.startsWith(`${to}/`),
   );
 
 export default function MobileNav() {
@@ -82,13 +67,12 @@ export default function MobileNav() {
       linkRefs.current.map((element) =>
         element
           ? {
-              center:
-                element.offsetLeft + element.offsetWidth / 2,
+              center: element.offsetLeft + element.offsetWidth / 2,
               width: element.offsetWidth,
             }
-          : null
+          : null,
       ),
-    []
+    [],
   );
 
   const paint = useCallback(() => {
@@ -97,69 +81,43 @@ export default function MobileNav() {
     const slots = getSlots();
     const state = spring.current;
 
-    if (
-      !nav ||
-      !indicator ||
-      !slots[0] ||
-      state.x === null
-    ) {
+    if (!nav || !indicator || !slots[0] || state.x === null) {
       return;
     }
 
     const slotWidth = slots[0].width;
-    const padding =
-      parseFloat(getComputedStyle(nav).paddingTop) || 8;
+    const padding = parseFloat(getComputedStyle(nav).paddingTop) || 8;
 
     const baseHeight = nav.clientHeight - padding * 2;
     const speed = Math.abs(state.v);
     const direction = Math.sign(state.v);
 
-    const stretch = Math.min(
-      speed / 30,
-      slotWidth * 0.14
-    );
+    const stretch = Math.min(speed / 30, slotWidth * 0.14);
 
     const extraHeight = Math.min(speed / 90, 4);
     const edge = Math.abs(state.o);
     const edgeDirection = Math.sign(state.o);
 
-    const width =
-      slotWidth * (1 + 0.32 * state.s) +
-      stretch +
-      edge;
+    const width = slotWidth * (1 + 0.32 * state.s) + stretch + edge;
 
-    const height =
-      baseHeight +
-      extraHeight * 2 -
-      Math.min(edge * 0.08, 3);
+    const height = baseHeight + extraHeight * 2 - Math.min(edge * 0.08, 3);
 
     const center =
-      state.x +
-      direction * stretch * 0.25 +
-      edgeDirection * edge / 2;
+      state.x + direction * stretch * 0.25 + (edgeDirection * edge) / 2;
 
-    const left = clamp(
-      center - width / 2,
-      -22,
-      nav.clientWidth - width + 22
-    );
+    const left = clamp(center - width / 2, -22, nav.clientWidth - width + 22);
 
-    const top =
-      padding - (height - baseHeight) / 2;
+    const top = padding - (height - baseHeight) / 2;
 
     indicator.style.width = `${width}px`;
     indicator.style.height = `${height}px`;
     indicator.style.opacity = "1";
 
-    indicator.style.transform =
-      `translate3d(${left}px, ${top}px, 0)`;
+    indicator.style.transform = `translate3d(${left}px, ${top}px, 0)`;
   }, [getSlots]);
 
   const run = useCallback(() => {
-    if (
-      rafRef.current !== null ||
-      spring.current.x === null
-    ) {
+    if (rafRef.current !== null || spring.current.x === null) {
       return;
     }
 
@@ -169,9 +127,7 @@ export default function MobileNav() {
       const state = spring.current;
 
       const dt =
-        last === null
-          ? 0.016
-          : clamp((time - last) / 1000, 0.001, 0.032);
+        last === null ? 0.016 : clamp((time - last) / 1000, 0.001, 0.032);
 
       last = time;
 
@@ -180,26 +136,15 @@ export default function MobileNav() {
       const damping = dragging ? 24 : 21;
 
       state.v +=
-        (
-          stiffness * (state.target - state.x) -
-          damping * state.v
-        ) * dt;
+        (stiffness * (state.target - state.x) - damping * state.v) * dt;
 
       state.x += state.v * dt;
 
-      state.sv +=
-        (
-          260 * (state.sTarget - state.s) -
-          17 * state.sv
-        ) * dt;
+      state.sv += (260 * (state.sTarget - state.s) - 17 * state.sv) * dt;
 
       state.s += state.sv * dt;
 
-      state.ov +=
-        (
-          300 * (state.oTarget - state.o) -
-          20 * state.ov
-        ) * dt;
+      state.ov += (300 * (state.oTarget - state.o) - 20 * state.ov) * dt;
 
       state.o += state.ov * dt;
 
@@ -246,7 +191,7 @@ export default function MobileNav() {
 
       run();
     },
-    [paint, run]
+    [paint, run],
   );
 
   const setPress = useCallback(
@@ -254,7 +199,7 @@ export default function MobileNav() {
       spring.current.sTarget = on ? 1 : 0;
       run();
     },
-    [run]
+    [run],
   );
 
   useLayoutEffect(() => {
@@ -263,10 +208,7 @@ export default function MobileNav() {
     const slot = getSlots()[activeIndex];
 
     if (slot && !dragRef.current) {
-      animateTo(
-        slot.center,
-        spring.current.x === null
-      );
+      animateTo(slot.center, spring.current.x === null);
     }
   }, [activeIndex, animateTo, getSlots]);
 
@@ -283,9 +225,7 @@ export default function MobileNav() {
     };
 
     const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(update)
-        : null;
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
 
     observer?.observe(nav);
 
@@ -311,8 +251,7 @@ export default function MobileNav() {
     const nav = navRef.current;
     if (!nav) return -1;
 
-    const localX =
-      clientX - nav.getBoundingClientRect().left;
+    const localX = clientX - nav.getBoundingClientRect().left;
 
     let nearest = -1;
     let distance = Infinity;
@@ -402,8 +341,7 @@ export default function MobileNav() {
 
     if (!nav || !slots[0]) return;
 
-    const localX =
-      event.clientX - nav.getBoundingClientRect().left;
+    const localX = event.clientX - nav.getBoundingClientRect().left;
 
     const first = slots[0].center;
     const last = slots[slots.length - 1].center;
@@ -434,9 +372,7 @@ export default function MobileNav() {
 
     if (!drag || drag.id !== event.pointerId) return;
 
-    const index = drag.dragging
-      ? getNearestIndex(event.clientX)
-      : drag.index;
+    const index = drag.dragging ? getNearestIndex(event.clientX) : drag.index;
 
     const rect = navRef.current?.getBoundingClientRect();
 
@@ -492,7 +428,7 @@ export default function MobileNav() {
       <nav
         ref={navRef}
         className={`bottom-nav${pressed ? " is-pressed" : ""}`}
-        aria-label="Основная навигация"
+        aria-label={translateText("Основная навигация")}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -518,7 +454,7 @@ export default function MobileNav() {
             className={`bottom-nav__link${
               selectedIndex === index ? " is-active" : ""
             }`}
-            aria-label={label}
+            aria-label={translateText(label)}
             onClick={() => {
               if (pathname === to) {
                 window.scrollTo({
@@ -528,15 +464,9 @@ export default function MobileNav() {
               }
             }}
           >
-            <Icon
-              size={22}
-              strokeWidth={1.8}
-              aria-hidden="true"
-            />
+            <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
 
-            <span className="bottom-nav__label">
-              {label}
-            </span>
+            <span className="bottom-nav__label">{translateText(label)}</span>
           </NavLink>
         ))}
       </nav>

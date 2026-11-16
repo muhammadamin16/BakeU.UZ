@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, Copy, Check } from "lucide-react";
@@ -14,28 +15,30 @@ export default function SellerContact({ shop, order, draft = false }) {
       <div className="ck-contact-number">
         <Phone size={18} />
         {phone ? (
-          <a href={"tel:" + phone}>{shop.phone}</a>
+          <a href={"tel:" + phone}>{translateText(shop.phone)}</a>
         ) : (
-          <span>Телефон не указан — уточните в чате</span>
+          <span>{translateText("Телефон не указан — уточните в чате")}</span>
         )}
-        {shop.hours && <small>{shop.hours}</small>}
+        {shop.hours && <small>{translateText(shop.hours)}</small>}
       </div>
       {shop.demo && (
         <small className="ck-muted">
-          Демо-магазин: телефон и контакты приведены для примера.
+          {translateText(
+            "Демо-магазин: телефон и контакты приведены для примера.",
+          )}
         </small>
       )}
       <div className="ck-actions">
         {phone && (
           <a className="ck-button" href={"tel:" + phone}>
             <Phone size={16} />
-            Позвонить
+            {translateText("Позвонить")}
           </a>
         )}
         {phone && (
           <a className="ck-button" href={smsLink(phone, text, apple)}>
             <MessageCircle size={16} />
-            Подготовить SMS
+            {translateText("Подготовить SMS")}
           </a>
         )}
         <Link
@@ -43,7 +46,7 @@ export default function SellerContact({ shop, order, draft = false }) {
           to={"/messages?seller=" + encodeURIComponent(shop.id) + "&checkout=1"}
         >
           <MessageCircle size={16} />
-          Чат BakeU
+          {translateText("Чат BakeU")}
         </Link>
         <button
           type="button"
@@ -65,7 +68,7 @@ export default function SellerContact({ shop, order, draft = false }) {
           ) : (
             <Copy size={16} />
           )}
-          Скопировать заказ
+          {translateText("Скопировать заказ")}
         </button>
       </div>
       <button
@@ -74,12 +77,14 @@ export default function SellerContact({ shop, order, draft = false }) {
         aria-expanded={showText}
         onClick={() => setShowText(!showText)}
       >
-        {showText ? "Скрыть текст сообщения" : "Посмотреть текст сообщения"}
+        {translateText(
+          showText ? "Скрыть текст сообщения" : "Посмотреть текст сообщения",
+        )}
       </button>
       {showText && (
         <textarea
           className="ck-message-preview"
-          aria-label={"Текст для " + shop.name}
+          aria-label={translateText("Текст для " + shop.name)}
           readOnly
           value={text}
           rows={8}
@@ -88,12 +93,13 @@ export default function SellerContact({ shop, order, draft = false }) {
       )}
       {notice && (
         <p className="ck-feedback" role="status">
-          {notice}
+          {translateText(notice)}
         </p>
       )}
       <p className="ck-muted">
-        SMS откроется на вашем телефоне. Отправку подтверждаете вы; стоимость —
-        по тарифу оператора.
+        {translateText(
+          "SMS откроется на вашем телефоне. Отправку подтверждаете вы; стоимость — по тарифу оператора.",
+        )}
       </p>
     </div>
   );

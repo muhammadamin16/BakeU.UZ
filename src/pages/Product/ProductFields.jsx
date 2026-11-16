@@ -1,27 +1,7 @@
+import { translateText } from "../../i18n/index.js";
 import { categoryFields, fieldLabels } from "./productDetails";
 import { readPicture } from "../../store/shopStore";
 import "./Product.css";
-export function validateProductDetails(p) {
-  const variants = p.variants || [];
-  if (
-    variants.some(
-      (v) =>
-        !v.label?.trim() ||
-        !Number.isFinite(Number(v.price)) ||
-        Number(v.price) <= 0,
-    )
-  )
-    return "Заполните название и цену каждого варианта.";
-  for (const item of [p, ...variants])
-    for (const k of ["weight", "diameter", "pieces"])
-      if (
-        item[k] !== undefined &&
-        item[k] !== "" &&
-        (!Number.isFinite(Number(item[k])) || Number(item[k]) <= 0)
-      )
-        return "Вес, диаметр и количество должны быть больше нуля.";
-  return "";
-}
 export default function ProductFields({ value: p, onChange: set, onError }) {
   const fields = categoryFields(p.category);
   const update = (key, value) => set((old) => ({ ...old, [key]: value }));
@@ -34,7 +14,7 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
   const specs = (item, change) =>
     fields.map((key) => (
       <label className="bw-field" key={key}>
-        {fieldLabels[key]}
+        {translateText(fieldLabels[key])}
         <input
           type={
             ["weight", "diameter", "pieces"].includes(key) ? "number" : "text"
@@ -50,17 +30,19 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
     <>
       <div className="bw-fields">
         <label className="bw-field">
-          Цена указана за
+          {translateText("Цена указана за")}
           <select
             value={p.unit || "шт."}
             onChange={(e) => update("unit", e.target.value)}
           >
             {["шт.", "кг", "порцию", "набор", "упаковку"].map((x) => (
-              <option key={x}>{x}</option>
+              <option value={x} key={x}>
+                {translateText(x)}
+              </option>
             ))}
           </select>
         </label>
-        {specs(p, update)}
+        {translateText(specs(p, update))}
       </div>
       <div className="bw-fields">
         {[
@@ -71,7 +53,7 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
           ["delivery", "Доставка и самовывоз"],
         ].map(([key, label]) => (
           <label className="bw-field" key={key}>
-            {label}
+            {translateText(label)}
             <textarea
               maxLength={1000}
               value={p[key] || ""}
@@ -81,25 +63,27 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
         ))}
       </div>
       <div className="pd-editor-variants">
-        <h4>Варианты товара</h4>
+        <h4>{translateText("Варианты товара")}</h4>
         <p>
-          Для каждого варианта укажите итоговую цену. Первый вариант — основной.
-          Пустые характеристики не показываются.
+          {translateText(
+            "Для каждого варианта укажите итоговую цену. Первый вариант — основной. Пустые характеристики не показываются.",
+          )}
         </p>
         {variants.map((v, i) => (
           <div key={v.id}>
             <div className="bw-fields">
               <label className="bw-field">
-                Вариант {i + 1}
+                {translateText("Вариант ")}
+                {translateText(i + 1)}
                 <input
                   required
                   value={v.label}
-                  placeholder="Например: 2 кг · 12 порций"
+                  placeholder={translateText("Например: 2 кг · 12 порций")}
                   onChange={(e) => changeVariant(v.id, "label", e.target.value)}
                 />
               </label>
               <label className="bw-field">
-                Цена варианта, сум
+                {translateText("Цена варианта, сум")}
                 <input
                   required
                   type="number"
@@ -108,7 +92,9 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
                   onChange={(e) => changeVariant(v.id, "price", e.target.value)}
                 />
               </label>
-              {specs(v, (key, val) => changeVariant(v.id, key, val))}
+              {translateText(
+                specs(v, (key, val) => changeVariant(v.id, key, val)),
+              )}
             </div>
             <button
               className="bw-btn"
@@ -120,7 +106,7 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
                 )
               }
             >
-              Удалить вариант
+              {translateText("Удалить вариант")}
             </button>
           </div>
         ))}
@@ -134,11 +120,11 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
             ])
           }
         >
-          + Добавить вариант
+          {translateText("+ Добавить вариант")}
         </button>
       </div>
       <label className="bw-field">
-        Дополнительные фото · до 4
+        {translateText("Дополнительные фото · до 4")}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -167,7 +153,7 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
           <button
             key={i}
             type="button"
-            aria-label={"Удалить фото " + (i + 1)}
+            aria-label={translateText("Удалить фото " + (i + 1))}
             onClick={() =>
               update(
                 "images",
@@ -175,8 +161,11 @@ export default function ProductFields({ value: p, onChange: set, onError }) {
               )
             }
           >
-            <img src={src} alt={"Дополнительное фото " + (i + 1)} />
-            Удалить
+            <img
+              src={src}
+              alt={translateText("Дополнительное фото " + (i + 1))}
+            />
+            {translateText("Удалить")}
           </button>
         ))}
       </div>

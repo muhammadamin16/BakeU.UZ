@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import ProductPhoto from "./ProductPhoto";
@@ -21,17 +22,19 @@ export default function OrderItemsField({
         <div className="ad-order-add-item">
           <select
             id={id}
-            aria-label="Товар для заказа"
+            aria-label={translateText("Товар для заказа")}
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
             disabled={!shopId}
           >
             <option value="">
-              {shopId ? "Выберите товар" : "Сначала выберите магазин"}
+              {translateText(
+                shopId ? "Выберите товар" : "Сначала выберите магазин",
+              )}
             </option>
             {available.map((row) => (
               <option key={row.id} value={row.id}>
-                {row.name} · {money(row.price)}
+                {translateText(row.name)} · {translateText(money(row.price))}
               </option>
             ))}
           </select>
@@ -66,23 +69,27 @@ export default function OrderItemsField({
               );
             }}
           >
-            <Plus size={16} />В заказ
+            <Plus size={16} />
+            {translateText("В заказ")}
           </button>
         </div>
       )}
       {value.map((line) => (
         <div className="ad-order-line-editor" key={line.productId}>
-          <ProductPhoto src={line.image} alt={line.name} />
+          <ProductPhoto src={line.image} alt={translateText(line.name)} />
           <div>
-            <strong>{line.name}</strong>
-            <small>{money(line.unitPrice)} за шт.</small>
+            <strong>{translateText(line.name)}</strong>
+            <small>
+              {translateText(money(line.unitPrice))}
+              {translateText(" за шт.")}
+            </small>
           </div>
           <input
             type="number"
             min="1"
             max="9999"
             step="1"
-            aria-label={`Количество: ${line.name}`}
+            aria-label={translateText(`Количество: ${line.name}`)}
             value={line.quantity}
             disabled={disabled}
             onChange={(event) =>
@@ -105,7 +112,7 @@ export default function OrderItemsField({
             <button
               type="button"
               className="ad-icon danger"
-              aria-label={`Убрать ${line.name}`}
+              aria-label={translateText(`Убрать ${line.name}`)}
               onClick={() =>
                 onChange(
                   value.filter((row) => row.productId !== line.productId),
@@ -117,7 +124,9 @@ export default function OrderItemsField({
           )}
         </div>
       ))}
-      {!value.length && <p className="ad-muted">Состав заказа не указан.</p>}
+      {!value.length && (
+        <p className="ad-muted">{translateText("Состав заказа не указан.")}</p>
+      )}
     </div>
   );
 }

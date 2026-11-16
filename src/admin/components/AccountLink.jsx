@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -13,12 +14,12 @@ export default function AccountLink({ person, kind = "customers" }) {
         className={`ad-person-avatar ${kind === "sellers" ? "seller" : ""}`}
         aria-hidden="true"
       >
-        {initials(person.name)}
+        {initials(translateText(person.name))}
       </span>
       <span>
-        <strong>{person.name}</strong>
+        <strong>{translateText(person.name)}</strong>
         <small>
-          Открыть профиль{" "}
+          {translateText("Открыть профиль")}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"

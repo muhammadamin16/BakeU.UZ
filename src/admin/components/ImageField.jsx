@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { readAdminPicture } from "../utils/images";
 import ProductPhoto from "./ProductPhoto";
@@ -13,13 +14,13 @@ export default function ImageField({
   const [error, setError] = useState("");
   return (
     <div className="ad-image-field">
-      <ProductPhoto src={value} alt="Предпросмотр фото" />
+      <ProductPhoto src={value} alt={translateText("Предпросмотр фото")} />
       <div>
         <input
           id={id}
           disabled={disabled}
-          aria-label={label}
-          placeholder="/images/... или https://..."
+          aria-label={translateText(label)}
+          placeholder={translateText("/images/... или https://...")}
           value={value || ""}
           onChange={(event) => {
             setError("");
@@ -27,12 +28,12 @@ export default function ImageField({
           }}
         />
         <label className="ad-upload-label" htmlFor={`${id}-upload`}>
-          Загрузить с компьютера
+          {translateText("Загрузить с компьютера")}
         </label>
         <input
           id={`${id}-upload`}
           disabled={disabled}
-          aria-label="Загрузить фото товара"
+          aria-label={translateText("Загрузить фото товара")}
           type="file"
           accept="image/png,image/jpeg,image/webp"
           onChange={async (event) => {
@@ -57,12 +58,12 @@ export default function ImageField({
             className="ad-btn small"
             onClick={() => onChange("")}
           >
-            Убрать фото
+            {translateText("Убрать фото")}
           </button>
         )}
         {error && (
           <p role="alert" className="ad-form-error">
-            {error}
+            {translateText(error)}
           </p>
         )}
       </div>

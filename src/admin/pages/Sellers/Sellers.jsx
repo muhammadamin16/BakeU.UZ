@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CollectionPage } from "../../components/AdminUI";
@@ -27,7 +28,7 @@ export default function Sellers() {
   ];
   return (
     <CollectionPage
-      title="Продавцы"
+      title={translateText("Продавцы")}
       collection="sellers"
       fields={accountFields("sellers")}
       columns={columns}
@@ -37,7 +38,7 @@ export default function Sellers() {
           className="ad-btn small"
           to={`/admin/sellers/${encodeURIComponent(row.id)}`}
         >
-          Профиль{" "}
+          {translateText("Профиль")}{" "}
           <ArrowUpRight
             size={12}
             className="ad-inline-arrow"

@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import {
   useCallback,
   useEffect,
@@ -40,27 +42,48 @@ const ERROR_TEXT = "Не удалось получить ответ. Попро�
 
 /** Демо-ответы. Здесь позже подключается настоящий API. */
 async function getAiReply(userText) {
-  await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 500));
+  await new Promise((resolve) =>
+    setTimeout(resolve, 800 + Math.random() * 500),
+  );
 
   const lower = userText.toLowerCase();
 
-  if (lower.includes("торт") || lower.includes("праздник")) {
+  if (
+    lower.includes("торт") ||
+    lower.includes("tort") ||
+    lower.includes("праздник") ||
+    lower.includes("bayram")
+  ) {
     return "Отлично! Для торта уточните: сколько гостей, бюджет и есть ли аллергии (орехи, глютен и т.д.)? Могу сразу предложить варианты от 180 000 до 450 000 сум.";
   }
-  if (lower.includes("самса") || lower.includes("ужин")) {
+  if (
+    lower.includes("самса") ||
+    lower.includes("somsa") ||
+    lower.includes("ужин") ||
+    lower.includes("kechki")
+  ) {
     return "Самса — отличный выбор! У нас есть классическая с мясом и куриная. Сколько штук нужно и в каком районе забрать?";
   }
-  if (lower.includes("орех") || lower.includes("аллерг")) {
+  if (
+    lower.includes("орех") ||
+    lower.includes("yong") ||
+    lower.includes("аллерг") ||
+    lower.includes("allerg")
+  ) {
     return "Да, есть торты и десерты без орехов. Могу показать варианты с маркировкой «без орехов». Какой повод и на сколько человек?";
   }
-  if (lower.includes("рядом") || lower.includes("близко")) {
+  if (
+    lower.includes("рядом") ||
+    lower.includes("yaqin") ||
+    lower.includes("близко")
+  ) {
     return "Сейчас посмотрю мастеров рядом с вами. Разрешите геолокацию или напишите район — подберу ближайшие варианты.";
   }
   return "Понял вас. Расскажите чуть подробнее: бюджет, количество гостей, повод и район — подберу самые подходящие варианты на BakeU.";
 }
 
 const formatTime = (timestamp) =>
-  new Date(timestamp).toLocaleTimeString("ru-RU", {
+  new Date(timestamp).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -131,7 +154,9 @@ export default function AiAssistant() {
   useEffect(() => {
     const container = messagesRef.current;
     if (!container) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     container.scrollTo({
       top: container.scrollHeight,
       behavior: reduced ? "auto" : "smooth",
@@ -238,7 +263,11 @@ export default function AiAssistant() {
   };
 
   const handleKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing
+    ) {
       event.preventDefault();
       handleSend();
     }
@@ -293,15 +322,15 @@ export default function AiAssistant() {
         {/* ===== История ===== */}
         <aside
           className={`ai-history ${historyOpen ? "is-open" : ""}`}
-          aria-label="История чатов"
+          aria-label={translateText("История чатов")}
         >
           <div className="ai-history__top">
-            <h2>История</h2>
+            <h2>{translateText("История")}</h2>
             <button
               type="button"
               className="ai-icon-btn ai-history__close"
               onClick={() => setHistoryOpen(false)}
-              aria-label="Закрыть историю"
+              aria-label={translateText("Закрыть историю")}
             >
               <X size={18} />
             </button>
@@ -309,7 +338,7 @@ export default function AiAssistant() {
 
           <button type="button" className="ai-new" onClick={startNewChat}>
             <MessageSquarePlus size={17} />
-            Новый чат
+            {translateText("Новый чат")}
           </button>
 
           {chats.length > 0 && (
@@ -319,8 +348,8 @@ export default function AiAssistant() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Поиск по чатам"
-                aria-label="Поиск по истории"
+                placeholder={translateText("Поиск по чатам")}
+                aria-label={translateText("Поиск по истории")}
               />
             </div>
           )}
@@ -328,18 +357,21 @@ export default function AiAssistant() {
           <div className="ai-history__list">
             {chats.length === 0 && (
               <p className="ai-history__empty">
-                Здесь появятся ваши разговоры с помощником. Задайте первый
-                вопрос.
+                {translateText(
+                  "Здесь появятся ваши разговоры с помощником. Задайте первый вопрос.",
+                )}
               </p>
             )}
 
             {chats.length > 0 && groups.length === 0 && (
-              <p className="ai-history__empty">Ничего не найдено.</p>
+              <p className="ai-history__empty">
+                {translateText("Ничего не найдено.")}
+              </p>
             )}
 
             {groups.map((group) => (
               <section key={group.label} className="ai-group">
-                <h3>{group.label}</h3>
+                <h3>{translateText(group.label)}</h3>
                 <ul>
                   {group.items.map((chat) => (
                     <li
@@ -352,11 +384,15 @@ export default function AiAssistant() {
                         onClick={() => openChat(chat.id)}
                         aria-current={chat.id === activeId ? "true" : undefined}
                       >
-                        <span className="ai-chat__title">{chat.title}</span>
+                        <span className="ai-chat__title">
+                          {translateText(chat.title)}
+                        </span>
                         <span className="ai-chat__meta">
-                          {chat.messages.length}{" "}
-                          {chat.messages.length === 1 ? "сообщение" : "сообщ."} ·{" "}
-                          {formatTime(chat.updatedAt)}
+                          {translateText(chat.messages.length)}{" "}
+                          {translateText(
+                            chat.messages.length === 1 ? "сообщение" : "сообщ.",
+                          )}{" "}
+                          · {translateText(formatTime(chat.updatedAt))}
                         </span>
                       </button>
                       <button
@@ -365,14 +401,14 @@ export default function AiAssistant() {
                           confirmId === chat.id ? "is-confirm" : ""
                         }`}
                         onClick={() => deleteChat(chat.id)}
-                        aria-label={
+                        aria-label={translateText(
                           confirmId === chat.id
                             ? "Подтвердить удаление"
-                            : `Удалить чат: ${chat.title}`
-                        }
+                            : `Удалить чат: ${chat.title}`,
+                        )}
                       >
                         {confirmId === chat.id ? (
-                          "Удалить?"
+                          translateText("Удалить?")
                         ) : (
                           <Trash2 size={15} />
                         )}
@@ -391,7 +427,11 @@ export default function AiAssistant() {
               onClick={clearAll}
             >
               <Trash2 size={15} />
-              {confirmId === "all" ? "Точно очистить всё?" : "Очистить историю"}
+              {translateText(
+                confirmId === "all"
+                  ? "Точно очистить всё?"
+                  : "Очистить историю",
+              )}
             </button>
           )}
         </aside>
@@ -401,7 +441,7 @@ export default function AiAssistant() {
             type="button"
             className="ai-backdrop"
             onClick={() => setHistoryOpen(false)}
-            aria-label="Закрыть историю"
+            aria-label={translateText("Закрыть историю")}
             tabIndex={-1}
           />
         )}
@@ -413,10 +453,12 @@ export default function AiAssistant() {
               type="button"
               className="ai-icon-btn ai__history-btn"
               onClick={() => setHistoryOpen(true)}
-              aria-label="Открыть историю чатов"
+              aria-label={translateText("Открыть историю чатов")}
             >
               <History size={18} />
-              {chats.length > 0 && <span className="ai__count">{chats.length}</span>}
+              {chats.length > 0 && (
+                <span className="ai__count">{chats.length}</span>
+              )}
             </button>
 
             <div className="ai__title">
@@ -424,11 +466,13 @@ export default function AiAssistant() {
                 <Sparkles size={16} strokeWidth={2.2} />
               </span>
               <div>
-                <h1>Помощник BakeU</h1>
+                <h1>{translateText("Помощник BakeU")}</h1>
                 <p>
-                  {activeChat
-                    ? activeChat.title
-                    : "Бюджет, повод, гости, район — обычными словами"}
+                  {translateText(
+                    activeChat
+                      ? activeChat.title
+                      : "Бюджет, повод, гости, район — обычными словами",
+                  )}
                 </p>
               </div>
             </div>
@@ -437,8 +481,8 @@ export default function AiAssistant() {
               type="button"
               className="ai-icon-btn"
               onClick={startNewChat}
-              aria-label="Начать новый чат"
-              title="Новый чат"
+              aria-label={translateText("Начать новый чат")}
+              title={translateText("Новый чат")}
             >
               <RotateCcw size={17} />
             </button>
@@ -455,8 +499,8 @@ export default function AiAssistant() {
                 <span className="ai-welcome__badge" aria-hidden="true">
                   <Sparkles size={26} strokeWidth={2} />
                 </span>
-                <h2>Чем помочь?</h2>
-                <p>{GREETING}</p>
+                <h2>{translateText("Чем помочь?")}</h2>
+                <p>{translateText(GREETING)}</p>
 
                 <div className="ai-welcome__grid">
                   {SUGGESTIONS.map((item) => (
@@ -464,9 +508,9 @@ export default function AiAssistant() {
                       key={item}
                       type="button"
                       className="ai-chip"
-                      onClick={() => handleSend(item)}
+                      onClick={() => handleSend(translateText(item))}
                     >
-                      {item}
+                      {translateText(item)}
                     </button>
                   ))}
                 </div>
@@ -479,9 +523,13 @@ export default function AiAssistant() {
                     message.isError ? "ai-bubble--error" : ""
                   }`}
                 >
-                  <p>{message.text}</p>
+                  <p>
+                    {message.role === "assistant"
+                      ? translateText(message.text)
+                      : message.text}
+                  </p>
                   <time dateTime={new Date(message.time).toISOString()}>
-                    {formatTime(message.time)}
+                    {translateText(formatTime(message.time))}
                   </time>
                 </div>
               ))
@@ -490,7 +538,7 @@ export default function AiAssistant() {
             {isTyping && (
               <div
                 className="ai-bubble ai-bubble--assistant ai-bubble--typing"
-                aria-label="Помощник печатает"
+                aria-label={translateText("Помощник печатает")}
               >
                 <span className="ai-dot" />
                 <span className="ai-dot" />
@@ -506,8 +554,8 @@ export default function AiAssistant() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Напишите, что нужно…"
-              aria-label="Сообщение помощнику"
+              placeholder={translateText("Напишите, что нужно…")}
+              aria-label={translateText("Сообщение помощнику")}
               autoComplete="off"
               maxLength={1000}
             />
@@ -515,7 +563,7 @@ export default function AiAssistant() {
               type="submit"
               className="ai__send"
               disabled={!input.trim() || isTyping}
-              aria-label="Отправить"
+              aria-label={translateText("Отправить")}
             >
               <ArrowUp size={19} strokeWidth={2.6} />
             </button>

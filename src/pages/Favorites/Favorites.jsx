@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { Link } from "react-router-dom";
 import { useFavoriteStore } from "../../store/favoriteStore";
 import ProductActions from "../../components/ProductActions/ProductActions";
@@ -10,19 +11,19 @@ export default function Favorites() {
   return (
     <main className="bu-shopping">
       <div className="bu-heading">
-        <h1>Избранное</h1>
+        <h1>{translateText("Избранное")}</h1>
         {products.length > 0 && (
           <button className="bu-text" onClick={clear}>
-            Очистить
+            {translateText("Очистить")}
           </button>
         )}
       </div>
       {!products.length ? (
         <div className="bu-empty">
-          <h2>Сохраните то, что нравится</h2>
-          <p>Нажмите сердечко на карточке товара.</p>
+          <h2>{translateText("Сохраните то, что нравится")}</h2>
+          <p>{translateText("Нажмите сердечко на карточке товара.")}</p>
           <Link to="/" className="bu-button">
-            Открыть каталог
+            {translateText("Открыть каталог")}
           </Link>
         </div>
       ) : (
@@ -31,9 +32,12 @@ export default function Favorites() {
             <article className="bu-card" key={p.id}>
               <Link to={"/product/" + encodeURIComponent(p.productId || p.id)}>
                 <ProductImage src={p.image} name={p.name} />
-                <h2>{p.name}</h2>
+                <h2>{translateText(p.name)}</h2>
               </Link>
-              <p>{new Intl.NumberFormat("ru-RU").format(p.price)} сум</p>
+              <p>
+                {translateText(new Intl.NumberFormat("ru-RU").format(p.price))}
+                {translateText(" сум")}
+              </p>
               <ProductActions product={p} />
             </article>
           ))}

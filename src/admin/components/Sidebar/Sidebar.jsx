@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { Link, NavLink } from "react-router-dom";
 import {
   Send,
@@ -39,22 +40,26 @@ export default function Sidebar({ open, onClose }) {
       <button
         className={`ad-shade ${open ? "visible" : ""}`}
         onClick={onClose}
-        aria-label="Закрыть меню"
+        aria-label={translateText("Закрыть меню")}
       />
       <aside className={`ad-sidebar ${open ? "open" : ""}`}>
-        <Link className="ad-brand" to="/" aria-label="BakeU — главная сайта">
+        <Link
+          className="ad-brand"
+          to="/"
+          aria-label={translateText("BakeU — главная сайта")}
+        >
           <img
             src="/images/logo-bear.png"
             alt="BakeU"
             width="160"
             height="72"
           />
-          <small>Панель управления</small>
+          <small>{translateText("Панель управления")}</small>
         </Link>
         <button
           className="ad-mobile-close ad-icon"
           onClick={onClose}
-          aria-label="Закрыть меню"
+          aria-label={translateText("Закрыть меню")}
         >
           <X />
         </button>
@@ -67,7 +72,7 @@ export default function Sidebar({ open, onClose }) {
               onClick={onClose}
             >
               <Icon size={21} />
-              <span>{label}</span>
+              <span>{translateText(label)}</span>
               {path === "applications" && count > 0 && <b>{count}</b>}
             </NavLink>
           ))}

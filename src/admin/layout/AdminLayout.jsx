@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
@@ -47,20 +48,21 @@ export default function AdminLayout() {
         <main className="ad-content">
           {demoPreview && (
             <p className="ad-demo-preview" role="status">
-              <strong>Демонстрационная админка.</strong> Изменения сохраняются
-              только в этом браузере. Серверные аккаунты и заявки требуют входа
-              через Telegram.
+              <strong>{translateText("Демонстрационная админка.")}</strong>
+              {translateText(
+                " Изменения сохраняются только в этом браузере. Серверные аккаунты и заявки требуют входа через Telegram.",
+              )}
             </p>
           )}
           {error && (
             <p role="alert" className="ad-form-error">
-              {error}
+              {translateText(error)}
             </p>
           )}
           <Outlet />
         </main>
         <footer className="ad-footer">
-          Демо-панель · данные сохраняются в этом браузере
+          {translateText("Демо-панель · данные сохраняются в этом браузере")}
         </footer>
       </div>
     </div>

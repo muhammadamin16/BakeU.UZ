@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -30,15 +31,11 @@ export default function HeroSlider() {
   const suppressClick = useRef(false);
 
   function next(step = 1) {
-    setActive((index) =>
-      (index + step + slides.length) % slides.length
-    );
+    setActive((index) => (index + step + slides.length) % slides.length);
   }
 
   useEffect(() => {
-    const media = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const updateMotion = () => setReduced(media.matches);
     const updateVisibility = () => setHidden(document.hidden);
@@ -51,10 +48,7 @@ export default function HeroSlider() {
 
     return () => {
       media.removeEventListener("change", updateMotion);
-      document.removeEventListener(
-        "visibilitychange",
-        updateVisibility
-      );
+      document.removeEventListener("visibilitychange", updateVisibility);
     };
   }, []);
 
@@ -129,8 +123,8 @@ export default function HeroSlider() {
   return (
     <section
       className="bu-slider"
-      aria-label="Вдохновение для заказа"
-      aria-roledescription="карусель"
+      aria-label={translateText("Вдохновение для заказа")}
+      aria-roledescription={translateText("карусель")}
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -160,8 +154,7 @@ export default function HeroSlider() {
         }}
       >
         {slides.map((slide, index) => {
-          const position =
-            (index - active + slides.length) % slides.length;
+          const position = (index - active + slides.length) % slides.length;
 
           return (
             <Link
@@ -170,7 +163,7 @@ export default function HeroSlider() {
               className={`bu-slide bu-slide--${position}`}
               tabIndex={position === 0 ? 0 : -1}
               aria-hidden={position !== 0}
-              aria-label={slide.title}
+              aria-label={translateText(slide.title)}
               draggable={false}
               style={{
                 pointerEvents: position === 0 ? "auto" : "none",
@@ -183,8 +176,8 @@ export default function HeroSlider() {
               />
 
               <span>
-                <small>{slide.subtitle}</small>
-                <strong>{slide.title}</strong>
+                <small>{translateText(slide.subtitle)}</small>
+                <strong>{translateText(slide.title)}</strong>
               </span>
             </Link>
           );

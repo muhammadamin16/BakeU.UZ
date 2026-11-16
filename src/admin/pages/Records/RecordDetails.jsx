@@ -1,3 +1,5 @@
+import { getLocale } from "../../../i18n/index.js";
+import { translateText } from "../../../i18n/index.js";
 import { ArrowUpRight } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -36,8 +38,8 @@ function Information({ rows }) {
     <dl className="ad-record-information">
       {rows.map(([label, value]) => (
         <div key={label}>
-          <dt>{label}</dt>
-          <dd>{value || "Не указано"}</dd>
+          <dt>{translateText(label)}</dt>
+          <dd>{translateText(value || "Не указано")}</dd>
         </div>
       ))}
     </dl>
@@ -61,10 +63,10 @@ export default function RecordDetails({ kind }) {
   if (!record)
     return (
       <>
-        <PageTitle title="Запись не найдена" />
+        <PageTitle title={translateText("Запись не найдена")} />
         <Link className="ad-btn" to={`/admin/${kind}`}>
           <ArrowLeft size={16} />
-          {listTitle}
+          {translateText(listTitle)}
         </Link>
       </>
     );
@@ -94,7 +96,7 @@ export default function RecordDetails({ kind }) {
         className="ad-text-link"
         to={`/admin/${entity}/${encodeURIComponent(row.id)}`}
       >
-        {row.name}{" "}
+        {translateText(row.name)}{" "}
         <ArrowUpRight
           size={12}
           className="ad-inline-arrow"
@@ -109,17 +111,17 @@ export default function RecordDetails({ kind }) {
   return (
     <>
       <PageTitle
-        title={
+        title={translateText(
           kind === "products"
             ? record.name
             : kind === "orders"
               ? `Заказ ${record.id}`
-              : `Подписка ${record.id}`
-        }
+              : `Подписка ${record.id}`,
+        )}
       >
         <Link className="ad-btn" to={`/admin/${kind}`}>
           <ArrowLeft size={16} />
-          {listTitle}
+          {translateText(listTitle)}
         </Link>
       </PageTitle>
       <section className="ad-panel ad-record-hero">
@@ -128,25 +130,33 @@ export default function RecordDetails({ kind }) {
             <Icon size={23} />
           </span>
           <div>
-            <span className="ad-muted">{record.id}</span>
+            <span className="ad-muted">{translateText(record.id)}</span>
             <h2>
-              {kind === "products"
-                ? record.category
-                : kind === "orders"
-                  ? record.customer
-                  : record.plan}
+              {translateText(
+                kind === "products"
+                  ? record.category
+                  : kind === "orders"
+                    ? record.customer
+                    : record.plan,
+              )}
             </h2>
           </div>
           <Badge>
-            {kind === "subscriptions"
-              ? subscriptionStatus(record)
-              : record.status}
+            {translateText(
+              kind === "subscriptions"
+                ? subscriptionStatus(record)
+                : record.status,
+            )}
           </Badge>
         </div>
         <div className="ad-inline-actions">
           <button className="ad-btn primary" onClick={() => setEditing(true)}>
             <Pencil size={16} />
-            {kind === "subscriptions" ? "Изменить / продлить" : "Редактировать"}
+            {translateText(
+              kind === "subscriptions"
+                ? "Изменить / продлить"
+                : "Редактировать",
+            )}
           </button>
           {kind === "products" && <ProductStatusAction product={record} />}
           {kind === "orders" && <OrderStatusActions order={record} />}
@@ -163,14 +173,16 @@ export default function RecordDetails({ kind }) {
           <button
             type="button"
             className="ad-photo-open"
-            aria-label="Увеличить фото"
+            aria-label={translateText("Увеличить фото")}
             disabled={!record.image}
             onClick={() => setPhoto(true)}
           >
-            <ProductPhoto src={record.image} alt={record.name} />
+            <ProductPhoto src={record.image} alt={translateText(record.name)} />
           </button>
           <div>
-            <span className="ad-record-price">{money(record.price)}</span>
+            <span className="ad-record-price">
+              {translateText(money(record.price))}
+            </span>
             <Information
               rows={[
                 ["Магазин", link("shops", shop, record.shop)],
@@ -180,11 +192,12 @@ export default function RecordDetails({ kind }) {
               ]}
             />
             <p className="ad-record-description">
-              {record.description || "Описание не добавлено."}
+              {translateText(record.description || "Описание не добавлено.")}
             </p>
             {restriction && (
               <p className="ad-restriction-note">
-                Для новых заказов недоступен: {restriction.toLowerCase()}.
+                {translateText("Для новых заказов недоступен: ")}
+                {translateText(restriction.toLowerCase())}.
               </p>
             )}
           </div>
@@ -208,7 +221,7 @@ export default function RecordDetails({ kind }) {
             <div className="ad-section-heading">
               <h2>
                 <Package size={21} />
-                Состав заказа
+                {translateText("Состав заказа")}
               </h2>
             </div>
             <div className="ad-order-items">
@@ -220,7 +233,7 @@ export default function RecordDetails({ kind }) {
                   <div className="ad-order-item" key={line.productId}>
                     <ProductPhoto
                       src={line.image || product?.image}
-                      alt={line.name}
+                      alt={translateText(line.name)}
                     />
                     <div>
                       {product ? (
@@ -228,7 +241,7 @@ export default function RecordDetails({ kind }) {
                           className="ad-text-link"
                           to={`/admin/products/${encodeURIComponent(product.id)}`}
                         >
-                          {line.name}{" "}
+                          {translateText(line.name)}{" "}
                           <ArrowUpRight
                             size={12}
                             className="ad-inline-arrow"
@@ -236,19 +249,25 @@ export default function RecordDetails({ kind }) {
                           />
                         </Link>
                       ) : (
-                        <strong>{line.name}</strong>
+                        <strong>{translateText(line.name)}</strong>
                       )}
                       <small>
-                        {money(line.unitPrice)} × {line.quantity} шт.
+                        {translateText(money(line.unitPrice))} ×{" "}
+                        {translateText(line.quantity)}
+                        {translateText(" шт.")}
                       </small>
                     </div>
-                    <strong>{money(line.unitPrice * line.quantity)}</strong>
+                    <strong>
+                      {translateText(money(line.unitPrice * line.quantity))}
+                    </strong>
                   </div>
                 );
               })}
             </div>
             {!record.items?.length && (
-              <p className="ad-empty">Состав этого заказа не был сохранён.</p>
+              <p className="ad-empty">
+                {translateText("Состав этого заказа не был сохранён.")}
+              </p>
             )}
           </section>
         </>
@@ -274,7 +293,7 @@ export default function RecordDetails({ kind }) {
                     [
                       "Пауза с",
                       record.pausedAt
-                        ? new Date(record.pausedAt).toLocaleString("ru-RU")
+                        ? new Date(record.pausedAt).toLocaleString(getLocale())
                         : "Нет данных",
                     ],
                   ]
@@ -283,7 +302,9 @@ export default function RecordDetails({ kind }) {
             ]}
           />
           <p className="ad-restriction-note">
-            Управляет доступом в демо-панели. Банковские списания не изменяются.
+            {translateText(
+              "Управляет доступом в демо-панели. Банковские списания не изменяются.",
+            )}
           </p>
         </section>
       )}
@@ -291,13 +312,13 @@ export default function RecordDetails({ kind }) {
         <div className="ad-section-heading">
           <h2>
             <Clock3 size={21} />
-            История изменений
+            {translateText("История изменений")}
           </h2>
           <Link
             className="ad-btn small"
             to={`/admin/history?${scopeKey}=${encodeURIComponent(record.id)}`}
           >
-            Вся история{" "}
+            {translateText("Вся история")}{" "}
             <ArrowUpRight
               size={12}
               className="ad-inline-arrow"
@@ -309,7 +330,7 @@ export default function RecordDetails({ kind }) {
       </section>
       {editing && (
         <Modal
-          title={`Редактировать: ${record.name || record.id}`}
+          title={translateText(`Редактировать: ${record.name || record.id}`)}
           onClose={() => setEditing(false)}
         >
           <RecordForm
@@ -325,9 +346,12 @@ export default function RecordDetails({ kind }) {
         </Modal>
       )}
       {photo && (
-        <Modal title="Фото товара" onClose={() => setPhoto(false)}>
+        <Modal
+          title={translateText("Фото товара")}
+          onClose={() => setPhoto(false)}
+        >
           <div className="ad-photo-preview">
-            <ProductPhoto src={record.image} alt={record.name} />
+            <ProductPhoto src={record.image} alt={translateText(record.name)} />
           </div>
         </Modal>
       )}

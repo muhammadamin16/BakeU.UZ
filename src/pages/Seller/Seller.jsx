@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Store, ShoppingBag, Search, X } from "lucide-react";
@@ -32,7 +33,9 @@ function SellerCatalog({ tab }) {
   const visibleProducts = products.filter((p) => {
     const owner = shops.find((s) => s.id === p.shopId);
     return (
-      `${p.name} ${owner?.name ?? ""}`.toLocaleLowerCase("ru-RU").includes(q) &&
+      `${p.name} ${owner?.name ?? ""} ${translateText(p.name)} ${translateText(owner?.name ?? "")}`
+        .toLocaleLowerCase("ru-RU")
+        .includes(q) &&
       (category === "Все" || category === p.category)
     );
   });
@@ -40,9 +43,9 @@ function SellerCatalog({ tab }) {
   const visibleShops = shops.filter((s) => {
     const names = products
       .filter((p) => p.shopId === s.id)
-      .map((p) => p.name)
+      .map((p) => p.name + " " + translateText(p.name))
       .join(" ");
-    return `${s.name} ${s.description} ${names}`
+    return `${s.name} ${s.description} ${names} ${translateText(s.name)} ${translateText(s.description)}`
       .toLocaleLowerCase("ru-RU")
       .includes(q);
   });
@@ -59,14 +62,17 @@ function SellerCatalog({ tab }) {
 
   return (
     <main className="seller-page">
-      <nav className="seller-tabs" aria-label="Раздел каталога">
+      <nav
+        className="seller-tabs"
+        aria-label={translateText("Раздел каталога")}
+      >
         <Link
           to="?tab=sellers"
           className={showSellers ? "is-active" : ""}
           aria-current={showSellers ? "page" : undefined}
         >
           <Store size={19} aria-hidden="true" />
-          Продавцы
+          {translateText("Продавцы")}
         </Link>
         <Link
           to="?tab=products"
@@ -74,20 +80,26 @@ function SellerCatalog({ tab }) {
           aria-current={!showSellers ? "page" : undefined}
         >
           <ShoppingBag size={19} aria-hidden="true" />
-          Товары
+          {translateText("Товары")}
         </Link>
       </nav>
 
       <div className="seller-heading">
         <div>
-          <span className="seller-eyebrow">СДЕЛАНО С ЛЮБОВЬЮ</span>
+          <span className="seller-eyebrow">
+            {translateText("СДЕЛАНО С ЛЮБОВЬЮ")}
+          </span>
           <h1>
-            {showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое"}
+            {translateText(
+              showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое",
+            )}
           </h1>
           <p>
-            {showSellers
-              ? "Маленькие магазины с большим вниманием к вкусу."
-              : "Торты, десерты и домашняя выпечка в одном месте."}
+            {translateText(
+              showSellers
+                ? "Маленькие магазины с большим вниманием к вкусу."
+                : "Торты, десерты и домашняя выпечка в одном месте.",
+            )}
           </p>
         </div>
 
@@ -97,14 +109,18 @@ function SellerCatalog({ tab }) {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={showSellers ? "Найти магазин…" : "Найти вкусное…"}
-            aria-label={showSellers ? "Поиск магазинов" : "Поиск товаров"}
+            placeholder={translateText(
+              showSellers ? "Найти магазин…" : "Найти вкусное…",
+            )}
+            aria-label={translateText(
+              showSellers ? "Поиск магазинов" : "Поиск товаров",
+            )}
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
-              aria-label="Очистить поиск"
+              aria-label={translateText("Очистить поиск")}
             >
               <X size={16} aria-hidden="true" />
             </button>
@@ -113,31 +129,36 @@ function SellerCatalog({ tab }) {
       </div>
 
       <p className="seller-demo">
-        Демо-каталог: магазины, рейтинги и отзывы приведены для примера.
+        {translateText(
+          "Демо-каталог: магазины, рейтинги и отзывы приведены для примера.",
+        )}
       </p>
 
       {showSellers ? (
-        <section className="seller-shops" aria-label="Продавцы">
+        <section
+          className="seller-shops"
+          aria-label={translateText("Продавцы")}
+        >
           {visibleShops.map((s) => (
             <ShopCard key={s.id} shop={s} />
           ))}
           {visibleShops.length === 0 && (
             <div className="seller-empty">
               <Store size={28} aria-hidden="true" />
-              <h2>Магазины не найдены</h2>
-              <p>Попробуйте другое название.</p>
+              <h2>{translateText("Магазины не найдены")}</h2>
+              <p>{translateText("Попробуйте другое название.")}</p>
               <button
                 type="button"
                 className="seller-pill"
                 onClick={resetFilters}
               >
-                Сбросить поиск
+                {translateText("Сбросить поиск")}
               </button>
             </div>
           )}
         </section>
       ) : (
-        <section aria-label="Товары">
+        <section aria-label={translateText("Товары")}>
           <div className="seller-categories">
             {categories.map((c) => (
               <button
@@ -147,16 +168,20 @@ function SellerCatalog({ tab }) {
                 aria-pressed={category === c}
                 onClick={() => setCategory(c)}
               >
-                {c}
+                {translateText(c)}
               </button>
             ))}
           </div>
 
           <div className="seller-results">
-            <span>Товаров: {visibleProducts.length}</span>
+            <span>
+              {translateText("Товаров: ")}
+              {visibleProducts.length}
+            </span>
             {(query || category !== "Все") && (
               <button type="button" onClick={resetFilters}>
-                Сбросить фильтры <X size={14} aria-hidden="true" />
+                {translateText("Сбросить фильтры ")}
+                <X size={14} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -175,14 +200,16 @@ function SellerCatalog({ tab }) {
           {visibleProducts.length === 0 && (
             <div className="seller-empty">
               <Search size={28} aria-hidden="true" />
-              <h2>Товары не найдены</h2>
-              <p>Попробуйте другое название или категорию.</p>
+              <h2>{translateText("Товары не найдены")}</h2>
+              <p>
+                {translateText("Попробуйте другое название или категорию.")}
+              </p>
               <button
                 type="button"
                 className="seller-pill"
                 onClick={resetFilters}
               >
-                Сбросить фильтры
+                {translateText("Сбросить фильтры")}
               </button>
             </div>
           )}
@@ -190,7 +217,7 @@ function SellerCatalog({ tab }) {
       )}
 
       <p className="seller-notice" role="status">
-        {notice}
+        {translateText(notice)}
       </p>
     </main>
   );

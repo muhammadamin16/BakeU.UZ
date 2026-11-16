@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { ImageOff } from "lucide-react";
 import { safeProductImage } from "../utils/images";
@@ -8,7 +9,7 @@ function Photo({ src, alt, className }) {
     <img
       className={`ad-product-photo ${className}`}
       src={src}
-      alt={alt}
+      alt={translateText(alt)}
       loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
@@ -17,10 +18,10 @@ function Photo({ src, alt, className }) {
     <span
       className={`ad-product-photo ad-product-photo-empty ${className}`}
       role="img"
-      aria-label={`${alt || "Товар"}: нет фото`}
+      aria-label={translateText(`${alt || "Товар"}: нет фото`)}
     >
       <ImageOff size={22} />
-      <small>Нет фото</small>
+      <small>{translateText("Нет фото")}</small>
     </span>
   );
 }
@@ -31,5 +32,12 @@ export default function ProductPhoto({
   className = "",
 }) {
   const safe = safeProductImage(src);
-  return <Photo key={safe} src={safe} alt={alt} className={className} />;
+  return (
+    <Photo
+      key={safe}
+      src={safe}
+      alt={translateText(alt)}
+      className={className}
+    />
+  );
 }

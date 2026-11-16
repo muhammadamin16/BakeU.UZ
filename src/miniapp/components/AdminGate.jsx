@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { Link } from "react-router-dom";
 import { ShieldCheck, LoaderCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { useAdminAccess } from "../useAdminAccess";
@@ -18,32 +19,38 @@ export default function AdminGate({ children, allowDemoPreview = false }) {
         )}
       </div>
       <h1>
-        {loading
-          ? "Проверяем вход…"
-          : denied
-            ? "Нет прав администратора"
-            : "Вход для администратора"}
+        {translateText(
+          loading
+            ? "Проверяем вход…"
+            : denied
+              ? "Нет прав администратора"
+              : "Вход для администратора",
+        )}
       </h1>
       <p>
-        {loading
-          ? "Проверяем вашу Telegram-сессию на сервере."
-          : error ||
-            (denied
-              ? "Ваш Telegram-аккаунт подтверждён, но у него нет прав администратора. Обратитесь к владельцу BakeU."
-              : "Для доступа к серверным данным откройте Mini App кнопкой в Telegram-боте с аккаунта администратора. Обычная ссылка в браузере не создаёт Telegram-сессию.")}
+        {translateText(
+          loading
+            ? "Проверяем вашу Telegram-сессию на сервере."
+            : error ||
+                (denied
+                  ? "Ваш Telegram-аккаунт подтверждён, но у него нет прав администратора. Обратитесь к владельцу BakeU."
+                  : "Для доступа к серверным данным откройте Mini App кнопкой в Telegram-боте с аккаунта администратора. Обычная ссылка в браузере не создаёт Telegram-сессию."),
+        )}
       </p>
       {canPreviewDemo && !loading && (
         <Link className="mini-secondary" to="/admin">
-          Открыть демо-админку
+          {translateText("Открыть демо-админку")}
         </Link>
       )}
       {!loading && (status === "error" || denied) && (
         <button className="mini-secondary" onClick={retry}>
-          <RefreshCw size={16} /> Проверить снова
+          <RefreshCw size={16} />
+          {translateText(" Проверить снова")}
         </button>
       )}
       <Link to="/miniapp">
-        <ArrowLeft size={16} /> На главную Mini App
+        <ArrowLeft size={16} />
+        {translateText(" На главную Mini App")}
       </Link>
     </main>
   );

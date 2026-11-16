@@ -1,6 +1,7 @@
-import ProductFields, {
-  validateProductDetails,
-} from "../../Product/ProductFields";
+import { getLocale } from "../../../i18n/index.js";
+import { translateText } from "../../../i18n/index.js";
+import ProductFields from "../../Product/ProductFields";
+import { validateProductDetails } from "../../Product/validateProductDetails";
 import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
 import { Orders, Reviews, Sales } from "../Activity";
@@ -193,7 +194,7 @@ export default function SellerProfile({ account, onLogout }) {
   }
   const field = (label, key, type = "text") => (
     <label className="bw-field" key={key}>
-      <span>{label}</span>
+      <span>{translateText(label)}</span>
       <input
         type={type}
         value={draft[key] ?? ""}
@@ -206,7 +207,7 @@ export default function SellerProfile({ account, onLogout }) {
   return (
     <div className="bw-layout">
       <aside className="bw-sidebar">
-        <span className="bw-kicker">BAKEU · ПРОДАВЕЦ</span>
+        <span className="bw-kicker">{translateText("BAKEU · ПРОДАВЕЦ")}</span>
         {sections.map(([key, label, Icon]) => (
           <button
             key={key}
@@ -215,20 +216,25 @@ export default function SellerProfile({ account, onLogout }) {
             aria-pressed={tab === key}
           >
             <Icon size={18} />
-            {label}
+            {translateText(label)}
           </button>
         ))}
         <button onClick={onLogout}>
           <LogOut size={18} />
-          Выйти
+          {translateText("Выйти")}
         </button>
       </aside>
       <div className="bw-content">
         <header className="bw-heading">
           <div>
-            <span className="bw-kicker">ВАШ МАГАЗИН</span>
-            <h1>Привет, {account.firstName}!</h1>
-            <p>Всё для ваших вкусных идей — в одном месте.</p>
+            <span className="bw-kicker">{translateText("ВАШ МАГАЗИН")}</span>
+            <h1>
+              {translateText("Привет, ")}
+              {translateText(account.firstName)}!
+            </h1>
+            <p>
+              {translateText("Всё для ваших вкусных идей — в одном месте.")}
+            </p>
           </div>
           <div className="bw-actions">
             {saved && (
@@ -236,17 +242,18 @@ export default function SellerProfile({ account, onLogout }) {
                 className="bw-btn"
                 to={`/seller?shop=${encodeURIComponent(id)}`}
               >
-                Мой магазин <ExternalLink size={16} />
+                {translateText("Мой магазин ")}
+                <ExternalLink size={16} />
               </Link>
             )}
             <button className="bw-btn primary" onClick={openAdd}>
               <Plus size={18} />
-              Добавить товар
+              {translateText("Добавить товар")}
             </button>
           </div>
         </header>
         <p role="status" className="bw-status">
-          {notice}
+          {translateText(notice)}
         </p>
         {tab === "overview" && (
           <>
@@ -273,29 +280,32 @@ export default function SellerProfile({ account, onLogout }) {
                 ],
               ].map(([label, value]) => (
                 <div className="bw-card" key={label}>
-                  <small>{label}</small>
-                  <strong>{value}</strong>
+                  <small>{translateText(label)}</small>
+                  <strong>{translateText(value)}</strong>
                 </div>
               ))}
             </div>
             <div className="bw-two">
               <Sales ownerId={id} />
               <section className="bw-card">
-                <h2>Начните с магазина</h2>
+                <h2>{translateText("Начните с магазина")}</h2>
                 <p>
-                  Добавьте обложку, контакты и адрес, затем разместите первый
-                  товар.
+                  {translateText(
+                    "Добавьте обложку, контакты и адрес, затем разместите первый товар.",
+                  )}
                 </p>
                 <button className="bw-btn" onClick={() => setTab("settings")}>
-                  Настроить магазин <Settings size={16} />
+                  {translateText("Настроить магазин ")}
+                  <Settings size={16} />
                 </button>
-                <h3>Быстрый доступ</h3>
+                <h3>{translateText("Быстрый доступ")}</h3>
                 <div className="bw-actions">
                   <button className="bw-btn" onClick={() => setTab("products")}>
-                    Мои товары · {products.length}
+                    {translateText("Мои товары · ")}
+                    {products.length}
                   </button>
                   <button className="bw-btn" onClick={() => setTab("messages")}>
-                    Сообщения
+                    {translateText("Сообщения")}
                   </button>
                 </div>
               </section>
@@ -305,20 +315,27 @@ export default function SellerProfile({ account, onLogout }) {
         {tab === "products" && (
           <section className="bw-card">
             <div className="bw-heading">
-              <h2>Мои товары · {products.length}</h2>
+              <h2>
+                {translateText("Мои товары · ")}
+                {products.length}
+              </h2>
               <input
-                aria-label="Поиск моих товаров"
-                placeholder="Найти товар…"
+                aria-label={translateText("Поиск моих товаров")}
+                placeholder={translateText("Найти товар…")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
             {editor && (
               <form className="bw-editor" onSubmit={submitProduct}>
-                <h3>{editor.id ? "Редактировать товар" : "Новый товар"}</h3>
+                <h3>
+                  {translateText(
+                    editor.id ? "Редактировать товар" : "Новый товар",
+                  )}
+                </h3>
                 <div className="bw-fields">
                   <label className="bw-field">
-                    Название
+                    {translateText("Название")}
                     <input
                       required
                       value={editor.name}
@@ -328,7 +345,7 @@ export default function SellerProfile({ account, onLogout }) {
                     />
                   </label>
                   <label className="bw-field">
-                    Цена, сум
+                    {translateText("Цена, сум")}
                     <input
                       required
                       min="1"
@@ -340,7 +357,7 @@ export default function SellerProfile({ account, onLogout }) {
                     />
                   </label>
                   <label className="bw-field">
-                    Категория
+                    {translateText("Категория")}
                     <select
                       value={editor.category}
                       onChange={(e) =>
@@ -348,12 +365,14 @@ export default function SellerProfile({ account, onLogout }) {
                       }
                     >
                       {PRODUCT_CATEGORIES.map((c) => (
-                        <option key={c}>{c}</option>
+                        <option value={c} key={c}>
+                          {translateText(c)}
+                        </option>
                       ))}
                     </select>
                   </label>
                   <label className="bw-field">
-                    Фото JPG / PNG / WebP
+                    {translateText("Фото JPG / PNG / WebP")}
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -365,11 +384,11 @@ export default function SellerProfile({ account, onLogout }) {
                   <img
                     className="bw-preview"
                     src={editor.image}
-                    alt="Фото товара"
+                    alt={translateText("Фото товара")}
                   />
                 )}
                 <label className="bw-field">
-                  Описание
+                  {translateText("Описание")}
                   <textarea
                     value={editor.description}
                     maxLength={1500}
@@ -384,13 +403,15 @@ export default function SellerProfile({ account, onLogout }) {
                   onError={setNotice}
                 />
                 <div className="bw-actions">
-                  <button className="bw-btn primary">Сохранить товар</button>
+                  <button className="bw-btn primary">
+                    {translateText("Сохранить товар")}
+                  </button>
                   <button
                     type="button"
                     className="bw-btn"
                     onClick={() => setEditor(null)}
                   >
-                    Отмена
+                    {translateText("Отмена")}
                   </button>
                 </div>
               </form>
@@ -402,9 +423,12 @@ export default function SellerProfile({ account, onLogout }) {
                 )
                 .map((p) => (
                   <article className="bw-product" key={p.id}>
-                    <img src={p.image} alt={p.name} />
-                    <strong>{p.name}</strong>
-                    <span>{p.price.toLocaleString("ru-RU")} сум</span>
+                    <img src={p.image} alt={translateText(p.name)} />
+                    <strong>{translateText(p.name)}</strong>
+                    <span>
+                      {translateText(p.price.toLocaleString(getLocale()))}
+                      {translateText(" сум")}
+                    </span>
                     <label>
                       <input
                         type="checkbox"
@@ -413,44 +437,51 @@ export default function SellerProfile({ account, onLogout }) {
                           saveProduct({ ...p, available: e.target.checked })
                         }
                       />{" "}
-                      В наличии
+                      {translateText("В наличии")}
                     </label>
                     <div className="bw-actions">
                       <button
                         className="bw-btn"
-                        aria-label={`Изменить ${p.name}`}
+                        aria-label={translateText(`Изменить ${p.name}`)}
                         onClick={() => setEditor({ ...p })}
                       >
                         <Pencil size={15} />
-                        Изменить
+                        {translateText("Изменить")}
                       </button>
                       <button
                         className="bw-text"
                         onClick={() => {
-                          if (window.confirm(`Удалить «${p.name}»?`))
+                          if (
+                            window.confirm(
+                              translateText(`Удалить «${p.name}»?`),
+                            )
+                          )
                             removeProduct(p.id);
                         }}
                       >
-                        Удалить
+                        {translateText("Удалить")}
                       </button>
                     </div>
                   </article>
                 ))}
             </div>
             {!products.length && (
-              <p>Пока нет товаров. Нажмите «Добавить товар».</p>
+              <p>
+                {translateText("Пока нет товаров. Нажмите «Добавить товар».")}
+              </p>
             )}
             {!saved && (
               <p>
-                Чтобы магазин и товары появились в каталоге, сохраните настройки
-                магазина.
+                {translateText(
+                  "Чтобы магазин и товары появились в каталоге, сохраните настройки магазина.",
+                )}
               </p>
             )}
           </section>
         )}
         {tab === "settings" && (
           <form className="bw-card" onSubmit={save}>
-            <h2>Настройки магазина</h2>
+            <h2>{translateText("Настройки магазина")}</h2>
             <div
               className="bw-cover"
               style={
@@ -460,7 +491,7 @@ export default function SellerProfile({ account, onLogout }) {
               }
             >
               <label className="bw-btn">
-                Изменить баннер
+                {translateText("Изменить баннер")}
                 <input
                   hidden
                   type="file"
@@ -472,13 +503,13 @@ export default function SellerProfile({ account, onLogout }) {
             <div className="bw-actions">
               <span className="bw-avatar">
                 {draft.logo ? (
-                  <img src={draft.logo} alt="Логотип" />
+                  <img src={draft.logo} alt={translateText("Логотип")} />
                 ) : (
                   draft.initials
                 )}
               </span>
               <label className="bw-btn">
-                Изменить логотип
+                {translateText("Изменить логотип")}
                 <input
                   hidden
                   type="file"
@@ -488,16 +519,16 @@ export default function SellerProfile({ account, onLogout }) {
               </label>
             </div>
             <div className="bw-fields">
-              {field("Название магазина", "name")}
-              {field("Никнейм", "nickname")}
-              {field("Телефон", "phone", "tel")}
-              {field("Telegram", "telegram")}
-              {field("Instagram", "instagram")}
-              {field("Адрес", "address")}
-              {field("Широта", "lat", "number")}
-              {field("Долгота", "lng", "number")}
-              {field("Открытие", "open", "time")}
-              {field("Закрытие", "close", "time")}
+              {translateText(field("Название магазина", "name"))}
+              {translateText(field("Никнейм", "nickname"))}
+              {translateText(field("Телефон", "phone", "tel"))}
+              {translateText(field("Telegram", "telegram"))}
+              {translateText(field("Instagram", "instagram"))}
+              {translateText(field("Адрес", "address"))}
+              {translateText(field("Широта", "lat", "number"))}
+              {translateText(field("Долгота", "lng", "number"))}
+              {translateText(field("Открытие", "open", "time"))}
+              {translateText(field("Закрытие", "close", "time"))}
             </div>
             <button
               type="button"
@@ -524,10 +555,10 @@ export default function SellerProfile({ account, onLogout }) {
                 );
               }}
             >
-              Определить мою локацию
+              {translateText("Определить мою локацию")}
             </button>
             <label className="bw-field">
-              Описание магазина
+              {translateText("Описание магазина")}
               <textarea
                 value={draft.about}
                 maxLength={1500}
@@ -535,7 +566,9 @@ export default function SellerProfile({ account, onLogout }) {
               />
             </label>
             <div className="bw-actions">
-              <button className="bw-btn primary">Сохранить изменения</button>
+              <button className="bw-btn primary">
+                {translateText("Сохранить изменения")}
+              </button>
               <button
                 className="bw-btn"
                 type="button"
@@ -544,7 +577,7 @@ export default function SellerProfile({ account, onLogout }) {
                   setNotice("Изменения отменены.");
                 }}
               >
-                Отмена
+                {translateText("Отмена")}
               </button>
             </div>
           </form>
@@ -554,15 +587,18 @@ export default function SellerProfile({ account, onLogout }) {
         {tab === "stats" && <Sales ownerId={id} />}
         {tab === "followers" && (
           <section className="bw-card">
-            <h2>Подписчики · {followers.length}</h2>
+            <h2>
+              {translateText("Подписчики · ")}
+              {followers.length}
+            </h2>
             {followers.length ? (
               followers.map((f) => (
                 <div className="bw-address" key={f.buyerId}>
-                  {f.name}
+                  {translateText(f.name)}
                 </div>
               ))
             ) : (
-              <p>Пока никто не подписался на магазин.</p>
+              <p>{translateText("Пока никто не подписался на магазин.")}</p>
             )}
           </section>
         )}
@@ -581,10 +617,11 @@ export default function SellerProfile({ account, onLogout }) {
                 }
               }}
             >
-              <h2>Автоответчик</h2>
+              <h2>{translateText("Автоответчик")}</h2>
               <p>
-                Отвечает один раз на первое сообщение нового покупателя. Ответ
-                отмечается как автоматический.
+                {translateText(
+                  "Отвечает один раз на первое сообщение нового покупателя. Ответ отмечается как автоматический.",
+                )}
               </p>
               <label className="bw-check">
                 <input
@@ -592,10 +629,10 @@ export default function SellerProfile({ account, onLogout }) {
                   checked={replyEnabled}
                   onChange={(e) => setReplyEnabled(e.target.checked)}
                 />{" "}
-                Включён
+                {translateText("Включён")}
               </label>
               <label className="bw-field">
-                Текст приветствия
+                {translateText("Текст приветствия")}
                 <textarea
                   value={replyText}
                   maxLength={1000}
@@ -603,18 +640,25 @@ export default function SellerProfile({ account, onLogout }) {
                   onChange={(e) => setReplyText(e.target.value)}
                 />
               </label>
-              <button className="bw-btn primary">Сохранить автоответчик</button>
+              <button className="bw-btn primary">
+                {translateText("Сохранить автоответчик")}
+              </button>
             </form>
           </>
         )}
         {tab === "subscription" && (
           <section className="bw-card">
             <Crown size={28} />
-            <h2>Подписка BakeU</h2>
-            <p>Подписка не активирована. Оплата ещё не подключена.</p>
+            <h2>{translateText("Подписка BakeU")}</h2>
             <p>
-              После подключения оплаты здесь появятся тариф, срок действия и
-              история платежей. Подписка позволит размещать товары на главной.
+              {translateText(
+                "Подписка не активирована. Оплата ещё не подключена.",
+              )}
+            </p>
+            <p>
+              {translateText(
+                "После подключения оплаты здесь появятся тариф, срок действия и история платежей. Подписка позволит размещать товары на главной.",
+              )}
             </p>
           </section>
         )}

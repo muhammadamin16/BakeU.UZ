@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -33,15 +35,17 @@ export function Orders({ account, ownerId }) {
   return (
     <section className="bw-card">
       <div className="bw-heading">
-        <h2>{seller ? "Заказы магазина" : "Мои заказы"}</h2>
+        <h2>{translateText(seller ? "Заказы магазина" : "Мои заказы")}</h2>
         <select
-          aria-label="Статус заказов"
+          aria-label={translateText("Статус заказов")}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
           {["Все", "Новый", "Готовится", "Доставка", "Выполнен", "Отменён"].map(
             (s) => (
-              <option key={s}>{s}</option>
+              <option value={s} key={s}>
+                {translateText(s)}
+              </option>
             ),
           )}
         </select>
@@ -49,60 +53,79 @@ export function Orders({ account, ownerId }) {
       {!seller && (
         <p>
           <Link to="/checkout" className="bw-btn primary">
-            Оформить заказ из корзины
+            {translateText("Оформить заказ из корзины")}
           </Link>{" "}
           <Link to="/orders" className="bw-btn">
-            Все заказы
+            {translateText("Все заказы")}
           </Link>
         </p>
       )}
-      <p role="status">{notice}</p>
-      {!orders.length && <p>Заказов пока нет.</p>}
+      <p role="status">{translateText(notice)}</p>
+      {!orders.length && <p>{translateText("Заказов пока нет.")}</p>}
       {orders
         .filter((o) => filter === "Все" || o.status === filter)
         .map((o) => (
           <article className="bw-order" key={o.id}>
             <div className="bw-heading">
-              <strong>Заказ #{o.id.slice(0, 6)}</strong>
-              <span className="bw-badge">{o.status}</span>
+              <strong>
+                {translateText("Заказ #")}
+                {translateText(o.id.slice(0, 6))}
+              </strong>
+              <span className="bw-badge">{translateText(o.status)}</span>
             </div>
             <small>
-              {new Date(o.at).toLocaleDateString("ru-RU")} · {o.buyerName}
+              {translateText(new Date(o.at).toLocaleDateString(getLocale()))} ·{" "}
+              {translateText(o.buyerName)}
             </small>
             <p>
-              <strong>{seller ? o.buyerName : o.shopName || o.shopId}</strong>
+              <strong>
+                {translateText(seller ? o.buyerName : o.shopName || o.shopId)}
+              </strong>
             </p>
             {o.items.map((p) => (
               <div className="bw-order-line" key={p.id}>
                 {p.image && <img src={p.image} alt="" />}
                 <span>
-                  {p.name} × {p.quantity}
+                  {translateText(p.name)} × {translateText(p.quantity)}
                 </span>
-                <b>{money(p.price * p.quantity)}</b>
+                <b>{translateText(money(p.price * p.quantity))}</b>
               </div>
             ))}
             <p>
-              {o.fulfillment === "pickup" ? "Самовывоз: " : "Доставка: "}
-              {o.address}
+              {translateText(
+                o.fulfillment === "pickup" ? "Самовывоз: " : "Доставка: ",
+              )}
+              {translateText(o.address)}
             </p>
             {o.schedule && (
               <p>
-                {o.schedule.date.split("-").reverse().join(".")} в{" "}
-                {o.schedule.time}
+                {translateText(o.schedule.date.split("-").reverse().join("."))}
+                {translateText(" в")} {translateText(o.schedule.time)}
               </p>
             )}
             {o.buyerPhone && seller && (
               <p>
-                <a href={"tel:" + o.buyerPhone}>Позвонить: {o.buyerPhone}</a>
+                <a href={"tel:" + o.buyerPhone}>
+                  {translateText("Позвонить: ")}
+                  {translateText(o.buyerPhone)}
+                </a>
               </p>
             )}
-            {o.note && <p>Комментарий: {o.note}</p>}
+            {o.note && (
+              <p>
+                {translateText("Комментарий: ")}
+                {translateText(o.note)}
+              </p>
+            )}
             <p>
               <Link className="bw-btn" to={"/orders/" + o.id}>
-                Подробности заказа
+                {translateText("Подробности заказа")}
               </Link>
             </p>
-            <strong>Итого: {money(o.total)}</strong>
+            <strong>
+              {translateText("Итого: ")}
+              {translateText(money(o.total))}
+            </strong>
             {seller && (
               <div className="bw-actions">
                 {(transitions[o.status] || []).map((s) => (
@@ -111,7 +134,7 @@ export function Orders({ account, ownerId }) {
                     key={s}
                     onClick={() => run(() => updateOrder(ownerId, o.id, s))}
                   >
-                    {s}
+                    {translateText(s)}
                   </button>
                 ))}
               </div>
@@ -147,15 +170,17 @@ function ReviewForm({ onSave }) {
       }}
     >
       <label className="bw-field">
-        Оценка
+        {translateText("Оценка")}
         <select value={rating} onChange={(e) => setRating(e.target.value)}>
           {[5, 4, 3, 2, 1].map((n) => (
-            <option key={n}>{n}</option>
+            <option value={n} key={n}>
+              {translateText(n)}
+            </option>
           ))}
         </select>
       </label>
       <label className="bw-field">
-        Ваш отзыв
+        {translateText("Ваш отзыв")}
         <textarea
           required
           value={text}
@@ -163,8 +188,8 @@ function ReviewForm({ onSave }) {
           onChange={(e) => setText(e.target.value)}
         />
       </label>
-      <button className="bw-btn">Сохранить отзыв</button>
-      <p role="alert">{error}</p>
+      <button className="bw-btn">{translateText("Сохранить отзыв")}</button>
+      <p role="alert">{translateText(error)}</p>
     </form>
   );
 }
@@ -177,15 +202,22 @@ export function Reviews({ account, ownerId }) {
   const [notice, setNotice] = useState("");
   return (
     <section className="bw-card">
-      <h2>Отзывы</h2>
-      {!reviews.length && <p>Отзывы появятся после выполнения заказов.</p>}
+      <h2>{translateText("Отзывы")}</h2>
+      {!reviews.length && (
+        <p>{translateText("Отзывы появятся после выполнения заказов.")}</p>
+      )}
       {reviews.map((r) => (
         <article className="bw-order" key={r.id}>
           <strong>
-            {r.author} · {"★".repeat(r.rating)}
+            {translateText(r.author)} · {translateText("★".repeat(r.rating))}
           </strong>
           <p>{r.text}</p>
-          {r.reply && <blockquote>Ответ магазина: {r.reply}</blockquote>}
+          {r.reply && (
+            <blockquote>
+              {translateText("Ответ магазина: ")}
+              {translateText(r.reply)}
+            </blockquote>
+          )}
           {account.role === "seller" && (
             <form
               onSubmit={(e) => {
@@ -203,7 +235,7 @@ export function Reviews({ account, ownerId }) {
               }}
             >
               <label className="bw-field">
-                Ответ покупателю
+                {translateText("Ответ покупателю")}
                 <textarea
                   name="reply"
                   required
@@ -211,12 +243,12 @@ export function Reviews({ account, ownerId }) {
                   maxLength={1500}
                 />
               </label>
-              <button className="bw-btn">Ответить</button>
+              <button className="bw-btn">{translateText("Ответить")}</button>
             </form>
           )}
         </article>
       ))}
-      <p role="status">{notice}</p>
+      <p role="status">{translateText(notice)}</p>
     </section>
   );
 }
@@ -229,7 +261,10 @@ export function Sales({ ownerId }) {
     const d = new Date();
     d.setDate(d.getDate() - days + 1 + i);
     return {
-      date: d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" }),
+      date: d.toLocaleDateString(getLocale(), {
+        day: "numeric",
+        month: "short",
+      }),
       value: orders
         .filter((o) => new Date(o.at).toDateString() === d.toDateString())
         .reduce((n, o) => n + o.total, 0),
@@ -239,33 +274,40 @@ export function Sales({ ownerId }) {
   return (
     <section className="bw-card">
       <div className="bw-heading">
-        <h2>Статистика продаж</h2>
+        <h2>{translateText("Статистика продаж")}</h2>
         <select
-          aria-label="Период статистики"
+          aria-label={translateText("Период статистики")}
           value={days}
           onChange={(e) => setDays(+e.target.value)}
         >
-          <option value={7}>За 7 дней</option>
-          <option value={30}>За 30 дней</option>
+          <option value={7}>{translateText("За 7 дней")}</option>
+          <option value={30}>{translateText("За 30 дней")}</option>
         </select>
       </div>
       <strong className="bw-total">
-        {money(daily.reduce((n, d) => n + d.value, 0))}
+        {translateText(money(daily.reduce((n, d) => n + d.value, 0)))}
       </strong>
-      <p>По выполненным локальным заказам</p>
-      <div className="bw-bars" role="img" aria-label="Выручка по дням">
+      <p>{translateText("По выполненным локальным заказам")}</p>
+      <div
+        className="bw-bars"
+        role="img"
+        aria-label={translateText("Выручка по дням")}
+      >
         {daily.map((d) => (
-          <div key={d.date} title={`${d.date}: ${money(d.value)}`}>
+          <div
+            key={d.date}
+            title={translateText(`${d.date}: ${money(d.value)}`)}
+          >
             <span style={{ height: Math.max(2, (d.value / max) * 150) }} />
-            <small>{days === 7 ? d.date : ""}</small>
+            <small>{translateText(days === 7 ? d.date : "")}</small>
           </div>
         ))}
       </div>
       <details>
-        <summary>Данные графика</summary>
+        <summary>{translateText("Данные графика")}</summary>
         {daily.map((d) => (
           <p key={d.date}>
-            {d.date}: {money(d.value)}
+            {translateText(d.date)}: {translateText(money(d.value))}
           </p>
         ))}
       </details>

@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled } from "../../../bot/client/accountApi";
 import { useState } from "react";
@@ -58,13 +59,19 @@ export default function Login() {
   return (
     <AuthShell>
       <header className="bk-head">
-        <h1>С возвращением</h1>
-        <p>Войдите, чтобы продолжить покупки и управлять профилем.</p>
+        <h1>{translateText("С возвращением")}</h1>
+        <p>
+          {translateText(
+            "Войдите, чтобы продолжить покупки и управлять профилем.",
+          )}
+        </p>
       </header>
 
       <form className="bk-form" onSubmit={submit} noValidate>
         <div className="bk-field">
-          <label htmlFor="login-email">Электронная почта</label>
+          <label htmlFor="login-email">
+            {translateText("Электронная почта")}
+          </label>
           <div className="bk-input">
             <Mail size={18} />
             <input
@@ -81,14 +88,14 @@ export default function Login() {
         </div>
 
         <div className="bk-field">
-          <label htmlFor="login-password">Пароль</label>
+          <label htmlFor="login-password">{translateText("Пароль")}</label>
           <div className="bk-input">
             <LockKeyhole size={18} />
             <input
               id="login-password"
               type={visible ? "text" : "password"}
               autoComplete="current-password"
-              placeholder="Введите пароль"
+              placeholder={translateText("Введите пароль")}
               value={form.password}
               onChange={update("password")}
               aria-invalid={Boolean(error)}
@@ -98,7 +105,9 @@ export default function Login() {
               type="button"
               className="bk-eye"
               onClick={() => setVisible((v) => !v)}
-              aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
+              aria-label={translateText(
+                visible ? "Скрыть пароль" : "Показать пароль",
+              )}
             >
               {visible ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -108,31 +117,37 @@ export default function Login() {
         {error && (
           <p className="bk-alert" role="alert">
             <TriangleAlert size={16} />
-            {error}
+            {translateText(error)}
           </p>
         )}
 
         <button className="bk-primary" type="submit" disabled={busy}>
           {busy ? (
             <>
-              <Loader2 size={18} className="bk-spin" /> Входим…
+              <Loader2 size={18} className="bk-spin" />
+              {translateText(" Входим…")}
             </>
           ) : (
             <>
-              Войти <ArrowRight size={18} />
+              {translateText("Войти ")}
+              <ArrowRight size={18} />
             </>
           )}
         </button>
       </form>
 
       <p className="bk-switch">
-        Ещё нет аккаунта?{" "}
-        <Link to={authLink("/register", params)}>Зарегистрироваться</Link>
+        {translateText("Ещё нет аккаунта?")}{" "}
+        <Link to={authLink("/register", params)}>
+          {translateText("Зарегистрироваться")}
+        </Link>
       </p>
       <p className="bk-note">
-        {accountApiEnabled
-          ? "Вход в серверный аккаунт BakeU."
-          : "Демо-вход: аккаунт хранится только в этом браузере."}
+        {translateText(
+          accountApiEnabled
+            ? "Вход в серверный аккаунт BakeU."
+            : "Демо-вход: аккаунт хранится только в этом браузере.",
+        )}
       </p>
     </AuthShell>
   );

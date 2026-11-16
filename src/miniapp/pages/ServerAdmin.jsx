@@ -1,3 +1,5 @@
+import { getLocale } from "../../i18n/index.js";
+import { translateText } from "../../i18n/index.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   RefreshCw,
@@ -73,14 +75,15 @@ export default function ServerAdmin() {
   }
   return (
     <>
-      <PageTitle title="Аккаунты и заявки">
+      <PageTitle title={translateText("Аккаунты и заявки")}>
         <button className="ad-btn" onClick={load} disabled={loading}>
           <RefreshCw size={16} />
-          Обновить
+          {translateText("Обновить")}
         </button>
       </PageTitle>
       <p className="mini-server-status">
-        <ShieldCheck size={14} /> Серверные регистрации сайта и заявки Telegram
+        <ShieldCheck size={14} />
+        {translateText(" Серверные регистрации сайта и заявки Telegram")}
       </p>
       <div className="mini-server-stats">
         {[
@@ -91,8 +94,8 @@ export default function ServerAdmin() {
         ].map(([Icon, label, value]) => (
           <div key={label}>
             <Icon size={20} />
-            <small> {label}</small>
-            <strong>{value ?? "—"}</strong>
+            <small> {translateText(label)}</small>
+            <strong>{translateText(value ?? "—")}</strong>
           </div>
         ))}
       </div>
@@ -108,51 +111,61 @@ export default function ServerAdmin() {
               setRejecting("");
             }}
           >
-            {label}
+            {translateText(label)}
           </button>
         ))}
       </div>
       {error && (
         <p className="ad-form-error" role="alert">
-          {error}
+          {translateText(error)}
         </p>
       )}
       <section className="ad-panel" aria-busy={loading}>
         {loading ? (
           <p className="ad-empty">
-            <LoaderCircle className="mini-spin" size={20} /> Загрузка…
+            <LoaderCircle className="mini-spin" size={20} />
+            {translateText(" Загрузка…")}
           </p>
         ) : data.rows.length ? (
           data.rows.map((row) => (
             <article className="mini-server-row" key={row.id}>
               <div>
                 <h3>
-                  {tab === "applications"
-                    ? row.shop
-                    : [row.firstName, row.lastName].filter(Boolean).join(" ")}
+                  {translateText(
+                    tab === "applications"
+                      ? row.shop
+                      : [row.firstName, row.lastName].filter(Boolean).join(" "),
+                  )}
                 </h3>
                 {tab === "applications" ? (
                   <>
                     <p>
-                      {row.owner} · {row.address}
+                      {translateText(row.owner)} · {translateText(row.address)}
                     </p>
-                    <Badge>{row.status}</Badge>
-                    {row.reason && <p>Причина: {row.reason}</p>}
+                    <Badge>{translateText(row.status)}</Badge>
+                    {row.reason && (
+                      <p>
+                        {translateText("Причина: ")}
+                        {translateText(row.reason)}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>
-                    <p>{row.email}</p>
+                    <p>{translateText(row.email)}</p>
                     <p>
-                      {row.phone}
-                      {row.company ? ` · ${row.company}` : ""}
+                      {translateText(row.phone)}
+                      {translateText(row.company ? ` · ${row.company}` : "")}
                     </p>
                   </>
                 )}
                 <small>
-                  {new Date(row.createdAt).toLocaleString("ru-RU", {
-                    timeZone: "Asia/Tashkent",
-                  })}{" "}
-                  · Ташкент
+                  {translateText(
+                    new Date(row.createdAt).toLocaleString(getLocale(), {
+                      timeZone: "Asia/Tashkent",
+                    }),
+                  )}{" "}
+                  {translateText("· Ташкент")}
                 </small>
               </div>
               {tab === "applications" && row.status === "На проверке" && (
@@ -165,7 +178,9 @@ export default function ServerAdmin() {
                         void decide(row.id, "Отклонено");
                       }}
                     >
-                      <label htmlFor="mini-reject-reason">Причина отказа</label>
+                      <label htmlFor="mini-reject-reason">
+                        {translateText("Причина отказа")}
+                      </label>
                       <textarea
                         id="mini-reject-reason"
                         required
@@ -178,14 +193,14 @@ export default function ServerAdmin() {
                           className="ad-btn small red"
                           disabled={Boolean(busy)}
                         >
-                          Отклонить
+                          {translateText("Отклонить")}
                         </button>
                         <button
                           type="button"
                           className="ad-btn small"
                           onClick={() => setRejecting("")}
                         >
-                          Отмена
+                          {translateText("Отмена")}
                         </button>
                       </div>
                     </form>
@@ -196,7 +211,7 @@ export default function ServerAdmin() {
                         disabled={Boolean(busy)}
                         onClick={() => decide(row.id, "Одобрено")}
                       >
-                        ✓ Одобрить
+                        {translateText("✓ Одобрить")}
                       </button>
                       <button
                         className="ad-btn small red"
@@ -206,7 +221,7 @@ export default function ServerAdmin() {
                           setReason("");
                         }}
                       >
-                        ✕ Отклонить
+                        {translateText("✕ Отклонить")}
                       </button>
                     </div>
                   )}
@@ -215,7 +230,7 @@ export default function ServerAdmin() {
             </article>
           ))
         ) : (
-          <p className="ad-empty">Записей пока нет</p>
+          <p className="ad-empty">{translateText("Записей пока нет")}</p>
         )}
       </section>
       <div className="ad-row-actions">
@@ -227,9 +242,12 @@ export default function ServerAdmin() {
             setPage((p) => p - 1);
           }}
         >
-          ← Назад
+          {translateText("← Назад")}
         </button>
-        <span className="ad-muted">Страница {page + 1}</span>
+        <span className="ad-muted">
+          {translateText("Страница ")}
+          {translateText(page + 1)}
+        </span>
         <button
           className="ad-btn"
           disabled={!data.hasNext || loading}
@@ -238,7 +256,7 @@ export default function ServerAdmin() {
             setPage((p) => p + 1);
           }}
         >
-          Далее →
+          {translateText("Далее →")}
         </button>
       </div>
     </>

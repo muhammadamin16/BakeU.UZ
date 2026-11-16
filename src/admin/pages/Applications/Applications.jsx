@@ -1,3 +1,4 @@
+import { translateText } from "../../../i18n/index.js";
 import { money, date } from "../../utils/format";
 import { CollectionPage } from "../../components/AdminUI";
 import { ApplicationDecisionActions } from "../../components/ManagementActions";
@@ -28,7 +29,7 @@ const columns = [
 export default function Applications() {
   return (
     <CollectionPage
-      title="Заявки на открытие магазина"
+      title={translateText("Заявки на открытие магазина")}
       collection="applications"
       fields={fields}
       columns={columns}

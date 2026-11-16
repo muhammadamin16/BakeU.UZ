@@ -1,3 +1,4 @@
+import { translateText } from "../../i18n/index.js";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -47,7 +48,8 @@ export default function Welcome() {
       <div className="mini-welcome-inner">
         <header className="mini-topline">
           <span>
-            <Snowflake size={15} /> QISH ERTAGI BAKEU BILAN
+            <Snowflake size={15} />
+            {translateText(" QISH ERTAGI BAKEU BILAN")}
           </span>
           <span className="mini-platform">
             <Send size={13} /> MINI APP
@@ -64,27 +66,30 @@ export default function Welcome() {
               fetchPriority="high"
             />
             <div className="mini-season">
-              <span /> Qishning eng shirin ta’mlari
+              <span />
+              {translateText(" Qishning eng shirin ta’mlari")}
             </div>
             <h1>
-              Bir chimdim mehr.
+              {translateText("Bir chimdim mehr.")}
               <br />
-              <em>Bir olam shirinlik.</em>
+              <em>{translateText("Bir olam shirinlik.")}</em>
             </h1>
             <p className="mini-description">
-              Uy pishiriqlari, sevimli desertlar va mehr bilan pishiradigan
-              ustalar — barchasi BakeU’da.
+              {translateText(
+                "Uy pishiriqlari, sevimli desertlar va mehr bilan pishiradigan ustalar — barchasi BakeU’da.",
+              )}
             </p>
             <button className="mini-enter" onClick={enter}>
               <span>
-                <Store size={21} /> Magazinga kirish
+                <Store size={21} />
+                {translateText(" Magazinga kirish")}
               </span>
               <ArrowUpRight size={23} />
             </button>
             <div className="mini-quick-tags">
-              <span>🍰 Tortlar</span>
-              <span>🍪 Pechenye</span>
-              <span>🥐 Yangi pishiriqlar</span>
+              <span>{translateText("🍰 Tortlar")}</span>
+              <span>{translateText("🍪 Pechenye")}</span>
+              <span>{translateText("🥐 Yangi pishiriqlar")}</span>
             </div>
           </div>
           <div className="mini-illustration">
@@ -94,14 +99,14 @@ export default function Welcome() {
             <div className="mini-note note-top">
               <Heart size={17} />
               <span>
-                Mehr bilan
+                {translateText("Mehr bilan")}
                 <br />
-                <strong>tayyorlangan</strong>
+                <strong>{translateText("tayyorlangan")}</strong>
               </span>
             </div>
             <img
               src="/images/winter/bear-gift.png"
-              alt="Sovg‘ali qishki BakeU ayiqchasi"
+              alt={translateText("Sovg‘ali qishki BakeU ayiqchasi")}
               className="mini-bear"
               width="480"
               height="440"
@@ -109,9 +114,9 @@ export default function Welcome() {
             <div className="mini-note note-bottom">
               <Gift size={19} />
               <span>
-                Har bir buyurtmada
+                {translateText("Har bir buyurtmada")}
                 <br />
-                <strong>bir oz bayram</strong>
+                <strong>{translateText("bir oz bayram")}</strong>
               </span>
             </div>
             <div className="mini-snow-base" />
@@ -120,50 +125,57 @@ export default function Welcome() {
             <div>
               <Leaf size={20} />
               <span>
-                <strong>Uy ta’mi</strong>
-                <small>Qalbdan tayyorlangan</small>
+                <strong>{translateText("Uy ta’mi")}</strong>
+                <small>{translateText("Qalbdan tayyorlangan")}</small>
               </span>
             </div>
             <div>
               <Heart size={20} />
               <span>
-                <strong>O‘z ustalari</strong>
-                <small>Sevimli pishiruvchilar</small>
+                <strong>{translateText("O‘z ustalari")}</strong>
+                <small>{translateText("Sevimli pishiruvchilar")}</small>
               </span>
             </div>
             <div>
               <Snowflake size={20} />
               <span>
-                <strong>Qish kayfiyati</strong>
-                <small>Har kuni iliqlik</small>
+                <strong>{translateText("Qish kayfiyati")}</strong>
+                <small>{translateText("Har kuni iliqlik")}</small>
               </span>
             </div>
           </div>
         </main>
-        <section className="mini-access" aria-label="Telegram holati">
+        <section
+          className="mini-access"
+          aria-label={translateText("Telegram holati")}
+        >
           {status === "loading" ? (
             <p>
-              <LoaderCircle className="mini-spin" size={16} /> Telegram
-              tekshirilmoqda…
+              <LoaderCircle className="mini-spin" size={16} />
+              {translateText(" Telegram tekshirilmoqda…")}
             </p>
           ) : status === "ready" ? (
             <p>
               <ShieldCheck size={16} />
               <span>
-                Xush kelibsiz, <strong>{user.firstName}</strong>
+                {translateText("Xush kelibsiz, ")}
+                <strong>{translateText(user.firstName)}</strong>
               </span>
             </p>
           ) : status === "error" ? (
             <div className="mini-error" role="status">
-              <span>{error}</span>
+              <span>{translateText(error)}</span>
               <button onClick={retry}>
-                <RefreshCw size={14} /> Qayta urinish
+                <RefreshCw size={14} />
+                {translateText(" Qayta urinish")}
               </button>
             </div>
           ) : (
             <p>
-              <ShieldCheck size={15} /> Magazinni mehmon sifatida ham
-              ko‘rishingiz mumkin
+              <ShieldCheck size={15} />
+              {translateText(
+                " Magazinni mehmon sifatida ham ko‘rishingiz mumkin",
+              )}
             </p>
           )}
           {isAdmin && status === "ready" && (
@@ -174,22 +186,23 @@ export default function Welcome() {
             >
               <span>
                 <ShieldCheck size={18} />
-                <strong>Admin panel</strong>
-                <small>Akkauntlar va magazinlar</small>
+                <strong>{translateText("Admin panel")}</strong>
+                <small>{translateText("Akkauntlar va magazinlar")}</small>
               </span>
               <ChevronRight size={18} />
             </Link>
           )}
         </section>
         <footer className="mini-welcome-footer">
-          <span>BakeU · Mehrdan boshlangan</span>
+          <span>{translateText("BakeU · Mehrdan boshlangan")}</span>
           {links.telegram && (
             <a href={links.telegram} target="_blank" rel="noreferrer">
               Telegram <ArrowRight size={12} />
             </a>
           )}
           <Link to="/">
-            Magazinni ko‘rish <ArrowRight size={12} />
+            {translateText("Magazinni ko‘rish ")}
+            <ArrowRight size={12} />
           </Link>
         </footer>
       </div>
