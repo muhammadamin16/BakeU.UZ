@@ -1,29 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { translateText } from "../../../i18n/index.js";
+import { authReturnTo, authLink } from "../../../store/navigation";
+import { accountApiEnabled } from "../../../bot/client/accountApi";
+import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
   Building2,
   Check,
+  Eye,
+  EyeOff,
   Loader2,
   LockKeyhole,
   Mail,
   MapPin,
   Phone,
-  ShieldCheck,
   ShoppingBag,
   Store,
   TriangleAlert,
   UserRound,
 } from "lucide-react";
-import { translateText as t } from "../../../i18n/index.js";
-import { authReturnTo, authLink } from "../../../store/navigation";
-import { accountApiEnabled } from "../../../bot/client/accountApi";
+
 import { registerLocal } from "../../../store/localAccount";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
-import AuthField from "../AuthField";
 import "../Auth.css";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const EMPTY = {
   firstName: "",
@@ -34,20 +37,51 @@ const EMPTY = {
   company: "",
   location: "",
 };
+
 const ROLES = [
   {
     id: "client",
     icon: ShoppingBag,
     title: "Покупатель",
-    text: "Находите любимую выпечку и общайтесь с мастерами",
+    text: "Покупайте товары и находите рецепты",
   },
   {
     id: "seller",
     icon: Store,
     title: "Продавец",
-    text: "Расскажите о своём деле и откройте магазин",
+    text: "Создайте магазин и продавайте товары",
   },
 ];
+
+function Field({
+  id,
+  label,
+  icon: Icon,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  autoComplete,
+}) {
+  return (
+    <div className="bk-field">
+      <label htmlFor={id}>{translateText(label)}</label>
+      <div className="bk-input">
+        <Icon size={18} />
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={translateText(placeholder)}
+          autoComplete={autoComplete}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Register() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -55,82 +89,41 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("client");
   const [form, setForm] = useState(EMPTY);
-  const [fields, setFields] = useState({});
+  const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const errorRef = useRef(null);
-  const headingRef = useRef(null);
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, [step]);
-  useEffect(() => {
-    if (error) errorRef.current?.focus();
-  }, [error]);
+
   if (isLoggedIn()) return <Navigate to={returnTo} replace />;
+
   const isSeller = role === "seller";
-  function update(key, value) {
+
+  const update = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
-    setFields((f) => ({ ...f, [key]: "" }));
     setError("");
-  }
-  function changeRole(event) {
-    if (
-      !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
-    )
-      return;
-    event.preventDefault();
-    const next = role === "client" ? "seller" : "client";
-    setRole(next);
-    event.currentTarget.querySelector(`[data-role="${next}"]`)?.focus();
-  }
+  };
+
   async function submit(event) {
     event.preventDefault();
     if (busy) return;
-    const invalid = {};
-    if (form.firstName.trim().length < 2 || form.firstName.trim().length > 100)
-      invalid.firstName = "Введите имя: от 2 до 100 символов.";
-    if (form.lastName.trim().length < 2 || form.lastName.trim().length > 100)
-      invalid.lastName = "Введите фамилию: от 2 до 100 символов.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
-      invalid.email = "Введите корректный email.";
-    let phone = form.phone.replace(/\D/g, "");
-    if (phone.length === 9) phone = "998" + phone;
-    if (!/^998\d{9}$/.test(phone))
-      invalid.phone = "Укажите телефон Узбекистана: +998 и 9 цифр.";
+
+    if (
+      !form.firstName.trim() ||
+      !form.lastName.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.password
+    )
+      return setError("Заполните все обязательные поля.");
+    if (!EMAIL_RE.test(form.email.trim()))
+      return setError("Введите корректный email.");
     if (form.password.length < 8)
-      invalid.password = "Пароль должен содержать минимум 8 символов.";
-    if (isSeller && !form.company.trim())
-      invalid.company = "Укажите название магазина";
-    if (isSeller && !form.location.trim())
-      invalid.location = "Укажите местоположение магазина";
-    setFields(invalid);
-    if (Object.keys(invalid).length) {
-      const ids = {
-        firstName: "reg-first",
-        lastName: "reg-last",
-        email: "reg-email",
-        phone: "reg-phone",
-        password: "reg-password",
-        company: "reg-company",
-        location: "reg-location",
-      };
-      document.getElementById(ids[Object.keys(invalid)[0]])?.focus();
-      return;
-    }
+      return setError("Пароль должен содержать минимум 8 символов.");
+    if (isSeller && (!form.company.trim() || !form.location.trim()))
+      return setError("Укажите название магазина и местоположение.");
+
     setBusy(true);
     try {
-      await registerLocal(
-        {
-          ...form,
-          firstName: form.firstName.trim(),
-          lastName: form.lastName.trim(),
-          email: form.email.trim(),
-          phone: "+" + phone,
-          company: form.company.trim(),
-          location: form.location.trim(),
-        },
-        role,
-      );
+      await registerLocal(form, role);
       navigate(returnTo, { replace: true });
     } catch (e) {
       setError(e.message || "Не удалось создать аккаунт");
@@ -138,220 +131,219 @@ export default function Register() {
       setBusy(false);
     }
   }
-  function field(key, id, label, icon, options = {}) {
-    return (
-      <AuthField
-        key={key}
-        id={id}
-        name={key}
-        label={label}
-        icon={icon}
-        value={form[key]}
-        onChange={(v) => update(key, v)}
-        error={fields[key]}
-        disabled={busy}
-        {...options}
-      />
-    );
-  }
+
   return (
     <AuthShell wide={step === 2}>
-      <ol className="bk-progress" aria-label={t("Шаги регистрации")}>
-        <li className="is-done" aria-current={step === 1 ? "step" : undefined}>
-          <span>
-            {step === 2 ? <Check size={13} aria-hidden="true" /> : "1"}
-          </span>
-          {t("Тип аккаунта")}
-        </li>
-        <li
-          className={step === 2 ? "is-done" : ""}
-          aria-current={step === 2 ? "step" : undefined}
-        >
-          <span>2</span>
-          {t("Ваши данные")}
-        </li>
-      </ol>
-      <header className="bk-head">
-        {step === 2 && (
-          <button
-            type="button"
-            className="bk-link-back"
-            disabled={busy}
-            onClick={() => {
-              setStep(1);
-              setError("");
-            }}
-          >
-            <ArrowLeft size={15} aria-hidden="true" />
-            {t("Назад")}
-          </button>
-        )}
-        <span className="bk-kicker">{t("ВАША ИСТОРИЯ НА BAKEU")}</span>
-        <h1 ref={headingRef} tabIndex={-1}>
-          {t(
-            step === 1
-              ? "Создать аккаунт"
-              : isSeller
-                ? "Данные продавца"
-                : "Ваши данные",
-          )}
-        </h1>
-        <p>
-          {t(
-            step === 1
-              ? "Как вы планируете использовать BakeU?"
-              : isSeller
-                ? "Расскажите о себе и своём магазине."
-                : "Заполните данные для регистрации.",
-          )}
-        </p>
-      </header>
+      <div className="bk-progress" aria-hidden="true">
+        <span className="is-done" />
+        <span className={step === 2 ? "is-done" : ""} />
+      </div>
+
       {step === 1 ? (
         <>
+          <header className="bk-head">
+            <h1>{translateText("Создать аккаунт")}</h1>
+            <p>{translateText("Как вы планируете использовать BakeU?")}</p>
+          </header>
+
           <div
             className="bk-roles"
             role="radiogroup"
-            aria-label={t("Тип аккаунта")}
-            onKeyDown={changeRole}
+            aria-label={translateText("Тип аккаунта")}
           >
             {ROLES.map(({ id, icon: Icon, title, text }) => (
               <button
                 key={id}
                 type="button"
                 role="radio"
-                data-role={id}
                 aria-checked={role === id}
-                tabIndex={role === id ? 0 : -1}
-                className={`bk-role${role === id ? " is-selected" : ""}`}
+                className={`bk-role ${role === id ? "is-selected" : ""}`}
                 onClick={() => setRole(id)}
               >
                 <span className="bk-role__icon">
-                  <Icon size={23} aria-hidden="true" />
+                  <Icon size={20} />
                 </span>
                 <span className="bk-role__text">
-                  <strong>{t(title)}</strong>
-                  <small>{t(text)}</small>
+                  <strong>{translateText(title)}</strong>
+                  <small>{translateText(text)}</small>
                 </span>
                 <span className="bk-role__check">
-                  {role === id && <Check size={13} aria-hidden="true" />}
+                  <Check size={13} strokeWidth={3} />
                 </span>
               </button>
             ))}
           </div>
+
           <button
             className="bk-primary"
             type="button"
             onClick={() => setStep(2)}
           >
-            {t("Продолжить")}
-            <ArrowRight size={18} aria-hidden="true" />
+            {translateText("Продолжить ")}
+            <ArrowRight size={18} />
           </button>
         </>
       ) : (
-        <form
-          className="bk-form bk-form--grid"
-          onSubmit={submit}
-          noValidate
-          aria-busy={busy}
-        >
-          {field("firstName", "reg-first", "Имя", UserRound, {
-            placeholder: "Ваше имя",
-            autoComplete: "given-name",
-            maxLength: 100,
-          })}
-          {field("lastName", "reg-last", "Фамилия", UserRound, {
-            placeholder: "Ваша фамилия",
-            autoComplete: "family-name",
-            maxLength: 100,
-          })}
-          {field("email", "reg-email", "Почта", Mail, {
-            type: "email",
-            inputMode: "email",
-            placeholder: "example@gmail.com",
-            autoComplete: "email",
-            maxLength: 254,
-          })}
-          {field("phone", "reg-phone", "Телефон", Phone, {
-            type: "tel",
-            inputMode: "tel",
-            placeholder: "+998 90 123 45 67",
-            autoComplete: "tel",
-            maxLength: 24,
-          })}
-          {isSeller && (
-            <>
-              {field("company", "reg-company", "Магазин", Building2, {
-                placeholder: "Название магазина",
-                autoComplete: "organization",
-                maxLength: 150,
-              })}
-              {field("location", "reg-location", "Местоположение", MapPin, {
-                placeholder: "Город, район",
-                autoComplete: "street-address",
-                maxLength: 300,
-              })}
-            </>
-          )}
-          <div className="bk-field--wide">
-            {field("password", "reg-password", "Пароль", LockKeyhole, {
-              type: "password",
-              placeholder: "Минимум 8 символов",
-              autoComplete: "new-password",
-              minLength: 8,
-              hint: "Используйте не меньше 8 символов",
-            })}
-          </div>
-          {error && (
-            <p
-              className="bk-alert bk-field--wide"
-              role="alert"
-              tabIndex={-1}
-              ref={errorRef}
+        <>
+          <header className="bk-head">
+            <button
+              type="button"
+              className="bk-link-back"
+              onClick={() => {
+                setStep(1);
+                setError("");
+              }}
             >
-              <TriangleAlert size={17} aria-hidden="true" />
-              {t(error)}
+              <ArrowLeft size={15} />
+              {translateText(" Назад")}
+            </button>
+            <h1>
+              {translateText(isSeller ? "Данные продавца" : "Ваши данные")}
+            </h1>
+            <p>
+              {translateText(
+                isSeller
+                  ? "Расскажите о себе и своём магазине."
+                  : "Заполните данные для регистрации.",
+              )}
             </p>
-          )}
-          <button
-            className="bk-primary bk-field--wide"
-            type="submit"
-            disabled={busy}
-          >
-            {busy ? (
+          </header>
+
+          <form className="bk-form bk-form--grid" onSubmit={submit} noValidate>
+            <Field
+              id="reg-first"
+              label={translateText("Имя")}
+              icon={UserRound}
+              value={form.firstName}
+              onChange={(v) => update("firstName", v)}
+              placeholder={translateText("Ваше имя")}
+              autoComplete="given-name"
+            />
+            <Field
+              id="reg-last"
+              label={translateText("Фамилия")}
+              icon={UserRound}
+              value={form.lastName}
+              onChange={(v) => update("lastName", v)}
+              placeholder={translateText("Ваша фамилия")}
+              autoComplete="family-name"
+            />
+            <Field
+              id="reg-email"
+              label={translateText("Почта")}
+              icon={Mail}
+              type="email"
+              value={form.email}
+              onChange={(v) => update("email", v)}
+              placeholder="example@gmail.com"
+              autoComplete="email"
+            />
+            <Field
+              id="reg-phone"
+              label={translateText("Телефон")}
+              icon={Phone}
+              type="tel"
+              value={form.phone}
+              onChange={(v) => update("phone", v)}
+              placeholder="+998 90 123 45 67"
+              autoComplete="tel"
+            />
+
+            {isSeller && (
               <>
-                <Loader2 size={18} className="bk-spin" aria-hidden="true" />
-                {t("Создаём…")}
-              </>
-            ) : (
-              <>
-                {t(
-                  accountApiEnabled
-                    ? "Создать аккаунт"
-                    : "Создать демо-профиль",
-                )}
-                <ArrowRight size={18} aria-hidden="true" />
+                <Field
+                  id="reg-company"
+                  label={translateText("Магазин")}
+                  icon={Building2}
+                  value={form.company}
+                  onChange={(v) => update("company", v)}
+                  placeholder="Sweet Bakery"
+                  autoComplete="organization"
+                />
+                <Field
+                  id="reg-location"
+                  label={translateText("Местоположение")}
+                  icon={MapPin}
+                  value={form.location}
+                  onChange={(v) => update("location", v)}
+                  placeholder={translateText("Город, район")}
+                  autoComplete="street-address"
+                />
               </>
             )}
-          </button>
-        </form>
+
+            <div className="bk-field bk-field--wide">
+              <label htmlFor="reg-password">{translateText("Пароль")}</label>
+              <div className="bk-input">
+                <LockKeyhole size={18} />
+                <input
+                  id="reg-password"
+                  type={visible ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder={translateText("Минимум 8 символов")}
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  minLength={8}
+                  required
+                />
+                <button
+                  type="button"
+                  className="bk-eye"
+                  onClick={() => setVisible((v) => !v)}
+                  aria-label={translateText(
+                    visible ? "Скрыть пароль" : "Показать пароль",
+                  )}
+                >
+                  {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <p className="bk-alert bk-field--wide" role="alert">
+                <TriangleAlert size={16} />
+                {translateText(error)}
+              </p>
+            )}
+
+            <button
+              className="bk-primary bk-field--wide"
+              type="submit"
+              disabled={busy}
+            >
+              {busy ? (
+                <>
+                  <Loader2 size={18} className="bk-spin" />
+                  {translateText(" Создаём…")}
+                </>
+              ) : (
+                <>
+                  {translateText(
+                    accountApiEnabled
+                      ? "Создать аккаунт"
+                      : "Создать демо-профиль",
+                  )}{" "}
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </form>
+        </>
       )}
+
       <p className="bk-switch">
-        {t("Уже есть аккаунт?")}{" "}
-        <Link to={authLink("/login", params)}>
-          {t("Войти")}
-          <ArrowRight size={14} aria-hidden="true" />
-        </Link>
+        {translateText("Уже есть аккаунт? ")}
+        <Link to={authLink("/login", params)}>{translateText("Войти")}</Link>
       </p>
-      <p className="bk-note">
-        <ShieldCheck size={16} aria-hidden="true" />
-        <span>
-          {t(
+      {step === 2 && (
+        <p className="bk-note">
+          {translateText(
             accountApiEnabled
               ? "Аккаунт сохраняется на сервере BakeU. Администратор получит уведомление о регистрации без пароля."
               : "Демо-режим: аккаунт хранится только в этом браузере.",
           )}
-        </span>
-      </p>
+        </p>
+      )}
     </AuthShell>
   );
 }

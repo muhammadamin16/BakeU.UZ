@@ -1,3 +1,4 @@
+import { useMiniApp } from "../miniapp/context";
 import Welcome from "../miniapp/pages/Welcome";
 import AdminGate from "../miniapp/components/AdminGate";
 import AdminRoutes from "../admin/routes/AdminRoutes";
@@ -6,6 +7,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "../components/Header/Header";
 import MobileNav from "../components/MobileNav/MobileNav";
 import Footer from "../components/Footer/Footer";
+import AuthModal from "../components/AuthModal/AuthModal";
 
 import Product from "../pages/Product/Product";
 import Cart from "../pages/Cart/Cart";
@@ -33,10 +35,10 @@ function matchesPath(pathname, base) {
 
 export default function AppRoutes() {
   const { pathname } = useLocation();
+  const { isMiniMode } = useMiniApp();
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
-  const Content = isAuthPage || isHome ? "div" : "main";
   const showFooter =
     !isAuthPage &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
@@ -53,7 +55,7 @@ export default function AppRoutes() {
     <>
       {!isAuthPage && <Header />}
 
-      <Content className={isAuthPage ? "auth-route" : "container"}>
+      <main className="container">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
@@ -73,9 +75,11 @@ export default function AppRoutes() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Content>
+      </main>
 
-      {!isAuthPage && <MobileNav />}
+      {isHome && !isMiniMode && <AuthModal />}
+
+      <MobileNav />
       {showFooter && <Footer />}
     </>
   );

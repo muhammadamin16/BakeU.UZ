@@ -50,12 +50,10 @@ if (typeof window !== "undefined") {
 }
 export const getLocale = () => (language === "uz" ? "uz-UZ" : "ru-RU");
 const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const patterns = templates
-  .map((parts) => ({
-    parts,
-    expression: new RegExp("^" + parts.map(escape).join("([\\s\\S]*?)") + "$"),
-  }))
-  .sort((a, b) => b.parts.join("").length - a.parts.join("").length);
+const patterns = templates.map((parts) => ({
+  parts,
+  expression: new RegExp("^" + parts.map(escape).join("([\\s\\S]*?)") + "$"),
+}));
 function translateString(value, locale, depth = 0) {
   const dictionary = locale === "uz" ? uz : ru;
   if (Object.hasOwn(dictionary, value)) return dictionary[value];

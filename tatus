@@ -1,0 +1,22 @@
+* [33m1bf53a4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mAmin[m[33m)[m a
+[31m|[m * [33mbd06aa5[m[33m ([m[1;31morigin/HEAD[m[33m, [m[1;31morigin/Amin[m[33m)[m Redesign winter storefront and accessible bilingual authentication
+[31m|[m[31m/[m  
+*   [33m5c8b834[m[33m ([m[1;32mbackup-Amin[m[33m)[m Merge branch 'Amin' of https://github.com/muhammadamin16/BakeU.UZ into Amin
+[33m|[m[34m\[m  
+[33m|[m * [33ma8978bb[m Apply requested Uzbek alphabet and fix background music playback
+* [34m|[m [33mb5faced[m a
+[34m|[m[34m/[m  
+* [33m35c833a[m a
+* [33maa26f60[m Fix Uzbek and Russian site localization and profile chat navigation
+* [33ma6a9d3b[m Group backend and mobile projects under apps
+* [33m83089e5[m Start NestJS PostgreSQL backend with Drizzle migrations and health API
+* [33m77080f3[m[33m ([m[1;31morigin/Joka[m[33m)[m Add standalone React Capacitor mobile scaffold with Android and iOS projects
+* [33m4b8d3ff[m a
+*   [33mc707745[m Merge remote-tracking branch 'origin/Amin' into Amin
+[35m|[m[36m\[m  
+[35m|[m * [33ma021ba8[m Fix direct admin navigation and add a command to open the admin dashboard
+[35m|[m * [33mc9d6ad6[m Restore default dev port 5173 with configurable port and safe fallback
+* [36m|[m   [33mbfee530[m Merge branch 'Joka' of https://github.com/muhammadamin16/BakeU.UZ into Amin
+[36m|[m[1;32m\[m [36m\[m  
+[36m|[m [1;32m|[m[36m/[m  
+[36m|[m[36m/[m[1;32m|[m   
