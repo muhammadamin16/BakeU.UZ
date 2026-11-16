@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../../i18n/alphabet.js";
 import { getLocale } from "../../../i18n/index.js";
 import { translateText } from "../../../i18n/index.js";
 import ProductFields from "../../Product/ProductFields";
@@ -419,7 +420,7 @@ export default function SellerProfile({ account, onLogout }) {
             <div className="bw-product-grid">
               {products
                 .filter((p) =>
-                  p.name.toLowerCase().includes(query.toLowerCase()),
+                  normalizeSearch(p.name).includes(normalizeSearch(query)),
                 )
                 .map((p) => (
                   <article className="bw-product" key={p.id}>

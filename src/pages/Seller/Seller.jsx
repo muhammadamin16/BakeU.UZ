@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -28,14 +29,14 @@ function SellerCatalog({ tab }) {
   const items = useCartStore((s) => s.items);
 
   const showSellers = tab === "sellers";
-  const q = query.trim().toLocaleLowerCase("ru-RU");
+  const q = normalizeSearch(query);
 
   const visibleProducts = products.filter((p) => {
     const owner = shops.find((s) => s.id === p.shopId);
     return (
-      `${p.name} ${owner?.name ?? ""} ${translateText(p.name)} ${translateText(owner?.name ?? "")}`
-        .toLocaleLowerCase("ru-RU")
-        .includes(q) &&
+      normalizeSearch(
+        `${p.name} ${owner?.name ?? ""} ${translateText(p.name)} ${translateText(owner?.name ?? "")}`,
+      ).includes(q) &&
       (category === "Все" || category === p.category)
     );
   });
@@ -45,9 +46,9 @@ function SellerCatalog({ tab }) {
       .filter((p) => p.shopId === s.id)
       .map((p) => p.name + " " + translateText(p.name))
       .join(" ");
-    return `${s.name} ${s.description} ${names} ${translateText(s.name)} ${translateText(s.description)}`
-      .toLocaleLowerCase("ru-RU")
-      .includes(q);
+    return normalizeSearch(
+      `${s.name} ${s.description} ${names} ${translateText(s.name)} ${translateText(s.description)}`,
+    ).includes(q);
   });
 
   const resetFilters = () => {

@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { normalizeAccounts, upsertAdminRecord } from "./accounts.js";
 import { productPhoto, safeProductImage } from "./images.js";
 import {
@@ -49,36 +50,32 @@ export const nextOrderStatuses = (status) => transitions[status] || [];
 export const matchesSearch = (row, query) =>
   Boolean(
     !query.trim() ||
-      [
-        "id",
-        "name",
-        "owner",
-        "shop",
-        "customer",
-        "phone",
-        "email",
-        "login",
-        "category",
-        "plan",
-        "status",
-        "address",
-        "notes",
-        "title",
-        "text",
-        "actor",
-        "action",
-        "label",
-        "reason",
-      ].some((key) =>
-        String(row[key] || "")
-          .toLocaleLowerCase("ru-RU")
-          .includes(query.trim().toLocaleLowerCase("ru-RU")),
-      ) ||
-      row.items?.some((item) =>
-        String(item.name)
-          .toLocaleLowerCase("ru-RU")
-          .includes(query.trim().toLocaleLowerCase("ru-RU")),
-      ),
+    [
+      "id",
+      "name",
+      "owner",
+      "shop",
+      "customer",
+      "phone",
+      "email",
+      "login",
+      "category",
+      "plan",
+      "status",
+      "address",
+      "notes",
+      "title",
+      "text",
+      "actor",
+      "action",
+      "label",
+      "reason",
+    ].some((key) =>
+      normalizeSearch(row[key]).includes(normalizeSearch(query)),
+    ) ||
+    row.items?.some((item) =>
+      normalizeSearch(item.name).includes(normalizeSearch(query)),
+    ),
   );
 const restricted = (row) => row && row.status !== "Активен";
 const canonical = (value) =>

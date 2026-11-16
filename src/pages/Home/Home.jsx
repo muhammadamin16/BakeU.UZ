@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale } from "../../i18n/index.js";
 import { translateText } from "../../i18n/index.js";
 import HeroSlider from "./components/HeroSlider";
@@ -54,9 +55,9 @@ export default function Home({
   const visibleProducts = featured.filter((product) => {
     const matchesCategory = category === "Все" || product.category === category;
 
-    const matchesQuery = (product.name + " " + translateText(product.name))
-      .toLocaleLowerCase("ru-RU")
-      .includes(query.trim().toLocaleLowerCase("ru-RU"));
+    const matchesQuery = normalizeSearch(
+      product.name + " " + translateText(product.name),
+    ).includes(normalizeSearch(query));
 
     return matchesCategory && matchesQuery;
   });

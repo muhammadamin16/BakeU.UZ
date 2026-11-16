@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale } from "../../i18n/index.js";
 import { useLanguage } from "../../i18n/useLanguage";
 import { translateText } from "../../i18n/index.js";
@@ -590,17 +591,17 @@ export default function MapPage() {
       list = list.filter((i) => i.distance != null && i.distance <= radiusKm);
     }
 
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearch(query);
     if (q) {
       list = list.filter((item) => {
         const extra = activeTab === "products" ? item.seller : item.categories;
         return (
-          (item.name + " " + translateText(item.name, language))
-            .toLowerCase()
-            .includes(q) ||
-          (extra + " " + translateText(extra, language))
-            .toLowerCase()
-            .includes(q)
+          normalizeSearch(
+            item.name + " " + translateText(item.name, language),
+          ).includes(q) ||
+          normalizeSearch(
+            extra + " " + translateText(extra, language),
+          ).includes(q)
         );
       });
     }

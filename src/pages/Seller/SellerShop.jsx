@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { translateText } from "../../i18n/index.js";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
@@ -132,9 +133,9 @@ function ShopProfile({ shopId }) {
   const categories = ["Все", ...new Set(shopProducts.map((p) => p.category))];
 
   const visibleProducts = shopProducts.filter((p) => {
-    const matchesSearch = (p.name + " " + translateText(p.name))
-      .toLowerCase()
-      .includes(search.trim().toLowerCase());
+    const matchesSearch = normalizeSearch(
+      p.name + " " + translateText(p.name),
+    ).includes(normalizeSearch(search));
 
     const matchesCategory = category === "Все" || p.category === category;
 

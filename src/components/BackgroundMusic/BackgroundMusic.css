@@ -1,13 +1,10 @@
-
 /* MUSIC POSITION */
 
 .bakeu-music {
   position: fixed;
 
   right: 22px;
-  bottom: calc(
-    112px + env(safe-area-inset-bottom, 0px)
-  );
+  bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 
   z-index: 9999;
 }
@@ -94,9 +91,7 @@
   .bakeu-music {
     right: 16px;
 
-    bottom: calc(
-      111px + env(safe-area-inset-bottom, 0px)
-    );
+    bottom: calc(111px + env(safe-area-inset-bottom, 0px));
   }
 
   .bakeu-music-btn {
@@ -131,6 +126,81 @@
 
 @media (prefers-reduced-motion: reduce) {
   .music-spinning {
+    animation: none;
+  }
+}
+
+.bakeu-music-btn {
+  position: relative;
+}
+.bakeu-music-btn:focus-visible {
+  outline: 3px solid #432015;
+  outline-offset: 4px;
+}
+.bakeu-music-btn.has-error {
+  background: #fff2da;
+}
+.music-loading {
+  animation: bakeu-disc-spin 1s linear infinite;
+}
+.bakeu-music-level {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #432015;
+  border: 2px solid #fff;
+}
+.bakeu-music-level i {
+  width: 2px;
+  height: 9px;
+  border-radius: 2px;
+  background: #ffe8a8;
+  animation: bakeu-music-level 800ms ease-in-out infinite alternate;
+}
+.bakeu-music-level i:nth-child(2) {
+  animation-delay: -400ms;
+}
+.bakeu-music-level i:nth-child(3) {
+  animation-delay: -200ms;
+}
+@keyframes bakeu-music-level {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+.bakeu-music-message {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(280px, calc(100vw - 40px));
+  padding: 12px 15px;
+  border-radius: 16px;
+  border: 1px solid #ead6c6;
+  background: #fffbf5;
+  color: #432015;
+  box-shadow: 0 8px 26px rgb(67 32 21 / 14%);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.bakeu-music-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-loading,
+  .bakeu-music-level i {
     animation: none;
   }
 }

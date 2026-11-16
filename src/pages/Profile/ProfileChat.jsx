@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale } from "../../i18n/index.js";
 import { translateText } from "../../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
@@ -85,9 +86,9 @@ export default function ProfileChat({ account, ownerId, initialShop }) {
         </label>
         {mine
           .filter((t) =>
-            (seller ? t.buyerName : t.shopName)
-              .toLowerCase()
-              .includes(query.toLowerCase()),
+            normalizeSearch(seller ? t.buyerName : t.shopName).includes(
+              normalizeSearch(query),
+            ),
           )
           .map((t) => (
             <button
@@ -118,7 +119,9 @@ export default function ProfileChat({ account, ownerId, initialShop }) {
           <>
             <h3>{translateText("Написать магазину")}</h3>
             {shops
-              .filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
+              .filter((s) =>
+                normalizeSearch(s.name).includes(normalizeSearch(query)),
+              )
               .map((shop) => (
                 <button
                   key={shop.id}
