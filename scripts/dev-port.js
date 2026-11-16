@@ -74,6 +74,15 @@ export function devPortPlugin() {
             fallback.port +
             ". Откройте адрес Local ниже; свой порт можно задать через VITE_DEV_PORT в .env.local.",
         );
+      const printUrls = server.printUrls.bind(server);
+      server.printUrls = () => {
+        printUrls();
+        const local = server.resolvedUrls?.local?.[0];
+        if (local)
+          server.config.logger.info(
+            "  ➜  Admin:   " + new URL("#/admin", local).href,
+          );
+      };
     },
   };
 }

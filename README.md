@@ -12,6 +12,19 @@ Currently, two official plugins are available:
 Run `npm install` and `npm run dev`, then open the **Local** address printed by
 Vite. The usual port is **5173** again: `http://127.0.0.1:5173/`.
 The demo admin is at the same address followed by `#/admin`.
+Vite also prints a separate **Admin** link with the actual selected port.
+To start directly in the admin instead of the storefront, use:
+
+```sh
+npm run dev:admin
+```
+
+This opens the demo admin in the default browser. `npm run dev` continues to
+serve the storefront. Plain `/admin` and `/admin/products/...` URLs are converted
+to their `/#/admin...` equivalents before routing when the host serves the SPA
+entry point (as the Vite development server does). Explicit hash routes and
+Telegram launch parameters are preserved. `/#/admin/telegram` still requires
+verified server admin access.
 
 To choose your own port on Windows or Mac, create or edit **`.env.local`** in the
 repository root (beside `package.json`) and add:

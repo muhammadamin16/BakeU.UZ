@@ -92,3 +92,12 @@ boundary and server setup.
 Choose a personal development port with `VITE_DEV_PORT=8080` in root
 `.env.local`, then restart `npm run dev`. If the requested port is reserved or
 occupied, Vite prints its selected fallback address. See the root README.
+
+## Open the admin directly
+
+Run `npm run dev:admin` from the repository root to open the demo dashboard in
+the default browser, using the port Vite actually selected. `npm run dev` also
+prints a separate **Admin** URL. Bookmark that URL, including `/#/admin`.
+Plain `/admin` requests served by the SPA entry point are normalized to the
+hash route, with collection filters preserved. This does not change Telegram
+permissions or enable access to `/admin/telegram` without authentication.
