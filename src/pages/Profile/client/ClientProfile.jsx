@@ -3,7 +3,7 @@ import ProfileChat from "../ProfileChat";
 import { Orders, Reviews } from "../Activity";
 import { useWorkspace, followShop } from "../../../store/workspaceStore";
 import { accountId } from "../../../store/localAccount";
-import { useCatalog } from "../../Seller/sellerData";
+import { useCatalog } from "../../../store/sellerData";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {

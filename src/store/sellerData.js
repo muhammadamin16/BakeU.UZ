@@ -1,5 +1,5 @@
-import { PRODUCT_CATEGORIES } from "../Product/productDetails";
-import { useShopStore } from "../../store/shopStore";
+import { PRODUCT_CATEGORIES } from "../pages/Product/productDetails";
+import { useShopStore } from "./shopStore";
 export const products = [
   {
     id: "cake",

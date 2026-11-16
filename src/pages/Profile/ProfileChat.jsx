@@ -13,7 +13,7 @@ import {
   markThreadRead,
 } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
-import { useCatalog } from "../Seller/sellerData";
+import { useCatalog } from "../../store/sellerData";
 export default function ProfileChat({ account, ownerId, initialShop }) {
   const threads = useWorkspace((s) => s.threads),
     { shops } = useCatalog();

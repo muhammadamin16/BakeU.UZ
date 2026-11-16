@@ -2,7 +2,7 @@ import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Store, Star, ArrowUpRight, Plus } from "lucide-react";
-import { products, getShop } from "./sellerData";
+import { products, getShop } from "../../store/sellerData";
 
 export const formatPrice = (price) => `${price.toLocaleString("ru-RU")} сум`;
 export const shopUrl = (id) => `?shop=${encodeURIComponent(id)}`;

@@ -6,7 +6,7 @@ import { accountId } from "../../store/localAccount";
 import { shopIdFor } from "../../store/shopStore";
 import { updateOrder, useWorkspace } from "../../store/workspaceStore";
 import { checkoutMoney } from "../../store/checkout";
-import { useCatalog } from "../Seller/sellerData";
+import { useCatalog } from "../../store/sellerData";
 import ProductImage from "../../components/ProductImage/ProductImage";
 import SellerContact from "../Checkout/SellerContact";
 import "../Checkout/Checkout.css";
