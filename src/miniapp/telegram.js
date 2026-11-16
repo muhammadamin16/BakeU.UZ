@@ -1,5 +1,9 @@
+import { normalizeAdminUrl } from "../routes/adminUrl";
+
 const initialUrl =
-  typeof window !== "undefined" ? new URL(window.location.href) : null;
+  typeof window !== "undefined"
+    ? normalizeAdminUrl(window.location.href)
+    : null;
 const fragment = initialUrl ? initialUrl.hash.slice(1) : "";
 const launchParams = new URLSearchParams(
   fragment.includes("?") ? fragment.split("?").slice(1).join("?") : fragment,
@@ -14,16 +18,18 @@ export const miniLaunch = {
   isTelegram: Boolean(rawInitData),
   mode: Boolean(
     rawInitData ||
-    initialUrl?.searchParams.get("miniapp") === "1" ||
-    fragment.startsWith("/miniapp"),
+      initialUrl?.searchParams.get("miniapp") === "1" ||
+      fragment.startsWith("/miniapp"),
   ),
 };
 export async function prepareTelegram() {
   if (!initialUrl) return;
+  if (window.location.href !== initialUrl.href)
+    window.history.replaceState(null, "", initialUrl.href);
   const needsSDK = Boolean(
     rawInitData ||
-    initialUrl.searchParams.get("miniapp") === "1" ||
-    window.Telegram?.WebApp?.initData,
+      initialUrl.searchParams.get("miniapp") === "1" ||
+      window.Telegram?.WebApp?.initData,
   );
   if (needsSDK && !window.Telegram?.WebApp) {
     try {

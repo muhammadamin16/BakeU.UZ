@@ -1,6 +1,6 @@
 # BakeU Admin (demo)
 
-Open `http://127.0.0.1:3000/#/admin` after `npm install` and `npm run dev`, or open `https://bake-u-uz-self.vercel.app/#/admin` once this version is deployed.
+After `npm install` and `npm run dev`, open the terminal's **Local** address followed by `#/admin` (normally `http://127.0.0.1:5173/#/admin`), or open `https://bake-u-uz-self.vercel.app/#/admin` once this version is deployed.
 
 The admin is a browser-local demo, not a secured production admin. All admin records are independent demo data persisted by Zustand under `bakeu-admin-demo-v1`. They do not modify customer/seller account stores. These demo collections do not authenticate against the server or process payments. The separate `/admin/telegram` page requires verified server authorization. Server-side authentication and role checks are required before using real records.
 
@@ -88,3 +88,16 @@ session, or access to actual registrations. The server-backed `/admin/telegram`
 page always requires a verified Telegram admin; unknown admin routes and Telegram
 Mini App launches retain their gate. See `../miniapp/README.md` for the exact
 boundary and server setup.
+
+Choose a personal development port with `VITE_DEV_PORT=8080` in root
+`.env.local`, then restart `npm run dev`. If the requested port is reserved or
+occupied, Vite prints its selected fallback address. See the root README.
+
+## Open the admin directly
+
+Run `npm run dev:admin` from the repository root to open the demo dashboard in
+the default browser, using the port Vite actually selected. `npm run dev` also
+prints a separate **Admin** URL. Bookmark that URL, including `/#/admin`.
+Plain `/admin` requests served by the SPA entry point are normalized to the
+hash route, with collection filters preserved. This does not change Telegram
+permissions or enable access to `/admin/telegram` without authentication.
