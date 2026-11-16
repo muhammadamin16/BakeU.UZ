@@ -474,7 +474,7 @@ export default function MobileNav() {
       <img
         className="bottom-nav__mascot"
         src="/images/winter/bear-gift.png"
-        alt=""
+        alt="bear"
         aria-hidden="true"
         draggable={false}
       />
