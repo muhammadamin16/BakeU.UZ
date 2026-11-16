@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000/#/miniapp` for a **guest** preview. Guests can enter the storefront. Fake Telegram data or query parameters cannot enable admin access. To test genuine Telegram auth, the frontend and API need an HTTPS address reachable by Telegram.
+Open the terminal’s **Local** address followed by `#/miniapp` (normally `http://127.0.0.1:5173/#/miniapp`) for a **guest** preview. Guests can enter the storefront. Fake Telegram data or query parameters cannot enable admin access. To test genuine Telegram auth, the frontend and API need an HTTPS address reachable by Telegram.
 
 Use root `.env.local` with `VITE_ACCOUNT_API_URL=/api` for local Vite proxying to the bot API on port 3001. Start `npm run bot` in another terminal after configuring the bot token and admin IDs. Existing `.env` files are not overwritten by Git pulls.
 
@@ -95,12 +95,17 @@ After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bo
 
 ## Local admin development
 
-`npm run dev` now binds to `http://127.0.0.1:3000` with a strict port. This avoids
-Windows' reserved 5139–5238 range (including Vite's previous 5173 default) and IPv6
-localhost binding issues. If 3000 is occupied, stop the previous local server or
-select an available port with `npm run dev -- --port 3002`. The API keeps port 3001.
+`npm run dev` uses IPv4 loopback and normally port **5173**. To choose your own
+port, add `VITE_DEV_PORT=8080` to your root `.env.local`, preserving existing
+settings, then restart the dev server. A one-time `--port 8080` takes priority.
 
-Open `http://127.0.0.1:3000/#/admin` to work on the existing browser demo pages.
+Windows may reserve 5139–5238, including 5173. When a port is denied or occupied,
+the server prints a warning and selects an available port starting with 3000,
+skipping the API's 3001. `--strictPort` disables fallback when an exact port is
+required. Build, production preview and SSR middleware do not probe dev ports.
+
+Open the printed **Local** address followed by `#/admin` to work on the existing
+browser demo pages (normally `http://127.0.0.1:5173/#/admin`).
 The same browser-only demo is available at
 `https://bake-u-uz-self.vercel.app/#/admin` after deploying this version. It works
 in development and production builds without a localhost restriction. Only the
@@ -116,8 +121,8 @@ a different access-denied message. API errors retain retry, with a loading state
 A browser guest on this server page can return to the demo admin through the link.
 There is no token/query-string switch that grants server access.
 
-For server account testing through port 3000, add exact origins
-`http://127.0.0.1:3000,http://localhost:3000` to your existing
+For server account testing, add the exact frontend origins you use, for example
+`http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3000,http://localhost:3000` to your existing
 `src/bot/.env` `ALLOWED_ORIGINS`, preserving the existing public origins, and
 restart the API. Git does not modify your private `.env`. This is unnecessary
 for the standalone local demo; production Telegram authentication still requires
