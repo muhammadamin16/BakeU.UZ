@@ -117,7 +117,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
       </Link>
 
       <section id="home-catalog" className="bu-catalog" aria-labelledby="bu-catalog-title">
-        <div className="bu-catalog__top">
+        <div className="bu-catalog__top">product__image
           <div className="bu-catalog__heading">
             <span className="bu-overline">BAKEU COLLECTION</span>
             <h2 id="bu-catalog-title">{translateText("Топ товары")}</h2>
