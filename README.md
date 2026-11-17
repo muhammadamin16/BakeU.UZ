@@ -62,42 +62,33 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
-## Application folders
+## BakeU App — Android / iOS
 
-The backend and mobile app share the `apps/` directory:
+The complete website is also bundled as a Capacitor application in
+[apps/mobile/](apps/mobile/README.md). It uses the same `src/main.jsx`, pages,
+admin routes, translations, state, CSS and `public/` assets. There are no separate
+placeholder screens to keep in sync. Server-only bot code stays outside the app.
 
-```text
-apps/
-├── backend/   # NestJS + PostgreSQL API
-└── mobile/    # React + Capacitor Android/iOS app
-```
-
-See [apps/README.md](apps/README.md) for commands. Each project keeps its own
-package.json and lockfile; the website remains in the repository root.
-
-## Mobile app structure
-
-A separate React + TypeScript + Capacitor project lives in [apps/mobile/](apps/mobile/README.md).
-It has its own dependencies, build and Android/iOS projects. This is a runnable
-structure-only scaffold; product features and the backend are not connected yet.
+From the repository root, with Node.js 24+:
 
 ```sh
-cd apps/mobile
 npm ci
-npm run dev
+npm run app:install
+npm run app:dev
 ```
 
-The mobile web preview uses `http://127.0.0.1:4300/`. Root website commands remain
-separate. The root Vite dependency scan targets its own `index.html` so it does
-not treat the nested mobile app as a second website entry.
+The app development server uses port 4300; the website keeps its existing port.
 
-The root linter skips `apps/`; use `npm --prefix apps/mobile run check` for its own TypeScript, lint and build checks.
+```sh
+npm run app:check
+npm run app:parity
+npm run app:sync
+npm run app:android
+npm run app:ios
+```
 
-## Backend foundation
-
-A separate [apps/backend/](apps/backend/README.md) contains the NestJS + TypeScript +
-PostgreSQL + Drizzle foundation. The new API uses port 4000 and `/api/v1`.
-Health/readiness and API documentation are implemented; business endpoints and
-frontend integration are not implemented yet. The existing Telegram/SQLite API
-on 3001 is preserved and does not migrate automatically. See the backend README
-for setup, Docker and the next implementation stages.
+`app:parity` compares every bundled website module and public asset by SHA-256.
+Android requires a full JDK 21, Android Studio and Android SDK 36. iOS requires
+macOS and Xcode. Native builds and phone tests are separate from the web build
+and Capacitor sync. See the mobile README for API origins, existing demo-mode
+limits, secure configuration and the complete folder map.

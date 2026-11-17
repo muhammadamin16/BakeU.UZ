@@ -13,7 +13,15 @@
     "bot:check": "npm --prefix src/bot run miniapp:check",
     "bot:test": "npm --prefix src/bot test",
     "miniapp:test": "node scripts/check-miniapp.mjs",
-    "bot:website": "npm --prefix src/bot start"
+    "bot:website": "npm --prefix src/bot start",
+    "app:install": "npm --prefix apps/mobile ci",
+    "app:dev": "npm --prefix apps/mobile run dev",
+    "app:build": "npm --prefix apps/mobile run build",
+    "app:check": "npm --prefix apps/mobile run check",
+    "app:parity": "npm --prefix apps/mobile run parity",
+    "app:sync": "npm --prefix apps/mobile run sync",
+    "app:android": "npm --prefix apps/mobile run android",
+    "app:ios": "npm --prefix apps/mobile run ios"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

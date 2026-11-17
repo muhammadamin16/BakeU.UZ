@@ -1,3 +1,4 @@
+import { writeClipboard } from "../../platform/device.js";
 import { translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -53,7 +54,7 @@ export default function SellerContact({ shop, order, draft = false }) {
           className="ck-button"
           onClick={async () => {
             try {
-              await navigator.clipboard.writeText(text);
+              await writeClipboard(text);
               setNotice(
                 "Текст скопирован. Отправьте его продавцу удобным способом.",
               );

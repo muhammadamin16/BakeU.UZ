@@ -1,0 +1,13 @@
+{
+  "appId": "uz.bakeu.mobile",
+  "appName": "BakeU",
+  "webDir": "dist",
+  "server": { "hostname": "localhost", "androidScheme": "https" },
+  "android": { "backgroundColor": "#f7e4e4", "allowMixedContent": false },
+  "ios": {
+    "backgroundColor": "#f7e4e4",
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": { "Keyboard": { "resize": "body" } }
+}

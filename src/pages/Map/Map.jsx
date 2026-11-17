@@ -1,3 +1,8 @@
+import {
+  getDevicePosition,
+  supportsLocation,
+  hasNativeLocation,
+} from "../../platform/device.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale } from "../../i18n/index.js";
 import { useLanguage } from "../../i18n/useLanguage";
@@ -168,7 +173,7 @@ const formatDistance = (km) =>
 
 function getOnce(options) {
   return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
+    getDevicePosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       reject,
       options,
@@ -178,10 +183,14 @@ function getOnce(options) {
 
 /* 1-qadam: GPS / Wi-Fi orqali (eng aniq) */
 async function requestGps() {
-  if (typeof navigator === "undefined" || !navigator.geolocation) {
+  if (!supportsLocation()) {
     throw { reason: "unsupported", detail: "navigator.geolocation yo'q" };
   }
-  if (typeof window !== "undefined" && window.isSecureContext === false) {
+  if (
+    !hasNativeLocation() &&
+    typeof window !== "undefined" &&
+    window.isSecureContext === false
+  ) {
     throw { reason: "insecure", detail: "isSecureContext = false" };
   }
 

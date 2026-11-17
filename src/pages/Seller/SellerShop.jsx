@@ -1,3 +1,9 @@
+import {
+  canShare,
+  shareContent,
+  writeClipboard,
+  publicShareUrl,
+} from "../../platform/device.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { translateText } from "../../i18n/index.js";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
@@ -162,17 +168,17 @@ function ShopProfile({ shopId }) {
   };
 
   const shareShop = async () => {
-    const url = window.location.href;
+    const url = publicShareUrl(window.location.href);
 
     try {
-      if (navigator.share) {
-        await navigator.share({
+      if (canShare()) {
+        await shareContent({
           title: shop.name,
           text: `${shop.name} — BakeU`,
           url,
         });
       } else {
-        await navigator.clipboard.writeText(url);
+        await writeClipboard(url);
         setNotice("Ссылка скопирована!");
       }
     } catch (error) {

@@ -49,6 +49,9 @@ export function readConfig(env = process.env, { miniApp = false } = {}) {
     .map((x) => x.trim())
     .filter(Boolean);
   for (const origin of origins) {
+    // WKWebView uses this custom origin. It must be explicitly allowlisted;
+    // wildcard/null/custom origins still fail, and all API auth checks remain.
+    if (origin === "capacitor://localhost") continue;
     let parsed;
     try {
       parsed = new URL(origin);

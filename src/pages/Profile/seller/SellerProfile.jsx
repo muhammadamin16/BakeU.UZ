@@ -1,3 +1,7 @@
+import {
+  getDevicePosition,
+  supportsLocation,
+} from "../../../platform/device.js";
 import { normalizeSearch } from "../../../i18n/alphabet.js";
 import { getLocale } from "../../../i18n/index.js";
 import { translateText } from "../../../i18n/index.js";
@@ -535,13 +539,13 @@ export default function SellerProfile({ account, onLogout }) {
               type="button"
               className="bw-btn"
               onClick={() => {
-                if (!navigator.geolocation) {
+                if (!supportsLocation()) {
                   setNotice(
                     "Геолокация недоступна. Введите координаты вручную.",
                   );
                   return;
                 }
-                navigator.geolocation.getCurrentPosition(
+                getDevicePosition(
                   (p) => {
                     update("lat", p.coords.latitude);
                     update("lng", p.coords.longitude);

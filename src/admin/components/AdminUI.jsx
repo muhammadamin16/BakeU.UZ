@@ -143,7 +143,7 @@ export function RecordForm({ fields, initial = {}, onSave, onClose }) {
         const id = `${formId}-${field.key}`;
         const common = {
           id,
-          "aria-label": field.label,
+          "aria-label": translateText(field.label),
           "aria-describedby": field.hint ? `${id}-hint` : undefined,
           disabled: field.disabled || busy,
         };

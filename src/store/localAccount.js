@@ -1,3 +1,4 @@
+import { hasPasswordDigest, devicePasswordDigest } from "../platform/device.js";
 import {
   accountApiEnabled,
   registerServer,
@@ -20,6 +21,7 @@ const hex = (bytes) =>
     b.toString(16).padStart(2, "0"),
   ).join("");
 async function digest(password, salt) {
+  if (!globalThis.crypto?.subtle) return devicePasswordDigest(password, salt);
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
@@ -44,7 +46,8 @@ export async function registerLocal(form, role) {
   if (accountApiEnabled) return registerServer(form, role);
   if (!["client", "seller"].includes(role))
     throw Error("Выберите тип аккаунта.");
-  if (!crypto.subtle) throw Error("Откройте сайт через HTTPS или localhost.");
+  if (!globalThis.crypto?.subtle && !hasPasswordDigest())
+    throw Error("Откройте сайт через HTTPS или localhost.");
   const email = form.email.trim().toLowerCase();
   const records = readAccounts();
   if (

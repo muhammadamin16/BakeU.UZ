@@ -1,0 +1,21 @@
+@import "./fonts.css";
+
+html[data-bakeu-app] {
+  overscroll-behavior-y: none;
+}
+html[data-bakeu-app] body {
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-bakeu-app] .bk-auth {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+html[data-bakeu-app][data-keyboard="open"] .bottom-nav-shell,
+html[data-bakeu-app][data-keyboard="open"] .bakeu-music {
+  display: none;
+}
+html[data-bakeu-app] input,
+html[data-bakeu-app] textarea,
+html[data-bakeu-app] select {
+  font-size: max(16px, 1em);
+}
