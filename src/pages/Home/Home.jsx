@@ -1,32 +1,15 @@
-import { normalizeSearch } from "../../i18n/alphabet.js";
-import { getLocale } from "../../i18n/index.js";
-import { translateText } from "../../i18n/index.js";
-import HeroSlider from "./components/HeroSlider";
-import {
-  demoProducts,
-  demoSubscriptions,
-  eligibleProducts,
-} from "../../store/homeData";
-import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Search,
-  ShoppingBag,
-  MapPin,
-  ArrowUpRight,
-  ArrowRight,
-  Plus,
-  Check,
-  X,
-} from "lucide-react";
-
+import { ArrowRight, ArrowUpRight, Check, MapPin, Plus, Search, ShoppingBag, Sparkles, X } from "lucide-react";
+import { normalizeSearch } from "../../i18n/alphabet.js";
+import { getLocale, translateText } from "../../i18n/index.js";
+import TopBanner from "../../components/TopBanner/TopBanner.jsx";
+import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
+import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
-const products = demoProducts;
-
-const categories = [
+const CATEGORIES = [
   { name: "Все", icon: "✦" },
   { name: "Торты", icon: "🍰" },
   { name: "Печенье", icon: "🍪" },
@@ -34,225 +17,127 @@ const categories = [
   { name: "Самса", icon: "🥟" },
 ];
 
-export default function Home({
-  catalog = products,
-  subscriptions = demoSubscriptions,
-  demo = true,
-}) {
+const MAKERS = [
+  { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов", image: "/images/products/cake.jpg", initials: "SF" },
+  { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
+  { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
+];
+
+function ProductCard({ product, quantity, onAdd }) {
+  const productUrl = `/product/${encodeURIComponent(product.id)}`;
+  const sellerUrl = `/profile?shop=${encodeURIComponent(product.sellerId ?? "")}`;
+
+  return (
+    <article className="bu-product">
+      <div className="bu-product__image" style={{ backgroundColor: product.color || "#f1e8dc" }}>
+        <Link className="bu-product__image-link" to={productUrl} aria-label={translateText(`Подробнее: ${product.name}`)}>
+          <img src={product.image} alt={translateText(product.name)} loading="lazy" decoding="async" />
+        </Link>
+        <div className="bu-product__favorite"><FavoriteButton product={product} /></div>
+        {quantity > 0 && (
+          <span className="bu-product__quantity"><Check size={13} aria-hidden="true" /> {translateText("В корзине:")} {quantity}</span>
+        )}
+      </div>
+      <div className="bu-product__body">
+        <div className="bu-product__meta">
+          <Link to={sellerUrl} className="bu-shop-link">{translateText(product.sellerName || "BakeU")}</Link>
+          <span className="bu-product__category">{translateText(product.category || "")}</span>
+        </div>
+        <h3><Link to={productUrl}>{translateText(product.name)}</Link></h3>
+        <div className="bu-product__bottom">
+          <span className="bu-product__price">
+            {Number(product.price || 0).toLocaleString(getLocale())}
+            <small>{translateText("сум")}</small>
+          </span>
+          <button className="bu-product__add" type="button" onClick={() => onAdd(product)} aria-label={translateText(`Добавить в корзину: ${product.name}`)}>
+            <Plus size={20} strokeWidth={2} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function Home({ catalog = demoProducts, subscriptions = demoSubscriptions }) {
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(timer);
-  }, []);
-  const featured = eligibleProducts(catalog, subscriptions, now);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState("");
-
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
-  const visibleProducts = featured.filter((product) => {
-    const matchesCategory = category === "Все" || product.category === category;
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-    const matchesQuery = normalizeSearch(
-      product.name + " " + translateText(product.name),
-    ).includes(normalizeSearch(query));
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 3500);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
-    return matchesCategory && matchesQuery;
-  });
-
-  function resetFilters() {
-    setQuery("");
-    setCategory("Все");
-  }
-
-  function scrollToProducts() {
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    document.getElementById("home-catalog")?.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
-      block: "start",
+  const featured = useMemo(() => eligibleProducts(catalog, subscriptions, now), [catalog, subscriptions, now]);
+  const visibleProducts = useMemo(() => {
+    const normalized = normalizeSearch(query.trim());
+    return featured.filter((product) => {
+      const matchesCategory = category === "Все" || product.category === category;
+      const searchable = normalizeSearch(`${product.name || ""} ${translateText(product.name || "")} ${product.sellerName || ""}`);
+      return matchesCategory && (!normalized || searchable.includes(normalized));
     });
-  }
+  }, [featured, category, query]);
 
-  function openCatalog(nextCategory = "Все") {
+  const resetFilters = () => { setQuery(""); setCategory("Все"); };
+  const scrollToProducts = () => {
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    document.getElementById("home-catalog")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  };
+  const openCatalog = (nextCategory = "Все") => {
     setQuery("");
-    setCategory(nextCategory);
-    scrollToProducts();
-  }
-
-  function handleAdd(product) {
+    setCategory(CATEGORIES.some((item) => item.name === nextCategory) ? nextCategory : "Все");
+    window.requestAnimationFrame(scrollToProducts);
+  };
+  const handleAdd = (product) => {
     add(product);
-    setNotice(`Добавлено в корзину: ${product.name}`);
-  }
-
+    setNotice(`${translateText("Добавлено в корзину:")} ${translateText(product.name)}`);
+  };
   const isFiltered = query.trim() !== "" || category !== "Все";
 
   return (
     <main className="bu-home">
-      <section className="bu-hero" aria-labelledby="bu-hero-title">
-        <div className="bu-hero__content">
-          <span className="bu-eyebrow">
-            <span aria-hidden="true" />
-            {translateText("МАЛЕНЬКИЕ РАДОСТИ КАЖДЫЙ ДЕНЬ")}
-          </span>
-
-          <h1 id="bu-hero-title">
-            {translateText("По-домашнему.")}
-            <br />
-            <span>{translateText("По вашему вкусу.")}</span>
-          </h1>
-
-          <p className="bu-hero__description">
-            {translateText(
-              "Торты, десерты и выпечка от местных мастеров. Найдите что-нибудь особенное на BakeU.",
-            )}
-          </p>
-
-          <div className="bu-hero__actions">
-            <button
-              type="button"
-              className="bu-button bu-button--primary"
-              onClick={() => openCatalog()}
-            >
-              {translateText("Выбрать вкусное")}
-              <ArrowRight size={18} aria-hidden="true" />
-            </button>
-
-            <Link to="/map" className="bu-button bu-button--secondary">
-              <MapPin size={18} aria-hidden="true" />
-              {translateText("Найти рядом")}
-            </Link>
-          </div>
-        </div>
-
-        <div className="bu-hero__gallery">
-          <button
-            type="button"
-            className="bu-feature bu-feature--cake"
-            onClick={() => openCatalog("Торты")}
-            aria-label={translateText("Посмотреть торты")}
-          >
-            <img
-              src="/images/products/cake.jpg"
-              alt={translateText("Шоколадный торт")}
-              fetchPriority="high"
-            />
-
-            <span className="bu-feature__caption">
-              <span>{translateText("Для особого повода")}</span>
-              <ArrowUpRight size={19} aria-hidden="true" />
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className="bu-feature bu-feature--cookie"
-            onClick={() => openCatalog("Печенье")}
-            aria-label={translateText("Посмотреть печенье")}
-          >
-            <img
-              src="/images/products/cookie.jpg"
-              alt={translateText("Домашнее печенье")}
-            />
-
-            <span className="bu-feature__caption">
-              <span>{translateText("К любимому чаю")}</span>
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </span>
-          </button>
-
-          <span className="bu-hero__note">
-            {translateText("С любовью к вкусному ♡")}
-          </span>
-        </div>
-      </section>
+      <TopBanner onCategoryClick={openCatalog} />
 
       <Link to="/map" className="bu-map">
-        <span className="bu-map__icon">
-          <MapPin size={22} aria-hidden="true" />
-        </span>
-
+        <span className="bu-map__icon"><MapPin size={21} aria-hidden="true" /></span>
         <span className="bu-map__text">
           <strong>{translateText("Вкусное ближе, чем кажется")}</strong>
-          <span>
-            {translateText("Откройте карту и найдите мастеров рядом")}
-          </span>
+          <span>{translateText("Откройте карту и найдите мастеров рядом")}</span>
         </span>
-
-        <span className="bu-map__action">
-          <span>{translateText("Открыть карту")}</span>
-          <ArrowUpRight size={21} aria-hidden="true" />
-        </span>
+        <span className="bu-map__action">{translateText("Открыть карту")} <ArrowUpRight size={19} aria-hidden="true" /></span>
       </Link>
 
-      <section
-        id="home-catalog"
-        className="bu-catalog"
-        aria-labelledby="bu-catalog-title"
-      >
+      <section id="home-catalog" className="bu-catalog" aria-labelledby="bu-catalog-title">
         <div className="bu-catalog__top">
-          <div>
-            <span className="bu-overline">
-              {translateText("ВИТРИНА МАСТЕРОВ")}
-            </span>
+          <div className="bu-catalog__heading">
+            <span className="bu-overline">BAKEU COLLECTION</span>
             <h2 id="bu-catalog-title">{translateText("Топ товары")}</h2>
             <Link className="bu-all-products" to="/seller?tab=products">
-              {translateText("Смотреть все товары ")}
-              <ArrowUpRight size={18} aria-hidden="true" />
+              {translateText("Смотреть все товары")} <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
-            <p className="bu-subtitle">
-              {translateText("Выпечка магазинов с активной подпиской BakeU.")}
-            </p>
           </div>
-
-          <div className="bu-search">
-            <Search size={20} aria-hidden="true" />
-
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={translateText("Торт, печенье, хлеб…")}
-              aria-label={translateText("Поиск товаров")}
-            />
-
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label={translateText("Очистить поиск")}
-              >
-                <X size={17} />
-              </button>
-            )}
-          </div>
+          <label className="bu-search">
+            <Search size={19} aria-hidden="true" />
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={translateText("Торт, печенье, хлеб…")} aria-label={translateText("Поиск товаров")} />
+            {query && <button type="button" onClick={() => setQuery("")} aria-label={translateText("Очистить поиск")}><X size={17} /></button>}
+          </label>
         </div>
 
-        <div
-          className="bu-categories"
-          aria-label={translateText("Категории товаров")}
-        >
-          {categories.map((item) => {
-            const count = featured.filter(
-              (product) =>
-                item.name === "Все" || product.category === item.name,
-            ).length;
-
+        <div className="bu-categories" role="group" aria-label={translateText("Категории товаров")}>
+          {CATEGORIES.map((item) => {
+            const count = item.name === "Все" ? featured.length : featured.filter((p) => p.category === item.name).length;
             return (
-              <button
-                key={item.name}
-                type="button"
-                className={`bu-category ${
-                  category === item.name ? "is-active" : ""
-                }`}
-                aria-pressed={category === item.name}
-                onClick={() => setCategory(item.name)}
-              >
-                <span aria-hidden="true">{translateText(item.icon)}</span>
+              <button key={item.name} type="button" className={`bu-category${category === item.name ? " is-active" : ""}`} aria-pressed={category === item.name} onClick={() => setCategory(item.name)}>
+                <span className="bu-category__emoji" aria-hidden="true">{item.icon}</span>
                 {translateText(item.name)}
                 <span className="bu-category__count">{count}</span>
               </button>
@@ -260,237 +145,49 @@ export default function Home({
           })}
         </div>
 
-        {demo && (
-          <p className="bu-demo">
-            {translateText(
-              "Демо-витрина: подписки магазинов показаны для примера.",
-            )}
-          </p>
-        )}
         <div className="bu-results">
-          <span>
-            {translateText(isFiltered ? "Найдено товаров" : "Всего товаров")}:{" "}
-            <strong>{visibleProducts.length}</strong>
-          </span>
-
-          {isFiltered && (
-            <button type="button" onClick={resetFilters}>
-              {translateText("Сбросить фильтры")}
-              <X size={14} aria-hidden="true" />
-            </button>
-          )}
+          <span>{translateText(isFiltered ? "Найдено товаров" : "Всего товаров")}: <strong>{visibleProducts.length}</strong></span>
+          {isFiltered && <button type="button" onClick={resetFilters}>{translateText("Сбросить фильтры")} <X size={14} /></button>}
         </div>
 
-        <div className="bu-products">
-          {visibleProducts.map((product) => {
-            const quantity = items?.[product.id] ?? 0;
-
-            return (
-              <article className="bu-product" key={product.id}>
-                <div
-                  className="bu-product__image"
-                  style={{ backgroundColor: product.color }}
-                >
-                  <Link
-                    to={"/product/" + encodeURIComponent(product.id)}
-                    aria-label={translateText("Подробнее: " + product.name)}
-                  >
-                    <img
-                      src={product.image}
-                      alt={translateText(product.name)}
-                      loading="lazy"
-                    />
-                  </Link>
-                  <FavoriteButton product={product} />
-                  {quantity > 0 && (
-                    <span className="bu-product__quantity">
-                      <Check size={13} aria-hidden="true" />
-                      {translateText("В корзине:")} {quantity}
-                    </span>
-                  )}
-                </div>
-
-                <div className="bu-product__body">
-                  <Link
-                    to={`/profile?shop=${encodeURIComponent(product.sellerId)}`}
-                    className="bu-shop-link"
-                  >
-                    {translateText(product.sellerName)}
-                  </Link>
-                  <span className="bu-product__category">
-                    {translateText(product.category)}
-                  </span>
-
-                  <h3>
-                    <Link to={"/product/" + encodeURIComponent(product.id)}>
-                      {translateText(product.name)}
-                    </Link>
-                  </h3>
-
-                  <div className="bu-product__bottom">
-                    <span className="bu-product__price">
-                      {translateText(product.price.toLocaleString(getLocale()))}
-                      <small>{translateText("сум")}</small>
-                    </span>
-
-                    <button
-                      type="button"
-                      className="bu-product__add"
-                      onClick={() => handleAdd(product)}
-                      aria-label={translateText(
-                        `Добавить в корзину: ${product.name}`,
-                      )}
-                    >
-                      <Plus size={21} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-
-        {visibleProducts.length === 0 && (
+        {visibleProducts.length ? (
+          <div className="bu-products">
+            {visibleProducts.map((product) => (
+              <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} />
+            ))}
+          </div>
+        ) : (
           <div className="bu-empty">
-            <Search size={30} aria-hidden="true" />
+            <Search size={28} aria-hidden="true" />
             <h3>{translateText("Пока ничего не нашли")}</h3>
-            <p>
-              {translateText(
-                "Попробуйте другое название или выберите все категории.",
-              )}
-            </p>
-
-            <button
-              type="button"
-              className="bu-button bu-button--primary"
-              onClick={resetFilters}
-            >
-              {translateText("Сбросить фильтры")}
-            </button>
+            <p>{translateText("Попробуйте другое название или выберите все категории.")}</p>
+            <button className="bu-button bu-button--primary" type="button" onClick={resetFilters}>{translateText("Сбросить фильтры")}</button>
           </div>
         )}
+        <div className={`bu-notice${notice ? " is-visible" : ""}`} role="status" aria-live="polite" aria-atomic="true">
+          {notice && <><ShoppingBag size={17} aria-hidden="true" /><span>{notice}</span></>}
+        </div>
+      </section>
 
-        <div
-          className="bu-notice"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {notice && (
-            <>
-              <ShoppingBag size={16} aria-hidden="true" />
-              <span>{translateText(notice)}</span>
-            </>
-          )}
-        </div>
-      </section>
-      <section className="bu-discover" aria-labelledby="bu-discover-title">
-        <div className="bu-discover__intro">
-          <span className="bu-overline">
-            {translateText("ВДОХНОВЕНИЕ НА КАЖДЫЙ ДЕНЬ")}
-          </span>
-          <h2 id="bu-discover-title">
-            {translateText("Найдите свой")}
-            <br />
-            <span>{translateText("любимый вкус.")}</span>
-          </h2>
-          <p>
-            {translateText(
-              "От хрустящего хлеба до любимого десерта — всё от домашних мастеров.",
-            )}
-          </p>
-          <Link
-            to="/seller?tab=products"
-            className="bu-button bu-button--primary"
-          >
-            {translateText("Выбрать вкусное ")}
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-        <HeroSlider />
-      </section>
       <section className="bu-makers" aria-labelledby="bu-makers-title">
         <div className="bu-makers__heading">
-          <div>
-            <span className="bu-overline">
-              {translateText("ЛЮДИ, КОТОРЫЕ ПЕКУТ С ЛЮБОВЬЮ")}
-            </span>
-            <h2 id="bu-makers-title">
-              {translateText("Знакомьтесь, кондитеры")}
-            </h2>
-          </div>
-          <Link to="/seller?tab=sellers">
-            {translateText("Все продавцы ")}
-            <ArrowUpRight size={18} />
-          </Link>
+          <div><span className="bu-overline">MADE WITH LOVE</span><h2 id="bu-makers-title">{translateText("Знакомьтесь, кондитеры")}</h2></div>
+          <Link to="/seller?tab=sellers">{translateText("Все продавцы")} <ArrowUpRight size={18} aria-hidden="true" /></Link>
         </div>
         <div className="bu-makers__grid">
-          {[
-            {
-              id: "shahzoda",
-              name: "Shahzoda Family",
-              initials: "SF",
-              description: "Торты для ваших особенных моментов",
-              image: "cake",
-              color: "#ead9b9",
-            },
-            {
-              id: "sweet-home",
-              name: "Sweet Home",
-              initials: "SH",
-              description: "Печенье и сладости к любимому чаю",
-              image: "cookie",
-              color: "#ead9e1",
-            },
-            {
-              id: "bakeu",
-              name: "BakeU Bakery",
-              initials: "BU",
-              description: "Домашний хлеб и ароматная самса",
-              image: "bread",
-              color: "#dce6d5",
-            },
-          ].map((shop) => (
-            <Link
-              key={shop.id}
-              className="bu-maker"
-              to={`/profile?shop=${shop.id}`}
-              aria-label={translateText(`Открыть профиль: ${shop.name}`)}
-            >
-              <span
-                className="bu-maker__avatar"
-                style={{ background: shop.color }}
-              >
-                {translateText(shop.initials)}
-              </span>
-              <span className="bu-maker__info">
-                <strong>{translateText(shop.name)}</strong>
-                <span>{translateText(shop.description)}</span>
-                <small>{translateText("Открыть профиль ↗")}</small>
-              </span>
-              <img
-                src={`/images/products/${shop.image}.jpg`}
-                alt=""
-                loading="lazy"
-              />
+          {MAKERS.map((shop) => (
+            <Link key={shop.id} className="bu-maker" to={`/profile?shop=${encodeURIComponent(shop.id)}`} aria-label={translateText(`Открыть профиль: ${shop.name}`)}>
+              <div className="bu-maker__photo"><img src={shop.image} alt="" loading="lazy" decoding="async" /></div>
+              <div className="bu-maker__info"><span className="bu-maker__avatar">{shop.initials}</span><strong>{shop.name}</strong><span>{translateText(shop.description)}</span><small>{translateText("Открыть профиль")} <ArrowUpRight size={13} /></small></div>
             </Link>
           ))}
         </div>
       </section>
+
       <Link to="/ai" className="bu-helper">
-        <span className="bu-helper__icon" aria-hidden="true">
-          ✦
-        </span>
-        <span>
-          <strong>{translateText("Не знаете, что выбрать?")}</strong>
-          <small>
-            {translateText("Расскажите помощнику BakeU, чего хочется сегодня.")}
-          </small>
-        </span>
-        <span className="bu-helper__action">
-          {translateText("Спросить помощника ")}
-          <ArrowUpRight size={20} />
-        </span>
+        <span className="bu-helper__icon"><Sparkles size={24} aria-hidden="true" /></span>
+        <span className="bu-helper__text"><strong>{translateText("Не знаете, что выбрать?")}</strong><small>{translateText("Расскажите помощнику BakeU, чего хочется сегодня.")}</small></span>
+        <span className="bu-helper__action">{translateText("Спросить помощника")} <ArrowRight size={19} aria-hidden="true" /></span>
       </Link>
     </main>
   );
