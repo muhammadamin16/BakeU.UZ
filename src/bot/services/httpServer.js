@@ -140,7 +140,7 @@ export function createApiServer({ auth, repo, config }) {
           throw new HttpError(404, "Маршрут не найден.");
         }
         if (
-          ["/api/auth/register", "/api/auth/login"].includes(path) &&
+          ["/api/auth/register", "/api/auth/login", "/api/auth/start-registration", "/api/auth/verify-registration"].includes(path) &&
           req.method === "POST"
         ) {
           const ip = config.trustProxy
@@ -156,10 +156,14 @@ export function createApiServer({ auth, repo, config }) {
           concurrentAuth++;
           try {
             const data = await readJson(req);
-            const result = await (path.endsWith("/register")
-              ? auth.register(data)
-              : auth.login(data));
-            return send(path.endsWith("/register") ? 201 : 200, result);
+            const result = path.endsWith("/start-registration")
+              ? await auth.startRegistration(data)
+              : path.endsWith("/verify-registration")
+                ? auth.verifyRegistration(data)
+                : path.endsWith("/register")
+                  ? await auth.register(data)
+                  : await auth.login(data);
+            return send(path.endsWith("/register") || path.endsWith("/verify-registration") ? 201 : 200, result);
           } finally {
             concurrentAuth--;
           }
