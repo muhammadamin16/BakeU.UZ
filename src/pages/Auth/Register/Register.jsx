@@ -85,6 +85,7 @@ export default function Register() {
   const [busy, setBusy] = useState(false);
   const [pendingToken, setPendingToken] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [botUrl, setBotUrl] = useState("");
 
   if (isLoggedIn()) return <Navigate to={returnTo} replace />;
 
@@ -102,7 +103,7 @@ export default function Register() {
     if (
       !form.firstName.trim() ||
       !form.lastName.trim() ||
-      !/^998\d{9}$/.test(form.phone.replace(/\D/g, "")) ||
+      !form.phone.trim() ||
       !form.password
     )
       return setError("Заполните все обязательные поля.");
@@ -118,8 +119,10 @@ export default function Register() {
       }
       const result = await startTelegramRegistration(form, role);
       setPendingToken(result.token);
+      setBotUrl(result.botUrl);
       setStep(3);
-      window.open(result.botUrl, "_blank", "noopener,noreferrer");
+      const popup = window.open(result.botUrl, "_blank", "noopener,noreferrer");
+      if (!popup) setBotUrl(result.botUrl);
     } catch (e) {
       setError(e.message || "Не удалось создать аккаунт");
     } finally {
@@ -199,6 +202,13 @@ export default function Register() {
             <h1>{translateText("Подтверждение телефона")}</h1>
             <p>{translateText("Откройте Telegram, нажмите Start, поделитесь своим номером и введите код из бота.")}</p>
           </header>
+          {botUrl && (
+            <p className="bk-switch">
+              <a href={botUrl} target="_blank" rel="noopener noreferrer">
+                {translateText("Открыть Telegram бот")}
+              </a>
+            </p>
+          )}
           <form className="bk-form" onSubmit={confirmCode}>
             <div className="bk-field">
               <label htmlFor="reg-code">{translateText("Код из Telegram")}</label>
