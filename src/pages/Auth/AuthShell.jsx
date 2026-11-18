@@ -66,7 +66,7 @@ return (
         >
           <img
             className="bk-logo-image"
-            src="/bakeu-logo.png"
+            src="/images/logo-bear.png"
             alt="BakeU"
           />
         </Link>

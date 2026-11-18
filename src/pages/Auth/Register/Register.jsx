@@ -1,19 +1,16 @@
 import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
-import { accountApiEnabled } from "../../../bot/client/accountApi";
+import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../bot/client/accountApi";
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   Check,
   Eye,
   EyeOff,
   Loader2,
   LockKeyhole,
-  Mail,
-  MapPin,
   Phone,
   ShoppingBag,
   Store,
@@ -21,21 +18,15 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { registerLocal } from "../../../store/localAccount";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
 import "../Auth.css";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 const EMPTY = {
   firstName: "",
   lastName: "",
-  email: "",
   phone: "",
   password: "",
-  company: "",
-  location: "",
 };
 
 const ROLES = [
@@ -92,6 +83,9 @@ export default function Register() {
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingToken, setPendingToken] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [botUrl, setBotUrl] = useState("");
 
   if (isLoggedIn()) return <Navigate to={returnTo} replace />;
 
@@ -110,33 +104,55 @@ export default function Register() {
       !form.firstName.trim() ||
       !form.lastName.trim() ||
       !form.phone.trim() ||
-      !form.email.trim() ||
       !form.password
     )
       return setError("Заполните все обязательные поля.");
-    if (!EMAIL_RE.test(form.email.trim()))
-      return setError("Введите корректный email.");
+    if (!/^998\d{9}$/.test(form.phone.replace(/\D/g, "")))
+      return setError("Введите номер в формате +998 XX XXX XX XX.");
     if (form.password.length < 8)
       return setError("Пароль должен содержать минимум 8 символов.");
-    if (isSeller && (!form.company.trim() || !form.location.trim()))
-      return setError("Укажите название магазина и местоположение.");
 
+    // Open a tab during the user gesture so browsers do not block Telegram after an API await.
+    const telegramTab = accountApiEnabled ? window.open("about:blank", "_blank") : null;
+    if (telegramTab) telegramTab.opener = null;
     setBusy(true);
     try {
-      await registerLocal(form, role);
-      navigate(returnTo, { replace: true });
+      if (!accountApiEnabled) {
+        throw Error("Для подтверждения через Telegram подключите BakeU Bot API.");
+      }
+      const result = await startTelegramRegistration(form, role);
+      setPendingToken(result.token);
+      setBotUrl(result.botUrl);
+      setStep(3);
+      if (telegramTab) telegramTab.location.replace(result.botUrl);
     } catch (e) {
+      telegramTab?.close();
       setError(e.message || "Не удалось создать аккаунт");
     } finally {
       setBusy(false);
     }
   }
 
+  async function confirmCode(event) {
+    event.preventDefault();
+    if (busy || !pendingToken) return;
+    setBusy(true);
+    setError("");
+    try {
+      await verifyTelegramRegistration(pendingToken, verificationCode.trim());
+      navigate(returnTo, { replace: true });
+    } catch (e) {
+      setError(e.message || "Код не подошёл.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <AuthShell wide={step === 2}>
+    <AuthShell wide={step !== 1}>
       <div className="bk-progress" aria-hidden="true">
         <span className="is-done" />
-        <span className={step === 2 ? "is-done" : ""} />
+        <span className={step !== 1 ? "is-done" : ""} />
       </div>
 
       {step === 1 ? (
@@ -183,6 +199,43 @@ export default function Register() {
             <ArrowRight size={18} />
           </button>
         </>
+      ) : step === 3 ? (
+        <>
+          <header className="bk-head">
+            <h1>{translateText("Подтверждение телефона")}</h1>
+            <p>{translateText("Откройте Telegram, нажмите Start, поделитесь своим номером и введите код из бота.")}</p>
+          </header>
+          {botUrl && (
+            <p className="bk-switch">
+              <a href={botUrl} target="_blank" rel="noopener noreferrer">
+                {translateText("Открыть Telegram бот")}
+              </a>
+            </p>
+          )}
+          <form className="bk-form" onSubmit={confirmCode}>
+            <div className="bk-field">
+              <label htmlFor="reg-code">{translateText("Код из Telegram")}</label>
+              <div className="bk-input">
+                <input
+                  id="reg-code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                />
+              </div>
+            </div>
+            {error && <p className="bk-alert" role="alert">{translateText(error)}</p>}
+            <button className="bk-primary" type="submit" disabled={busy || verificationCode.length !== 6}>
+              {translateText("Подтвердить код")} <ArrowRight size={18} />
+            </button>
+          </form>
+        </>
       ) : (
         <>
           <header className="bk-head">
@@ -203,7 +256,7 @@ export default function Register() {
             <p>
               {translateText(
                 isSeller
-                  ? "Расскажите о себе и своём магазине."
+                  ? "Заполните основные данные. Магазин добавите позже в профиле."
                   : "Заполните данные для регистрации.",
               )}
             </p>
@@ -229,16 +282,6 @@ export default function Register() {
               autoComplete="family-name"
             />
             <Field
-              id="reg-email"
-              label={translateText("Почта")}
-              icon={Mail}
-              type="email"
-              value={form.email}
-              onChange={(v) => update("email", v)}
-              placeholder="example@gmail.com"
-              autoComplete="email"
-            />
-            <Field
               id="reg-phone"
               label={translateText("Телефон")}
               icon={Phone}
@@ -248,29 +291,6 @@ export default function Register() {
               placeholder="+998 90 123 45 67"
               autoComplete="tel"
             />
-
-            {isSeller && (
-              <>
-                <Field
-                  id="reg-company"
-                  label={translateText("Магазин")}
-                  icon={Building2}
-                  value={form.company}
-                  onChange={(v) => update("company", v)}
-                  placeholder="Sweet Bakery"
-                  autoComplete="organization"
-                />
-                <Field
-                  id="reg-location"
-                  label={translateText("Местоположение")}
-                  icon={MapPin}
-                  value={form.location}
-                  onChange={(v) => update("location", v)}
-                  placeholder={translateText("Город, район")}
-                  autoComplete="street-address"
-                />
-              </>
-            )}
 
             <div className="bk-field bk-field--wide">
               <label htmlFor="reg-password">{translateText("Пароль")}</label>
@@ -319,9 +339,7 @@ export default function Register() {
               ) : (
                 <>
                   {translateText(
-                    accountApiEnabled
-                      ? "Создать аккаунт"
-                      : "Создать демо-профиль",
+                    "Отправить код",
                   )}{" "}
                   <ArrowRight size={18} />
                 </>
@@ -338,9 +356,7 @@ export default function Register() {
       {step === 2 && (
         <p className="bk-note">
           {translateText(
-            accountApiEnabled
-              ? "Аккаунт сохраняется на сервере BakeU. Администратор получит уведомление о регистрации без пароля."
-              : "Демо-режим: аккаунт хранится только в этом браузере.",
+            "Регистрация завершится только после подтверждения номера в Telegram.",
           )}
         </p>
       )}

@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pause, Play } from "lucide-react";
 import { translateText } from "../../i18n/index.js";
 import "./TopBanner.css";
 
@@ -15,7 +15,7 @@ const slides = [
     description: "Тепло домашней выпечки в каждом кусочке",
     button: "Смотреть хлеб",
     category: "Хлеб",
-    image: "/images/banners/cakes.webp",
+    image: "/images/banners/bread.webp",
   },
   {
     id: 2,
@@ -31,7 +31,7 @@ const slides = [
     description: "Нежные десерты для самых тёплых встреч",
     button: "Смотреть торты",
     category: "Торты",
-    image: "/images/banners/bread.webp",
+    image: "/images/banners/cakes.webp",
   },
 ];
 
@@ -42,10 +42,14 @@ export default function TopBanner({ onCategoryClick }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [transitionEnabled, setTransitionEnabled] = useState(true);
   const [progressCycle, setProgressCycle] = useState(0);
+  const [playing, setPlaying] = useState(
+    () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [ctaFocused, setCtaFocused] = useState(false);
+  const isPlaying = playing && !ctaFocused;
 
   const currentRef = useRef(0);
   const movingRef = useRef(false);
-  const timerRef = useRef(null);
   const fallbackRef = useRef(null);
   const touchStartRef = useRef(null);
   const raf1Ref = useRef(null);
@@ -66,6 +70,8 @@ export default function TopBanner({ onCategoryClick }) {
 
       raf1Ref.current = window.requestAnimationFrame(() => {
         raf2Ref.current = window.requestAnimationFrame(() => {
+          raf1Ref.current = null;
+          raf2Ref.current = null;
           setTransitionEnabled(true);
           movingRef.current = false;
         });
@@ -77,8 +83,12 @@ export default function TopBanner({ onCategoryClick }) {
 
   const moveTo = useCallback(
     (nextIndex) => {
-      if (movingRef.current) return;
+      if (nextIndex === currentRef.current) return;
 
+      window.cancelAnimationFrame(raf1Ref.current);
+      window.cancelAnimationFrame(raf2Ref.current);
+      raf1Ref.current = null;
+      raf2Ref.current = null;
       movingRef.current = true;
       currentRef.current = nextIndex;
 
@@ -96,16 +106,17 @@ export default function TopBanner({ onCategoryClick }) {
     [finishTransition]
   );
 
-  // Automatic slide every 5 seconds
   useEffect(() => {
-    timerRef.current = window.setTimeout(() => {
-      moveTo(currentRef.current + 1);
+    if (!isPlaying) return;
+
+    const timer = window.setTimeout(() => {
+      moveTo((currentRef.current % slides.length) + 1);
     }, AUTO_DELAY);
 
     return () => {
-      window.clearTimeout(timerRef.current);
+      window.clearTimeout(timer);
     };
-  }, [currentIndex, progressCycle, moveTo]);
+  }, [isPlaying, currentIndex, progressCycle, moveTo]);
 
   const handleTransitionEnd = (event) => {
     if (event.target !== event.currentTarget) return;
@@ -114,46 +125,31 @@ export default function TopBanner({ onCategoryClick }) {
     finishTransition();
   };
 
-  const goToSlide = (targetIndex) => {
-    if (
-      movingRef.current ||
-      targetIndex === currentRef.current
-    ) {
-      return;
-    }
-
-    moveTo(targetIndex);
-  };
-
   // Mobile touch gestures
   const handleTouchStart = (event) => {
-    touchStartRef.current = event.touches[0].clientX;
+    const { clientX, clientY } = event.touches[0];
+    touchStartRef.current = { clientX, clientY };
   };
 
   const handleTouchEnd = (event) => {
-    if (touchStartRef.current === null) return;
+    const start = touchStartRef.current;
+    if (!start) return;
 
-    const distance =
-      touchStartRef.current - event.changedTouches[0].clientX;
+    const { clientX, clientY } = event.changedTouches[0];
+    const distance = start.clientX - clientX;
+    const verticalDistance = start.clientY - clientY;
 
     touchStartRef.current = null;
 
     if (
       Math.abs(distance) < SWIPE_THRESHOLD ||
-      movingRef.current
+      Math.abs(distance) <= Math.abs(verticalDistance)
     ) {
       return;
     }
 
-    if (distance > 0) {
-      moveTo(currentRef.current + 1);
-    } else {
-      moveTo(
-        currentRef.current === 0
-          ? slides.length - 1
-          : currentRef.current - 1
-      );
-    }
+    const index = currentRef.current % slides.length;
+    moveTo(distance > 0 ? index + 1 : (index + slides.length - 1) % slides.length);
   };
 
   const handleCategoryClick = (category) => {
@@ -163,14 +159,13 @@ export default function TopBanner({ onCategoryClick }) {
     }
 
     document.getElementById("home-catalog")?.scrollIntoView({
-      behavior: "smooth",
+      behavior: "auto",
       block: "start",
     });
   };
 
   useEffect(() => {
     return () => {
-      window.clearTimeout(timerRef.current);
       window.clearTimeout(fallbackRef.current);
 
       if (raf1Ref.current !== null) {
@@ -187,11 +182,11 @@ export default function TopBanner({ onCategoryClick }) {
     <section
       className="top-banner"
       aria-label={translateText("Рекламные предложения")}
-      aria-roledescription="carousel"
+      aria-roledescription={translateText("карусель")}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { touchStartRef.current = null; }}
     >
-      {/* SLIDER */}
       <div
         className="top-banner__track"
         onTransitionEnd={handleTransitionEnd}
@@ -227,17 +222,15 @@ export default function TopBanner({ onCategoryClick }) {
               />
 
               <div className="top-banner__content">
-                <span className="top-banner__eyebrow">
-                  BAKEU · FRESH & HOMEMADE
-                </span>
-
-                <h2>{translateText(slide.title)}</h2>
+                <h1>{translateText(slide.title)}</h1>
 
                 <p>{translateText(slide.description)}</p>
 
                 <button
                   type="button"
                   className="top-banner__cta"
+                  onFocus={() => setCtaFocused(true)}
+                  onBlur={() => setCtaFocused(false)}
                   onClick={() =>
                     handleCategoryClick(slide.category)
                   }
@@ -251,43 +244,37 @@ export default function TopBanner({ onCategoryClick }) {
         })}
       </div>
 
-      {/* PROGRESS INDICATORS */}
-      <div className="top-banner__pagination">
-        {slides.map((slide, index) => (
-          <button
-            key={slide.id}
-            type="button"
-            className={`top-banner__indicator ${
-              index === activeIndex ? "is-active" : ""
-            }`}
-            onClick={() => goToSlide(index)}
-            aria-label={`${translateText("Слайд")} ${index + 1}`}
-            aria-current={
-              index === activeIndex ? "true" : undefined
-            }
-          >
-            {index === activeIndex && (
-              <span
-                key={progressCycle}
-                className="top-banner__progress"
-                style={{
-                  animationDuration: `${AUTO_DELAY}ms`,
-                }}
-              />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* SLIDE COUNTER */}
-      <div className="top-banner__counter" aria-hidden="true">
-        <strong>
-          {String(activeIndex + 1).padStart(2, "0")}
-        </strong>
-        <span>/</span>
-        <span>
-          {String(slides.length).padStart(2, "0")}
-        </span>
+      <div className="top-banner__controls">
+        <div className="top-banner__pagination">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              className="top-banner__indicator"
+              onClick={() => moveTo(index)}
+              aria-label={`${translateText("Слайд")} ${index + 1}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+            >
+              <span className="top-banner__indicator-track" aria-hidden="true">
+                {index === activeIndex && (
+                  <span
+                    key={progressCycle}
+                    className={`top-banner__progress${isPlaying ? "" : " is-paused"}`}
+                    style={{ animationDuration: `${AUTO_DELAY}ms` }}
+                  />
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="top-banner__playback"
+          onClick={() => setPlaying((value) => !value)}
+          aria-label={translateText(playing ? "Приостановить слайды" : "Запустить слайды")}
+        >
+          {playing ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
+        </button>
       </div>
     </section>
   );

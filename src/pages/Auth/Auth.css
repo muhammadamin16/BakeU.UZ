@@ -688,3 +688,14 @@
     max-height: 58px;
   }
 }
+
+/* Auth language switch is pinned to the viewport top-right. */
+.bk-auth-top > .bakeu-header__languages {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  z-index: 1101;
+}
+@media (max-width: 600px) {
+  .bk-auth-top > .bakeu-header__languages { top: 14px; right: 14px; }
+}

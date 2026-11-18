@@ -24,8 +24,8 @@ export function validateProfile(input, { roleRequired = true } = {}) {
     throw new HttpError(400, "Некорректные данные.");
   const firstName = text(input.firstName, "Имя"),
     lastName = text(input.lastName, "Фамилия");
-  const email = text(input.email, "Email", 254).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+  const email = typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new HttpError(400, "Введите корректный email.");
   const phone = text(input.phone, "Телефон", 30).replace(/[^0-9]/g, "");
   if (!/^998\d{9}$/.test(phone))
@@ -38,8 +38,8 @@ export function validateProfile(input, { roleRequired = true } = {}) {
     throw new HttpError(400, "Выберите покупателя или продавца.");
   const out = { firstName, lastName, email, phone, role };
   if (role === "seller") {
-    out.company = text(input.company, "Магазин", 150);
-    out.location = text(input.location, "Адрес", 250);
+    out.company = typeof input.company === "string" ? input.company.trim().slice(0, 150) : "";
+    out.location = typeof input.location === "string" ? input.location.trim().slice(0, 250) : "";
   }
   return out;
 }
@@ -54,6 +54,62 @@ export function createAuth(repo, config, notifications) {
     return { user, token };
   };
   return {
+    startRegistration: async (input) => {
+      const fields = validateProfile(input);
+      if (typeof input.password !== "string" || input.password.length < 8 || input.password.length > 128)
+        throw new HttpError(400, "Пароль: от 8 до 128 символов.");
+      if (repo.findUserByPhone(fields.phone))
+        throw new HttpError(409, "Этот номер уже зарегистрирован.");
+      if (!config.botUsername)
+        throw new HttpError(503, "Telegram бот временно не настроен.");
+      const token = randomBytes(24).toString("hex");
+      const salt = randomBytes(16).toString("hex");
+      const passwordHash = (await scrypt(input.password, salt, 64)).toString("hex");
+      repo.savePendingRegistration(tokenHash(token), fields, passwordHash, salt, Date.now() + 10 * 60000);
+      return { token, botUrl: `https://t.me/${config.botUsername}?start=verify_${token}`, expiresIn: 600 };
+    },
+    beginTelegramVerification: (token, telegramId) => {
+      if (!/^[a-f0-9]{48}$/.test(token)) return false;
+      return Boolean(repo.setPendingTelegram(tokenHash(token), telegramId));
+    },
+    sendTelegramVerification: (token, telegramId, phone) => {
+      if (!/^[a-f0-9]{48}$/.test(token)) return null;
+      const hash = tokenHash(token);
+      const pending = repo.pendingRegistration(hash);
+      if (!pending || pending.telegram_id !== String(telegramId) || pending.code_hash || pending.attempts >= 5) return null;
+      const fields = JSON.parse(pending.fields);
+      if (String(phone).replace(/\D/g, "") !== fields.phone) return null;
+      const code = String(randomBytes(4).readUInt32BE(0) % 1000000).padStart(6, "0");
+      const codeHash = tokenHash(hash + ":" + code);
+      if (!repo.setPendingCode(hash, telegramId, codeHash)) return null;
+      return code;
+    },
+    verifyRegistration: (input) => {
+      if (typeof input?.token !== "string" || !/^[a-f0-9]{48}$/.test(input.token) ||
+          typeof input.code !== "string" || !/^\d{6}$/.test(input.code))
+        throw new HttpError(400, "Некорректный код.");
+      const hash = tokenHash(input.token);
+      const pending = repo.pendingRegistration(hash);
+      if (!pending || !pending.telegram_id || !pending.code_hash)
+        throw new HttpError(400, "Сначала подтвердите номер в Telegram.");
+      if (pending.attempts >= 5) throw new HttpError(429, "Слишком много попыток.");
+      repo.pendingAttempt(hash);
+      if (tokenHash(hash + ":" + input.code) !== pending.code_hash)
+        throw new HttpError(400, "Неверный код.");
+      const fields = JSON.parse(pending.fields);
+      if (repo.findUserByPhone(fields.phone))
+        throw new HttpError(409, "Этот номер уже зарегистрирован.");
+      let user;
+      try {
+        user = repo.register(fields, pending.password_hash, pending.salt, notifications.registration);
+      } catch (error) {
+        if (/UNIQUE constraint failed/.test(error.message))
+          throw new HttpError(409, "Этот номер уже зарегистрирован.");
+        throw error;
+      }
+      repo.deletePending(hash);
+      return { ...session(user), application: repo.applicationForUser(user.id) };
+    },
     register: async (input) => {
       const fields = validateProfile(input);
       if (
@@ -85,12 +141,13 @@ export function createAuth(repo, config, notifications) {
     },
     login: async (input) => {
       if (
-        typeof input?.email !== "string" ||
+        (typeof input?.phone !== "string" && typeof input?.email !== "string") ||
         typeof input?.password !== "string" ||
         input.password.length > 128
       )
-        throw new HttpError(400, "Введите email и пароль.");
-      const record = repo.findUserByEmail(input.email.trim().toLowerCase());
+        throw new HttpError(400, "Введите телефон и пароль.");
+      const phone = typeof input.phone === "string" ? input.phone.replace(/\D/g, "") : "";
+      const record = phone ? repo.findUserByPhone(phone) : repo.findUserByEmail((input.email || "").trim().toLowerCase());
       const candidate = await scrypt(
         input.password,
         record?.salt || "bakeu-dummy-salt",
@@ -100,7 +157,7 @@ export function createAuth(repo, config, notifications) {
         !record ||
         !timingSafeEqual(candidate, Buffer.from(record.password_hash, "hex"))
       )
-        throw new HttpError(401, "Неверный email или пароль.");
+        throw new HttpError(401, "Неверный телефон или пароль.");
       const user = repo.user(record.id);
       return {
         ...session(user),

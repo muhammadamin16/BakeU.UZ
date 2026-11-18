@@ -42,11 +42,12 @@ async function main() {
     notifications = createNotifications(repo, config);
   const auth = createAuth(repo, config, notifications);
   const server = createApiServer({ auth, repo, config });
-  const handle = createUpdateHandler({ repo, telegram, config, notifications });
+  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth });
   const flush = createOutboxWorker(repo, telegram);
   // Validate token and switch from webhook to polling without discarding pending updates.
   startupStage = "telegram";
   const me = await telegram.call("getMe");
+  config.botUsername = me.username;
   await telegram.call("deleteWebhook", { drop_pending_updates: false });
   await telegram.call("setMyCommands", {
     commands: [

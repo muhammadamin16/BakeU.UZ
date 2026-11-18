@@ -1,0 +1,65 @@
+:root {
+  --glass-control-ink: #432015;
+  --glass-control-rest: linear-gradient(145deg, #ffffff7a, #fff8e82e);
+  --glass-control-active: linear-gradient(135deg, #ffffffe6, #f4c97c59);
+  --glass-control-edge: #ffffffb3;
+  --glass-control-shadow: inset 0 1px 1px #ffffffd9, 0 4px 14px #4320150a;
+  --glass-control-focus: #944b24;
+  --glass-control-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Keep each control's sizing and layout while sharing the language switcher's surface. */
+:is(#root, .bakeu-auth-overlay) :is(
+  button:not(.bakeu-header__languages *, .top-banner__indicator, .leaflet-container *),
+  input[type="submit"],
+  a[role="button"],
+  a:is(.bu-button, .ck-button, .pd-button, .bw-btn, .map-btn, .shop-route-button,
+    .bakeu-header__icon, .bake-footer__store, .bu-all-products, .bu-helper, .bu-map,
+    .bu-continue, .ck-back, .ck-text-button, .seller-shop__open, .ad-btn,
+    .bu-makers__heading > a, .seller-tabs > a)
+) {
+  background: var(--glass-control-rest);
+  border-color: var(--glass-control-edge);
+  box-shadow: var(--glass-control-shadow);
+  color: var(--glass-control-ink);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease,
+    transform 220ms var(--glass-control-ease);
+
+  &:is([aria-pressed="true"], [aria-selected="true"], [aria-current="page"], .is-active, .active) {
+    background: var(--glass-control-active);
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      background: var(--glass-control-active);
+    }
+  }
+
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    background: var(--glass-control-active);
+    box-shadow: inset 0 1px 4px #43201526;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--glass-control-focus);
+    outline-offset: 2px;
+  }
+
+  &:is(:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & {
+      transition: none;
+    }
+
+    &:is(:hover, :active) {
+      transform: none;
+    }
+  }
+}
