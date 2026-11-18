@@ -10,6 +10,7 @@ export const config = {
   supportEmail: "support@example.com",
   useWebApp: false,
   sessionHours: 24,
+  botUsername: "BakeU_Test_Bot",
   origins: ["http://localhost:5173"],
   trustProxy: false,
 };
