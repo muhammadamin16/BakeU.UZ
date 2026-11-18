@@ -50,7 +50,10 @@ function SellerCatalog({ tab }) {
   }, [notice]);
 
   const shown = visibleProducts.slice(0, limit);
-  const remaining = visibleProducts.length - shown.length;
+  const shownShops = visibleShops.slice(0, limit);
+  const total = showSellers ? visibleShops.length : visibleProducts.length;
+  const shownCount = showSellers ? shownShops.length : shown.length;
+  const remaining = Math.max(0, total - shownCount);
   const reset = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
   const addProduct = (product) => { add(product); setNotice(`${t("В корзине")}: ${t(product.name)}`); };
   const collapse = () => {
@@ -87,16 +90,16 @@ function SellerCatalog({ tab }) {
           {(query || (!showSellers && category !== "Все")) && <button type="button" onClick={reset}>{t("Сбросить")} <X size={14} /></button>}
         </div>
         {showSellers ? (
-          <div className="seller-shops">{visibleShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
+          <div className="seller-shops">{shownShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
         ) : (
           <div className="seller-products">{shown.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
         )}
         {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
-        {!showSellers && visibleProducts.length > PAGE_SIZE && <div className="seller-pagination">
-          <span>{shown.length} / {visibleProducts.length}</span>
-          <div className="seller-pagination__track" role="progressbar" aria-label={t("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={shown.length}><span style={{ width: `${shown.length / visibleProducts.length * 100}%` }} /></div>
+        {total > PAGE_SIZE && <div className="seller-pagination">
+          <span>{shownCount} / {total}</span>
+          <div className="seller-pagination__track" role="progressbar" aria-label={t(showSellers ? "Показано магазинов" : "Показано товаров")} aria-valuemin={0} aria-valuemax={total} aria-valuenow={shownCount}><span style={{ width: `${shownCount / total * 100}%` }} /></div>
           <div className="seller-pagination__buttons">
-            {remaining > 0 && <button type="button" className="seller-pagination__more" onClick={() => setLimit((v) => v + PAGE_SIZE)}>{t("Больше товаров")} <ArrowDown size={17} /></button>}
+            {remaining > 0 && <button type="button" className="seller-pagination__more" onClick={() => setLimit((v) => v + PAGE_SIZE)}>{t(showSellers ? "Больше магазинов" : "Больше товаров")} <ArrowDown size={17} /></button>}
             {limit > PAGE_SIZE && <button type="button" className="seller-pagination__less" onClick={collapse}>{t("Свернуть")} <ArrowUp size={16} /></button>}
           </div>
         </div>}

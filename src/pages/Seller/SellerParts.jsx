@@ -46,10 +46,54 @@ export function ProductCard({ product, quantity = 0, onAdd }) {
 }
 
 export function ShopCard({ shop, products = catalogProducts }) {
-  const shopProducts = products.filter((p) => String(p.shopId) === String(shop.id));
-  return <article className="seller-shop">
-    <Link to={sellerLink(shop.id)} className="seller-shop__top"><ShopLogo shop={shop} /><div className="seller-shop__identity"><h2>{t(shop.name)}</h2><ShopRating shop={shop} /></div><ArrowUpRight size={19} className="seller-shop__arrow" /></Link>
-    <div className="seller-shop__previews">{shopProducts.slice(0, 3).map((p) => <Link to={productLink(p.id)} key={p.id} className="seller-shop__preview" aria-label={t(p.name)}><ProductImage product={p} /></Link>)}{!shopProducts.length && <span className="seller-shop__no-products">{t("Скоро здесь будут товары")}</span>}</div>
-    <Link to={sellerLink(shop.id)} className="seller-shop__open">{t("Смотреть магазин")}<ArrowUpRight size={16} /></Link>
-  </article>;
+  const shopProducts = products.filter((product) => String(product.shopId) === String(shop.id));
+  const featured = shopProducts.slice(0, 3);
+  const main = featured[0];
+
+  return (
+    <article className="seller-shop seller-shop--editorial">
+      <div className="seller-shop__cover">
+        {main ? (
+          <Link className="seller-shop__cover-link" to={sellerLink(shop.id)} aria-label={t(shop.name)}>
+            <ProductImage product={main} />
+          </Link>
+        ) : (
+          <Link className="seller-shop__cover-link" to={sellerLink(shop.id)} aria-label={t(shop.name)}>
+            <span className="seller-shop__cover-empty"><Store size={32} /></span>
+          </Link>
+        )}
+        <span className="seller-shop__cover-count">{shopProducts.length} {t("товаров")}</span>
+      </div>
+
+      <div className="seller-shop__content">
+        <Link className="seller-shop__top" to={sellerLink(shop.id)}>
+          <ShopLogo shop={shop} />
+          <div className="seller-shop__identity">
+            <h2>{t(shop.name)}</h2>
+            <ShopRating shop={shop} />
+          </div>
+          <span className="seller-shop__arrow"><ArrowUpRight size={17} /></span>
+        </Link>
+
+        <div className="seller-shop__previews" aria-label={t("Товары магазина")}>
+          {featured.length ? featured.map((product) => (
+            <Link
+              to={productLink(product.id)}
+              key={product.id}
+              className="seller-shop__preview"
+              title={t(product.name)}
+              aria-label={t(product.name)}
+            >
+              <ProductImage product={product} />
+            </Link>
+          )) : <span className="seller-shop__no-products">{t("Скоро появятся товары")}</span>}
+        </div>
+
+        <Link className="seller-shop__open" to={sellerLink(shop.id)}>
+          {t("Открыть магазин")}
+          <ArrowUpRight size={16} />
+        </Link>
+      </div>
+    </article>
+  );
 }
