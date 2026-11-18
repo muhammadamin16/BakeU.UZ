@@ -21,7 +21,7 @@ const CATEGORIES = [
   { name: "Самса", icon: "🥟" },
 ];
 const MAKERS = [
-  { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов", image: "/images/products/cake.jpg", initials: "SF" },
+  { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов.", image: "/images/products/cake.jpg", initials: "SF" },
   { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
   { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
 ];
