@@ -48,8 +48,8 @@ export async function registerServer(form, role) {
   const result = await request("/auth/register", "POST", { ...form, role });
   return cache(result);
 }
-export async function loginServer(email, password) {
-  const result = await request("/auth/login", "POST", { email, password });
+export async function loginServer(phone, password) {
+  const result = await request("/auth/login", "POST", { phone, password });
   return cache(result);
 }
 export async function saveServerProfile(profile) {
@@ -66,4 +66,12 @@ export async function logoutServer() {
       : Promise.resolve();
   sessionStorage.removeItem(TOKEN_KEY);
   return pending;
+}
+
+export async function startTelegramRegistration(form, role) {
+  return request("/auth/start-registration", "POST", { ...form, role });
+}
+export async function verifyTelegramRegistration(token, code) {
+  const result = await request("/auth/verify-registration", "POST", { token, code });
+  return cache(result);
 }
