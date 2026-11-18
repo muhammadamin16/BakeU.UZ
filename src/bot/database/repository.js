@@ -7,7 +7,7 @@ export function createRepository(db) {
           ...JSON.parse(row.profile),
           id: row.id,
           role: row.role,
-          email: row.email,
+          email: row.email.endsWith('@accounts.bakeu.invalid') ? '' : row.email,
           phone: row.phone,
           createdAt: row.created_at,
         }
@@ -58,6 +58,8 @@ export function createRepository(db) {
     db,
     queue,
     profile,
+    findUserByPhone: (phone) =>
+      db.prepare("SELECT * FROM users WHERE phone=?").get(phone),
     findUserByEmail: (email) =>
       db.prepare("SELECT * FROM users WHERE email=?").get(email),
     user: (id) => profile(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
@@ -74,7 +76,7 @@ export function createRepository(db) {
         };
         db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?,?,?)").run(
           id,
-          fields.email,
+          fields.email || `${fields.phone}@accounts.bakeu.invalid`,
           fields.phone,
           fields.role,
           JSON.stringify(user),
@@ -83,7 +85,7 @@ export function createRepository(db) {
           now,
         );
         let app = null;
-        if (fields.role === "seller") {
+        if (fields.role === "seller" && fields.company && fields.location) {
           const aid = randomUUID();
           db.prepare(
             "INSERT INTO applications(id,user_id,shop,address,created_at) VALUES(?,?,?,?,?)",
@@ -93,6 +95,25 @@ export function createRepository(db) {
         notify?.(user, app);
         return user;
       }),
+    savePendingRegistration: (hash, fields, passwordHash, salt, expiresAt) => {
+      db.prepare("DELETE FROM pending_registration WHERE expires_at<?").run(Date.now());
+      db.prepare("INSERT INTO pending_registration(token_hash,fields,password_hash,salt,expires_at) VALUES(?,?,?,?,?)")
+        .run(hash, JSON.stringify(fields), passwordHash, salt, expiresAt);
+    },
+    pendingRegistration: (hash) =>
+      db.prepare("SELECT * FROM pending_registration WHERE token_hash=? AND expires_at>?")
+        .get(hash, Date.now()),
+    setPendingTelegram: (hash, telegramId) =>
+      db.prepare("UPDATE pending_registration SET telegram_id=?,code_hash='',attempts=0 WHERE token_hash=? AND expires_at>?")
+        .run(String(telegramId), hash, Date.now()).changes,
+    setPendingCode: (hash, telegramId, codeHash) =>
+      db.prepare("UPDATE pending_registration SET code_hash=? WHERE token_hash=? AND telegram_id=? AND expires_at>?")
+        .run(codeHash, hash, String(telegramId), Date.now()).changes,
+    pendingAttempt: (hash) =>
+      db.prepare("UPDATE pending_registration SET attempts=attempts+1 WHERE token_hash=?")
+        .run(hash),
+    deletePending: (hash) =>
+      db.prepare("DELETE FROM pending_registration WHERE token_hash=?").run(hash),
     updateProfile: (id, fields) => {
       const previous = api.user(id);
       if (!previous) return null;
@@ -105,7 +126,7 @@ export function createRepository(db) {
         demo: false,
       };
       db.prepare("UPDATE users SET email=?,phone=?,profile=? WHERE id=?").run(
-        user.email,
+        user.email || `${user.phone}@accounts.bakeu.invalid`,
         user.phone,
         JSON.stringify(user),
         id,
