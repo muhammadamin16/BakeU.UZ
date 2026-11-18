@@ -28,13 +28,25 @@ test("HTTP API handles CORS, server registration, login, authenticated profile a
       response.headers.get("access-control-allow-origin"),
       "http://localhost:5173",
     );
-    response = await fetch(base + "/api/auth/register", {
+    response = await fetch(base + "/api/auth/start-registration", {
       method: "POST",
       headers: {
         Origin: "http://localhost:5173",
         "content-type": "application/json",
       },
-      body: JSON.stringify(fields()),
+      body: JSON.stringify({ ...fields(), email: "" }),
+    });
+    assert.equal(response.status, 200);
+    const pending = await response.json();
+    assert.match(pending.botUrl, /t.me\/BakeU_Test_Bot/);
+    assert.equal(s.auth.beginTelegramVerification(pending.token, "777"), true);
+    assert.equal(s.auth.sendTelegramVerification(pending.token, "777", "+998 90 123 45 68"), null);
+    const code = s.auth.sendTelegramVerification(pending.token, "777", fields().phone);
+    assert.match(code, /^\d{6}$/);
+    response = await fetch(base + "/api/auth/verify-registration", {
+      method: "POST",
+      headers: { Origin: "http://localhost:5173", "content-type": "application/json" },
+      body: JSON.stringify({ token: pending.token, code }),
     });
     assert.equal(response.status, 201);
     const { token, user } = await response.json();
@@ -61,7 +73,7 @@ test("HTTP API handles CORS, server registration, login, authenticated profile a
     assert.equal(response.status, 200);
     response = await fetch(base + "/api/auth/me", { headers });
     assert.equal(response.status, 401);
-    response = await fetch(base + "/api/auth/register", {
+    response = await fetch(base + "/api/auth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "{",
