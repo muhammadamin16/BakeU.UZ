@@ -5,7 +5,7 @@ import { showMain, publicAction } from "./public.js";
 import { adminAction } from "./admin.js";
 import { applicationMessage } from "../utils/formatMessage.js";
 import { backAdmin } from "../keyboards/adminKeyboard.js";
-export function createUpdateHandler({ repo, telegram, config, notifications }) {
+export function createUpdateHandler({ repo, telegram, config, notifications, auth }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 60000 });
   return async (update) => {
     const callback = update.callback_query;
@@ -35,6 +35,35 @@ export function createUpdateHandler({ repo, telegram, config, notifications }) {
     repo.rememberTelegram(user);
     const text = update.message?.text?.trim() || "";
     const command = text.split(/\s/)[0].split("@")[0];
+    const verifyStart = /^\/start verify_([a-f0-9]{48})$/.exec(text);
+    if (verifyStart) {
+      repo.clearState(chatId);
+      if (!auth?.beginTelegramVerification(verifyStart[1], user.id))
+        return telegram.send(chatId, { text: "Ссылка устарела. Вернитесь в BakeU и запросите новый код." });
+      repo.setState(chatId, { kind: "verify_phone", token: verifyStart[1] });
+      return telegram.send(chatId, {
+        text: "🔐 BakeU: подтвердите номер, указанный при регистрации. Нажмите кнопку ниже.",
+        reply_markup: {
+          keyboard: [[{ text: "📱 Поделиться своим номером", request_contact: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+        },
+      });
+    }
+    const pendingContactState = repo.getState(chatId);
+    if (pendingContactState?.kind === "verify_phone" && update.message?.contact) {
+      const contact = update.message.contact;
+      if (String(contact.user_id || "") !== String(user.id))
+        return telegram.send(chatId, { text: "Отправьте именно свой номер кнопкой ниже." });
+      const code = auth?.sendTelegramVerification(pendingContactState.token, user.id, contact.phone_number);
+      if (!code)
+        return telegram.send(chatId, { text: "Номер не совпадает с номером регистрации или срок ссылки истёк." });
+      repo.clearState(chatId);
+      return telegram.send(chatId, {
+        text: `✅ BakeU: ваш код подтверждения — ${code}\n\nВведите его на сайте. Код действует до 10 минут.`,
+        reply_markup: { remove_keyboard: true },
+      });
+    }
     if (command === "/id")
       return telegram.send(chatId, { text: `Ваш Telegram ID: ${user.id}` });
     if (command === "/start" || command === "/cancel") {
