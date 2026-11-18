@@ -2,7 +2,6 @@ import LanguageSwitcher from "../../components/LanguageSwitcher/LanguageSwitcher
 import { translateText } from "../../i18n/index.js";
 import { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat } from "lucide-react";
 /**
  * Login va Register uchun umumiy maket: fonda bitta markazlashgan card.
  * Pastki MobileNav ko'rinib turgan bo'lsa, uning balandligi o'lchanadi va
@@ -59,18 +58,20 @@ export default function AuthShell({ wide = false, children }) {
 return (
   <main className="bk-auth" ref={rootRef}>
     <div className={`bk-card ${wide ? "bk-card--wide" : ""}`}>
-      <Link
-        to="/"
-        className="bk-logo"
-        aria-label={translateText("BakeU, на главную")}
-      >
-        <span className="bk-logo__mark">
-          <ChefHat size={20} />
-        </span>
-        Bake<span>U</span>
-      </Link>
-
-      <LanguageSwitcher />
+      <div className="bk-auth-top">
+        <Link
+          to="/"
+          className="bk-logo"
+          aria-label={translateText("BakeU, на главную")}
+        >
+          <img
+            className="bk-logo-image"
+            src="/bakeu-logo.png"
+            alt="BakeU"
+          />
+        </Link>
+        <LanguageSwitcher />
+      </div>
       {children}
     </div>
   </main>
