@@ -104,7 +104,7 @@ export function createRepository(db) {
       db.prepare("SELECT * FROM pending_registration WHERE token_hash=? AND expires_at>?")
         .get(hash, Date.now()),
     setPendingTelegram: (hash, telegramId) =>
-      db.prepare("UPDATE pending_registration SET telegram_id=?,code_hash='',attempts=0 WHERE token_hash=? AND expires_at>?")
+      db.prepare("UPDATE pending_registration SET telegram_id=? WHERE token_hash=? AND telegram_id='' AND expires_at>?")
         .run(String(telegramId), hash, Date.now()).changes,
     setPendingCode: (hash, telegramId, codeHash) =>
       db.prepare("UPDATE pending_registration SET code_hash=? WHERE token_hash=? AND telegram_id=? AND expires_at>?")
