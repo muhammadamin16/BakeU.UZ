@@ -1,3 +1,4 @@
+import LanguageSwitcher from "../../components/LanguageSwitcher/LanguageSwitcher";
 import { translateText } from "../../i18n/index.js";
 import { Link } from "react-router-dom";
 import { ShieldCheck, LoaderCircle, ArrowLeft, RefreshCw } from "lucide-react";
@@ -11,6 +12,7 @@ export default function AdminGate({ children, allowDemoPreview = false }) {
   return (
     <main className="mini-gate">
       <img src="/images/logo-bear.png" alt="BakeU" width="240" height="80" />
+      <LanguageSwitcher />
       <div className="mini-gate-icon">
         {loading ? (
           <LoaderCircle className="mini-spin" size={31} />

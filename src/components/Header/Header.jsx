@@ -2,16 +2,11 @@ import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
 
-import { useLanguage } from "../../i18n/useLanguage";
-import { setLanguage, translateText } from "../../i18n/index.js";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
+import { translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
 import { useFavoriteStore } from "../../store/favoriteStore";
 import "./Header.css";
-
-const LANGUAGES = [
-  { code: "uz", label: "UZ", name: "O‘zbekcha" },
-  { code: "ru", label: "RU", name: "Русский" },
-];
 
 // Higher distance = the glass effect builds up more gradually.
 const MAX_SCROLL = 400;
@@ -37,7 +32,6 @@ function IconLink({ to, label, count, children }) {
 }
 
 export default function Header() {
-  const language = useLanguage();
   const headerRef = useRef(null);
 
   const favoriteCount = useFavoriteStore(
@@ -136,26 +130,7 @@ export default function Header() {
         </Link>
 
         <div className="bakeu-header__actions">
-          <div
-            className={`bakeu-header__languages is-${language}`}
-            role="group"
-            aria-label={translateText("Выбор языка")}
-          >
-            <span className="bakeu-header__slider" aria-hidden="true" />
-            {LANGUAGES.map(({ code, label, name }) => (
-              <button
-                key={code}
-                type="button"
-                lang={code}
-                title={name}
-                aria-label={name}
-                aria-pressed={language === code}
-                onClick={() => setLanguage(code)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <LanguageSwitcher />
 
           <IconLink
             to="/favorites"

@@ -1,3 +1,4 @@
+import { translateText } from "../i18n/index.js";
 import { detailsFor } from "../pages/Product/productDetails.js";
 
 export const checkoutMoney = (n) =>
@@ -110,39 +111,44 @@ export function checkoutGroups(cart, catalog, shops) {
   return { groups: [...groups.values()], issues };
 }
 
-export function orderMessage(order, draft = false) {
+export function orderMessage(order, draft = false, language = "ru") {
+  const t = (text) => translateText(text, language);
+  const money = (amount) => t(checkoutMoney(amount));
   const when =
     order.schedule?.date && order.schedule?.time
       ? order.schedule.date.split("-").reverse().join(".") +
-        " в " +
+        t(" в ") +
         order.schedule.time
-      : "хочу согласовать дату и время";
+      : t("хочу согласовать дату и время");
+  const delivery = order.fulfillment === "delivery";
+
   return [
     draft
-      ? "Здравствуйте! Хочу уточнить заказ в " + order.shopName + "."
-      : "BakeU · заявка №" + order.id.slice(0, 8) + " · " + order.shopName,
+      ? t("Здравствуйте! Хочу уточнить заказ в ") + order.shopName + "."
+      : t("BakeU · заявка №") + order.id.slice(0, 8) + " · " + order.shopName,
     ...order.items.map(
       (p) =>
-        p.name +
-        (p.variantLabel ? " (" + p.variantLabel + ")" : "") +
+        t(p.name) +
+        (p.variantLabel ? " (" + t(p.variantLabel) + ")" : "") +
         " × " +
         p.quantity +
         " — " +
-        checkoutMoney(p.price * p.quantity),
+        money(p.price * p.quantity),
     ),
-    "Товары: " + checkoutMoney(order.total),
-    (order.fulfillment === "delivery"
-      ? "Доставка: " + (order.address || "адрес уточню")
-      : "Самовывоз") +
+    t("Товары: ") + money(order.total),
+    (delivery
+      ? t("Доставка: ") + (order.address || t("адрес уточню"))
+      : t("Самовывоз")) +
       "; " +
       when +
       ".",
-    "Покупатель: " +
-      (order.buyerName || "имя уточню") +
+    t("Покупатель: ") +
+      (order.buyerName || t("имя уточню")) +
       (order.buyerPhone ? ", " + order.buyerPhone : ""),
-    order.note ? "Комментарий: " + order.note : "",
-    "Пожалуйста, подтвердите наличие, время и окончательную стоимость" +
-      (order.fulfillment === "delivery" ? " с доставкой." : "."),
+    order.note ? t("Комментарий: ") + order.note : "",
+    t(delivery
+      ? "Пожалуйста, подтвердите наличие, время и окончательную стоимость с доставкой."
+      : "Пожалуйста, подтвердите наличие, время и окончательную стоимость."),
   ]
     .filter(Boolean)
     .join("\n");

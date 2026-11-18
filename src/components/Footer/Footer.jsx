@@ -90,7 +90,7 @@ function StoreBadge({ href, Icon, caption, name }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={translateText(`${caption} ${name}`)}
+      aria-label={`${translateText(caption)} ${name}`}
     >
       <Icon />
       <span className="bake-footer__store-text">

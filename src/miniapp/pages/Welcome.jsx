@@ -1,3 +1,4 @@
+import LanguageSwitcher from "../../components/LanguageSwitcher/LanguageSwitcher";
 import { translateText } from "../../i18n/index.js";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -12,7 +13,6 @@ import {
   Store,
   Leaf,
   Gift,
-  Send,
 } from "lucide-react";
 import { useMiniApp } from "../context";
 import { haptic } from "../telegram";
@@ -51,9 +51,7 @@ export default function Welcome() {
             <Snowflake size={15} />
             {translateText(" QISH ERTAGI BAKEU BILAN")}
           </span>
-          <span className="mini-platform">
-            <Send size={13} /> MINI APP
-          </span>
+          <LanguageSwitcher />
         </header>
         <main className="mini-welcome-card">
           <div className="mini-intro">
@@ -159,7 +157,7 @@ export default function Welcome() {
               <ShieldCheck size={16} />
               <span>
                 {translateText("Xush kelibsiz, ")}
-                <strong>{translateText(user.firstName)}</strong>
+                <strong>{user.firstName}</strong>
               </span>
             </p>
           ) : status === "error" ? (

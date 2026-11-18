@@ -1,5 +1,5 @@
 import { writeClipboard } from "../../platform/device.js";
-import { translateText } from "../../i18n/index.js";
+import { getLanguage, translateText } from "../../i18n/index.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, Copy, Check } from "lucide-react";
@@ -9,7 +9,7 @@ export default function SellerContact({ shop, order, draft = false }) {
   const [notice, setNotice] = useState("");
   const [showText, setShowText] = useState(false);
   const phone = contactPhone(shop.phone);
-  const text = orderMessage(order, draft);
+  const text = orderMessage(order, draft, getLanguage());
   const apple = /iPad|iPhone|iPod/.test(navigator.userAgent);
   return (
     <div className="ck-contact">

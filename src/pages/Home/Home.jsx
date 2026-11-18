@@ -5,7 +5,7 @@ import {
   MapPin, Plus, Search, ShoppingBag, Sparkles, X,
 } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { getLocale, translateText } from "../../i18n/index.js";
+import { getLocale, matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
@@ -63,7 +63,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const [now, setNow] = useState(() => Date.now());
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(null);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const catalogRef = useRef(null);
   const add = useCartStore((state) => state.add);
@@ -75,7 +75,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   }, []);
   useEffect(() => {
     if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(""), 3500);
+    const timer = window.setTimeout(() => setNotice(null), 3500);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
@@ -87,8 +87,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
     const normalized = normalizeSearch(query.trim());
     return featured.filter((product) => {
       const matchesCategory = category === "Все" || product.category === category;
-      const searchable = normalizeSearch(`${product.name || ""} ${translateText(product.name || "")} ${product.sellerName || ""}`);
-      return matchesCategory && (!normalized || searchable.includes(normalized));
+      return matchesCategory && (!normalized || matchesLocalizedSearch(normalized, product.name, product.sellerName));
     });
   }, [featured, category, query]);
 
@@ -97,8 +96,14 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const isFiltered = query.trim() !== "" || category !== "Все";
   const expanded = limit > PAGE_SIZE;
 
-  // Reset the catalog whenever the search/filter changes.
-  useEffect(() => { setLimit(PAGE_SIZE); }, [query, category]);
+  const updateQuery = (value) => {
+    setQuery(value);
+    setLimit(PAGE_SIZE);
+  };
+  const updateCategory = (value) => {
+    setCategory(value);
+    setLimit(PAGE_SIZE);
+  };
 
   const scrollToProducts = () => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
@@ -113,7 +118,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const resetFilters = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
   const handleAdd = (product) => {
     add(product);
-    setNotice(`${translateText("Добавлено в корзину:")} ${translateText(product.name)}`);
+    setNotice(product.name);
   };
   const collapseProducts = () => {
     setLimit(PAGE_SIZE);
@@ -144,8 +149,8 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
           </div>
           <label className="bu-search">
             <Search size={19} aria-hidden="true" />
-            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={translateText("Торт, печенье, хлеб…")} aria-label={translateText("Поиск товаров")} />
-            {query && <button type="button" onClick={() => setQuery("")} aria-label={translateText("Очистить поиск")}><X size={17} /></button>}
+            <input type="search" value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={translateText("Торт, печенье, хлеб…")} aria-label={translateText("Поиск товаров")} />
+            {query && <button type="button" onClick={() => updateQuery("")} aria-label={translateText("Очистить поиск")}><X size={17} /></button>}
           </label>
         </div>
 
@@ -153,7 +158,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
           {CATEGORIES.map((item) => {
             const count = item.name === "Все" ? featured.length : featured.filter((p) => p.category === item.name).length;
             return (
-              <button key={item.name} type="button" className={`bu-category${category === item.name ? " is-active" : ""}`} aria-pressed={category === item.name} onClick={() => setCategory(item.name)}>
+              <button key={item.name} type="button" className={`bu-category${category === item.name ? " is-active" : ""}`} aria-pressed={category === item.name} onClick={() => updateCategory(item.name)}>
                 <span className="bu-category__emoji" aria-hidden="true">{item.icon}</span>
                 {translateText(item.name)} <span className="bu-category__count">{count}</span>
               </button>
@@ -177,7 +182,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
             {(remaining > 0 || expanded) && (
               <div className="bu-load-more">
                 <p className="bu-load-more__label">
-                  {translateText("Показано")} <strong>{displayedProducts.length}</strong> {translateText("из")} <strong>{visibleProducts.length}</strong> {translateText("товаров")}
+                  {translateText(`Показано ${displayedProducts.length} из ${visibleProducts.length} товаров`)}
                 </p>
                 <div className="bu-load-more__track" role="progressbar" aria-label={translateText("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={displayedProducts.length}>
                   <span style={{ width: `${(displayedProducts.length / visibleProducts.length) * 100}%` }} />
@@ -209,7 +214,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
         )}
 
         <div className={`bu-notice${notice ? " is-visible" : ""}`} role="status" aria-live="polite" aria-atomic="true">
-          {notice && <><ShoppingBag size={17} aria-hidden="true" /><span>{notice}</span></>}
+          {notice && <><ShoppingBag size={17} aria-hidden="true" /><span>{translateText(`Добавлено в корзину: ${notice}`)}</span></>}
         </div>
       </section>
 

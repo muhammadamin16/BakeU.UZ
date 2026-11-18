@@ -1,7 +1,8 @@
+import { lazy, Suspense } from "react";
+import { translateText } from "../i18n/index.js";
 import { useMiniApp } from "../miniapp/context";
 import Welcome from "../miniapp/pages/Welcome";
 import AdminGate from "../miniapp/components/AdminGate";
-import AdminRoutes from "../admin/routes/AdminRoutes";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Header from "../components/Header/Header";
@@ -16,14 +17,16 @@ import Orders from "../pages/Orders/Orders";
 import OrderDetails from "../pages/Orders/OrderDetails";
 import Favorites from "../pages/Favorites/Favorites";
 import Home from "../pages/Home/Home";
-import MapPage from "../pages/Map/Map";
-import AiAssistant from "../pages/AiAssistant/AiAssistant";
 import Chat from "../pages/Messages/Chat";
 
 import Login from "../pages/Auth/Login/Login";
 import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
+
+const AdminRoutes = lazy(() => import("../admin/routes/AdminRoutes"));
+const MapPage = lazy(() => import("../pages/Map/Map"));
+const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
 
 const AUTH_PATHS = ["/login", "/register"];
 
@@ -36,6 +39,7 @@ function matchesPath(pathname, base) {
 export default function AppRoutes() {
   const { pathname } = useLocation();
   const { isMiniMode } = useMiniApp();
+  const loading = <p role="status">{translateText("Загрузка…")}</p>;
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
@@ -47,7 +51,9 @@ export default function AppRoutes() {
   if (matchesPath(pathname, "/admin"))
     return (
       <AdminGate allowDemoPreview>
-        <AdminRoutes />
+        <Suspense fallback={loading}>
+          <AdminRoutes />
+        </Suspense>
       </AdminGate>
     );
 
@@ -64,8 +70,22 @@ export default function AppRoutes() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/ai" element={<AiAssistant />} />
+          <Route
+            path="/map"
+            element={
+              <Suspense fallback={loading}>
+                <MapPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/ai"
+            element={
+              <Suspense fallback={loading}>
+                <AiAssistant />
+              </Suspense>
+            }
+          />
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
 

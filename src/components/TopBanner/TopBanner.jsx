@@ -15,7 +15,7 @@ const slides = [
     description: "Тепло домашней выпечки в каждом кусочке",
     button: "Смотреть хлеб",
     category: "Хлеб",
-    image: "/images/banners/cakes.png",
+    image: "/images/banners/cakes.webp",
   },
   {
     id: 2,
@@ -23,7 +23,7 @@ const slides = [
     description: "Круассаны, булочки и любимые угощения",
     button: "Смотреть выпечку",
     category: "Все",
-    image: "/images/banners/bakery.png",
+    image: "/images/banners/bakery.webp",
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ const slides = [
     description: "Нежные десерты для самых тёплых встреч",
     button: "Смотреть торты",
     category: "Торты",
-    image: "/images/banners/bread.png",
+    image: "/images/banners/bread.webp",
   },
 ];
 

@@ -266,12 +266,12 @@ function ShopProfile({ shopId }) {
           style={{ "--shop-color": shop.color }}
         >
           <img
-            src={shop.banner || "/images/banners/shop-cover.png"}
+            src={shop.banner || "/images/banners/shop-cover.webp"}
             alt={translateText("Домашняя выпечка и приготовление десертов")}
             fetchPriority="high"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "/images/banners/shop-cover.png";
+              e.currentTarget.src = "/images/banners/shop-cover.webp";
             }}
           />
           <div className="shop-cover-overlay" />

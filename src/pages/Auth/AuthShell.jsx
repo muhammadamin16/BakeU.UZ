@@ -1,3 +1,4 @@
+import LanguageSwitcher from "../../components/LanguageSwitcher/LanguageSwitcher";
 import { translateText } from "../../i18n/index.js";
 import { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -69,6 +70,7 @@ return (
         Bake<span>U</span>
       </Link>
 
+      <LanguageSwitcher />
       {children}
     </div>
   </main>

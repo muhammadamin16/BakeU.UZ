@@ -510,6 +510,10 @@
 }
 
 .map-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   min-height: 42px;
   padding: 10px 16px;
   border-radius: 100px;

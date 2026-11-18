@@ -290,3 +290,24 @@ test("login and registration return only to safe internal purchase routes", () =
   ])
     assert.equal(authReturnTo(new URLSearchParams({ next })), "/profile");
 });
+
+test("Uzbek checkout messages translate labels and preserve buyer details", () => {
+  const order = {
+    id: "abc12345",
+    shopName: "Sweet Home",
+    items: [{ name: "Шоколадный торт", quantity: 2, price: 45000 }],
+    total: 90000,
+    fulfillment: "delivery",
+    schedule: { date: "2026-11-20", time: "14:00" },
+    buyerName: "Дильшод",
+    address: "Ташкент, улица 1",
+    note: "Позвонить у входа",
+  };
+  const text = orderMessage(order, false, "uz");
+  assert.match(text, /Şokoladli tort × 2 — 90\s000 söm/);
+  assert.ok(text.includes("20.11.2026, soat 14:00"));
+  assert.ok(text.includes("Xaridor: Дильшод"));
+  assert.ok(text.includes("Ташкент, улица 1"));
+  assert.ok(text.includes("Izoh: Позвонить у входа"));
+  assert.ok(orderMessage(order).includes("Покупатель: Дильшод"));
+});

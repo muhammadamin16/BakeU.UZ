@@ -2,9 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import uz from "../locales/uz.json" with { type: "json" };
 import ru from "../locales/ru.json" with { type: "json" };
+import { normalizeSearch } from "./alphabet.js";
 import {
   getLanguage,
   getLocale,
+  matchesLocalizedSearch,
   readLanguage,
   setLanguage,
   subscribeLanguage,
@@ -68,4 +70,21 @@ test("subscribers update once per valid change, even when persistence is unavail
   stop();
   setLanguage("ru");
   assert.equal(calls, 1);
+});
+
+test("catalog controls and dynamic accessible names are translated", () => {
+  assert.equal(translateText("Больше товаров", "uz"), "Yana mahsulotlar");
+  assert.equal(translateText("Показано 8 из 33 товаров", "uz"), "Körsatilgan: 8 / 33 ta mahsulot");
+  assert.equal(translateText("В избранное: Шоколадный торт", "uz"), "Sevimlilarga qöşiş: Şokoladli tort");
+  assert.equal(translateText("В избранное: Шоколадный торт", "ru"), "В избранное: Шоколадный торт");
+});
+
+test("catalog search accepts both languages regardless of interface language", () => {
+  for (const language of ["uz", "ru"]) {
+    setLanguage(language);
+    for (const query of ["şokoladli", "shokoladli", "шоколадный"]) {
+      assert.ok(matchesLocalizedSearch(normalizeSearch(query), "Шоколадный торт"));
+    }
+    assert.equal(matchesLocalizedSearch("non", "Шоколадный торт"), false);
+  }
 });

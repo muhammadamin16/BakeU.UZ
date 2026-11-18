@@ -1,3 +1,4 @@
+import LanguageSwitcher from "../../../components/LanguageSwitcher/LanguageSwitcher";
 import { translateText } from "../../../i18n/index.js";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -59,6 +60,7 @@ export default function Header({ onMenu }) {
         <Link to="/admin">{translateText("Админ-панель")}</Link>
       </div>
       <HeaderSearch key={location.pathname + location.search} />
+      <LanguageSwitcher />
       <Link
         className="ad-notification-bell"
         to="/admin/notifications"
@@ -67,7 +69,7 @@ export default function Header({ onMenu }) {
         <Bell size={22} />
         {count > 0 && <b>{count}</b>}
       </Link>
-      <Link className="ad-account" to="/admin/settings">
+      <Link className="ad-account" to="/admin/settings" aria-label={translateText("Настройки")}>
         <span className="ad-avatar">
           <UserRound size={18} />
         </span>

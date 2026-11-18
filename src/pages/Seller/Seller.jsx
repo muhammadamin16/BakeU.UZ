@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, Check, Search, ShoppingBag, Store, X } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { translateText } from "../../i18n/index.js";
+import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
 import { useCatalog, categories } from "../../store/sellerData";
 import { ProductCard, ShopCard } from "./SellerParts";
@@ -24,7 +24,7 @@ function SellerCatalog({ tab }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [limit, setLimit] = useState(PAGE_SIZE);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(null);
   const sectionRef = useRef(null);
   const add = useCartStore((s) => s.add);
   const items = useCartStore((s) => s.items);
@@ -34,18 +34,28 @@ function SellerCatalog({ tab }) {
   const shopById = useMemo(() => new Map(shops.map((s) => [String(s.id), s])), [shops]);
   const visibleProducts = useMemo(() => products.filter((p) => {
     const shop = shopById.get(String(p.shopId));
-    const text = normalizeSearch(`${p.name ?? ""} ${shop?.name ?? ""} ${t(p.name)} ${t(shop?.name)}`);
-    return (category === "Все" || category === p.category) && (!normalized || text.includes(normalized));
+    return (category === "Все" || category === p.category) &&
+      (!normalized || matchesLocalizedSearch(normalized, p.name, shop?.name));
   }), [products, shopById, category, normalized]);
   const visibleShops = useMemo(() => shops.filter((s) => {
-    const names = products.filter((p) => String(p.shopId) === String(s.id)).map((p) => `${p.name} ${t(p.name)}`).join(" ");
-    return !normalized || normalizeSearch(`${s.name ?? ""} ${s.description ?? ""} ${t(s.name)} ${names}`).includes(normalized);
+    return !normalized ||
+      matchesLocalizedSearch(normalized, s.name, s.description) ||
+      products.some((p) =>
+        String(p.shopId) === String(s.id) && matchesLocalizedSearch(normalized, p.name),
+      );
   }), [shops, products, normalized]);
 
-  useEffect(() => { setLimit(PAGE_SIZE); }, [query, category]);
+  const updateQuery = (value) => {
+    setQuery(value);
+    setLimit(PAGE_SIZE);
+  };
+  const updateCategory = (value) => {
+    setCategory(value);
+    setLimit(PAGE_SIZE);
+  };
   useEffect(() => {
     if (!notice) return undefined;
-    const timer = setTimeout(() => setNotice(""), 2600);
+    const timer = setTimeout(() => setNotice(null), 2600);
     return () => clearTimeout(timer);
   }, [notice]);
 
@@ -55,7 +65,7 @@ function SellerCatalog({ tab }) {
   const shownCount = showSellers ? shownShops.length : shown.length;
   const remaining = Math.max(0, total - shownCount);
   const reset = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
-  const addProduct = (product) => { add(product); setNotice(`${t("В корзине")}: ${t(product.name)}`); };
+  const addProduct = (product) => { add(product); setNotice(product.name); };
   const collapse = () => {
     setLimit(PAGE_SIZE);
     requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -76,14 +86,14 @@ function SellerCatalog({ tab }) {
         </div>
         <div className="seller-search" role="search">
           <Search size={19} aria-hidden="true" />
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t(showSellers ? "Поиск магазина" : "Найти товар")} aria-label={t("Поиск")} />
-          {query && <button type="button" onClick={() => setQuery("")} aria-label={t("Очистить поиск")}><X size={17} /></button>}
+          <input type="search" value={query} onChange={(e) => updateQuery(e.target.value)} placeholder={t(showSellers ? "Поиск магазина" : "Найти товар")} aria-label={t("Поиск")} />
+          {query && <button type="button" onClick={() => updateQuery("")} aria-label={t("Очистить поиск")}><X size={17} /></button>}
         </div>
       </header>
 
       <section className="seller-product-section" ref={sectionRef} aria-label={t(showSellers ? "Продавцы" : "Товары")}>
         {!showSellers && <div className="seller-categories" aria-label={t("Категории")}>
-          {categories.map((c) => <button key={c} type="button" className={category === c ? "is-active" : ""} aria-pressed={category === c} onClick={() => setCategory(c)}>{t(c)}</button>)}
+          {categories.map((c) => <button key={c} type="button" className={category === c ? "is-active" : ""} aria-pressed={category === c} onClick={() => updateCategory(c)}>{t(c)}</button>)}
         </div>}
         <div className="seller-results">
           <span>{showSellers ? visibleShops.length : visibleProducts.length} {t(showSellers ? "магазинов" : "товаров")}</span>
@@ -104,7 +114,7 @@ function SellerCatalog({ tab }) {
           </div>
         </div>}
       </section>
-      <div className={`seller-notice seller-notice--toast ${notice ? "is-visible" : ""}`} role="status" aria-live="polite"><Check size={17} />{notice}</div>
+      <div className={`seller-notice seller-notice--toast ${notice ? "is-visible" : ""}`} role="status" aria-live="polite"><Check size={17} />{notice && t(`Добавлено в корзину: ${notice}`)}</div>
     </main>
   );
 }

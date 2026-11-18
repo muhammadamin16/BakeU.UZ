@@ -1,12 +1,12 @@
+import { Link } from "react-router-dom";
 import {
   getDevicePosition,
   supportsLocation,
   hasNativeLocation,
 } from "../../platform/device.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { getLocale } from "../../i18n/index.js";
+import { getLocale, matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useLanguage } from "../../i18n/useLanguage";
-import { translateText } from "../../i18n/index.js";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   MapContainer,
@@ -38,6 +38,7 @@ import "./Map.css";
 const products = [
   {
     id: "cookie",
+    shopId: "sweet-home",
     name: "ПЕЧЕНЬЕ",
     price: 13200,
     rating: 4.9,
@@ -48,6 +49,7 @@ const products = [
   },
   {
     id: "bread",
+    shopId: "bakeu",
     name: "ХЛЕБ",
     price: 3400,
     rating: 4.8,
@@ -58,6 +60,7 @@ const products = [
   },
   {
     id: "cake",
+    shopId: "shahzoda",
     name: "ТОРТ",
     price: 45000,
     rating: 5.0,
@@ -68,6 +71,7 @@ const products = [
   },
   {
     id: "somsa",
+    shopId: "bakeu",
     name: "САМСА",
     price: 7000,
     rating: 4.7,
@@ -78,6 +82,7 @@ const products = [
   },
   {
     id: "smit",
+    shopId: "sweet-home",
     name: "СМИТ",
     price: 12000,
     rating: 4.6,
@@ -112,7 +117,7 @@ const sellers = [
     image: "/images/products/cake.jpg",
   },
   {
-    id: "sweethome",
+    id: "sweet-home",
     name: "SWEET HOME",
     badge: "S",
     badgeColor: "#4f9d75",
@@ -604,14 +609,7 @@ export default function MapPage() {
     if (q) {
       list = list.filter((item) => {
         const extra = activeTab === "products" ? item.seller : item.categories;
-        return (
-          normalizeSearch(
-            item.name + " " + translateText(item.name, language),
-          ).includes(q) ||
-          normalizeSearch(
-            extra + " " + translateText(extra, language),
-          ).includes(q)
-        );
+        return matchesLocalizedSearch(q, item.name, extra);
       });
     }
 
@@ -619,15 +617,20 @@ export default function MapPage() {
       if (sortBy === "rating") return b.rating - a.rating;
       if (sortBy === "price" && activeTab === "products")
         return a.price - b.price;
+      if (a.distance == null && b.distance == null) return 0;
       if (a.distance == null) return 1;
       if (b.distance == null) return -1;
       return a.distance - b.distance;
     });
 
     return list;
-  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm, language]);
+  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm]);
 
   const selected = filtered.find((i) => i.id === selectedId) || null;
+  const selectedShop = selected?.shopId ?? selected?.id;
+  const detailPath = activeTab === "products" && selected?.id !== "smit"
+    ? `/product/${selected?.id}`
+    : `/seller?shop=${selectedShop}`;
 
   /* Tanlanganda ro'yxatda ko'rinishga keltirish */
   useEffect(() => {
@@ -1000,12 +1003,12 @@ export default function MapPage() {
                 </span>
               </div>
               <div className="map-detail__actions">
-                <button type="button" className="map-btn map-btn--dark">
+                <Link className="map-btn map-btn--dark" to={detailPath}>
                   {translateText("Подробнее")}
-                </button>
-                <button type="button" className="map-btn map-btn--light">
+                </Link>
+                <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
                   {translateText("Написать")}
-                </button>
+                </Link>
               </div>
               <button
                 type="button"

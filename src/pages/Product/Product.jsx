@@ -337,7 +337,7 @@ function ProductView({ id }) {
           <aside className="pd-panel pd-seller">
             <img
               className="pd-banner"
-              src={shop.banner || "/images/banners/shop-cover.png"}
+              src={shop.banner || "/images/banners/shop-cover.webp"}
               alt={translateText("Обложка " + shop.name)}
             />
             <div className="pd-seller-title">

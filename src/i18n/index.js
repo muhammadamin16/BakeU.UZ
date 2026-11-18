@@ -1,3 +1,5 @@
+import { normalizeSearch } from "./alphabet.js";
+
 // Russian source text is its own fallback; ru.json contains only nonidentity overrides.
 import ru from "../locales/ru.json" with { type: "json" };
 import uz from "../locales/uz.json" with { type: "json" };
@@ -88,4 +90,12 @@ export function translateText(value, locale = language) {
   if (Array.isArray(value))
     return value.map((item) => translateText(item, locale));
   return value;
+}
+
+export function matchesLocalizedSearch(query, ...values) {
+  return values.some((value) =>
+    [value, translateText(value, "uz"), translateText(value, "ru")].some(
+      (text) => normalizeSearch(text).includes(query),
+    ),
+  );
 }
