@@ -720,3 +720,28 @@
   .bk-form--grid .bk-phone-country { font-size: 12px; gap: 3px; padding-right: 5px; }
   .bk-form--grid .bk-phone-input input { font-size: 12px; }
 }
+
+/* Mobile registration: bot opens by explicit gesture, code entry stays on site. */
+.bk-telegram-open {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f4b41b, #ffd48a);
+  color: #432015;
+  font-weight: 750;
+}
+.bk-restart-registration {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink, #432015);
+  text-decoration: underline;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
