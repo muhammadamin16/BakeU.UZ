@@ -654,3 +654,37 @@
 .bk-card > .bakeu-header__languages {
   margin: 0 auto 16px;
 }
+
+/* Auth-only brand and language placement; preserve existing winter/glass styles. */
+.bk-auth-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  margin-bottom: clamp(10px, 2.6vh, 22px);
+}
+.bk-auth-top .bk-logo {
+  margin: 0;
+  max-width: calc(100% - 98px);
+}
+.bk-logo-image {
+  display: block;
+  width: min(175px, 100%);
+  max-height: 68px;
+  object-fit: contain;
+}
+.bk-auth-top > .bakeu-header__languages {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+@media (max-width: 420px) {
+  .bk-auth-top {
+    min-height: 65px;
+  }
+  .bk-logo-image {
+    max-height: 58px;
+  }
+}
