@@ -112,6 +112,9 @@ export default function Register() {
     if (form.password.length < 8)
       return setError("Пароль должен содержать минимум 8 символов.");
 
+    // Open a tab during the user gesture so browsers do not block Telegram after an API await.
+    const telegramTab = accountApiEnabled ? window.open("about:blank", "_blank") : null;
+    if (telegramTab) telegramTab.opener = null;
     setBusy(true);
     try {
       if (!accountApiEnabled) {
@@ -121,9 +124,9 @@ export default function Register() {
       setPendingToken(result.token);
       setBotUrl(result.botUrl);
       setStep(3);
-      const popup = window.open(result.botUrl, "_blank", "noopener,noreferrer");
-      if (!popup) setBotUrl(result.botUrl);
+      if (telegramTab) telegramTab.location.replace(result.botUrl);
     } catch (e) {
+      telegramTab?.close();
       setError(e.message || "Не удалось создать аккаунт");
     } finally {
       setBusy(false);
