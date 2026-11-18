@@ -1,5 +1,5 @@
 import { translateText } from "../../i18n/index.js";
-import { categoryFields, fieldLabels } from "./productDetails";
+import { categoryFields, fieldLabels } from "./productDetails.js";
 import { readPicture } from "../../store/shopStore";
 import "./Product.css";
 export default function ProductFields({ value: p, onChange: set, onError }) {

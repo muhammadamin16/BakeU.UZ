@@ -1,225 +1,150 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowDown, ArrowUp, Check, MapPin, Search, ShoppingBag, Store, X } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { translateText } from "../../i18n/index.js";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Store, ShoppingBag, Search, X } from "lucide-react";
-
 import { useCartStore } from "../../store/cartStore";
 import { useCatalog, categories } from "../../store/sellerData";
 import { ProductCard, ShopCard } from "./SellerParts";
-import SellerShop from "./SellerShop";
+import SellerShop from "./SellerShop.jsx";
 import "./Seller.css";
+
+const PAGE_SIZE = 8;
+const t = (value) => translateText(String(value ?? ""));
+const ICONS = { "Все": "✦", "Торты": "🍰", "Печенье": "🍪", "Хлеб": "🥖", "Самса": "🥟" };
 
 export default function Seller() {
   const [params] = useSearchParams();
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
-
-  if (shopId) return <SellerShop key={shopId} shopId={shopId} />;
-  return <SellerCatalog key={tab} tab={tab} />;
+  return shopId ? <SellerShop key={shopId} shopId={shopId} /> : <SellerCatalog key={tab} tab={tab} />;
 }
 
 function SellerCatalog({ tab }) {
   const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const [notice, setNotice] = useState("");
-
-  const add = useCartStore((s) => s.add);
-  const items = useCartStore((s) => s.items);
-
+  const catalogRef = useRef(null);
+  const add = useCartStore((state) => state.add);
+  const items = useCartStore((state) => state.items);
   const showSellers = tab === "sellers";
-  const q = normalizeSearch(query);
+  const shopLookup = useMemo(() => new Map(shops.map((shop) => [shop.id, shop])), [shops]);
+  const normalized = normalizeSearch(query.trim());
 
-  const visibleProducts = products.filter((p) => {
-    const owner = shops.find((s) => s.id === p.shopId);
-    return (
-      normalizeSearch(
-        `${p.name} ${owner?.name ?? ""} ${translateText(p.name)} ${translateText(owner?.name ?? "")}`,
-      ).includes(q) &&
-      (category === "Все" || category === p.category)
-    );
+  const visibleProducts = useMemo(() => products.filter((product) => {
+    const shop = shopLookup.get(product.shopId);
+    const content = normalizeSearch(`${product.name ?? ""} ${shop?.name ?? ""} ${t(product.name)} ${t(shop?.name)}`);
+    return (category === "Все" || product.category === category) && (!normalized || content.includes(normalized));
+  }), [products, shopLookup, category, normalized]);
+
+  const visibleShops = useMemo(() => shops.filter((shop) => {
+    const shopProductNames = products.filter((product) => product.shopId === shop.id)
+      .map((product) => `${product.name} ${t(product.name)}`).join(" ");
+    const content = normalizeSearch(`${shop.name ?? ""} ${shop.description ?? ""} ${t(shop.name)} ${t(shop.description)} ${shopProductNames}`);
+    return !normalized || content.includes(normalized);
+  }), [shops, products, normalized]);
+
+  useEffect(() => { setLimit(PAGE_SIZE); }, [query, category]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 3300);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const shownProducts = visibleProducts.slice(0, limit);
+  const remaining = Math.max(0, visibleProducts.length - shownProducts.length);
+  const filtered = Boolean(query.trim()) || category !== "Все";
+  const scrollToCatalog = () => catalogRef.current?.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "start"
   });
-
-  const visibleShops = shops.filter((s) => {
-    const names = products
-      .filter((p) => p.shopId === s.id)
-      .map((p) => p.name + " " + translateText(p.name))
-      .join(" ");
-    return normalizeSearch(
-      `${s.name} ${s.description} ${names} ${translateText(s.name)} ${translateText(s.description)}`,
-    ).includes(q);
-  });
-
-  const resetFilters = () => {
-    setQuery("");
-    setCategory("Все");
-  };
-
-  const addProduct = (product) => {
+  const reset = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
+  const handleAdd = (product) => {
     add(product);
-    setNotice(`Добавлено в корзину: ${product.name}`);
+    setNotice(`${t("Добавлено в корзину:")} ${t(product.name)}`);
   };
+  const collapse = () => { setLimit(PAGE_SIZE); window.requestAnimationFrame(scrollToCatalog); };
 
   return (
-    <main className="seller-page">
-      <nav
-        className="seller-tabs"
-        aria-label={translateText("Раздел каталога")}
-      >
-        <Link
-          to="?tab=sellers"
-          className={showSellers ? "is-active" : ""}
-          aria-current={showSellers ? "page" : undefined}
-        >
-          <Store size={19} aria-hidden="true" />
-          {translateText("Продавцы")}
-        </Link>
-        <Link
-          to="?tab=products"
-          className={!showSellers ? "is-active" : ""}
-          aria-current={!showSellers ? "page" : undefined}
-        >
-          <ShoppingBag size={19} aria-hidden="true" />
-          {translateText("Товары")}
-        </Link>
-      </nav>
-
-      <div className="seller-heading">
-        <div>
-          <span className="seller-eyebrow">
-            {translateText("СДЕЛАНО С ЛЮБОВЬЮ")}
-          </span>
-          <h1>
-            {translateText(
-              showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое",
-            )}
-          </h1>
-          <p>
-            {translateText(
-              showSellers
-                ? "Маленькие магазины с большим вниманием к вкусу."
-                : "Торты, десерты и домашняя выпечка в одном месте.",
-            )}
-          </p>
-        </div>
-
-        <label className="seller-search">
-          <Search size={19} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={translateText(
-              showSellers ? "Найти магазин…" : "Найти вкусное…",
-            )}
-            aria-label={translateText(
-              showSellers ? "Поиск магазинов" : "Поиск товаров",
-            )}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              aria-label={translateText("Очистить поиск")}
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
-          )}
-        </label>
+    <main className="seller-page seller-page--professional">
+      <div className="seller-topline">
+        <span className="seller-overline">BAKEU MARKETPLACE</span>
+        <nav className="seller-tabs" aria-label={t("Раздел каталога")}>
+          <Link to="?tab=products" className={!showSellers ? "is-active" : ""} aria-current={!showSellers ? "page" : undefined}>
+            <ShoppingBag size={17} />{t("Товары")}
+          </Link>
+          <Link to="?tab=sellers" className={showSellers ? "is-active" : ""} aria-current={showSellers ? "page" : undefined}>
+            <Store size={17} />{t("Продавцы")}
+          </Link>
+        </nav>
       </div>
 
-      <p className="seller-demo">
-        {translateText(
-          "Демо-каталог: магазины, рейтинги и отзывы приведены для примера.",
-        )}
-      </p>
+      <header className="seller-heading">
+        <div className="seller-heading__text">
+          <span className="seller-eyebrow">{t("СДЕЛАНО С ЛЮБОВЬЮ")}</span>
+          <h1>{t(showSellers ? "Знакомьтесь с мастерами" : "Найдите своё любимое")}</h1>
+          <p>{t(showSellers ? "Откройте для себя кондитеров и пекарей BakeU." : "Торты, десерты и домашняя выпечка в одном месте.")}</p>
+        </div>
+        <label className="seller-search">
+          <Search size={19} aria-hidden="true" />
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)}
+            placeholder={t(showSellers ? "Найти магазин…" : "Найти вкусное…")}
+            aria-label={t(showSellers ? "Поиск магазинов" : "Поиск товаров")} />
+          {query && <button type="button" onClick={() => setQuery("")} aria-label={t("Очистить поиск")}><X size={17}/></button>}
+        </label>
+      </header>
 
-      {showSellers ? (
-        <section
-          className="seller-shops"
-          aria-label={translateText("Продавцы")}
-        >
-          {visibleShops.map((s) => (
-            <ShopCard key={s.id} shop={s} />
-          ))}
-          {visibleShops.length === 0 && (
-            <div className="seller-empty">
-              <Store size={28} aria-hidden="true" />
-              <h2>{translateText("Магазины не найдены")}</h2>
-              <p>{translateText("Попробуйте другое название.")}</p>
-              <button
-                type="button"
-                className="seller-pill"
-                onClick={resetFilters}
-              >
-                {translateText("Сбросить поиск")}
-              </button>
-            </div>
-          )}
-        </section>
-      ) : (
-        <section aria-label={translateText("Товары")}>
-          <div className="seller-categories">
-            {categories.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={category === c ? "is-active" : ""}
-                aria-pressed={category === c}
-                onClick={() => setCategory(c)}
-              >
-                {translateText(c)}
-              </button>
-            ))}
+      <Link to="/map" className="seller-map">
+        <span className="seller-map__icon"><MapPin size={22} /></span>
+        <span className="seller-map__text"><strong>{t("Вкусное ближе, чем кажется")}</strong><small>{t("Откройте карту и найдите мастеров рядом")}</small></span>
+        <span className="seller-map__link">{t("Открыть карту")} <span aria-hidden="true">↗</span></span>
+      </Link>
+
+      <section ref={catalogRef} className="seller-product-section" aria-label={t(showSellers ? "Продавцы" : "Товары")}>
+        {!showSellers && <div className="seller-categories" role="group" aria-label={t("Категории")}>
+          {categories.map((name) => {
+            const count = name === "Все" ? products.length : products.filter((p) => p.category === name).length;
+            return <button type="button" key={name} className={category === name ? "is-active" : ""} aria-pressed={category === name} onClick={() => setCategory(name)}>
+              <span aria-hidden="true">{ICONS[name] || "✦"}</span>{t(name)}<span className="seller-category-count">{count}</span>
+            </button>;
+          })}
+        </div>}
+        <div className="seller-results">
+          <span>{t(showSellers ? "Магазинов:" : "Товаров:")} <strong>{showSellers ? visibleShops.length : visibleProducts.length}</strong></span>
+          {filtered && <button type="button" onClick={reset}>{t("Сбросить фильтры")} <X size={15}/></button>}
+        </div>
+
+        {showSellers ? <div className="seller-shops">
+          {visibleShops.map((shop) => <ShopCard key={shop.id} shop={shop}/>)}
+        </div> : <div className="seller-products">
+          {shownProducts.map((product, index) => <div className="seller-product-entry" key={product.id} style={{ "--seller-stagger": `${Math.min(index % PAGE_SIZE, 7) * 45}ms` }}>
+            <ProductCard product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd}/>
+          </div>)}
+        </div>}
+
+        {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty">
+          <Search size={29}/><h2>{t(showSellers ? "Магазины не найдены" : "Товары не найдены")}</h2>
+          <p>{t("Попробуйте другой запрос или сбросьте фильтры.")}</p>
+          <button type="button" onClick={reset}>{t("Сбросить фильтры")}</button>
+        </div>}
+
+        {!showSellers && visibleProducts.length > PAGE_SIZE && <div className="seller-pagination">
+          <p>{t("Показано")} <strong>{shownProducts.length}</strong> {t("из")} <strong>{visibleProducts.length}</strong></p>
+          <div className="seller-pagination__track" role="progressbar" aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={shownProducts.length} aria-label={t("Показано товаров")}>
+            <span style={{ width: `${shownProducts.length / visibleProducts.length * 100}%` }}/>
           </div>
-
-          <div className="seller-results">
-            <span>
-              {translateText("Товаров: ")}
-              {visibleProducts.length}
-            </span>
-            {(query || category !== "Все") && (
-              <button type="button" onClick={resetFilters}>
-                {translateText("Сбросить фильтры ")}
-                <X size={14} aria-hidden="true" />
-              </button>
-            )}
+          <div className="seller-pagination__buttons">
+            {remaining > 0 && <button type="button" className="seller-pagination__more" onClick={() => setLimit((current) => current + PAGE_SIZE)}>
+              {t("Больше товаров")} <span className="seller-pagination__badge">+{Math.min(remaining, PAGE_SIZE)}</span><ArrowDown size={18}/>
+            </button>}
+            {limit > PAGE_SIZE && <button type="button" className="seller-pagination__less" onClick={collapse}>{t("Свернуть")}<ArrowUp size={17}/></button>}
           </div>
-
-          <div className="seller-products">
-            {visibleProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                quantity={items?.[p.id] ?? 0}
-                onAdd={addProduct}
-              />
-            ))}
-          </div>
-
-          {visibleProducts.length === 0 && (
-            <div className="seller-empty">
-              <Search size={28} aria-hidden="true" />
-              <h2>{translateText("Товары не найдены")}</h2>
-              <p>
-                {translateText("Попробуйте другое название или категорию.")}
-              </p>
-              <button
-                type="button"
-                className="seller-pill"
-                onClick={resetFilters}
-              >
-                {translateText("Сбросить фильтры")}
-              </button>
-            </div>
-          )}
-        </section>
-      )}
-
-      <p className="seller-notice" role="status">
-        {translateText(notice)}
-      </p>
+        </div>}
+      </section>
+      <p className="seller-demo">{t("Демо-каталог: магазины, рейтинги и отзывы приведены для примера.")}</p>
+      <div className={`seller-notice seller-notice--toast ${notice ? "is-visible" : ""}`} role="status" aria-live="polite"><Check size={18}/>{notice}</div>
     </main>
   );
 }
