@@ -139,8 +139,10 @@ export function createApiServer({ auth, repo, config }) {
           }
           throw new HttpError(404, "Маршрут не найден.");
         }
+        if (path === "/api/auth/register" && req.method === "POST")
+          throw new HttpError(410, "Регистрация доступна только после подтверждения телефона в Telegram.");
         if (
-          ["/api/auth/register", "/api/auth/login", "/api/auth/start-registration", "/api/auth/verify-registration"].includes(path) &&
+          ["/api/auth/login", "/api/auth/start-registration", "/api/auth/verify-registration"].includes(path) &&
           req.method === "POST"
         ) {
           const ip = config.trustProxy
@@ -160,10 +162,8 @@ export function createApiServer({ auth, repo, config }) {
               ? await auth.startRegistration(data)
               : path.endsWith("/verify-registration")
                 ? auth.verifyRegistration(data)
-                : path.endsWith("/register")
-                  ? await auth.register(data)
-                  : await auth.login(data);
-            return send(path.endsWith("/register") || path.endsWith("/verify-registration") ? 201 : 200, result);
+                : await auth.login(data);
+            return send(path.endsWith("/verify-registration") ? 201 : 200, result);
           } finally {
             concurrentAuth--;
           }
