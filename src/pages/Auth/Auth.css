@@ -699,3 +699,24 @@
 @media (max-width: 600px) {
   .bk-auth-top > .bakeu-header__languages { top: 14px; right: 14px; }
 }
+
+/* Uzbekistan phone field: keeps the existing glass input and color palette. */
+.bk-phone-input { gap: 8px; }
+.bk-phone-input .bk-phone-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--ink, #432015);
+  font-size: 13px;
+  font-weight: 700;
+  padding-right: 9px;
+  border-right: 1px solid rgba(67,32,21,.14);
+}
+.bk-phone-input input { min-width: 0; letter-spacing: .025em; }
+@media (max-width: 420px) {
+  .bk-form--grid .bk-phone-input { padding: 0 8px; gap: 5px; }
+  .bk-form--grid .bk-phone-country { font-size: 12px; gap: 3px; padding-right: 5px; }
+  .bk-form--grid .bk-phone-input input { font-size: 12px; }
+}
