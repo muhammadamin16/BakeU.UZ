@@ -2,6 +2,17 @@ import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../bot/client/accountApi";
 import { useState } from "react";
+
+const PENDING_KEY = "bakeu-telegram-pending-registration";
+function readPendingRegistration() {
+  try {
+    const record = JSON.parse(sessionStorage.getItem(PENDING_KEY) || "null");
+    return record && record.expiresAt > Date.now() ? record : null;
+  } catch {
+    return null;
+  }
+}
+
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -77,15 +88,16 @@ export default function Register() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = authReturnTo(params);
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState("client");
+  const [pending] = useState(readPendingRegistration);
+  const [step, setStep] = useState(() => pending ? 3 : 1);
+  const [role, setRole] = useState(() => pending?.role || "client");
   const [form, setForm] = useState(EMPTY);
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [pendingToken, setPendingToken] = useState("");
+  const [pendingToken, setPendingToken] = useState(() => pending?.token || "");
   const [verificationCode, setVerificationCode] = useState("");
-  const [botUrl, setBotUrl] = useState("");
+  const [botUrl, setBotUrl] = useState(() => pending?.botUrl || "");
 
   if (isLoggedIn()) return <Navigate to={returnTo} replace />;
 
@@ -112,21 +124,23 @@ export default function Register() {
     if (form.password.length < 8)
       return setError("Пароль должен содержать минимум 8 символов.");
 
-    // Open a tab during the user gesture so browsers do not block Telegram after an API await.
-    const telegramTab = accountApiEnabled ? window.open("about:blank", "_blank") : null;
-    if (telegramTab) telegramTab.opener = null;
     setBusy(true);
     try {
       if (!accountApiEnabled) {
         throw Error("Для подтверждения через Telegram подключите BakeU Bot API.");
       }
       const result = await startTelegramRegistration({ ...form, phone: completeUzPhone(form.phone) }, role);
+      const pendingRecord = {
+        token: result.token,
+        botUrl: result.botUrl,
+        role,
+        expiresAt: Date.now() + (result.expiresIn || 600) * 1000,
+      };
+      sessionStorage.setItem(PENDING_KEY, JSON.stringify(pendingRecord));
       setPendingToken(result.token);
       setBotUrl(result.botUrl);
       setStep(3);
-      if (telegramTab) telegramTab.location.replace(result.botUrl);
     } catch (e) {
-      telegramTab?.close();
       setError(e.message || "Не удалось создать аккаунт");
     } finally {
       setBusy(false);
@@ -140,6 +154,7 @@ export default function Register() {
     setError("");
     try {
       await verifyTelegramRegistration(pendingToken, verificationCode.trim());
+      sessionStorage.removeItem(PENDING_KEY);
       navigate(returnTo, { replace: true });
     } catch (e) {
       setError(e.message || "Код не подошёл.");
@@ -207,11 +222,12 @@ export default function Register() {
           </header>
           {botUrl && (
             <p className="bk-switch">
-              <a href={botUrl} target="_blank" rel="noopener noreferrer">
+              <a href={botUrl} target="_blank" rel="noopener noreferrer" className="bk-telegram-open">
                 {translateText("Открыть Telegram бот")}
               </a>
             </p>
           )}
+          <p className="bk-note">{translateText("После получения кода вернитесь сюда. Код действителен 10 минут.")}</p>
           <form className="bk-form" onSubmit={confirmCode}>
             <div className="bk-field">
               <label htmlFor="reg-code">{translateText("Код из Telegram")}</label>
@@ -235,6 +251,20 @@ export default function Register() {
               {translateText("Подтвердить код")} <ArrowRight size={18} />
             </button>
           </form>
+          <button
+            className="bk-restart-registration"
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem(PENDING_KEY);
+              setPendingToken("");
+              setVerificationCode("");
+              setBotUrl("");
+              setError("");
+              setStep(2);
+            }}
+          >
+            {translateText("Отправить новый код")}
+          </button>
         </>
       ) : (
         <>
