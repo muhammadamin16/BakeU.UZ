@@ -9,13 +9,13 @@ import {
   EyeOff,
   Loader2,
   LockKeyhole,
-  Phone,
   TriangleAlert,
 } from "lucide-react";
 
 import { loginLocal } from "../../../store/localAccount";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
+import PhoneInput, { completeUzPhone } from "../PhoneInput";
 import "../Auth.css";
 
 export default function Login() {
@@ -38,14 +38,14 @@ export default function Login() {
     event.preventDefault();
     if (busy) return;
 
-    if (!/^998\d{9}$/.test(form.phone.replace(/\D/g, "")) || !form.password) {
+    if (!completeUzPhone(form.phone) || !form.password) {
       setError("Введите номер +998 и пароль.");
       return;
     }
 
     setBusy(true);
     try {
-      await loginLocal(form.phone.trim(), form.password);
+      await loginLocal(completeUzPhone(form.phone), form.password);
       navigate(returnTo, { replace: true });
     } catch (e) {
       setError(e.message || "Не удалось войти");
@@ -70,19 +70,15 @@ export default function Login() {
           <label htmlFor="login-phone">
             {translateText("Телефон")}
           </label>
-          <div className="bk-input">
-            <Phone size={18} />
-            <input
-              id="login-phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder="+998 90 123 45 67"
-              value={form.phone}
-              onChange={update("phone")}
-              aria-invalid={Boolean(error)}
-              required
-            />
-          </div>
+          <PhoneInput
+            id="login-phone"
+            value={form.phone}
+            onChange={(value) => {
+              setForm((current) => ({ ...current, phone: value }));
+              setError("");
+            }}
+            invalid={Boolean(error)}
+          />
         </div>
 
         <div className="bk-field">
