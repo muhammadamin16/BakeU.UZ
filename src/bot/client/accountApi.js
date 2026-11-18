@@ -35,13 +35,21 @@ async function request(path, method = "GET", body) {
       "Сервер BakeU недоступен. Проверьте подключение и попробуйте снова.",
     );
   }
+  const responseType = response.headers.get("content-type") || "";
+  if (!responseType.includes("application/json")) {
+    throw Error(
+      response.ok
+        ? "API BakeU настроен неправильно: вместо JSON пришла страница сайта. Проверьте VITE_ACCOUNT_API_URL и proxy /api."
+        : `API BakeU недоступен (HTTP ${response.status}). Проверьте, что запросы /api идут к Telegram-боту, а не к сайту или Go Backend.`,
+    );
+  }
   let result;
   try {
     result = await response.json();
   } catch {
-    throw Error("Сервер вернул некорректный ответ.");
+    throw Error("Сервер вернул повреждённый JSON. Проверьте логи BakeU Bot API.");
   }
-  if (!response.ok) throw Error(result.error || "Ошибка сервера.");
+  if (!response.ok) throw Error(result.error || `Ошибка сервера (HTTP ${response.status}).`);
   return result;
 }
 export async function registerServer(form, role) {

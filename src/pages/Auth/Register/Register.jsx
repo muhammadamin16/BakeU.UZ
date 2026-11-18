@@ -11,7 +11,6 @@ import {
   EyeOff,
   Loader2,
   LockKeyhole,
-  Phone,
   ShoppingBag,
   Store,
   TriangleAlert,
@@ -20,6 +19,7 @@ import {
 
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
+import PhoneInput, { completeUzPhone } from "../PhoneInput";
 import "../Auth.css";
 
 const EMPTY = {
@@ -107,7 +107,7 @@ export default function Register() {
       !form.password
     )
       return setError("Заполните все обязательные поля.");
-    if (!/^998\d{9}$/.test(form.phone.replace(/\D/g, "")))
+    if (!completeUzPhone(form.phone))
       return setError("Введите номер в формате +998 XX XXX XX XX.");
     if (form.password.length < 8)
       return setError("Пароль должен содержать минимум 8 символов.");
@@ -120,7 +120,7 @@ export default function Register() {
       if (!accountApiEnabled) {
         throw Error("Для подтверждения через Telegram подключите BakeU Bot API.");
       }
-      const result = await startTelegramRegistration(form, role);
+      const result = await startTelegramRegistration({ ...form, phone: completeUzPhone(form.phone) }, role);
       setPendingToken(result.token);
       setBotUrl(result.botUrl);
       setStep(3);
@@ -281,16 +281,14 @@ export default function Register() {
               placeholder={translateText("Ваша фамилия")}
               autoComplete="family-name"
             />
-            <Field
-              id="reg-phone"
-              label={translateText("Телефон")}
-              icon={Phone}
-              type="tel"
-              value={form.phone}
-              onChange={(v) => update("phone", v)}
-              placeholder="+998 90 123 45 67"
-              autoComplete="tel"
-            />
+            <div className="bk-field">
+              <label htmlFor="reg-phone">{translateText("Телефон")}</label>
+              <PhoneInput
+                id="reg-phone"
+                value={form.phone}
+                onChange={(value) => update("phone", value)}
+              />
+            </div>
 
             <div className="bk-field bk-field--wide">
               <label htmlFor="reg-password">{translateText("Пароль")}</label>

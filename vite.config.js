@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(
     mode,
     fileURLToPath(new URL(".", import.meta.url)),
-    "VITE_DEV_",
+    "VITE_",
   );
   return {
     plugins: [react(), devPortPlugin()],
@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       host: "127.0.0.1",
       port: readDevPort(env.VITE_DEV_PORT),
       strictPort: false,
-      proxy: { "/api": "http://127.0.0.1:3001" },
+      proxy: { "/api": { target: env.VITE_BOT_API_PROXY_TARGET || "http://127.0.0.1:3001", changeOrigin: true } },
     },
   };
 });
