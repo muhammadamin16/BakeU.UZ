@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Check, MapPin, Plus, Search, ShoppingBag, Sparkles, X } from "lucide-react";
+import {
+  ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Check,
+  MapPin, Plus, Search, ShoppingBag, Sparkles, X,
+} from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
@@ -9,6 +12,7 @@ import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/h
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
+const PAGE_SIZE = 8;
 const CATEGORIES = [
   { name: "Все", icon: "✦" },
   { name: "Торты", icon: "🍰" },
@@ -16,7 +20,6 @@ const CATEGORIES = [
   { name: "Хлеб", icon: "🥖" },
   { name: "Самса", icon: "🥟" },
 ];
-
 const MAKERS = [
   { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов", image: "/images/products/cake.jpg", initials: "SF" },
   { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
@@ -26,7 +29,6 @@ const MAKERS = [
 function ProductCard({ product, quantity, onAdd }) {
   const productUrl = `/product/${encodeURIComponent(product.id)}`;
   const sellerUrl = `/profile?shop=${encodeURIComponent(product.sellerId ?? "")}`;
-
   return (
     <article className="bu-product">
       <div className="bu-product__image" style={{ backgroundColor: product.color || "#f1e8dc" }}>
@@ -46,8 +48,7 @@ function ProductCard({ product, quantity, onAdd }) {
         <h3><Link to={productUrl}>{translateText(product.name)}</Link></h3>
         <div className="bu-product__bottom">
           <span className="bu-product__price">
-            {Number(product.price || 0).toLocaleString(getLocale())}
-            <small>{translateText("сум")}</small>
+            {Number(product.price || 0).toLocaleString(getLocale())} <small>{translateText("сум")}</small>
           </span>
           <button className="bu-product__add" type="button" onClick={() => onAdd(product)} aria-label={translateText(`Добавить в корзину: ${product.name}`)}>
             <Plus size={20} strokeWidth={2} aria-hidden="true" />
@@ -63,6 +64,8 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState("");
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const catalogRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
@@ -70,14 +73,16 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
-
   useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(""), 3500);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const featured = useMemo(() => eligibleProducts(catalog, subscriptions, now), [catalog, subscriptions, now]);
+  const featured = useMemo(
+    () => eligibleProducts(catalog, subscriptions, now),
+    [catalog, subscriptions, now]
+  );
   const visibleProducts = useMemo(() => {
     const normalized = normalizeSearch(query.trim());
     return featured.filter((product) => {
@@ -87,21 +92,33 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
     });
   }, [featured, category, query]);
 
-  const resetFilters = () => { setQuery(""); setCategory("Все"); };
+  const displayedProducts = visibleProducts.slice(0, limit);
+  const remaining = Math.max(0, visibleProducts.length - displayedProducts.length);
+  const isFiltered = query.trim() !== "" || category !== "Все";
+  const expanded = limit > PAGE_SIZE;
+
+  // Reset the catalog whenever the search/filter changes.
+  useEffect(() => { setLimit(PAGE_SIZE); }, [query, category]);
+
   const scrollToProducts = () => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    document.getElementById("home-catalog")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    catalogRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   };
   const openCatalog = (nextCategory = "Все") => {
     setQuery("");
     setCategory(CATEGORIES.some((item) => item.name === nextCategory) ? nextCategory : "Все");
+    setLimit(PAGE_SIZE);
     window.requestAnimationFrame(scrollToProducts);
   };
+  const resetFilters = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
   const handleAdd = (product) => {
     add(product);
     setNotice(`${translateText("Добавлено в корзину:")} ${translateText(product.name)}`);
   };
-  const isFiltered = query.trim() !== "" || category !== "Все";
+  const collapseProducts = () => {
+    setLimit(PAGE_SIZE);
+    window.requestAnimationFrame(scrollToProducts);
+  };
 
   return (
     <main className="bu-home">
@@ -116,8 +133,8 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
         <span className="bu-map__action">{translateText("Открыть карту")} <ArrowUpRight size={19} aria-hidden="true" /></span>
       </Link>
 
-      <section id="home-catalog" className="bu-catalog" aria-labelledby="bu-catalog-title">
-        <div className="bu-catalog__top">product__image
+      <section id="home-catalog" ref={catalogRef} className="bu-catalog" aria-labelledby="bu-catalog-title">
+        <div className="bu-catalog__top">
           <div className="bu-catalog__heading">
             <span className="bu-overline">BAKEU COLLECTION</span>
             <h2 id="bu-catalog-title">{translateText("Топ товары")}</h2>
@@ -138,8 +155,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
             return (
               <button key={item.name} type="button" className={`bu-category${category === item.name ? " is-active" : ""}`} aria-pressed={category === item.name} onClick={() => setCategory(item.name)}>
                 <span className="bu-category__emoji" aria-hidden="true">{item.icon}</span>
-                {translateText(item.name)}
-                <span className="bu-category__count">{count}</span>
+                {translateText(item.name)} <span className="bu-category__count">{count}</span>
               </button>
             );
           })}
@@ -150,12 +166,39 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
           {isFiltered && <button type="button" onClick={resetFilters}>{translateText("Сбросить фильтры")} <X size={14} /></button>}
         </div>
 
-        {visibleProducts.length ? (
-          <div className="bu-products">
-            {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} />
-            ))}
-          </div>
+        {visibleProducts.length > 0 ? (
+          <>
+            <div className="bu-products">
+              {displayedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} />
+              ))}
+            </div>
+
+            {(remaining > 0 || expanded) && (
+              <div className="bu-load-more">
+                <p className="bu-load-more__label">
+                  {translateText("Показано")} <strong>{displayedProducts.length}</strong> {translateText("из")} <strong>{visibleProducts.length}</strong> {translateText("товаров")}
+                </p>
+                <div className="bu-load-more__track" role="progressbar" aria-label={translateText("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={displayedProducts.length}>
+                  <span style={{ width: `${(displayedProducts.length / visibleProducts.length) * 100}%` }} />
+                </div>
+                <div className="bu-load-more__buttons">
+                  {remaining > 0 && (
+                    <button type="button" className="bu-load-more__primary" onClick={() => setLimit((previous) => Math.min(previous + PAGE_SIZE, visibleProducts.length))}>
+                      {translateText("Больше товаров")}
+                      <span className="bu-load-more__count">+{Math.min(PAGE_SIZE, remaining)}</span>
+                      <ArrowDown size={17} aria-hidden="true" />
+                    </button>
+                  )}
+                  {expanded && (
+                    <button type="button" className="bu-load-more__secondary" onClick={collapseProducts}>
+                      {translateText("Свернуть")} <ArrowUp size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bu-empty">
             <Search size={28} aria-hidden="true" />
@@ -164,6 +207,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
             <button className="bu-button bu-button--primary" type="button" onClick={resetFilters}>{translateText("Сбросить фильтры")}</button>
           </div>
         )}
+
         <div className={`bu-notice${notice ? " is-visible" : ""}`} role="status" aria-live="polite" aria-atomic="true">
           {notice && <><ShoppingBag size={17} aria-hidden="true" /><span>{notice}</span></>}
         </div>

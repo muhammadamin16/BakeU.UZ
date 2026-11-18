@@ -9,9 +9,9 @@ import "./MobileNav.css";
 
 const links = [
   { to: "/", label: "Главная", Icon: Store },
-  { to: "/map", label: "Карта", Icon: MapPin },
-  { to: "/ai", label: "Помощник", Icon: Sparkles },
   { to: "/seller", label: "Кондитер", Icon: ShoppingBag },
+  { to: "/ai", label: "Помощник", Icon: Sparkles },
+  { to: "/map", label: "Карта", Icon: MapPin },
   { to: "/profile", label: "Профиль", Icon: UserRound },
 ];
 
