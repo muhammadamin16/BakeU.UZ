@@ -48,25 +48,26 @@ export async function registerLocal(form, role) {
     throw Error("Выберите тип аккаунта.");
   if (!globalThis.crypto?.subtle && !hasPasswordDigest())
     throw Error("Откройте сайт через HTTPS или localhost.");
-  const email = form.email.trim().toLowerCase();
+  const email = (form.email || "").trim().toLowerCase();
   const records = readAccounts();
   if (
-    Object.values(records).some((r) => r.profile.email.toLowerCase() === email)
+    email && Object.values(records).some((r) => (r.profile.email || "").toLowerCase() === email)
   )
     throw Error("Этот email уже зарегистрирован в браузере.");
   const { password, ...fields } = form;
   const id = crypto.randomUUID(),
     salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+  if (Object.values(records).some((r) => r.profile.phone?.replace(/\D/g, "") === form.phone.replace(/\D/g, ""))) throw Error("Этот номер уже зарегистрирован.");
   const profile = { ...fields, email, id, role, demo: true };
   records[id] = { profile, salt, hash: await digest(password, salt) };
   localStorage.setItem(KEY, JSON.stringify(records));
   sessionStorage.setItem("bakeu-demo-profile", JSON.stringify(profile));
   return profile;
 }
-export async function loginLocal(email, password) {
-  if (accountApiEnabled) return loginServer(email, password);
+export async function loginLocal(phone, password) {
+  if (accountApiEnabled) return loginServer(phone, password);
   const record = Object.values(readAccounts()).find(
-    (r) => r.profile.email.toLowerCase() === email.trim().toLowerCase(),
+    (r) => r.profile.phone?.replace(/\D/g, "") === phone.replace(/\D/g, ""),
   );
   if (!record || (await digest(password, record.salt)) !== record.hash)
     throw Error(
@@ -86,7 +87,7 @@ export function saveLocalProfile(previous, next) {
     Object.values(records).some(
       (r) =>
         r.profile.id !== id &&
-        r.profile.email.toLowerCase() === profile.email.trim().toLowerCase(),
+        (r.profile.email || "").toLowerCase() === (profile.email || "").trim().toLowerCase() && Boolean(profile.email),
     )
   )
     throw Error("Этот email уже используется.");
