@@ -76,7 +76,7 @@ export function createAuth(repo, config, notifications) {
       if (!/^[a-f0-9]{48}$/.test(token)) return null;
       const hash = tokenHash(token);
       const pending = repo.pendingRegistration(hash);
-      if (!pending || pending.telegram_id !== String(telegramId)) return null;
+      if (!pending || pending.telegram_id !== String(telegramId) || pending.code_hash || pending.attempts >= 5) return null;
       const fields = JSON.parse(pending.fields);
       if (String(phone).replace(/\D/g, "") !== fields.phone) return null;
       const code = String(randomBytes(4).readUInt32BE(0) % 1000000).padStart(6, "0");
@@ -145,7 +145,7 @@ export function createAuth(repo, config, notifications) {
         typeof input?.password !== "string" ||
         input.password.length > 128
       )
-        throw new HttpError(400, "Введите email и пароль.");
+        throw new HttpError(400, "Введите телефон и пароль.");
       const phone = typeof input.phone === "string" ? input.phone.replace(/\D/g, "") : "";
       const record = phone ? repo.findUserByPhone(phone) : repo.findUserByEmail((input.email || "").trim().toLowerCase());
       const candidate = await scrypt(
@@ -157,7 +157,7 @@ export function createAuth(repo, config, notifications) {
         !record ||
         !timingSafeEqual(candidate, Buffer.from(record.password_hash, "hex"))
       )
-        throw new HttpError(401, "Неверный email или пароль.");
+        throw new HttpError(401, "Неверный телефон или пароль.");
       const user = repo.user(record.id);
       return {
         ...session(user),
