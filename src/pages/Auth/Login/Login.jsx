@@ -9,7 +9,7 @@ import {
   EyeOff,
   Loader2,
   LockKeyhole,
-  Mail,
+  Phone,
   TriangleAlert,
 } from "lucide-react";
 
@@ -18,13 +18,11 @@ import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
 import "../Auth.css";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export default function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = authReturnTo(params);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ phone: "", password: "" });
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,14 +38,14 @@ export default function Login() {
     event.preventDefault();
     if (busy) return;
 
-    if (!EMAIL_RE.test(form.email.trim()) || !form.password) {
-      setError("Введите корректную почту и пароль.");
+    if (!/^998\d{9}$/.test(form.phone.replace(/\D/g, "")) || !form.password) {
+      setError("Введите номер +998 и пароль.");
       return;
     }
 
     setBusy(true);
     try {
-      await loginLocal(form.email.trim(), form.password);
+      await loginLocal(form.phone.trim(), form.password);
       navigate(returnTo, { replace: true });
     } catch (e) {
       setError(e.message || "Не удалось войти");
@@ -69,18 +67,18 @@ export default function Login() {
 
       <form className="bk-form" onSubmit={submit} noValidate>
         <div className="bk-field">
-          <label htmlFor="login-email">
-            {translateText("Электронная почта")}
+          <label htmlFor="login-phone">
+            {translateText("Телефон")}
           </label>
           <div className="bk-input">
-            <Mail size={18} />
+            <Phone size={18} />
             <input
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              placeholder="example@gmail.com"
-              value={form.email}
-              onChange={update("email")}
+              id="login-phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="+998 90 123 45 67"
+              value={form.phone}
+              onChange={update("phone")}
               aria-invalid={Boolean(error)}
               required
             />
