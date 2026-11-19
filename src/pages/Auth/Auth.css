@@ -1,179 +1,538 @@
-html:has(.bk-auth),
-body:has(.bk-auth) {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
 
-.container:has(> .bk-auth) {
-  position: fixed;
-  inset: env(safe-area-inset-top, 0px) 0 calc(var(--nav-space) + env(safe-area-inset-bottom, 0px));
-  padding-block: 0;
-}
+/* ==========================================
+   BAKEU.UZ — AUTHENTICATION SYSTEM
+   Modern • Centered • Responsive
+========================================== */
+
+/* ==========================================
+   01. VARIABLES
+========================================== */
 
 .bk-auth {
   --bk-ink: #432015;
   --bk-muted: #745749;
   --bk-line: #e7d6c7;
+
+  --bk-paper: #fffaf5;
+  --bk-white: #fffdfa;
+
+  --bk-accent: #a66a47;
+  --bk-accent-dark: #542b20;
+  --bk-accent-hover: #674030;
+
+  --bk-selected: #f8eade;
+
+  --bk-radius: 24px;
+
+  /* Bottom navigation uchun joy */
+  --bk-nav-space: 112px;
+
+  position: relative;
+  isolation: isolate;
+
+  box-sizing: border-box;
+
   display: grid;
   place-items: center;
-  grid-template-rows: minmax(0, 1fr);
-  height: 100%;
-  padding-block: clamp(6px, 2dvh, 20px);
+
+  width: 100%;
+  height: calc(100svh - var(--bk-nav-space));
+
+  min-height: 0;
+
+  margin: 0;
+  padding: 18px 24px;
+
   color: var(--bk-ink);
+
+  overflow: hidden;
 }
+
+.bk-auth *,
+.bk-auth *::before,
+.bk-auth *::after {
+  box-sizing: border-box;
+}
+
+/* ==========================================
+   02. MAIN CARD
+========================================== */
 
 .bk-card {
+  position: relative;
+
   display: grid;
-  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
-  width: min(100%, 920px);
-  height: min(100%, 680px);
-  grid-template-rows: minmax(0, 1fr);
-  border: 1px solid #ead9cc;
-  border-radius: 26px;
-  overflow: hidden;
-  background: #fffaf5;
-  box-shadow: 0 22px 64px #43201513;
-}
 
-.bk-auth-visual {
-  background: #79513b url("/images/banners/bakery.webp") 72% center / cover no-repeat;
-}
+  grid-template-columns:
+    minmax(0, 40%)
+    minmax(0, 60%);
 
-.bk-auth-panel {
+  width: min(100%, 1020px);
+
+  height: min(680px, 100%);
+
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  padding: clamp(20px, 4vw, 44px);
+
+  margin: auto;
+
+  overflow: hidden;
+
+  border: 1px solid #ead9cc;
+  border-radius: 26px;
+
+  background: var(--bk-paper);
+
+  box-shadow:
+    0 24px 70px rgba(67, 32, 21, 0.08),
+    0 4px 18px rgba(67, 32, 21, 0.025);
 }
+
+/* ==========================================
+   03. LEFT IMAGE
+========================================== */
+
+.bk-auth-visual {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  background-color: #79513b;
+
+  background-image:
+    url("/images/banners/bakery.webp");
+
+  background-position: 72% center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* ==========================================
+   04. RIGHT PANEL
+========================================== */
+
+.bk-auth-panel {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: clamp(20px, 3vw, 48px);
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+
+  scrollbar-width: none;
+}
+
+.bk-auth-panel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Form content center */
+.bk-auth-content {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-block: auto;
+}
+
+/* ==========================================
+   05. TOP HEADER
+========================================== */
 
 .bk-auth-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: clamp(22px, 4vw, 38px);
+
+  gap: 16px;
+
+  width: 100%;
+
+  margin-bottom: clamp(22px, 3vw, 38px);
 }
 
 .bk-logo {
   display: inline-flex;
+  align-items: center;
+
   width: min(148px, 55%);
-  border-radius: 7px;
+  max-width: 148px;
+
+  border-radius: 8px;
+
+  text-decoration: none;
 }
 
-.bk-logo img { width: 100%; height: auto; }
+.bk-logo img {
+  display: block;
 
-.bk-head { margin-bottom: 20px; }
-.bk-head h1 {
-  margin: 0;
-  font-family: Georgia, serif;
-  font-weight: 650;
-  font-size: clamp(28px, 3.5vw, 42px);
-  line-height: 1.08;
-  letter-spacing: -0.035em;
+  width: 100%;
+  height: auto;
+
+  object-fit: contain;
+}
+
+/* ==========================================
+   06. PROGRESS STEPS
+========================================== */
+
+.bk-progress {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 7px;
+
+  width: 100%;
+
+  margin: 0 0 20px;
+  padding: 0;
+
+  list-style: none;
+}
+
+.bk-progress li {
+  min-width: 0;
+
+  padding-top: 8px;
+
+  border-top: 3px solid var(--bk-line);
+
+  color: var(--bk-muted);
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
   overflow-wrap: anywhere;
 }
+
+.bk-progress li.is-done {
+  border-top-color: var(--bk-accent);
+}
+
+.bk-progress li[aria-current="step"] {
+  color: var(--bk-ink);
+  font-weight: 750;
+}
+
+/* ==========================================
+   07. HEADINGS
+========================================== */
+
+.bk-head {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.bk-head h1 {
+  margin: 0;
+
+  color: var(--bk-ink);
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 650;
+  line-height: 1.08;
+
+  letter-spacing: -0.035em;
+
+  overflow-wrap: anywhere;
+}
+
 .bk-head p {
-  margin-top: 9px;
+  margin: 10px 0 0;
+
   color: var(--bk-muted);
+
   font-size: 14px;
   line-height: 1.55;
 }
 
-.bk-progress {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin: 0 0 18px;
-  padding: 0;
-  list-style: none;
-}
-.bk-progress li {
-  border-top: 3px solid var(--bk-line);
-  padding-top: 6px;
-  color: var(--bk-muted);
-  font-size: 11px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-.bk-progress .is-done { border-color: #a66a47; }
-.bk-progress [aria-current="step"] { color: var(--bk-ink); font-weight: 750; }
+/* ==========================================
+   08. FORM LAYOUT
+========================================== */
 
-.bk-form, .bk-roles {
+.bk-form,
+.bk-roles {
   display: grid;
   gap: 14px;
+
+  width: 100%;
+  min-width: 0;
 }
 
-.bk-form--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.bk-field--wide { grid-column: 1 / -1; }
+.bk-form--grid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+}
 
-.bk-field { display: grid; gap: 6px; min-width: 0; }
-.bk-field label { font-size: 13px; font-weight: 750; }
+.bk-field--wide {
+  grid-column: 1 / -1;
+}
+
+/* ==========================================
+   09. FIELDS
+========================================== */
+
+.bk-field {
+  display: grid;
+  gap: 7px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.bk-field label {
+  color: var(--bk-ink);
+
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+/* ==========================================
+   10. INPUTS
+========================================== */
 
 .bk-input {
   display: flex;
   align-items: center;
-  gap: 9px;
+
+  gap: 10px;
+
+  width: 100%;
   min-width: 0;
   min-height: 50px;
-  padding-inline: 12px;
+
+  padding-inline: 13px;
+
   border: 1px solid var(--bk-line);
   border-radius: 12px;
-  background: #fffdfa;
+
+  background: var(--bk-white);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.bk-input:hover {
+  border-color: #cba990;
 }
 
 .bk-input:focus-within {
   border-color: #a86d4b;
-  box-shadow: 0 0 0 2px #bc8a6a26;
+
+  box-shadow:
+    0 0 0 3px rgba(188, 138, 106, 0.14);
 }
-.bk-input:has([aria-invalid="true"]) { border-color: #ba6256; }
-.bk-input > svg { flex: none; color: #956544; }
+
+.bk-input:has([aria-invalid="true"]) {
+  border-color: #ba6256;
+}
+
+.bk-input > svg {
+  flex: none;
+
+  width: 18px;
+  height: 18px;
+
+  color: #956544;
+}
+
 .bk-input input {
   flex: 1;
-  min-width: 0;
+
   width: 100%;
+  min-width: 0;
   min-height: 48px;
+
+  padding: 0;
+
   border: 0;
   outline: 0;
+
   background: transparent;
+
   color: var(--bk-ink);
+
   font: inherit;
   font-size: 16px;
 }
-.bk-input input::placeholder { color: #846b5d; opacity: 1; }
+
+.bk-input input::placeholder {
+  color: #846b5d;
+  opacity: 1;
+}
+
+.bk-input input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   11. PHONE INPUT
+========================================== */
 
 .bk-phone-country {
+  display: inline-flex;
+  align-items: center;
+
   flex: none;
-  padding-inline-end: 8px;
-  border-inline-end: 1px solid var(--bk-line);
+
+  padding-right: 10px;
+
+  border-right: 1px solid var(--bk-line);
+
+  color: var(--bk-ink);
+
   font-size: 14px;
   font-weight: 750;
 }
 
-.bk-roles { margin-bottom: 15px; }
+/* ==========================================
+   12. ACCOUNT ROLES
+========================================== */
+
+.bk-roles {
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
 .bk-role {
   position: relative;
+
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+
+  grid-template-columns:
+    auto minmax(0, 1fr) auto;
+
   align-items: center;
-  gap: 12px;
-  min-height: 66px;
-  padding: 10px 13px;
+  gap: 13px;
+
+  width: 100%;
+  min-height: 74px;
+
+  padding: 12px 14px;
+
   border: 1px solid var(--bk-line);
-  border-radius: 13px;
-  background: #fffdfa;
+  border-radius: 14px;
+
+  background: var(--bk-white);
+
   cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
-.bk-role:has(input:checked) { border-color: #a56b49; background: #f8eade; }
-.bk-role:focus-within { outline: 2px solid #944b24; outline-offset: 2px; }
-.bk-role input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.bk-role__icon { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 10px; background: #f1e0d1; }
-.bk-role__text { display: grid; gap: 3px; }
-.bk-role__text strong { font-size: 14px; }
-.bk-role__text small { color: var(--bk-muted); font-size: 12px; line-height: 1.35; }
-.bk-role__check { visibility: hidden; color: #854926; }
-.bk-role:has(input:checked) .bk-role__check { visibility: visible; }
+
+.bk-role:hover {
+  border-color: #b98463;
+  background: #fff8f1;
+
+  transform: translateY(-1px);
+}
+
+.bk-role:has(input:checked) {
+  border-color: #a56b49;
+
+  background: var(--bk-selected);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(165, 107, 73, 0.08);
+}
+
+.bk-role:focus-within {
+  outline: 2px solid #944b24;
+  outline-offset: 2px;
+}
+
+.bk-role input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  opacity: 0;
+}
+
+.bk-role__icon {
+  display: grid;
+  place-items: center;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 11px;
+
+  background: #f1e0d1;
+
+  color: var(--bk-ink);
+}
+
+.bk-role__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.bk-role__text {
+  display: grid;
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.bk-role__text strong {
+  color: var(--bk-ink);
+
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.bk-role__text small {
+  color: var(--bk-muted);
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bk-role__check {
+  visibility: hidden;
+
+  color: #854926;
+}
+
+.bk-role:has(input:checked)
+.bk-role__check {
+  visibility: visible;
+}
+
+/* ==========================================
+   13. BUTTONS
+========================================== */
 
 .bk-primary,
 .bk-telegram-open,
@@ -182,68 +541,435 @@ body:has(.bk-auth) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   gap: 9px;
+
   min-height: 45px;
-  padding: 8px 12px;
-  border: 1px solid;
+
+  padding: 10px 16px;
+
+  border: 1px solid transparent;
   border-radius: 12px;
+
+  font-family: inherit;
   font-size: 14px;
   font-weight: 750;
+  line-height: 1.4;
+
   text-align: center;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .bk-primary,
-.bk-telegram-open { width: 100%; min-height: 49px; }
+.bk-telegram-open {
+  width: 100%;
+  min-height: 52px;
+}
+
+/* PRIMARY */
 .bk-primary {
   --glass-control-rest: #542b20;
   --glass-control-active: #674030;
   --glass-control-edge: #542b20;
   --glass-control-ink: #fff9ef;
+
+  border-color: #542b20;
+
+  background: #542b20;
+  color: #fff9ef;
 }
 
-.bk-link-back { min-height: 38px; margin-bottom: 14px; }
-.bk-restart-registration { margin-top: 12px; }
+.bk-primary:hover:not(:disabled) {
+  background: #674030;
+
+  box-shadow:
+    0 8px 22px rgba(84, 43, 32, 0.15);
+}
+
+.bk-primary:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.bk-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bk-primary svg,
+.bk-telegram-open svg {
+  flex: none;
+}
+
+/* TELEGRAM */
+.bk-telegram-open {
+  border-color: #1686bd;
+
+  background: #229ed9;
+  color: #ffffff;
+}
+
+.bk-telegram-open:hover {
+  background: #1686bd;
+}
+
+/* BACK */
+.bk-link-back {
+  width: fit-content;
+  min-height: 38px;
+
+  margin-bottom: 14px;
+
+  border-color: var(--bk-line);
+
+  background: var(--bk-white);
+  color: var(--bk-ink);
+}
+
+.bk-link-back:hover {
+  background: var(--bk-selected);
+}
+
+/* RESTART */
+.bk-restart-registration {
+  width: 100%;
+
+  margin-top: 12px;
+
+  border-color: var(--bk-line);
+
+  background: transparent;
+  color: var(--bk-ink);
+}
+
+.bk-restart-registration:hover {
+  background: var(--bk-selected);
+}
+
+/* ==========================================
+   14. ALERT
+========================================== */
+
 .bk-alert {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
+
+  gap: 9px;
+
+  width: 100%;
+
+  padding: 12px 14px;
+
   border: 1px solid #edc8be;
-  border-radius: 10px;
+  border-radius: 11px;
+
   background: #fff0eb;
   color: #8b3429;
+
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
+
   overflow-wrap: anywhere;
 }
-.bk-phone-alert {
-  flex-direction: column;
+
+.bk-alert svg {
+  flex: none;
 }
-.bk-phone-alert a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
+
+/* ==========================================
+   15. LOGIN / REGISTER SWITCH
+========================================== */
+
+.bk-switch {
+  margin-top: 18px;
+
+  color: var(--bk-ink);
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+.bk-switch a:not(.bk-telegram-open) {
+  color: #863e22;
+
   font-weight: 750;
+
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-.bk-alert svg, .bk-primary svg { flex: none; }
 
-.bk-switch { margin-top: 17px; text-align: center; font-size: 14px; line-height: 1.5; }
-.bk-switch a:not(.bk-telegram-open) { color: #863e22; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
-.bk-note { margin: 10px 0; color: var(--bk-muted); font-size: 12px; line-height: 1.5; }
-.bk-spin { animation: bk-spin 900ms linear infinite; }
-@keyframes bk-spin { to { transform: rotate(360deg); } }
+  transition: color 0.2s ease;
+}
+
+.bk-switch a:not(.bk-telegram-open):hover {
+  color: #542b20;
+}
+
+/* ==========================================
+   16. NOTES
+========================================== */
+
+.bk-note {
+  margin: 10px 0;
+
+  color: var(--bk-muted);
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* ==========================================
+   17. LOADING
+========================================== */
+
+.bk-spin {
+  animation: bk-spin 900ms linear infinite;
+}
+
+@keyframes bk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================
+   18. BODY SCROLL LOCK
+========================================== */
+
+body.bk-auth-page {
+  height: 100svh;
+  min-height: 0;
+
+  margin: 0;
+  padding-bottom: 0 !important;
+
+  overflow: hidden;
+}
+
+body.bk-auth-page #root {
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Bottom navigation */
+body.bk-auth-page .bottom-nav {
+  position: fixed;
+
+  bottom: max(
+    16px,
+    env(safe-area-inset-bottom)
+  );
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  z-index: 1000;
+}
+
+/* ==========================================
+   19. SHORT DESKTOP SCREENS
+========================================== */
+
+@media (max-height: 760px) and (min-width: 741px) {
+  .bk-auth {
+    padding: 12px 20px;
+  }
+
+  .bk-auth-panel {
+    padding: 20px 30px;
+  }
+
+  .bk-auth-top {
+    margin-bottom: 18px;
+  }
+
+  .bk-progress {
+    margin-bottom: 14px;
+  }
+
+  .bk-head {
+    margin-bottom: 14px;
+  }
+
+  .bk-head h1 {
+    font-size: clamp(26px, 3vw, 36px);
+  }
+
+  .bk-roles {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .bk-role {
+    min-height: 64px;
+    padding: 9px 12px;
+  }
+
+  .bk-switch {
+    margin-top: 12px;
+  }
+}
+
+/* ==========================================
+   20. TABLET
+========================================== */
+
+@media (max-width: 900px) {
+  .bk-card {
+    grid-template-columns:
+      minmax(0, 36%)
+      minmax(0, 64%);
+  }
+
+  .bk-auth-panel {
+    padding: 24px;
+  }
+
+  .bk-head h1 {
+    font-size: clamp(28px, 4vw, 38px);
+  }
+}
+
+/* ==========================================
+   21. MOBILE
+========================================== */
 
 @media (max-width: 740px) {
-  .bk-card { display: block; max-width: 510px; border-radius: 20px; }
-  .bk-auth-visual { display: none; }
-  .bk-auth-panel { height: 100%; }
+  .bk-auth {
+    padding: 12px 16px;
+  }
+
+  .bk-card {
+    display: block;
+
+    width: min(100%, 510px);
+    height: min(650px, 100%);
+
+    border-radius: 20px;
+  }
+
+  .bk-auth-visual {
+    display: none;
+  }
+
+  .bk-auth-panel {
+    height: 100%;
+    padding: 24px;
+  }
+
+  .bk-auth-top {
+    margin-bottom: 22px;
+  }
+
+  .bk-head h1 {
+    font-size: clamp(28px, 6vw, 38px);
+  }
+
+  .bk-progress li {
+    font-size: 10px;
+  }
+
+  .bk-role {
+    min-height: 68px;
+  }
 }
+
+/* ==========================================
+   22. SMALL MOBILE
+========================================== */
+
 @media (max-width: 480px) {
-  .bk-form--grid { grid-template-columns: minmax(0, 1fr); }
+  .bk-auth {
+    padding: 10px 12px;
+  }
+
+  .bk-card {
+    border-radius: 18px;
+  }
+
+  .bk-auth-panel {
+    padding: 18px;
+  }
+
+  .bk-auth-top {
+    margin-bottom: 18px;
+  }
+
+  .bk-logo {
+    max-width: 125px;
+  }
+
+  .bk-head {
+    margin-bottom: 16px;
+  }
+
+  .bk-head h1 {
+    font-size: 30px;
+  }
+
+  .bk-head p {
+    font-size: 13px;
+  }
+
+  .bk-form--grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bk-role {
+    min-height: 65px;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .bk-role__icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bk-role__text strong {
+    font-size: 13px;
+  }
+
+  .bk-role__text small {
+    font-size: 11px;
+  }
+
+  .bk-primary {
+    min-height: 48px;
+  }
+
+  .bk-switch {
+    margin-top: 14px;
+    font-size: 13px;
+  }
 }
+
+/* ==========================================
+   23. ACCESSIBILITY
+========================================== */
+
 @media (prefers-reduced-motion: reduce) {
-  .bk-spin { animation: none; }
+  .bk-spin {
+    animation: none;
+  }
+
+  .bk-role,
+  .bk-input,
+  .bk-primary,
+  .bk-telegram-open,
+  .bk-link-back,
+  .bk-restart-registration {
+    transition: none;
+  }
 }
