@@ -212,9 +212,8 @@ top:-66px ;
 /* Телефон */
 @media (max-width: 480px) {
   #root .bottom-nav-shell.bottom-nav-shell--centered {
-    width: calc(96% -   20px);
-    left: 48%;
-    bottom: 2%;
+    width: calc(100% - 24px);
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   #root .bottom-nav-shell--centered .bottom-nav {

@@ -24,8 +24,8 @@ body:has(.mini-gate) #root {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(110deg, #fff9ef88, #f6e7ed70),
-    url("/images/winter/background.png") center 62% / cover no-repeat;
+    linear-gradient(110deg, #f9f9ef9e, #edf3eaa8),
+    url("/images/winter/frosted-grove.webp") center 62% / cover no-repeat;
 }
 .mini-welcome:before {
   content: "";

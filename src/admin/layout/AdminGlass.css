@@ -11,10 +11,9 @@
   min-height: 100dvh;
   background-color: #f5e9e8;
   background-image:
-    radial-gradient(ellipse at 75% 10%, #ede5fa99, transparent 55%),
-    linear-gradient(115deg, #fff8f0e8, #faedf2d4),
-    url("/images/winter/background.png");
-  background-size: auto, auto, cover;
+    linear-gradient(115deg, #f8faf3ec, #edf3eadd),
+    url("/images/winter/frosted-grove.webp");
+  background-size: auto, cover;
   background-position: center;
   background-attachment: fixed;
   font-family: "Segoe UI", Arial, sans-serif;
