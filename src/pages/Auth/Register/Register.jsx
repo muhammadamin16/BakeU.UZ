@@ -1,3 +1,4 @@
+import ShopLocationPicker from "../../../components/ShopLocationPicker/ShopLocationPicker";
 import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../bot/client/accountApi";
@@ -28,6 +29,10 @@ const EMPTY = {
   firstName: "",
   lastName: "",
   phone: "",
+  company: "",
+  location: "",
+  lat: null,
+  lng: null,
 };
 
 const ROLES = [
@@ -106,6 +111,8 @@ export default function Register() {
       !form.phone.trim()
     )
       return setError("Заполните все обязательные поля.");
+    if (isSeller && (form.company.trim().length < 2 || form.location.trim().length < 3))
+      return setError("Укажите название магазина и подробный адрес.");
     if (!completeUzPhone(form.phone))
       return setError("Введите номер в формате +998 XX XXX XX XX.");
 
@@ -114,7 +121,19 @@ export default function Register() {
       if (!accountApiEnabled) {
         throw Error(BOT_API_REQUIRED);
       }
-      const result = await startTelegramRegistration({ ...form, phone: completeUzPhone(form.phone) }, role);
+      const payload = { ...form, phone: completeUzPhone(form.phone) };
+      if (isSeller) {
+        if (payload.lat == null || payload.lng == null) {
+          delete payload.lat;
+          delete payload.lng;
+        }
+      } else {
+        delete payload.company;
+        delete payload.location;
+        delete payload.lat;
+        delete payload.lng;
+      }
+      const result = await startTelegramRegistration(payload, role);
       savePhoneChallenge(PENDING_KEY, result, { role });
       setPendingToken(result.token);
       setBotUrl(result.botUrl);
@@ -224,7 +243,7 @@ export default function Register() {
             <p>
               {translateText(
                 isSeller
-                  ? "Заполните основные данные. Магазин добавите позже в профиле."
+                  ? "Укажите данные магазина и место на карте. После подтверждения телефона аккаунт продавца откроется сразу."
                   : "Заполните данные для регистрации.",
               )}
             </p>
@@ -258,6 +277,26 @@ export default function Register() {
               />
             </div>
 
+            {isSeller && (
+              <>
+                <Field
+                  id="reg-company"
+                  label="Название магазина"
+                  icon={Store}
+                  value={form.company}
+                  onChange={(v) => update("company", v)}
+                  placeholder="Например, Домашняя выпечка"
+                  autoComplete="organization"
+                />
+                <div className="bk-field bk-field--wide">
+                  <ShopLocationPicker
+                    id="reg-location"
+                    value={{ address: form.location, lat: form.lat, lng: form.lng }}
+                    onChange={(value) => setForm((prev) => ({ ...prev, location: value.address, lat: value.lat, lng: value.lng }))}
+                  />
+                </div>
+              </>
+            )}
             {error && <PhoneAuthAlert message={error} />}
 
             <button
