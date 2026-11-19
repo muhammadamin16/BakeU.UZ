@@ -21,8 +21,10 @@ export default function Home() {
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
   const [batches, setBatches] = useState(1);
+  const [shopsExpanded, setShopsExpanded] = useState(false);
   const batchSize = useProductBatchSize();
   const catalogRef = useRef(null);
+  const allSellersRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
@@ -42,7 +44,13 @@ export default function Home() {
   const displayedProducts = visibleProducts.slice(0, batchSize * batches);
   const remaining = visibleProducts.length - displayedProducts.length;
   const expanded = batches > 1;
-  const displayedShops = shops.slice(0, batchSize);
+  const shopsPerRow = batchSize / 2;
+  const displayedShops = shops.slice(0, shopsExpanded ? batchSize : shopsPerRow);
+  const canExpandShops = !shopsExpanded && shops.length > shopsPerRow;
+
+  useEffect(() => {
+    if (shopsExpanded) allSellersRef.current?.focus({ preventScroll: true });
+  }, [shopsExpanded]);
 
   const isFiltered = query.trim() !== "" || category !== "Все";
 
@@ -180,7 +188,6 @@ export default function Home() {
         <section className="bu-makers" aria-labelledby="bu-makers-title">
           <div className="bu-makers__heading">
             <h2 id="bu-makers-title">{translateText("Знакомьтесь, кондитеры")}</h2>
-            <Link to="/seller?tab=sellers">{translateText("Все продавцы")} <ArrowUpRight size={18} aria-hidden="true" /></Link>
           </div>
 
           <div className="product-grid seller-shops">
@@ -192,9 +199,15 @@ export default function Home() {
               {translateText("Показано магазинов")} {displayedShops.length} / {shops.length}
             </p>
             <div className="bu-load-more__buttons">
-              <Link className="bu-load-more__primary" to="/seller?tab=sellers">
-                {translateText("Больше продавцов")} <ArrowUpRight size={17} aria-hidden="true" />
-              </Link>
+              {canExpandShops ? (
+                <button type="button" className="bu-load-more__primary" onClick={() => setShopsExpanded(true)}>
+                  {translateText("Больше продавцов")} <ArrowDown size={17} aria-hidden="true" />
+                </button>
+              ) : (
+                <Link ref={allSellersRef} className="bu-load-more__primary" to="/seller?tab=sellers">
+                  {translateText("Все продавцы")} <ArrowUpRight size={17} aria-hidden="true" />
+                </Link>
+              )}
             </div>
           </div>
         </section>

@@ -106,7 +106,6 @@
   font-weight: 800;
 }
 .bu-all-products,
-.bu-makers__heading > a,
 .bu-results button {
   display: inline-flex;
   align-items: center;
@@ -122,7 +121,7 @@
   line-height: 1.25;
 }
 
-.bu-home :is(.bu-all-products, .bu-makers__heading > a, .bu-results button) svg {
+.bu-home :is(.bu-all-products, .bu-results button) svg {
   flex: none;
 }
 
