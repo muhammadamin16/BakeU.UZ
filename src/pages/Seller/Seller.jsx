@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, Check, Search, ShoppingBag, Store, X } from "lucide-react";
-import { useProductBatchSize } from "../../hooks/useProductBatchSize";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
@@ -11,25 +10,22 @@ import SellerShop from "./SellerShop.jsx";
 import "./Seller.css";
 
 const SHOP_BATCH_SIZE = 16;
-const PRODUCT_PREVIEW_BATCHES = 3;
 const t = (value) => translateText(String(value ?? ""));
 
 export default function Seller() {
   const [params] = useSearchParams();
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
-  const showAllProducts = tab === "products" && params.get("all") === "1";
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
-    : <SellerCatalog key={tab + showAllProducts} tab={tab} showAllProducts={showAllProducts} />;
+    : <SellerCatalog key={tab} tab={tab} />;
 }
 
-function SellerCatalog({ tab, showAllProducts }) {
+function SellerCatalog({ tab }) {
   const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
-  const [batches, setBatches] = useState(() => showAllProducts ? Infinity : 1);
-  const productBatchSize = useProductBatchSize();
+  const [batches, setBatches] = useState(1);
   const [notice, setNotice] = useState(null);
   const sectionRef = useRef(null);
   const add = useCartStore((s) => s.add);
@@ -65,13 +61,9 @@ function SellerCatalog({ tab, showAllProducts }) {
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const batchSize = showSellers ? SHOP_BATCH_SIZE : productBatchSize;
-  const shown = visibleProducts.slice(0, batches * productBatchSize);
   const shownShops = visibleShops.slice(0, batches * SHOP_BATCH_SIZE);
-  const nextIsAll = !showSellers && batches >= PRODUCT_PREVIEW_BATCHES;
-  const total = showSellers ? visibleShops.length : visibleProducts.length;
-  const shownCount = showSellers ? shownShops.length : shown.length;
-  const remaining = Math.max(0, total - shownCount);
+  const totalShops = visibleShops.length;
+  const shownCount = shownShops.length;
   const reset = () => { setQuery(""); setCategory("Все"); setBatches(1); };
   const addProduct = (product) => { add(product); setNotice(product.name); };
   const collapse = () => {
@@ -110,14 +102,14 @@ function SellerCatalog({ tab, showAllProducts }) {
         {showSellers ? (
           <div className="seller-shops">{shownShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
         ) : (
-          <div className="product-grid">{shown.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
+          <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
         )}
         {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
-        {total > batchSize && <div className="seller-pagination">
-          <span>{shownCount} / {total}</span>
-          <div className="seller-pagination__track" role="progressbar" aria-label={t(showSellers ? "Показано магазинов" : "Показано товаров")} aria-valuemin={0} aria-valuemax={total} aria-valuenow={shownCount}><span style={{ width: `${shownCount / total * 100}%` }} /></div>
+        {showSellers && totalShops > SHOP_BATCH_SIZE && <div className="seller-pagination">
+          <span>{shownCount} / {totalShops}</span>
+          <div className="seller-pagination__track" role="progressbar" aria-label={t("Показано магазинов")} aria-valuemin={0} aria-valuemax={totalShops} aria-valuenow={shownCount}><span style={{ width: `${shownCount / totalShops * 100}%` }} /></div>
           <div className="seller-pagination__buttons">
-            {remaining > 0 && <button type="button" className="seller-pagination__more" onClick={() => setBatches((current) => nextIsAll ? Infinity : current + 1)}>{t(showSellers ? "Больше магазинов" : nextIsAll ? "Показать все" : "Больше товаров")} <ArrowDown size={17} /></button>}
+            {shownCount < totalShops && <button type="button" className="seller-pagination__more" onClick={() => setBatches((current) => current + 1)}>{t("Больше магазинов")} <ArrowDown size={17} /></button>}
             {batches > 1 && <button type="button" className="seller-pagination__less" onClick={collapse}>{t("Свернуть")} <ArrowUp size={16} /></button>}
           </div>
         </div>}

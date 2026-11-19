@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowDown, ArrowRight, ArrowUp, ArrowUpRight,
@@ -8,68 +8,56 @@ import { useProductBatchSize } from "../../hooks/useProductBatchSize";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
-import ProductCard from "../../components/ProductCard/ProductCard";
-import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
+import { ProductCard } from "../Seller/SellerParts";
+import { categories, useCatalog } from "../../store/sellerData";
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
-const CATEGORIES = [
-  { name: "Все", icon: "✦" },
-  { name: "Торты", icon: "🍰" },
-  { name: "Печенье", icon: "🍪" },
-  { name: "Хлеб", icon: "🥖" },
-  { name: "Самса", icon: "🥟" },
-];
+const PREVIEW_BATCHES = 3;
+const CATEGORY_ICONS = { "Все": "✦", "Торты": "🍰", "Печенье": "🍪", "Хлеб": "🥖", "Самса": "🥟" };
 const MAKERS = [
   { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов.", image: "/images/products/cake.jpg", initials: "SF" },
   { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
   { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
 ];
 
-export default function Home({ catalog = demoProducts, subscriptions = demoSubscriptions }) {
-  const [now, setNow] = useState(() => Date.now());
+export default function Home() {
+  const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [batches, setBatches] = useState(1);
   const batchSize = useProductBatchSize();
   const catalogRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30000);
-    return () => window.clearInterval(timer);
-  }, []);
-  useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(null), 3500);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const featured = useMemo(
-    () => eligibleProducts(catalog, subscriptions, now),
-    [catalog, subscriptions, now]
-  );
-  const visibleProducts = useMemo(() => {
-    const normalized = normalizeSearch(query.trim());
-    return featured.filter((product) => {
-      const matchesCategory = category === "Все" || product.category === category;
-      return matchesCategory && (!normalized || matchesLocalizedSearch(normalized, product.name, product.sellerName));
-    });
-  }, [featured, category, query]);
+  const shopById = new Map(shops.map((shop) => [String(shop.id), shop]));
+  const normalized = normalizeSearch(query.trim());
+  const visibleProducts = products.filter((product) => {
+    const shop = shopById.get(String(product.shopId));
+    return (category === "Все" || product.category === category) &&
+      (!normalized || matchesLocalizedSearch(normalized, product.name, shop?.name));
+  });
+  const displayedProducts = visibleProducts.slice(0, batchSize * batches);
+  const remaining = visibleProducts.length - displayedProducts.length;
+  const expanded = batches > 1;
 
-  const displayedProducts = visibleProducts.slice(0, expanded ? batchSize * 2 : batchSize);
-  const remaining = Math.max(0, visibleProducts.length - displayedProducts.length);
   const isFiltered = query.trim() !== "" || category !== "Все";
 
   const updateQuery = (value) => {
     setQuery(value);
-    setExpanded(false);
+    setBatches(1);
   };
   const updateCategory = (value) => {
     setCategory(value);
-    setExpanded(false);
+    setBatches(1);
   };
 
   const scrollToProducts = () => {
@@ -78,17 +66,17 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   };
   const openCatalog = (nextCategory = "Все") => {
     setQuery("");
-    setCategory(CATEGORIES.some((item) => item.name === nextCategory) ? nextCategory : "Все");
-    setExpanded(false);
+    setCategory(categories.includes(nextCategory) ? nextCategory : "Все");
+    setBatches(1);
     window.requestAnimationFrame(scrollToProducts);
   };
-  const resetFilters = () => { setQuery(""); setCategory("Все"); setExpanded(false); };
+  const resetFilters = () => { setQuery(""); setCategory("Все"); setBatches(1); };
   const handleAdd = (product) => {
     add(product);
     setNotice(product.name);
   };
   const collapseProducts = () => {
-    setExpanded(false);
+    setBatches(1);
     window.requestAnimationFrame(scrollToProducts);
   };
 
@@ -122,12 +110,12 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
         </div>
 
         <div className="bu-categories" role="group" aria-label={translateText("Категории товаров")}>
-          {CATEGORIES.map((item) => {
-            const count = item.name === "Все" ? featured.length : featured.filter((p) => p.category === item.name).length;
+          {categories.map((item) => {
+            const count = item === "Все" ? products.length : products.filter((p) => p.category === item).length;
             return (
-              <button key={item.name} type="button" className={`bu-category${category === item.name ? " is-active" : ""}`} aria-pressed={category === item.name} onClick={() => updateCategory(item.name)}>
-                <span className="bu-category__emoji" aria-hidden="true">{item.icon}</span>
-                {translateText(item.name)} <span className="bu-category__count">{count}</span>
+              <button key={item} type="button" className={`bu-category${category === item ? " is-active" : ""}`} aria-pressed={category === item} onClick={() => updateCategory(item)}>
+                <span className="bu-category__emoji" aria-hidden="true">{CATEGORY_ICONS[item] || "•"}</span>
+                {translateText(item)} <span className="bu-category__count">{count}</span>
               </button>
             );
           })}
@@ -145,7 +133,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
                 <ProductCard
                   key={product.id}
                   product={product}
-                  sellerUrl={product.sellerId ? `/profile?shop=${encodeURIComponent(product.sellerId)}` : undefined}
+                  shop={shopById.get(String(product.shopId))}
                   quantity={items?.[product.id] ?? 0}
                   onAdd={handleAdd}
                 />
@@ -160,14 +148,14 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
                 <span style={{ width: `${(displayedProducts.length / visibleProducts.length) * 100}%` }} />
               </div>
               <div className="bu-load-more__buttons">
-                {!expanded && remaining > 0 ? (
-                  <button type="button" className="bu-load-more__primary" onClick={() => setExpanded(true)}>
+                {batches < PREVIEW_BATCHES && remaining > 0 ? (
+                  <button type="button" className="bu-load-more__primary" onClick={() => setBatches((current) => Math.min(current + 1, PREVIEW_BATCHES))}>
                     {translateText("Больше товаров")}
                     <span className="bu-load-more__count">+{Math.min(batchSize, remaining)}</span>
                     <ArrowDown size={17} aria-hidden="true" />
                   </button>
                 ) : (
-                  <Link className="bu-load-more__primary" to="/seller?tab=products&all=1">
+                  <Link className="bu-load-more__primary" to="/seller?tab=products">
                     {translateText("Больше товаров")} <ArrowUpRight size={17} aria-hidden="true" />
                   </Link>
                 )}
