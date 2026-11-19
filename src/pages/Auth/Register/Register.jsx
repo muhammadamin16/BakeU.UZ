@@ -11,7 +11,6 @@ import {
   Loader2,
   ShoppingBag,
   Store,
-  TriangleAlert,
   UserRound,
 } from "lucide-react";
 
@@ -20,7 +19,8 @@ import AuthShell from "../AuthShell";
 import PhoneInput from "../PhoneInput";
 import { completeUzPhone } from "../uzPhone";
 import PhoneVerification from "../PhoneVerification";
-import { readPhoneChallenge, savePhoneChallenge } from "../phoneChallenge";
+import PhoneAuthAlert from "../PhoneAuthAlert";
+import { BOT_API_REQUIRED, readPhoneChallenge, savePhoneChallenge } from "../phoneChallenge";
 
 const PENDING_KEY = "bakeu-telegram-pending-registration";
 
@@ -112,7 +112,7 @@ export default function Register() {
     setBusy(true);
     try {
       if (!accountApiEnabled) {
-        throw Error("Для подтверждения через Telegram подключите BakeU Bot API.");
+        throw Error(BOT_API_REQUIRED);
       }
       const result = await startTelegramRegistration({ ...form, phone: completeUzPhone(form.phone) }, role);
       savePhoneChallenge(PENDING_KEY, result, { role });
@@ -258,12 +258,7 @@ export default function Register() {
               />
             </div>
 
-            {error && (
-              <p className="bk-alert bk-field--wide" role="alert">
-                <TriangleAlert size={16} />
-                {translateText(error)}
-              </p>
-            )}
+            {error && <PhoneAuthAlert message={error} />}
 
             <button
               className="bk-primary bk-field--wide"

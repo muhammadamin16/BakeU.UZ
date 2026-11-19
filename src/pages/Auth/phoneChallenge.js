@@ -1,3 +1,5 @@
+export const BOT_API_REQUIRED = "Для подтверждения через Telegram подключите BakeU Bot API.";
+
 export function readPhoneChallenge(key) {
   try {
     const record = JSON.parse(sessionStorage.getItem(key) || "null");

@@ -8,7 +8,8 @@ import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
 import PhoneInput from "../PhoneInput";
 import PhoneVerification from "../PhoneVerification";
-import { readPhoneChallenge, savePhoneChallenge } from "../phoneChallenge";
+import PhoneAuthAlert from "../PhoneAuthAlert";
+import { BOT_API_REQUIRED, readPhoneChallenge, savePhoneChallenge } from "../phoneChallenge";
 import { completeUzPhone, uzPhoneDigits } from "../uzPhone";
 
 const PENDING_KEY = "bakeu-telegram-pending-login";
@@ -29,7 +30,7 @@ export default function Login() {
     const number = completeUzPhone(phone);
     if (busy) return;
     if (!number) return setError("Введите номер в формате +998 XX XXX XX XX.");
-    if (!accountApiEnabled) return setError("Для подтверждения через Telegram подключите BakeU Bot API.");
+    if (!accountApiEnabled) return setError(BOT_API_REQUIRED);
 
     setBusy(true);
     setError("");
@@ -86,7 +87,7 @@ export default function Login() {
                 setError("");
               }} invalid={Boolean(error)} />
             </div>
-            {error && <p className="bk-alert" role="alert">{t(error)}</p>}
+            {error && <PhoneAuthAlert message={error} />}
             <button className="bk-primary" type="submit" disabled={busy}>
               {t("Отправить код")}
               {busy ? <Loader2 size={18} className="bk-spin" aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
