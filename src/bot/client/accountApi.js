@@ -79,8 +79,10 @@ export async function saveServerProfile(profile) {
   const result = await request("/auth/me", "PATCH", profile);
   return cache(result);
 }
-export async function applyForShop(data) {
-  return request("/shop/apply", "POST", data);
+export async function openSellerShop(data) {
+  const result = await request("/shop/open", "POST", data);
+  cache(result);
+  return result;
 }
 
 export async function getServerProfile() {
