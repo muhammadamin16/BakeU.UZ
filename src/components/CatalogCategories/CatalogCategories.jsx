@@ -62,6 +62,9 @@ export default function CatalogCategories({ products, value, onChange }) {
     <div className="catalog-categories" role="group" aria-label={t("Категории товаров")}>
       <div className="catalog-categories__options">
         {shownInPreview.map(renderOption)}
+        <div id={extraId} className="catalog-categories__options catalog-categories__extra" hidden={!expanded}>
+          {expanded && extra.map(renderOption)}
+        </div>
         {extra.length > 0 && (
           <button
             type="button"
@@ -74,9 +77,6 @@ export default function CatalogCategories({ products, value, onChange }) {
             <ChevronDown size={17} aria-hidden="true" />
           </button>
         )}
-      </div>
-      <div id={extraId} className="catalog-categories__options" hidden={!expanded}>
-        {expanded && extra.map(renderOption)}
       </div>
     </div>
   );

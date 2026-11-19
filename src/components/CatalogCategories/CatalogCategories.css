@@ -12,6 +12,10 @@
   width: 100%;
 }
 
+.catalog-categories__extra {
+  flex-basis: 100%;
+}
+
 .catalog-categories__options[hidden] {
   display: none;
 }
