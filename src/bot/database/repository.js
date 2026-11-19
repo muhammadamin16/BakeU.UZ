@@ -155,6 +155,22 @@ export function createRepository(db) {
       application(
         db.prepare("SELECT * FROM applications WHERE user_id=?").get(id),
       ),
+    applyForShop: (userId, shop, address) =>
+      transaction(db, () => {
+        const owner = api.user(userId);
+        if (!owner || owner.role !== "client")
+          return { invalidRole: true };
+        const existing = api.applicationForUser(userId);
+        if (existing && existing.status !== "Отклонено")
+          return { application: existing, existing: true };
+        if (existing) db.prepare("DELETE FROM applications WHERE user_id=?").run(userId);
+        const now = new Date().toISOString();
+        const id = randomUUID();
+        db.prepare(
+          "INSERT INTO applications(id,user_id,shop,address,created_at) VALUES(?,?,?,?,?)",
+        ).run(id, userId, shop, address, now);
+        return { application: api.application(id), existing: false };
+      }),
     decide: (id, status, adminId, reason = "") =>
       transaction(db, () => {
         const a = api.application(id);
@@ -164,6 +180,14 @@ export function createRepository(db) {
         db.prepare(
           "UPDATE applications SET status=?,reason=?,decided_by=?,decided_at=? WHERE id=?",
         ).run(status, reason, String(adminId), new Date().toISOString(), id);
+        if (status === "Одобрено") {
+          const owner = api.user(a.userId);
+          if (owner && owner.role === "client") {
+            const promoted = { ...owner, role: "seller", company: a.shop, location: a.address };
+            db.prepare("UPDATE users SET role=?,profile=? WHERE id=?")
+              .run("seller", JSON.stringify(promoted), a.userId);
+          }
+        }
         return { application: api.application(id), changed: true };
       }),
     listUsers: (role, page = 0) =>
