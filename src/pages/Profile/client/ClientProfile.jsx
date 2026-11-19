@@ -82,7 +82,7 @@ export default function ClientProfile({
       return;
     }
     if (!shopForm.firstName.trim() || !shopForm.lastName.trim() || !shopForm.phone.trim() || !shopForm.shop.trim() || !shopForm.address.trim()) {
-      setNotice("Заполните все поля заявки.");
+      setNotice("Заполните все обязательные поля.");
       return;
     }
     setShopBusy(true);
@@ -101,7 +101,7 @@ export default function ClientProfile({
       onBecomeSeller?.(result.user);
       setNotice("Магазин открыт!");
     } catch (error) {
-      setNotice(error.message || "Не удалось отправить заявку.");
+      setNotice(error.message || "Не удалось открыть магазин.");
     } finally {
       setShopBusy(false);
     }
@@ -115,7 +115,7 @@ export default function ClientProfile({
       <button type="button" className="cu-row" onClick={action}>
         <Icon size={20} />
         <span>{translateText(label)}</span>
-        {translateText(extra)}
+        {extra}
         <ChevronRight size={17} />
       </button>
     );
@@ -341,23 +341,10 @@ export default function ClientProfile({
                   )}
                 </section>
                 <section className="cu-card cu-mobile-menu">
-                  {translateText(
-                    row("Мои заказы", ShoppingBag, () => setSection("orders")),
-                  )}
-                  {translateText(
-                    row("Избранное", Heart, () => setSection("favorites")),
-                  )}
-                  {row(
-                    "Сообщения",
-                    MessageCircle,
-                    () => setSection("messages"),
-                    unread > 0 ? (
-                      <b className="cu-count">{translateText(unread)}</b>
-                    ) : null,
-                  )}
-                  {translateText(
-                    row("Мои отзывы", Star, () => setSection("reviews")),
-                  )}
+                  {row("Мои заказы", ShoppingBag, () => setSection("orders"))}
+                  {row("Избранное", Heart, () => setSection("favorites"))}
+                  {row("Сообщения", MessageCircle, () => setSection("messages"), unread > 0 ? <b className="cu-count">{unread}</b> : null)}
+                  {row("Мои отзывы", Star, () => setSection("reviews"))}
                 </section>
                 <section className="cu-card">
                   <div className="cu-card-title">
@@ -458,27 +445,11 @@ export default function ClientProfile({
                 </section>
                 <section className="cu-card cu-settings">
                   <h2>{translateText("Настройки аккаунта")}</h2>
-                  {translateText(
-                    row("Личные данные", UserRound, () =>
-                      setSection("settings"),
-                    ),
-                  )}
-                  {translateText(
-                    row("Телефон и email", Mail, () => setSection("settings")),
-                  )}
-                  {translateText(
-                    row("Любимые магазины", Store, () =>
-                      setSection("following"),
-                    ),
-                  )}
-                  {translateText(
-                    row("Мои отзывы", Star, () => setSection("reviews")),
-                  )}
-                  {translateText(
-                    row("Безопасность", ShieldCheck, () =>
-                      setSection("security"),
-                    ),
-                  )}
+                  {row("Личные данные", UserRound, () => setSection("settings"))}
+                  {row("Телефон и email", Mail, () => setSection("settings"))}
+                  {row("Любимые магазины", Store, () => setSection("following"))}
+                  {row("Мои отзывы", Star, () => setSection("reviews"))}
+                  {row("Безопасность", ShieldCheck, () => setSection("security"))}
                 </section>
               </div>
             </div>
