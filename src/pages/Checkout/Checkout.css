@@ -2,8 +2,6 @@
   --ck-ink: #472e25;
   --ck-muted: #7e6559;
   color: var(--ck-ink);
-  width: min(1200px, 100%);
-  margin: 0 auto;
   padding: 22px 0 calc(130px + env(safe-area-inset-bottom));
 }
 .ck-page *,

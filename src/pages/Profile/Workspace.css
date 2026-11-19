@@ -470,8 +470,6 @@
 /* Account workspace: shared responsive messaging and activity */
 .bw-page {
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
   --bw-glass: linear-gradient(125deg, #ffffffb0, #fff3e65c);
 }
 .bw-page button,
@@ -869,12 +867,14 @@
 }
 @media (max-width: 800px) {
   .bw-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .bw-sidebar {
     position: static;
+    align-self: stretch;
+    min-width: 0;
     flex-direction: row;
-    overflow: auto;
+    overflow-x: auto;
     scrollbar-width: none;
     align-items: center;
   }

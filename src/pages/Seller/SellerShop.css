@@ -543,7 +543,7 @@
 }
 .seller-shop-page .shop-chat-window {
   position: fixed;
-  right: max(20px, calc((100vw - 1280px) / 2));
+  right: calc(max(0px, (100% - var(--site-max-width)) / 2) + var(--container-padding));
   bottom: calc(118px + env(safe-area-inset-bottom, 0px));
   z-index: 1100;
   width: 410px;

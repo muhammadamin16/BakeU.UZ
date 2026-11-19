@@ -3,8 +3,6 @@
   --pd-accent: #b85d24;
   color: var(--pd-ink);
   padding: 26px 0 140px;
-  max-width: 1240px;
-  margin: auto;
 }
 .pd-page * {
   box-sizing: border-box;
@@ -40,7 +38,7 @@
 }
 .pd-top {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
   align-items: start;
 }
