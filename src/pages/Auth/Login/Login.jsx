@@ -15,8 +15,8 @@ import {
 import { loginLocal } from "../../../store/localAccount";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
-import PhoneInput, { completeUzPhone } from "../PhoneInput";
-import "../Auth.css";
+import PhoneInput from "../PhoneInput";
+import { completeUzPhone } from "../uzPhone";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export default function Login() {
   return (
     <AuthShell>
       <header className="bk-head">
-        <h1>{translateText("С возвращением")}</h1>
+        <h1 id="bk-auth-title">{translateText("С возвращением")}</h1>
         <p>
           {translateText(
             "Войдите, чтобы продолжить покупки и управлять профилем.",

@@ -30,8 +30,8 @@ import {
 
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
-import PhoneInput, { completeUzPhone } from "../PhoneInput";
-import "../Auth.css";
+import PhoneInput from "../PhoneInput";
+import { completeUzPhone } from "../uzPhone";
 
 const EMPTY = {
   firstName: "",
@@ -149,7 +149,7 @@ export default function Register() {
 
   async function confirmCode(event) {
     event.preventDefault();
-    if (busy || !pendingToken) return;
+    if (busy || !pendingToken || verificationCode.length !== 6) return;
     setBusy(true);
     setError("");
     try {
@@ -164,16 +164,19 @@ export default function Register() {
   }
 
   return (
-    <AuthShell wide={step !== 1}>
-      <div className="bk-progress" aria-hidden="true">
-        <span className="is-done" />
-        <span className={step !== 1 ? "is-done" : ""} />
-      </div>
+    <AuthShell>
+      <ol className="bk-progress" aria-label={translateText("Этапы регистрации")}>
+        {["Тип аккаунта", "Ваши данные", "Подтверждение телефона"].map((label, index) => (
+          <li key={label} className={index < step ? "is-done" : undefined} aria-current={index + 1 === step ? "step" : undefined}>
+            {translateText(label)}
+          </li>
+        ))}
+      </ol>
 
       {step === 1 ? (
         <>
           <header className="bk-head">
-            <h1>{translateText("Создать аккаунт")}</h1>
+            <h1 id="bk-auth-title">{translateText("Создать аккаунт")}</h1>
             <p>{translateText("Как вы планируете использовать BakeU?")}</p>
           </header>
 
@@ -183,14 +186,8 @@ export default function Register() {
             aria-label={translateText("Тип аккаунта")}
           >
             {ROLES.map(({ id, icon: Icon, title, text }) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={role === id}
-                className={`bk-role ${role === id ? "is-selected" : ""}`}
-                onClick={() => setRole(id)}
-              >
+              <label key={id} className="bk-role">
+                <input type="radio" name="account-role" value={id} checked={role === id} onChange={() => setRole(id)} />
                 <span className="bk-role__icon">
                   <Icon size={20} />
                 </span>
@@ -201,7 +198,7 @@ export default function Register() {
                 <span className="bk-role__check">
                   <Check size={13} strokeWidth={3} />
                 </span>
-              </button>
+              </label>
             ))}
           </div>
 
@@ -217,7 +214,7 @@ export default function Register() {
       ) : step === 3 ? (
         <>
           <header className="bk-head">
-            <h1>{translateText("Подтверждение телефона")}</h1>
+            <h1 id="bk-auth-title">{translateText("Подтверждение телефона")}</h1>
             <p>{translateText("Откройте Telegram, нажмите Start, поделитесь своим номером и введите код из бота.")}</p>
           </header>
           {botUrl && (
@@ -241,7 +238,10 @@ export default function Register() {
                   pattern="[0-9]{6}"
                   placeholder="000000"
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) => {
+                    setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    setError("");
+                  }}
                   required
                 />
               </div>
@@ -254,6 +254,7 @@ export default function Register() {
           <button
             className="bk-restart-registration"
             type="button"
+            disabled={busy}
             onClick={() => {
               sessionStorage.removeItem(PENDING_KEY);
               setPendingToken("");
@@ -263,7 +264,7 @@ export default function Register() {
               setStep(2);
             }}
           >
-            {translateText("Отправить новый код")}
+            {translateText("Изменить данные")}
           </button>
         </>
       ) : (
@@ -280,7 +281,7 @@ export default function Register() {
               <ArrowLeft size={15} />
               {translateText(" Назад")}
             </button>
-            <h1>
+            <h1 id="bk-auth-title">
               {translateText(isSeller ? "Данные продавца" : "Ваши данные")}
             </h1>
             <p>
