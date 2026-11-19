@@ -85,9 +85,17 @@ export default function Profile() {
   return (
     <main className="bw-page">
       {serverError && (
-        <p className="bw-demo" role="status">
+        <div className="bw-demo" role="alert">
           {translateText(serverError)}
-        </p>
+          {/сессия|войдите|401/i.test(serverError) && (
+            <button type="button" className="bw-btn" onClick={() => {
+              clearSession();
+              navigate("/login?returnTo=%2Fprofile", { replace: true });
+            }}>
+              {translateText("Войти снова")}
+            </button>
+          )}
+        </div>
       )}
       <p className="bw-demo">
         {translateText(
