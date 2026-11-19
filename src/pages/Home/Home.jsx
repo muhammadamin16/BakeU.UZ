@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Check,
-  MapPin, Plus, Search, ShoppingBag, Sparkles, X,
+  MapPin, Minus, Plus, Search, ShoppingBag, Sparkles, X,
 } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale, matchesLocalizedSearch, translateText } from "../../i18n/index.js";
@@ -26,7 +26,8 @@ const MAKERS = [
   { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
 ];
 
-function ProductCard({ product, quantity, onAdd }) {
+function ProductCard({ product, quantity, onAdd, onDecrease }) {
+  const addRef = useRef(null);
   const productUrl = `/product/${encodeURIComponent(product.id)}`;
   const sellerUrl = `/profile?shop=${encodeURIComponent(product.sellerId ?? "")}`;
   return (
@@ -50,9 +51,37 @@ function ProductCard({ product, quantity, onAdd }) {
           <span className="bu-product__price">
             {Number(product.price || 0).toLocaleString(getLocale())} <small>{translateText("сум")}</small>
           </span>
-          <button className="bu-product__add" type="button" onClick={() => onAdd(product)} aria-label={translateText(`Добавить в корзину: ${product.name}`)}>
-            <Plus size={20} strokeWidth={2} aria-hidden="true" />
-          </button>
+          <div className="bu-product__stepper">
+            {quantity > 0 && (
+              <>
+                <button
+                  className="bu-product__add"
+                  type="button"
+                  aria-label={translateText(`Уменьшить количество: ${product.name}`)}
+                  onClick={() => {
+                    if (quantity === 1) addRef.current?.focus();
+                    onDecrease(product.id);
+                  }}
+                >
+                  <Minus size={17} aria-hidden="true" />
+                </button>
+                <output aria-label={translateText("В корзине:")}>{quantity}</output>
+              </>
+            )}
+            <button
+              ref={addRef}
+              className="bu-product__add"
+              type="button"
+              onClick={() => onAdd(product)}
+              aria-label={translateText(
+                quantity > 0
+                  ? `Увеличить количество: ${product.name}`
+                  : `Добавить в корзину: ${product.name}`,
+              )}
+            >
+              <Plus size={17} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
     </article>
@@ -67,6 +96,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const [limit, setLimit] = useState(PAGE_SIZE);
   const catalogRef = useRef(null);
   const add = useCartStore((state) => state.add);
+  const decrease = useCartStore((state) => state.decrease);
   const items = useCartStore((state) => state.items);
 
   useEffect(() => {
@@ -175,7 +205,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
           <>
             <div className="bu-products">
               {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} />
+                <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} onDecrease={decrease} />
               ))}
             </div>
 

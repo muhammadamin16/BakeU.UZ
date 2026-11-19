@@ -46,6 +46,7 @@ export default function TopBanner({ onCategoryClick }) {
   );
   const [ctaFocused, setCtaFocused] = useState(false);
   const isPlaying = canAutoplay && !ctaFocused;
+  const activeIndex = currentIndex % slides.length;
 
   const currentRef = useRef(0);
   const movingRef = useRef(false);
@@ -112,7 +113,7 @@ export default function TopBanner({ onCategoryClick }) {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isPlaying, currentIndex, moveTo]);
+  }, [isPlaying, activeIndex, moveTo]);
 
   const handleTransitionEnd = (event) => {
     if (event.target !== event.currentTarget) return;
@@ -239,7 +240,18 @@ export default function TopBanner({ onCategoryClick }) {
           );
         })}
       </div>
-
+      <div className="top-banner__progress" aria-hidden="true">
+        {slides.map((slide, index) => (
+          <span key={slide.id} className="top-banner__progress-track">
+            {index === activeIndex && (
+              <span
+                className={isPlaying ? "top-banner__progress-fill is-playing" : "top-banner__progress-fill"}
+                style={{ animationDuration: `${AUTO_DELAY}ms` }}
+              />
+            )}
+          </span>
+        ))}
+      </div>
     </section>
   );
 }

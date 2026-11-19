@@ -66,7 +66,7 @@
   width: min(100%, 690px);
   min-width: 0;
   max-height: 100%;
-  padding: 24px var(--banner-inset);
+  padding: 24px var(--banner-inset) 44px;
   overflow-wrap: anywhere;
   overflow-y: auto;
   font-size: clamp(1.75rem, 4vw, 3.5rem);
@@ -106,6 +106,40 @@
 
 .top-banner__cta svg {
   flex: none;
+}
+
+.top-banner__progress {
+  position: absolute;
+  inset: auto var(--banner-inset) 20px;
+  display: flex;
+  gap: 7px;
+  pointer-events: none;
+}
+
+.top-banner__progress-track {
+  width: 34px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ffffff60;
+}
+
+.top-banner__progress-fill {
+  display: block;
+  height: 100%;
+  background: #fff;
+  transform-origin: left;
+}
+
+.top-banner__progress-fill.is-playing {
+  animation-name: top-banner-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+@keyframes top-banner-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 @media (max-width: 640px) {

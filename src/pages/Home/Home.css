@@ -337,6 +337,7 @@
 }
 .bu-product__bottom {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -354,6 +355,21 @@
   letter-spacing: 0;
   color: #9a8170;
 }
+.bu-product__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.bu-product__stepper output {
+  min-width: 1.5ch;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
 .bu-product__add {
   display: grid;
   place-items: center;
