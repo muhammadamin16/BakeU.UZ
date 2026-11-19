@@ -1,6 +1,7 @@
 :root[data-season="winter"] {
-  --bg: #edf3ec;
-  --nav-space: 112px;
+  --bg: #f1e4ee;
+  --container-width: 1200px;
+  --nav-space: 145px;
 }
 
 [data-season="winter"] body,
@@ -8,30 +9,645 @@
   background: transparent;
 }
 
+/* Қишки фон */
 .winter-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(180deg, #f5f8f0b8, #edf3ec5e), url("/images/winter/frosted-grove.webp") center / cover no-repeat, #edf3ec;
+
+  background-color: #f1e4ee;
+  background-image:
+    linear-gradient(115deg, #c9c9ed22, transparent 70%),
+    url("/images/winter/background.png");
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+/* Қор парчалари */
+.winter-snowfall {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.winter-snowfall span {
+  position: absolute;
+  top: -40px;
+  color: #fff;
+  opacity: 0.65;
+  text-shadow: 0 1px 5px #a4a3c733;
+  animation: winter-snowfall linear infinite;
+}
+
+@keyframes winter-snowfall {
+  from {
+    transform: translate3d(0, -40px, 0) rotate(0deg);
+  }
+
+  to {
+    transform:
+      translate3d(24px, calc(100vh + 80px), 0)
+      rotate(90deg);
+  }
+}
+
+/* Header ва логотип */
+[data-season="winter"] .bakeu-header {
+  padding-top: 20px;
+  padding-bottom: 15px;
+}
+
+[data-season="winter"] .bakeu-header__logo-image {
+  width: 185px;
+  height: 75px;
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: normal;
+  content: url("/images/logo-bear.png");
 }
 
 [data-season="winter"] .bakeu-header-shell.is-scrolled {
-  background: #f3f7efed;
+  background: #f7edf0c7;
 }
 
-[data-season="winter"] #root .bottom-nav-shell--centered .bottom-nav {
-  background: #f5f9f2ed;
+/* Пастки навигация */
+[data-season="winter"] .bottom-nav-shell {
+  width: min(700px, calc(100% - 28px));
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+}
+
+[data-season="winter"] .bottom-nav-shell .bottom-nav {
+  width: calc(100% - 116px);
+  z-index: 0;
+  background: linear-gradient(150deg, #fff6f5ee, #f8e3e6e8);
+  border: 1px solid #fff;
+  box-shadow:
+    inset 0 2px 0 #fff,
+    0 8px 28px #9e7c9230;
+}
+
+/* Навбар устидаги қор */
+[data-season="winter"] .bottom-nav::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 4%;
+  right: 3%;
+  height: 22px;
+  border-radius: 15px 15px 8px 8px;
+
+  background:
+    radial-gradient(
+      ellipse 12% 9px at 9% 11px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 20% 7px at 36% 11px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 13% 8px at 68% 11px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 10% 11px at 90% 11px,
+      #fff 96%,
+      transparent 100%
+    ),
+    linear-gradient(
+      transparent 10px,
+      #fff 10px,
+      #f5f6ff
+    );
+
+  box-shadow:
+    inset 0 -3px 5px #d8d9ef8c,
+    0 -1px 5px #fff;
+
+  pointer-events: none;
+}
+
+/* Совғали айиқча */
+[data-season="winter"] .bottom-nav-shell .bottom-nav__mascot {
+  content: url("/images/bear.png");
+  right: 60px;
+  bottom: 11px;
+  width: 148px;
+  height: 148px;
+  z-index: 1;
 }
 
 [data-season="winter"] .bottom-nav__indicator {
-  background: linear-gradient(145deg, #fdfef9, #ccded1);
+  background: linear-gradient(#ffe8b8d9, #ffb854d9);
 }
 
-[data-season="winter"] .bottom-nav-shell--centered .bottom-nav__link {
-  color: #40594b;
+/* Бош саҳифа */
+[data-season="winter"] .bu-home {
+  --bu-ink: #45261e;
+  --bu-accent: #b83c1d;
+  --bu-muted: #80645d;
 }
 
-[data-season="winter"] .bottom-nav-shell--centered .bottom-nav__link.is-active {
-  color: #224b36;
+/* Асосий баннер */
+[data-season="winter"] .bu-home .bu-hero {
+  position: relative;
+  overflow: visible;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 28px;
+  padding: 32px 30px 34px 70px;
+  margin-top: 10px;
+  border: 2px solid #ffffffe6;
+  border-radius: 30px;
+  background: linear-gradient(115deg, #fff2eddb, #ffe2ded6);
+
+  box-shadow:
+    inset 0 1px 8px #fff,
+    0 10px 30px #a388a51f;
+}
+
+/* Баннер устидаги қор */
+[data-season="winter"] .bu-home .bu-hero::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: -15px;
+  height: 28px;
+  border-radius: 18px 18px 10px 10px;
+
+  background:
+    radial-gradient(
+      ellipse 9% 13px at 7% 17px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 13% 8px at 26% 17px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 10% 11px at 49% 17px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 13% 9px at 72% 17px,
+      #fff 96%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 9% 14px at 94% 17px,
+      #fff 96%,
+      transparent 100%
+    ),
+    linear-gradient(
+      transparent 15px,
+      #fff 15px,
+      #f1f2fc
+    );
+
+  box-shadow:
+    inset 0 -4px 6px #d9daf28c,
+    0 -2px 5px #ffffffa6;
+
+  pointer-events: none;
+}
+
+/* Баннер чапидаги қорбобо */
+[data-season="winter"] .bu-home .bu-hero::after {
+  content: "";
+  position: absolute;
+  left: -34px;
+  bottom: -8px;
+  width: 120px;
+  height: 155px;
+  background:
+    url("/images/winter/snowman.png")
+    bottom / contain no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+[data-season="winter"] .bu-home .bu-hero h1 {
+  font-family: Arial, sans-serif;
+  font-size: clamp(29px, 3.3vw, 43px);
+  font-weight: 800;
+  letter-spacing: -1.4px;
+}
+
+[data-season="winter"] .bu-home .bu-hero__description {
+  color: #60473f;
+}
+
+[data-season="winter"] .bu-home .bu-eyebrow {
+  color: #76594c;
+  font-size: 9px;
+}
+
+/* Олтинранг тугмалар */
+[data-season="winter"] .bu-home .bu-button--primary,
+[data-season="winter"] .bu-home .bu-category.is-active,
+[data-season="winter"] .bu-home .bu-product__add {
+  background: linear-gradient(#ffda6f, #ffad23);
+  border: 1px solid #ffe2a2;
+  color: #4f2b0f;
+
+  box-shadow:
+    inset 0 2px 3px #fff5,
+    0 5px 12px #edaa4233;
+}
+
+[data-season="winter"] .bu-home .bu-button--secondary {
+  background: #fff8f3cf;
+  border-color: white;
+}
+
+/* Баннердаги торт ва печенье */
+[data-season="winter"] .bu-home .bu-hero__gallery {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 12px;
+  height: 248px;
+  padding-bottom: 25px;
+}
+
+[data-season="winter"] .bu-home .bu-feature {
+  border: 5px solid #fff;
+  box-shadow: 0 7px 18px #94694d1f;
+}
+
+[data-season="winter"] .bu-home .bu-feature--cake {
+  height: 216px;
+  border-radius: 48px 20px 22px 22px;
+  transform: rotate(-3deg);
+}
+
+[data-season="winter"] .bu-home .bu-feature--cookie {
+  display: block;
+  height: 176px;
+  border-radius: 27px 35px 22px 22px;
+  transform: rotate(4deg);
+}
+
+[data-season="winter"] .bu-home .bu-hero__note {
+  display: block;
+}
+
+[data-season="winter"] .bu-home .bu-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 12px;
+  z-index: 1;
+  border-radius: 0 0 45% 30%;
+  background: linear-gradient(#fff, #ffffffa6);
+  pointer-events: none;
+}
+
+/* Харита панели */
+[data-season="winter"] .bu-home .bu-map {
+  position: relative;
+  margin-top: 22px;
+  border: 1px solid #fff;
+  background: linear-gradient(110deg, #ffffffbf, #f1eafa91);
+
+  box-shadow:
+    inset 0 1px 3px #fff,
+    0 6px 17px #9882a11a;
+
+  backdrop-filter: blur(12px);
+}
+
+[data-season="winter"] .bu-home .bu-map__text,
+[data-season="winter"] .bu-home .bu-map__action {
+  position: relative;
+}
+
+/* Каталог */
+[data-season="winter"] .bu-home .bu-catalog {
+  margin-top: 30px;
+}
+
+[data-season="winter"] .bu-home .bu-catalog h2 {
+  color: #48251c;
+  font-family: Arial, sans-serif;
+}
+
+[data-season="winter"] .bu-home .bu-search,
+[data-season="winter"] .bu-home .bu-category,
+[data-season="winter"] .bu-home .bu-product {
+  background: #fff8f5bd;
+  border: 1px solid #fff;
+
+  box-shadow:
+    inset 0 1px 2px #fff,
+    0 5px 15px #ac85921a;
+}
+
+/* Аввалги мавсумий безаклар */
+[data-season="winter"] .bu-home .bu-snow,
+[data-season="winter"] .bu-home .bu-winter-badge {
+  display: none;
+}
+
+/* Планшет */
+@media (max-width: 700px) {
+  [data-season="winter"] .bakeu-header {
+    padding-top: 12px;
+    padding-bottom: 8px;
+  }
+
+  [data-season="winter"] .bakeu-header__logo-image {
+    width: 160px;
+    height: 70px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 950px) {
+  :root[data-season="winter"] {
+    --container-padding: 24px;
+  }
+
+  [data-season="winter"] .bakeu-header {
+    padding-top: 10px;
+    padding-bottom: 6px;
+  }
+
+  [data-season="winter"] .bakeu-header__logo-image {
+    height: 65px;
+  }
+
+  [data-season="winter"] .bottom-nav-shell {
+    width: calc(100% - 76px);
+  }
+
+  [data-season="winter"] .bu-home .bu-hero {
+    padding: 20px 20px 24px 48px;
+    gap: 12px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero h1 {
+    font-size: 29px;
+    margin: 10px 0 8px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__description {
+    font-size: 10.5px;
+    line-height: 1.6;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__actions {
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  [data-season="winter"] .bu-home .bu-button {
+    padding: 8px 11px;
+    min-height: 36px;
+    font-size: 10.5px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__gallery {
+    height: 196px;
+    gap: 9px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature--cake {
+    height: 178px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature--cookie {
+    height: 149px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature__caption {
+    font-size: 10px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__note {
+    font-size: 12px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero::after {
+    left: -25px;
+    width: 96px;
+    height: 124px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map {
+    padding: 10px 14px;
+    margin-top: 19px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map__text strong {
+    font-size: 12px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map__text > span {
+    font-size: 10px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map__action {
+    font-size: 10px;
+    gap: 8px;
+  }
+
+  [data-season="winter"] .bu-home .bu-catalog {
+    margin-top: 22px;
+  }
+
+  [data-season="winter"] .bu-home .bu-search {
+    width: 280px;
+  }
+
+  [data-season="winter"] .bu-home .bu-search input {
+    height: 36px;
+  }
+
+  [data-season="winter"] .bu-home .bu-category {
+    min-height: 34px;
+    padding: 7px 10px;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  [data-season="winter"] .bu-home .bu-category__count {
+    min-width: 17px;
+    height: 17px;
+  }
+
+  [data-season="winter"] .bu-home .bu-category > span:first-child {
+    font-size: 14px;
+  }
+}
+
+/* Телефон */
+@media (max-width: 640px) {
+  [data-season="winter"] .bu-home .bu-hero {
+    grid-template-columns: 1fr;
+    padding: 27px 21px 28px;
+    gap: 22px;
+    margin-top: 12px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero h1 {
+    font-size: clamp(28px, 7.5vw, 38px);
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__gallery {
+    height: 190px;
+    gap: 12px;
+    padding-left: 34px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature--cake {
+    height: 153px;
+    border-radius: 26px 17px 17px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature--cookie {
+    height: 139px;
+    border-radius: 20px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero__note {
+    bottom: 0;
+    font-size: 11px;
+  }
+
+  [data-season="winter"] .bu-home .bu-feature__caption {
+    font-size: 9px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero::after {
+    left: -15px;
+    width: 76px;
+    height: 105px;
+  }
+
+  [data-season="winter"] .bu-home .bu-map {
+    margin-top: 19px;
+  }
+}
+
+@media (max-width: 480px) {
+  [data-season="winter"] .bakeu-header__logo-image {
+    width: 119px;
+    height: 57px;
+  }
+
+  [data-season="winter"] .bakeu-header {
+    gap: 8px;
+  }
+
+  [data-season="winter"] .bottom-nav-shell {
+    width: calc(100% - 0px);
+    left: 240px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  [data-season="winter"] .bottom-nav-shell .bottom-nav {
+    width: calc(100% - 72px);
+    padding: 5px;
+  }
+
+  [data-season="winter"] .bottom-nav-shell .bottom-nav__mascot {
+
+    top: -46px;
+  }
+
+  [data-season="winter"] .bottom-nav__link {
+    font-size: 9px;
+  }
+}
+
+/* Кам ҳаракатни танлаган фойдаланувчилар учун */
+@media (prefers-reduced-motion: reduce) {
+  .winter-snowfall {
+    display: none;
+  }
+}
+[data-season="winter"] .bottom-nav::before,
+[data-season="winter"] .bu-home .bu-hero::before {
+  --winter-snow-mask:
+    radial-gradient(
+      ellipse 8% 36% at 8% 70%,
+      #000 97%, transparent 100%
+    ),
+    radial-gradient(
+      ellipse 22% 52% at 27% 80%,
+      #000 97%, transparent 100%
+    ),
+    radial-gradient(
+      ellipse 18% 36% at 52% 72%,
+      #000 97%, transparent 100%
+    ),
+    radial-gradient(
+      ellipse 13% 65% at 73% 66%,
+      #000 97%, transparent 100%
+    ),
+    radial-gradient(
+      ellipse 9% 43% at 91% 78%,
+      #000 97%, transparent 100%
+    ),
+    radial-gradient(
+      ellipse 50% 36% at 50% 88%,
+      #000 97%, transparent 100%
+    );
+
+  background: linear-gradient(
+    #fff 15%,
+    #fff 65%,
+    #e8edf9e6 88%,
+    #e8edf900
+  );
+
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+
+  -webkit-mask-image: var(--winter-snow-mask);
+  mask-image: var(--winter-snow-mask);
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  pointer-events: none;
+}
+
+/* Навбардаги қор */
+[data-season="winter"] .bottom-nav::before {
+  top: -18px;
+  height: 30px;
+}
+
+/* Асосий баннердаги қор */
+[data-season="winter"] .bu-home .bu-hero::before {
+  top: -22px;
+  height: 34px;
+}
+
+/* Телефон учун */
+@media (max-width: 480px) {
+  [data-season="winter"] .bottom-nav::before {
+    top: -15px;
+    height: 25px;
+  }
+
+  [data-season="winter"] .bu-home .bu-hero::before {
+    top: -18px;
+    height: 29px;
+  }
 }

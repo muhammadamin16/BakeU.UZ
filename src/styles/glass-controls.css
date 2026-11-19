@@ -1,16 +1,16 @@
 :root {
-  --glass-control-ink: #233a32;
-  --glass-control-rest: #fafcf8;
-  --glass-control-hover: #edf4ea;
-  --glass-control-active: #dceade;
-  --glass-control-edge: #bfcec3;
-  --glass-control-selected-edge: #547763;
-  --glass-control-shadow: 0 1px 2px #233a3214;
-  --glass-control-focus: #38634c;
+  --glass-control-ink: #432015;
+  --glass-control-rest: linear-gradient(145deg, #ffffff7a, #fff8e82e);
+  --glass-control-hover: linear-gradient(145deg, #ffffffb3, #fff4df70);
+  --glass-control-active: linear-gradient(135deg, #ffffffe6, #f4c97c59);
+  --glass-control-edge: #ffffffb3;
+  --glass-control-selected-edge: #a2683b;
+  --glass-control-shadow: inset 0 1px 1px #ffffffd9, 0 4px 14px #4320150a;
+  --glass-control-focus: #944b24;
   --glass-control-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Shared action colors with room for each page's layout. */
+/* Keep each control's sizing and layout while sharing the language switcher's surface. */
 :is(#root, .bakeu-auth-overlay) :is(
   button:not(.bakeu-header__languages *, .leaflet-container *),
   input:is([type="submit"], [type="button"], [type="reset"]),
@@ -23,9 +23,11 @@
     .mini-gate > a, .ad-account)
 ) {
   background: var(--button-glass-rest, var(--glass-control-rest));
-  border-color: var(--button-glass-edge, var(--glass-control-edge));
+  border-color: var(--glass-control-edge);
   box-shadow: var(--glass-control-shadow);
   color: var(--button-glass-ink, var(--glass-control-ink));
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   -webkit-tap-highlight-color: transparent;
   transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease,
     transform 220ms var(--glass-control-ease);
@@ -69,23 +71,19 @@
   }
 }
 
-/* Use a filled surface for primary actions and a quiet surface for secondary actions. */
-:is(.bu-welcome__browse, .bu-product__add, .bu-button--primary, .bu-load-more__primary,
-  .bu-total .bu-button, .ck-button.primary, .pd-button.primary, .bw-btn.primary,
-  .ad-btn.primary, .map-geo-error__btn.is-primary, .map-btn--dark, .bk-primary,
-  .bakeu-auth-primary, .ai__send) {
-  --button-glass-ink: #fff;
-  --button-glass-rest: #285540;
-  --button-glass-hover: #1e4634;
-  --button-glass-active: #18392a;
-  --button-glass-edge: #285540;
+/* The banner puts its controls over photography and a dark overlay. */
+.top-banner {
+  --button-glass-rest: linear-gradient(145deg, #ffffff38, #fff8e821);
+  --button-glass-hover: linear-gradient(145deg, #ffffff4a, #fff8e830);
+  --button-glass-active: linear-gradient(135deg, #ffffff61, #f4c97c3d);
+  --button-glass-ink: #fffaf3;
+  --glass-control-selected-edge: #ffe7b9;
+  --glass-control-focus: #ffe7b9;
 }
 
-:is(button.danger, .bakeu-save-product[aria-pressed="true"]) {
-  --button-glass-ink: #852f28;
-  --button-glass-rest: #fff7f3;
-  --button-glass-hover: #fce7df;
-  --button-glass-active: #f7ded5;
-  --button-glass-edge: #dbaba0;
-  --glass-control-selected-edge: #a75548;
+.top-banner .top-banner__cta {
+  --button-glass-rest: linear-gradient(145deg, #ffffffe8, #fff8e8bf);
+  --button-glass-hover: linear-gradient(145deg, #fffffff2, #fff8e8d9);
+  --button-glass-active: linear-gradient(135deg, #fffffff2, #f4c97ce6);
+  --button-glass-ink: var(--glass-control-ink);
 }
