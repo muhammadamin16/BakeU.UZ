@@ -40,8 +40,8 @@ export function ShopCard({ shop, products = catalogProducts }) {
   const main = featured[0];
 
   return (
-    <article className="seller-shop seller-shop--editorial">
-      <div className="seller-shop__cover">
+    <article className="catalog-card seller-shop">
+      <div className="catalog-card__media seller-shop__cover">
         {main ? (
           <Link className="seller-shop__cover-link" to={sellerLink(shop.id)} aria-label={t(shop.name)}>
             <ProductImage product={main} />
@@ -54,7 +54,7 @@ export function ShopCard({ shop, products = catalogProducts }) {
         <span className="seller-shop__cover-count">{shopProducts.length} {t("товаров")}</span>
       </div>
 
-      <div className="seller-shop__content">
+      <div className="catalog-card__body">
         <Link className="seller-shop__top" to={sellerLink(shop.id)}>
           <ShopLogo shop={shop} />
           <div className="seller-shop__identity">

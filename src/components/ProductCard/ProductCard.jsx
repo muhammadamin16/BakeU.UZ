@@ -20,12 +20,12 @@ export function ProductImage({ product }) {
 }
 
 export default function ProductCard({ product, quantity = 0, onAdd, sellerName, sellerUrl }) {
-  const productUrl = `/product/${encodeURIComponent(product.id)}`;
+  const productUrl = `/product/${encodeURIComponent(product.productId || product.id)}`;
   const seller = t(sellerName || product.sellerName || "BakeU");
 
   return (
-    <article className="product-card">
-      <div className="product-card__image">
+    <article className="catalog-card product-card">
+      <div className="catalog-card__media product-card__image">
         <PhotoCarousel
           product={product}
           renderImage={(image) => (
@@ -43,7 +43,7 @@ export default function ProductCard({ product, quantity = 0, onAdd, sellerName, 
         </PhotoCarousel>
       </div>
 
-      <div className="product-card__body">
+      <div className="catalog-card__body product-card__body">
         <div className="product-card__meta">
           {sellerUrl ? <Link to={sellerUrl}>{seller}</Link> : <span>{seller}</span>}
           <span className="product-card__category">{t(product.category || "")}</span>
