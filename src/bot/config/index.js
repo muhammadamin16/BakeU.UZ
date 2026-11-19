@@ -68,13 +68,15 @@ export function readConfig(env = process.env, { miniApp = false } = {}) {
   }
   if (miniApp && !origins.includes(new URL(siteUrl).origin))
     origins.push(new URL(siteUrl).origin);
-  const port = Number(env.API_PORT || env.PORT || 3001),
+  // Railway supplies PORT; it must take precedence over a leftover local API_PORT.
+  const port = Number(env.PORT || env.API_PORT || 3001),
     sessionHours = Number(env.SESSION_HOURS || 24);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new ConfigError("API_PORT must be 1–65535.");
   if (!Number.isInteger(sessionHours) || sessionHours < 1 || sessionHours > 720)
     throw new ConfigError("SESSION_HOURS must be 1–720.");
-  const host = env.API_HOST || (env.RAILWAY_ENVIRONMENT ? "0.0.0.0" : "127.0.0.1"),
+  const railway = Boolean(env.RAILWAY_ENVIRONMENT || env.RAILWAY_SERVICE_ID || env.RAILWAY_PROJECT_ID);
+  const host = railway ? "0.0.0.0" : (env.API_HOST || "127.0.0.1"),
     trustProxy = env.TRUST_PROXY === "true";
   if (trustProxy && !["127.0.0.1", "::1"].includes(host))
     throw new ConfigError("TRUST_PROXY requires a loopback API_HOST.");
