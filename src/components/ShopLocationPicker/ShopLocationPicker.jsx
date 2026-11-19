@@ -110,7 +110,7 @@ export default function ShopLocationPicker({ value, onChange, id = "shop-address
       </div>}
       {expanded && <div className="bakeu-location-map">
         <MapContainer center={coords ? [coords.lat, coords.lng] : defaultCenter} zoom={coords ? 15 : 11}
-          scrollWheelZoom={false} className="bakeu-location-map-canvas">
+          scrollWheelZoom={false} attributionControl={false} className="bakeu-location-map-canvas">
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <MoveMap coords={coords}/>
@@ -118,6 +118,12 @@ export default function ShopLocationPicker({ value, onChange, id = "shop-address
           {coords && <Marker position={[coords.lat, coords.lng]} icon={pin} />}
         </MapContainer>
         <p>{t("Нажмите на карту, чтобы выбрать точное место магазина. Адрес можно написать вручную выше.")}</p>
+        <div className="bakeu-location-attribution">
+          <a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">Leaflet</a>
+          <span> | © </span>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+          <span> contributors</span>
+        </div>
       </div>}
       {value.lat != null && value.lng != null && value.lat !== "" && value.lng !== "" &&
         <p className="bakeu-location-confirm">✓ {t("Точка выбрана")}: {Number(value.lat).toFixed(5)}, {Number(value.lng).toFixed(5)}</p>}
