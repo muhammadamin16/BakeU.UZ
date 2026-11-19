@@ -23,9 +23,7 @@ body:has(.mini-gate) #root {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background:
-    linear-gradient(110deg, #fff9ef88, #f6e7ed70),
-    url("/images/winter/background.png") center 62% / cover no-repeat;
+  background: linear-gradient(110deg, #fff9ef88, #f6e7ed70);
 }
 .mini-welcome:before {
   content: "";

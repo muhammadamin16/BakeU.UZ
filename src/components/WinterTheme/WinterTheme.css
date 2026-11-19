@@ -1,57 +1,5 @@
 :root[data-season="winter"] {
-  --bg: #f1e4ee;
-  --container-width: 1200px;
   --nav-space: 145px;
-}
-
-[data-season="winter"] body,
-[data-season="winter"] #root {
-  background: transparent;
-}
-
-/* Қишки фон */
-.winter-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-
-  background-color: #f1e4ee;
-  background-image:
-    linear-gradient(115deg, #c9c9ed22, transparent 70%),
-    url("/images/winter/background.png");
-  background-position: center;
-  background-size: 100% 100%;
-}
-
-/* Қор парчалари */
-.winter-snowfall {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.winter-snowfall span {
-  position: absolute;
-  top: -40px;
-  color: #fff;
-  opacity: 0.65;
-  text-shadow: 0 1px 5px #a4a3c733;
-  animation: winter-snowfall linear infinite;
-}
-
-@keyframes winter-snowfall {
-  from {
-    transform: translate3d(0, -40px, 0) rotate(0deg);
-  }
-
-  to {
-    transform:
-      translate3d(24px, calc(100vh + 80px), 0)
-      rotate(90deg);
-  }
 }
 
 /* Header ва логотип */
@@ -572,11 +520,6 @@
 }
 
 /* Кам ҳаракатни танлаган фойдаланувчилар учун */
-@media (prefers-reduced-motion: reduce) {
-  .winter-snowfall {
-    display: none;
-  }
-}
 [data-season="winter"] .bottom-nav::before,
 [data-season="winter"] .bu-home .bu-hero::before {
   --winter-snow-mask:
