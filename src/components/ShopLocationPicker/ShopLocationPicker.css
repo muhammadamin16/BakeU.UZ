@@ -22,3 +22,41 @@
 }
 .bakeu-location-attribution a{color:#85674f;text-decoration:underline;text-underline-offset:2px}
 .bakeu-location-attribution a:hover{color:#5e351d}
+
+/* Keep required map credits legible but unobtrusive regardless of global auth styles. */
+.bakeu-location-picker .bakeu-location-map .bakeu-location-attribution{
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  position:static!important;
+  width:100%;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:2px 9px 5px!important;
+  gap:2px!important;
+  background:#fffaf4!important;
+  font-family:Arial,sans-serif!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  font-weight:400!important;
+  text-align:right!important;
+}
+.bakeu-location-picker .bakeu-location-map .bakeu-location-attribution a,
+.bakeu-location-picker .bakeu-location-map .bakeu-location-attribution span{
+  display:inline!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:0!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  font-weight:400!important;
+  letter-spacing:normal!important;
+}
+.bakeu-location-picker .bakeu-location-map .bakeu-location-attribution a{
+  color:#806b58!important;
+  text-decoration:none!important;
+}
+.bakeu-location-picker .bakeu-location-map .bakeu-location-attribution a:hover{
+  text-decoration:underline!important;
+}
