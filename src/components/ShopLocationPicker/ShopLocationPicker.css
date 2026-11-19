@@ -14,3 +14,11 @@
 .bakeu-location-suggestion{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fffaf2;border:1px solid #e8c9ac;border-radius:12px;padding:10px}
 .bakeu-location-suggestion p{flex:1 1 200px;font-size:12px;margin:0}
 @media(max-width:600px){.bakeu-location-actions button{flex:1 1 140px}.bakeu-location-map-canvas{height:245px}}
+
+.bakeu-location-attribution{
+  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+  gap:3px;padding:4px 12px 9px;font-size:10px;line-height:1.5;
+  color:#937b68;background:transparent;
+}
+.bakeu-location-attribution a{color:#85674f;text-decoration:underline;text-underline-offset:2px}
+.bakeu-location-attribution a:hover{color:#5e351d}
