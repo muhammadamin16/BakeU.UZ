@@ -13,9 +13,9 @@ function subscribe(onChange) {
 function getBatchSize() {
   if (window.matchMedia(twoColumns).matches) return 4;
   if (window.matchMedia(threeColumns).matches) return 6;
-  return 8;
+  return 10;
 }
 
 export function useProductBatchSize() {
-  return useSyncExternalStore(subscribe, getBatchSize, () => 8);
+  return useSyncExternalStore(subscribe, getBatchSize, () => 10);
 }
