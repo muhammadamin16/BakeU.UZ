@@ -603,3 +603,31 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Buyer workspace polish and shop application */
+.cu-profile-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.cu-profile-actions .bw-btn { min-width:0; }
+.cu-shop-registration { width:100%; }
+.cu-shop-registration h2 { margin:12px 0; }
+.cu-shop-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 18px; margin-top:20px; }
+.cu-shop-form-wide { grid-column:1 / -1; }
+.cu-shop-form .bw-field { min-width:0; margin:0 0 10px; }
+.cu-shop-form input[readonly] { opacity:.78; cursor:not-allowed; }
+.cu-layout .cu-identity { align-items:center; }
+.cu-layout .cu-stats { min-width:0; }
+.cu-layout .cu-card { overflow-wrap:anywhere; }
+.cu-layout { padding-bottom:34px; }
+@media (max-width:780px) {
+  .cu-shop-form { grid-template-columns:1fr; }
+  .cu-shop-form-wide { grid-column:auto; }
+  .cu-profile-actions { gap:8px; }
+  .cu-profile-actions .bw-btn { flex:1 1 170px; }
+  .cu-layout { padding-bottom:95px; }
+  .cu-stats button { padding:8px 5px; }
+  .cu-stats strong { font-size:21px; }
+}
+@media (max-width:420px) {
+  .cu-identity .cu-person { align-items:flex-start; }
+  .cu-profile-actions { flex-direction:column; align-items:stretch; }
+  .cu-profile-actions .bw-btn { flex:auto; width:100%; }
+}
