@@ -949,3 +949,9 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Allow fixed bottom navigation to clear workspace content */
+.bw-page{padding-bottom:max(160px,calc(130px + env(safe-area-inset-bottom,0px)))}
+.bw-page .bw-content,.bw-page .cu-main{min-width:0}
+.bw-page .bw-actions>a,.bw-page .bw-actions>button{white-space:normal}
+@media(max-width:780px){.bw-page{padding-bottom:max(180px,calc(140px + env(safe-area-inset-bottom,0px)))}}
