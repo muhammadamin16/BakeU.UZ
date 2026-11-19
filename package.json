@@ -21,7 +21,8 @@
     "app:parity": "npm --prefix apps/mobile run parity",
     "app:sync": "npm --prefix apps/mobile run sync",
     "app:android": "npm --prefix apps/mobile run android",
-    "app:ios": "npm --prefix apps/mobile run ios"
+    "app:ios": "npm --prefix apps/mobile run ios",
+    "deploy:check": "node scripts/check-railway-apis.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
