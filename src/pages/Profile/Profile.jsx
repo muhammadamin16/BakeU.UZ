@@ -42,6 +42,10 @@ export default function Profile() {
         const result = await getServerProfile();
         if (!cancelled) {
           setServerApplication(result.application);
+          if (result.user?.role && result.user.role !== account.role) {
+            setAccount(result.user);
+            sessionStorage.setItem("bakeu-demo-profile", JSON.stringify(result.user));
+          }
           setServerError("");
         }
       } catch (error) {
@@ -118,6 +122,8 @@ export default function Profile() {
           onLogout={logout}
           onSave={saveAccount}
           initialShop={params.get("chat")}
+          serverApplication={serverApplication}
+          onApplication={setServerApplication}
         />
       )}
     </main>
