@@ -33,6 +33,7 @@ export default function ShopLocationPicker({ value, onChange, id = "shop-address
   const [suggestion, setSuggestion] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [coords, setCoords] = useState(() =>
+    value.lat != null && value.lng != null &&
     Number.isFinite(Number(value.lat)) && Number.isFinite(Number(value.lng)) &&
     value.lat !== "" && value.lng !== "" ? { lat: Number(value.lat), lng: Number(value.lng) } : null
   );
@@ -80,7 +81,7 @@ export default function ShopLocationPicker({ value, onChange, id = "shop-address
     if (!navigator.geolocation) return setError(t("Геолокация не поддерживается."));
     setBusy(true); setError("");
     navigator.geolocation.getCurrentPosition(
-      (pos) => { onMapClick(pos.coords); setExpanded(true); setBusy(false); },
+      (pos) => { onMapClick({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setExpanded(true); setBusy(false); },
       () => { setError(t("Нет доступа к геолокации. Выберите точку на карте.")); setBusy(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
