@@ -25,6 +25,7 @@ import {
   LogOut,
   ExternalLink,
   Pencil,
+  ShoppingBag,
 } from "lucide-react";
 import {
   useShopStore,
@@ -82,8 +83,8 @@ export default function SellerProfile({ account, onLogout }) {
       telegram: "",
       instagram: "",
       address: account.location || "",
-      lat: 41.3111,
-      lng: 69.2797,
+      lat: Number.isFinite(Number(account.lat)) && account.lat != null ? Number(account.lat) : 41.3111,
+      lng: Number.isFinite(Number(account.lng)) && account.lng != null ? Number(account.lng) : 69.2797,
       open: "09:00",
       close: "20:00",
       color: "#ead9bd",
@@ -242,6 +243,10 @@ export default function SellerProfile({ account, onLogout }) {
             </p>
           </div>
           <div className="bw-actions">
+            <Link className="bw-btn" to="/seller?tab=products">
+              <ShoppingBag size={17} />
+              {translateText("Для заказа")}
+            </Link>
             {saved && (
               <Link
                 className="bw-btn"
