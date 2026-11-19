@@ -15,8 +15,7 @@ import {
 import { loginLocal } from "../../../store/localAccount";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
-import PhoneInput from "../PhoneInput";
-import { completeUzPhone } from "../uzPhone";
+import PhoneInput, { completeUzPhone } from "../PhoneInput";
 import "../Auth.css";
 
 export default function Login() {

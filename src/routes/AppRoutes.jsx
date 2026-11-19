@@ -30,7 +30,7 @@ const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
 
 const AUTH_PATHS = ["/login", "/register"];
 
-const NO_FOOTER_PREFIXES = ["/ai", "/profile", "/checkout", "/orders", "/map"];
+const NO_FOOTER_PREFIXES = ["/ai", "/profile", "/checkout", "/orders"];
 
 function matchesPath(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);
@@ -45,7 +45,7 @@ export default function AppRoutes() {
   const isHome = pathname === "/";
   const showFooter =
     !isAuthPage &&
-    !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname.toLowerCase(), base));
+    !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
   if (matchesPath(pathname, "/admin"))

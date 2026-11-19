@@ -1,10 +1,8 @@
 :root {
   --glass-control-ink: #432015;
   --glass-control-rest: linear-gradient(145deg, #ffffff7a, #fff8e82e);
-  --glass-control-hover: linear-gradient(145deg, #ffffffb3, #fff4df70);
   --glass-control-active: linear-gradient(135deg, #ffffffe6, #f4c97c59);
   --glass-control-edge: #ffffffb3;
-  --glass-control-selected-edge: #a2683b;
   --glass-control-shadow: inset 0 1px 1px #ffffffd9, 0 4px 14px #4320150a;
   --glass-control-focus: #944b24;
   --glass-control-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -12,42 +10,37 @@
 
 /* Keep each control's sizing and layout while sharing the language switcher's surface. */
 :is(#root, .bakeu-auth-overlay) :is(
-  button:not(.bakeu-header__languages *, .leaflet-container *),
-  input:is([type="submit"], [type="button"], [type="reset"]),
+  button:not(.bakeu-header__languages *, .top-banner__indicator, .leaflet-container *),
+  input[type="submit"],
   a[role="button"],
   a:is(.bu-button, .ck-button, .pd-button, .bw-btn, .map-btn, .shop-route-button,
     .bakeu-header__icon, .bake-footer__store, .bu-all-products, .bu-helper, .bu-map,
     .bu-continue, .ck-back, .ck-text-button, .seller-shop__open, .ad-btn,
-    .bu-makers__heading > a, .seller-tabs > a, .shop-contact-item,
-    .bk-telegram-open, .mini-secondary, .mini-admin-entry, .mini-welcome-footer > a,
-    .mini-gate > a, .ad-account)
+    .bu-makers__heading > a, .seller-tabs > a)
 ) {
-  background: var(--button-glass-rest, var(--glass-control-rest));
+  background: var(--glass-control-rest);
   border-color: var(--glass-control-edge);
   box-shadow: var(--glass-control-shadow);
-  color: var(--button-glass-ink, var(--glass-control-ink));
+  color: var(--glass-control-ink);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease,
+  transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease,
     transform 220ms var(--glass-control-ease);
+
+  &:is([aria-pressed="true"], [aria-selected="true"], [aria-current="page"], .is-active, .active) {
+    background: var(--glass-control-active);
+  }
 
   @media (hover: hover) {
     &:hover:not(:disabled, [aria-disabled="true"]) {
-      background: var(--button-glass-hover, var(--glass-control-hover));
+      background: var(--glass-control-active);
     }
   }
 
-  &:is([aria-pressed="true"], [aria-selected="true"], [aria-current]:not([aria-current="false"]),
-    .is-active, .active, .is-selected) {
-    background: var(--button-glass-active, var(--glass-control-active));
-    border-color: var(--glass-control-selected-edge);
-    box-shadow: var(--glass-control-shadow), inset 0 0 0 1px var(--glass-control-selected-edge);
-  }
-
   &:active:not(:disabled, [aria-disabled="true"]) {
-    background: var(--button-glass-active, var(--glass-control-active));
-    box-shadow: inset 0 1px 4px #43201540;
+    background: var(--glass-control-active);
+    box-shadow: inset 0 1px 4px #43201526;
   }
 
   &:focus-visible {
@@ -69,21 +62,4 @@
       transform: none;
     }
   }
-}
-
-/* The banner puts its controls over photography and a dark overlay. */
-.top-banner {
-  --button-glass-rest: linear-gradient(145deg, #ffffff38, #fff8e821);
-  --button-glass-hover: linear-gradient(145deg, #ffffff4a, #fff8e830);
-  --button-glass-active: linear-gradient(135deg, #ffffff61, #f4c97c3d);
-  --button-glass-ink: #fffaf3;
-  --glass-control-selected-edge: #ffe7b9;
-  --glass-control-focus: #ffe7b9;
-}
-
-.top-banner .top-banner__cta {
-  --button-glass-rest: linear-gradient(145deg, #ffffffe8, #fff8e8bf);
-  --button-glass-hover: linear-gradient(145deg, #fffffff2, #fff8e8d9);
-  --button-glass-active: linear-gradient(135deg, #fffffff2, #f4c97ce6);
-  --button-glass-ink: var(--glass-control-ink);
 }
