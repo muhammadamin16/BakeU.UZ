@@ -1,3 +1,4 @@
+import { applyForShop, accountApiEnabled } from "../../../bot/client/accountApi";
 import { translateText } from "../../../i18n/index.js";
 import "./ClientProfile.css";
 import ProfileChat from "../ProfileChat";
@@ -32,6 +33,8 @@ export default function ClientProfile({
   onLogout,
   onSave,
   initialShop,
+  serverApplication,
+  onApplication,
 }) {
   const follows = useWorkspace((s) => s.follows).filter(
     (f) => f.buyerId === accountId(account),
@@ -48,6 +51,8 @@ export default function ClientProfile({
     [section, setSection] = useState(initialShop ? "messages" : "overview"),
     [notice, setNotice] = useState(""),
     [address, setAddress] = useState("");
+  const [shopForm, setShopForm] = useState({ firstName: account.firstName || "", lastName: account.lastName || "", phone: account.phone || "", shop: "", address: "" });
+  const [shopBusy, setShopBusy] = useState(false);
   const threads = useWorkspace((s) => s.threads).filter(
     (t) => t.buyerId === accountId(account),
   );
@@ -69,6 +74,31 @@ export default function ClientProfile({
     ["addresses", "Мои адреса", MapPin],
     ["settings", "Настройки", Settings],
   ];
+  async function submitShop(event) {
+    event.preventDefault();
+    if (shopBusy) return;
+    if (!accountApiEnabled || !account.server) {
+      setNotice("Для открытия магазина войдите в серверный аккаунт BakeU.");
+      return;
+    }
+    if (!shopForm.firstName.trim() || !shopForm.lastName.trim() || !shopForm.phone.trim() || !shopForm.shop.trim() || !shopForm.address.trim()) {
+      setNotice("Заполните все поля заявки.");
+      return;
+    }
+    setShopBusy(true);
+    setNotice("");
+    try {
+      // Keep verified account contact details intact; send only shop fields to the server.
+      const result = await applyForShop({ shop: shopForm.shop.trim(), address: shopForm.address.trim() });
+      onApplication?.(result.application);
+      setNotice("Заявка отправлена. Дождитесь проверки администратором.");
+      setSection("overview");
+    } catch (error) {
+      setNotice(error.message || "Не удалось отправить заявку.");
+    } finally {
+      setShopBusy(false);
+    }
+  }
   function openConversation(shopId) {
     setChatShop(shopId);
     setSection("messages");
@@ -164,10 +194,16 @@ export default function ClientProfile({
                   account.nickname ? `@${account.nickname}` : account.email,
                 )}
               </p>
+              <div className="cu-profile-actions">
               <button className="bw-btn" onClick={() => setSection("settings")}>
                 <Pencil size={16} />
                 {translateText("Редактировать профиль")}
               </button>
+                <button type="button" className="bw-btn primary" onClick={() => setSection("open-shop")} disabled={serverApplication?.status === "На проверке" || serverApplication?.status === "Одобрено"}>
+                  <Store size={16} />
+                  {translateText(serverApplication?.status === "На проверке" ? "Магазин на проверке" : serverApplication?.status === "Одобрено" ? "Магазин одобрен" : "Открыть магазин")}
+                </button>
+              </div>
             </div>
           </div>
           <div className="cu-stats">
@@ -475,6 +511,26 @@ export default function ClientProfile({
               )}
             </section>
           </>
+        )}
+        {section === "open-shop" && (
+          <section className="cu-card cu-shop-registration">
+            <span className="cu-eyebrow">{translateText("BAKEU ДЛЯ ПРОДАВЦОВ")}</span>
+            <h2><Store size={22} /> {translateText("Открыть свой магазин")}</h2>
+            <p>{translateText("Заполните заявку. После проверки администратором ваш аккаунт станет аккаунтом продавца. Покупательские данные сохранятся.")}</p>
+            {serverApplication?.status === "На проверке" || serverApplication?.status === "Одобрено" ? (
+              <p role="status">{translateText(`Заявка: ${serverApplication.status}`)}</p>
+            ) : (
+              <form className="cu-shop-form" onSubmit={submitShop}>
+                <label className="bw-field"><span>{translateText("Имя")}</span><input autoComplete="given-name" required value={shopForm.firstName} onChange={e => setShopForm(s => ({...s, firstName: e.target.value}))} /></label>
+                <label className="bw-field"><span>{translateText("Фамилия")}</span><input autoComplete="family-name" required value={shopForm.lastName} onChange={e => setShopForm(s => ({...s, lastName: e.target.value}))} /></label>
+                <label className="bw-field"><span>{translateText("Название магазина")}</span><input required minLength={2} maxLength={150} value={shopForm.shop} onChange={e => setShopForm(s => ({...s, shop: e.target.value}))} placeholder={translateText("Например, Домашние торты")} /></label>
+                <label className="bw-field"><span>{translateText("Номер телефона")}</span><input required type="tel" autoComplete="tel" readOnly value={shopForm.phone} title={translateText("Подтверждённый номер аккаунта")} /></label>
+                <label className="bw-field cu-shop-form-wide"><span>{translateText("Адрес магазина")}</span><input required minLength={2} maxLength={250} value={shopForm.address} onChange={e => setShopForm(s => ({...s, address: e.target.value}))} placeholder={translateText("Город, район, улица")} /></label>
+                <p className="cu-shop-form-wide">{translateText("Имя и номер телефона используются из вашего подтверждённого аккаунта. Изменить их можно в настройках профиля.")}</p>
+                <button className="bw-btn primary cu-shop-form-wide" type="submit" disabled={shopBusy}>{translateText(shopBusy ? "Отправляем заявку…" : "Отправить заявку на открытие")}</button>
+              </form>
+            )}
+          </section>
         )}
         {section === "favorites" && (
           <section className="cu-card">
