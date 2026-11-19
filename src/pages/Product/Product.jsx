@@ -1,8 +1,9 @@
-import { translateText } from "../../i18n/index.js";
+import { getLocale, translateText } from "../../i18n/index.js";
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  ArrowUpRight,
   ShoppingBag,
   Minus,
   Plus,
@@ -29,7 +30,7 @@ import {
   fieldLabels,
 } from "./productDetails";
 import "./Product.css";
-const money = (n) => new Intl.NumberFormat("ru-RU").format(n) + " сум";
+const money = (n) => new Intl.NumberFormat(getLocale()).format(n) + " сум";
 export default function Product() {
   const { id } = useParams();
   return <ProductView key={id} id={id} />;
@@ -43,9 +44,9 @@ function ProductView({ id }) {
   const reviews = useWorkspace((s) => s.reviews).filter(
     (r) => r.productId === id,
   );
-  const navigate = useNavigate();
-  const [variantId, setVariantId] = useState(""),
-    [notice, setNotice] = useState("");
+  const [variantId, setVariantId] = useState("");
+  const [notice, setNotice] = useState("");
+  const [followNotice, setFollowNotice] = useState("");
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -78,6 +79,8 @@ function ProductView({ id }) {
       (f) => f.buyerId === accountId(account) && f.shopId === p.shopId,
     );
   const specs = { ...p, ...variant };
+  const visibleFields = categoryFields(p.category).filter((key) => specs[key]);
+  const shopPath = shop ? "/seller?shop=" + encodeURIComponent(shop.id) : null;
   const related = products
     .filter(
       (x) =>
@@ -86,16 +89,16 @@ function ProductView({ id }) {
     .slice(0, 3);
   function follow() {
     if (!account) {
-      setNotice("Войдите в аккаунт, чтобы подписаться на магазин.");
+      setFollowNotice("Войдите в аккаунт, чтобы подписаться на магазин.");
       return;
     }
     try {
       followShop(account, p.shopId);
-      setNotice(
+      setFollowNotice(
         following ? "Вы отписались от магазина." : "Вы подписались на магазин.",
       );
     } catch {
-      setNotice("Не удалось сохранить подписку.");
+      setFollowNotice("Не удалось сохранить подписку.");
     }
   }
   function add() {
@@ -117,8 +120,30 @@ function ProductView({ id }) {
         <span>{translateText(p.category)}</span>
       </nav>
       <div className="pd-top">
+        <div className="pd-heading">
+          <div className="pd-meta">
+            <span>{translateText(p.category)}</span>
+            <span className="pd-stock" data-available={p.available !== false}>
+              {translateText(p.available === false ? "Нет в наличии" : "Доступен к заказу")}
+            </span>
+          </div>
+          <h1>{translateText(p.name)}</h1>
+          {shop && (
+            <Link className="pd-shop-link" to={shopPath}>
+              <Store size={15} aria-hidden="true" />
+              {translateText(shop.name)}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </Link>
+          )}
+          <p className="pd-description">
+            {translateText(
+              p.description || "Подробности о составе и приготовлении уточняйте у продавца.",
+            )}
+          </p>
+        </div>
+
         <section
-          className="pd-gallery"
+          className="pd-panel pd-gallery"
           aria-label={translateText("Фотографии товара")}
         >
           <PhotoCarousel
@@ -129,30 +154,15 @@ function ProductView({ id }) {
             <FavoriteButton product={p} />
           </PhotoCarousel>
         </section>
+
         <section className="pd-panel pd-buy">
-          <span className="pd-kicker">
-            {translateText(p.category)} ·{" "}
-            {translateText(
-              p.available === false ? "Нет в наличии" : "Доступен к заказу",
-            )}
-          </span>
-          <h1>{translateText(p.name)}</h1>
-          {shop && (
-            <Link
-              className="pd-shop-link"
-              to={"/seller?shop=" + encodeURIComponent(shop.id)}
-            >
-              <Store size={17} />
-              {translateText(shop.name)}
-              <span>{translateText("Открыть магазин →")}</span>
-            </Link>
-          )}
-          <p className="pd-description">
-            {translateText(
-              p.description ||
-                "Подробности о составе и приготовлении уточняйте у продавца.",
-            )}
-          </p>
+          <div className="pd-price">
+            <strong>{translateText(money(selection.price))}</strong>
+            <span>
+              {translateText("за ")}
+              {translateText(variant?.label || p.unit || "1 шт.")}
+            </span>
+          </div>
           {p.variants.length > 0 && (
             <fieldset className="pd-options">
               <legend>{translateText("Выберите вариант")}</legend>
@@ -161,7 +171,10 @@ function ProductView({ id }) {
                   type="button"
                   key={v.id}
                   aria-pressed={variant?.id === v.id}
-                  onClick={() => setVariantId(v.id)}
+                  onClick={() => {
+                    setVariantId(v.id);
+                    setNotice("");
+                  }}
                 >
                   {translateText(v.label)}
                   <small>{translateText(money(v.price))}</small>
@@ -169,23 +182,6 @@ function ProductView({ id }) {
               ))}
             </fieldset>
           )}
-          <dl className="pd-specs">
-            {categoryFields(p.category)
-              .filter((k) => specs[k])
-              .map((k) => (
-                <div key={k}>
-                  <dt>{translateText(fieldLabels[k])}</dt>
-                  <dd>{translateText(specs[k])}</dd>
-                </div>
-              ))}
-          </dl>
-          <div className="pd-price">
-            <strong>{translateText(money(selection.price))}</strong>
-            <span>
-              {translateText("за ")}
-              {translateText(variant?.label || p.unit || "1 шт.")}
-            </span>
-          </div>
           <div className="pd-purchase">
             {qty > 0 ? (
               <>
@@ -236,25 +232,15 @@ function ProductView({ id }) {
             )}
           </div>
           {shop && (
-            <button
+            <Link
               className="pd-button"
-              onClick={() =>
-                navigate("/messages?seller=" + encodeURIComponent(shop.id))
-              }
+              to={"/messages?seller=" + encodeURIComponent(shop.id)}
             >
-              <MessageCircle size={18} />
+              <MessageCircle size={17} aria-hidden="true" />
               {translateText(" Написать продавцу")}
-            </button>
+            </Link>
           )}
-          <p className="pd-notice" role="status">
-            {translateText(notice)}
-            {notice.startsWith("Войдите") && (
-              <>
-                {" "}
-                <Link to="/login">{translateText("Войти →")}</Link>
-              </>
-            )}
-          </p>
+          <p className="pd-notice" role="status">{translateText(notice)}</p>
           <div className="pd-delivery">
             <Clock size={18} />
             <span>
@@ -269,6 +255,16 @@ function ProductView({ id }) {
         <div>
           <section className="pd-panel">
             <h2>{translateText("О продукте")}</h2>
+            {visibleFields.length > 0 && (
+              <dl className="pd-specs">
+                {visibleFields.map((key) => (
+                  <div key={key}>
+                    <dt>{translateText(fieldLabels[key])}</dt>
+                    <dd>{translateText(specs[key])}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
             <div className="pd-info-grid">
               {[
                 ["Состав", p.ingredients],
@@ -317,17 +313,12 @@ function ProductView({ id }) {
         </div>
         {shop && (
           <aside className="pd-panel pd-seller">
-            <img
-              className="pd-banner"
-              src={shop.banner || "/images/banners/shop-cover.webp"}
-              alt={translateText("Обложка " + shop.name)}
-            />
             <div className="pd-seller-title">
               <span className="pd-logo">
                 {shop.logo ? (
                   <ProductImage src={shop.logo} name={shop.name} />
                 ) : (
-                  shop.initials
+                  shop.initials || shop.name?.slice(0, 2)
                 )}
               </span>
               <div>
@@ -340,22 +331,21 @@ function ProductView({ id }) {
               <MapPin size={17} />
               {translateText(shop.address || "Адрес уточняется")}
             </p>
-            <Link
-              className="pd-button"
-              to={"/seller?shop=" + encodeURIComponent(shop.id)}
-            >
-              {translateText("Посмотреть магазин →")}
-            </Link>
-            <button
-              className={"pd-button " + (following ? "" : "primary")}
-              aria-pressed={!!following}
-              onClick={follow}
-            >
-              {following ? <Check size={18} /> : <Plus size={18} />}{" "}
-              {translateText(
-                following ? "Вы подписаны · Отписаться" : "Подписаться",
+            <div className="pd-seller-actions">
+              <Link className="pd-button" to={shopPath}>
+                {translateText("Посмотреть магазин →")}
+              </Link>
+              <button className="pd-button" aria-pressed={!!following} onClick={follow}>
+                {following ? <Check size={16} /> : <Plus size={16} />}
+                {translateText(following ? "Вы подписаны · Отписаться" : "Подписаться")}
+              </button>
+            </div>
+            <p className="pd-notice" role="status">
+              {translateText(followNotice)}
+              {followNotice.startsWith("Войдите") && (
+                <>{" "}<Link to="/login">{translateText("Войти →")}</Link></>
               )}
-            </button>
+            </p>
           </aside>
         )}
       </div>
