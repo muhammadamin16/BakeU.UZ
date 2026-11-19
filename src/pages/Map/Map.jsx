@@ -1,3 +1,4 @@
+import { useShopStore } from "../../store/shopStore";
 import { Link } from "react-router-dom";
 import {
   getDevicePosition,
@@ -398,6 +399,44 @@ function MapClickHandler({ onMapClick }) {
 
 export default function MapPage() {
   const language = useLanguage();
+  const savedShops = useShopStore((s) => s.shops);
+  const savedProducts = useShopStore((s) => s.products);
+  const locatedShops = useMemo(() => Object.values(savedShops).filter(
+    (shop) => shop.lat != null && shop.lng != null &&
+      shop.lat !== "" && shop.lng !== "" &&
+      Number.isFinite(Number(shop.lat)) && Number.isFinite(Number(shop.lng))
+  ), [savedShops]);
+  const mapSellers = useMemo(() => [
+    ...sellers,
+    ...locatedShops.map((shop) => ({
+      id: shop.id,
+      name: shop.name,
+      badge: (shop.initials || shop.name?.slice(0, 1) || "B").slice(0, 2),
+      badgeColor: shop.color || "#ed792d",
+      categories: shop.description || "Домашняя выпечка",
+      rating: Number(shop.rating) || 0,
+      lat: Number(shop.lat),
+      lng: Number(shop.lng),
+      image: shop.logo || "/images/products/cake.jpg",
+    })),
+  ], [locatedShops]);
+  const mapProducts = useMemo(() => [
+    ...products,
+    ...Object.values(savedProducts).filter(
+      (product) => product.available !== false && locatedShops.some((shop) => shop.id === product.shopId)
+    ).map((product) => {
+      const shop = savedShops[product.shopId];
+      return {
+        ...product,
+        name: product.name,
+        rating: Number(shop.rating) || 0,
+        image: product.image,
+        lat: Number(shop.lat),
+        lng: Number(shop.lng),
+        seller: shop.name,
+      };
+    }),
+  ], [savedProducts, savedShops, locatedShops]);
   const [activeTab, setActiveTab] = useState("products");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -592,7 +631,7 @@ export default function MapPage() {
 
   /* Filtrlangan va tartiblangan ro'yxat */
   const filtered = useMemo(() => {
-    const source = activeTab === "products" ? products : sellers;
+    const source = activeTab === "products" ? mapProducts : mapSellers;
 
     let list = source.map((item) => ({
       ...item,
@@ -624,7 +663,7 @@ export default function MapPage() {
     });
 
     return list;
-  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm]);
+  }, [activeTab, query, nearMe, userPos, sortBy, radiusKm, mapProducts, mapSellers]);
 
   const selected = filtered.find((i) => i.id === selectedId) || null;
   const selectedShop = selected?.shopId ?? selected?.id;
