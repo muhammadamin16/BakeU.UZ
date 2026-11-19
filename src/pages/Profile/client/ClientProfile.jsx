@@ -89,6 +89,9 @@ export default function ClientProfile({
     setNotice("");
     try {
       // Keep verified account contact details intact; send only shop fields to the server.
+      if (shopForm.firstName.trim() !== account.firstName || shopForm.lastName.trim() !== account.lastName) {
+        await onSave({ ...account, firstName: shopForm.firstName.trim(), lastName: shopForm.lastName.trim() });
+      }
       const result = await applyForShop({ shop: shopForm.shop.trim(), address: shopForm.address.trim() });
       onApplication?.(result.application);
       setNotice("Заявка отправлена. Дождитесь проверки администратором.");
