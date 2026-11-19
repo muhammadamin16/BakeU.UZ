@@ -90,7 +90,7 @@ export default function Profile() {
           {/сессия|войдите|401/i.test(serverError) && (
             <button type="button" className="bw-btn" onClick={() => {
               clearSession();
-              navigate("/login?returnTo=%2Fprofile", { replace: true });
+              navigate("/login", { replace: true });
             }}>
               {translateText("Войти снова")}
             </button>
