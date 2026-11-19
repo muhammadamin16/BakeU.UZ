@@ -5,11 +5,14 @@
   --glass-control-edge: #ffffff80;
   --glass-control-shadow: inset 0 1px 1px #ffffff40, 0 4px 14px #24130d22;
   --glass-control-focus: #fff;
+  --glass-control-selected-edge: #fff9;
+  --banner-height: clamp(21rem, 33vw, 28.75rem);
   --banner-inset: clamp(18px, 5vw, 72px);
 
   position: relative;
   isolation: isolate;
   width: 100%;
+  height: var(--banner-height);
   overflow: hidden;
   border-radius: clamp(16px, 2.4vw, 26px);
   background: #432015;
@@ -21,6 +24,8 @@
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 100%;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   will-change: transform;
 }
 
@@ -29,7 +34,7 @@
   display: grid;
   align-items: center;
   min-width: 0;
-  min-height: clamp(330px, 33vw, 460px);
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -56,15 +61,21 @@
   position: relative;
   display: grid;
   justify-items: start;
-  gap: clamp(12px, 1.6vw, 22px);
+  grid-template-rows: minmax(2.16em, auto) auto auto;
+  align-content: center;
+  gap: 10px;
   width: min(100%, 690px);
   min-width: 0;
-  padding: clamp(26px, 4vw, 58px) var(--banner-inset) clamp(66px, 7vw, 86px);
+  max-height: 100%;
+  padding: 18px var(--banner-inset) 68px;
   overflow-wrap: anywhere;
+  overflow-y: auto;
+  font-size: clamp(1.75rem, 4vw, 3.5rem);
 }
 
 .top-banner__content h1 {
-  font-size: clamp(28px, 4.4vw, 60px);
+  align-self: end;
+  font-size: inherit;
   font-weight: 750;
   line-height: 1.08;
   letter-spacing: -0.035em;
@@ -72,17 +83,19 @@
 }
 
 .top-banner__content p {
+  min-height: 2.8em;
   max-width: 36ch;
   color: #fff4e8;
-  font-size: clamp(14px, 1.35vw, 18px);
-  line-height: 1.5;
+  font-size: clamp(0.875rem, 1.35vw, 1.0625rem);
+  line-height: 1.4;
 }
 
 .top-banner .top-banner__cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  max-width: 100%;
+  justify-content: space-between;
+  width: min(100%, 13.5rem);
   min-height: 46px;
   padding: 9px clamp(14px, 2vw, 24px);
   border: 1px solid var(--glass-control-edge);
@@ -119,9 +132,8 @@
   width: clamp(32px, 5vw, 48px);
   height: 44px;
   padding: 0 3px;
-  border: 0;
+  border: 1px solid;
   border-radius: 12px;
-  background: transparent;
 }
 
 .top-banner__indicator-track {
@@ -133,8 +145,7 @@
 }
 
 .top-banner__indicator[aria-current="true"] .top-banner__indicator-track {
-  height: 6px;
-  background: #ffffffaa;
+  background: #ffffffdf;
 }
 
 .top-banner__progress {
@@ -174,6 +185,7 @@
 
   .top-banner__content {
     max-width: 430px;
+    font-size: clamp(1.625rem, 5.4vw, 2.125rem);
   }
 }
 
