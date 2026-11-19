@@ -3,7 +3,7 @@ import { useLanguage } from "../../i18n/useLanguage.js";
 import "./LanguageSwitcher.css";
 
 const LANGUAGES = [
-  { code: "uz", label: "UZ", name: "Özbekça" },
+  { code: "uz", label: "UZ", name: "Oʻzbekcha" },
   { code: "ru", label: "RU", name: "Русский" },
 ];
 

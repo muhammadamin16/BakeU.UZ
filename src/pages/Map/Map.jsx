@@ -422,6 +422,7 @@ export default function MapPage() {
   const [mapInstance, setMapInstance] = useState(null);
 
   const cardRefs = useRef({});
+  const searchRef = useRef(null);
   const posRef = useRef(null);
   const wantNearRef = useRef(false);
 
@@ -667,7 +668,7 @@ export default function MapPage() {
   };
 
   return (
-    <main className="map">
+    <div className="map">
       <div className="map-layout">
         {/* ===== Chap panel ===== */}
         <aside className="map-sidebar">
@@ -767,6 +768,7 @@ export default function MapPage() {
                   }}
                   type="button"
                   className={`map-card ${selectedId === item.id ? "is-selected" : ""}`}
+                  aria-current={selectedId === item.id ? "true" : undefined}
                   onClick={() => setSelectedId(item.id)}
                 >
                   <img
@@ -804,25 +806,30 @@ export default function MapPage() {
         {/* ===== Xarita ===== */}
         <section className={`map-area ${pickMode ? "is-picking" : ""}`}>
           <div className="map-toolbar">
-            <label className="map-search">
+            <div className="map-search" role="search">
               <Search size={20} strokeWidth={1.8} />
               <input
+                ref={searchRef}
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                aria-label={translateText("Искать в этой области")}
                 placeholder={translateText("Искать в этой области")}
               />
               {query && (
                 <button
                   type="button"
                   className="map-search__clear"
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    searchRef.current?.focus();
+                  }}
                   aria-label={translateText("Очистить")}
                 >
                   <X size={16} strokeWidth={2.2} />
                 </button>
               )}
-            </label>
+            </div>
             <button
               type="button"
               className="map-round"
@@ -1126,6 +1133,6 @@ export default function MapPage() {
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }
