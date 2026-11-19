@@ -1,56 +1,83 @@
 import { useId, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import {
+  Cake, CakeSlice, Candy, ChevronDown, Cookie, Cupcake, Dessert, LayoutGrid,
+  Pizza, Salad, Sandwich, Shapes, Wheat,
+} from "lucide-react";
 import { translateText as t } from "../../i18n/index.js";
 import { categories } from "../../store/sellerData";
 import "./CatalogCategories.css";
 
 const PREVIEW_COUNT = 5;
-const ICONS = { "Все": "✦", "Торты": "🍰", "Печенье": "🍪", "Хлеб": "🥖", "Самса": "🥟" };
+const ICONS = {
+  "Все": LayoutGrid,
+  "Торты": Cake,
+  "Салаты": Salad,
+  "Пирожные": CakeSlice,
+  "Капкейки": Cupcake,
+  "Десерты": Dessert,
+  "Печенье": Cookie,
+  "Хлеб": Wheat,
+  "Самса": Sandwich,
+  "Пироги": Pizza,
+  "Сладости": Candy,
+  "Другое": Shapes,
+};
+
+function CategoryOption({ item, count, selected, onChange }) {
+  const Icon = ICONS[item] ?? Shapes;
+  return (
+    <button
+      type="button"
+      className="catalog-categories__option"
+      aria-pressed={selected}
+      onClick={() => onChange(item)}
+    >
+      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+      {t(item)}
+      <span className="catalog-categories__count">{count}</span>
+    </button>
+  );
+}
 
 export default function CatalogCategories({ products, value, onChange }) {
   const [expanded, setExpanded] = useState(false);
-  const groupId = useId();
+  const extraId = useId();
   const counts = new Map();
   for (const { category } of products) {
     counts.set(category, (counts.get(category) ?? 0) + 1);
   }
   counts.set("Все", products.length);
 
-  const ordered = categories.toSorted((first, second) =>
+  const ordered = [...categories].sort((first, second) =>
     Number(counts.has(second)) - Number(counts.has(first)),
   );
   const preview = ordered.slice(0, PREVIEW_COUNT);
-  const displayed = expanded ? ordered : ordered.filter((item) => preview.includes(item) || item === value);
+  const extra = ordered.slice(PREVIEW_COUNT);
+  const shownInPreview = !expanded && extra.includes(value) ? [...preview, value] : preview;
+  const renderOption = (item) => (
+    <CategoryOption key={item} item={item} count={counts.get(item) ?? 0} selected={value === item} onChange={onChange} />
+  );
 
   return (
-    <div className="catalog-categories">
-      <div id={groupId} className="catalog-categories__options" role="group" aria-label={t("Категории товаров")}>
-        {displayed.map((item) => (
+    <div className="catalog-categories" role="group" aria-label={t("Категории товаров")}>
+      <div className="catalog-categories__options">
+        {shownInPreview.map(renderOption)}
+        {extra.length > 0 && (
           <button
-            key={item}
             type="button"
-            className="catalog-categories__option"
-            aria-pressed={value === item}
-            onClick={() => onChange(item)}
+            className="catalog-categories__toggle"
+            aria-controls={extraId}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}
           >
-            <span aria-hidden="true">{ICONS[item] || "•"}</span>
-            {t(item)}
-            <span className="catalog-categories__count">{counts.get(item) ?? 0}</span>
+            {t(expanded ? "Свернуть категории" : "Больше категорий")}
+            <ChevronDown size={17} aria-hidden="true" />
           </button>
-        ))}
+        )}
       </div>
-      {ordered.length > PREVIEW_COUNT && (
-        <button
-          type="button"
-          className="catalog-categories__toggle"
-          aria-controls={groupId}
-          aria-expanded={expanded}
-          onClick={() => setExpanded((current) => !current)}
-        >
-          {t(expanded ? "Свернуть категории" : "Больше категорий")}
-          <ChevronDown size={17} aria-hidden="true" />
-        </button>
-      )}
+      <div id={extraId} className="catalog-categories__options" hidden={!expanded}>
+        {expanded && extra.map(renderOption)}
+      </div>
     </div>
   );
 }
