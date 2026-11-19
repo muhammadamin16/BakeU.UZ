@@ -3,14 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
-import {
-  X,
-  ArrowRight,
-  ShoppingBag,
-  Store,
-  Sparkles,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 
 import {
   isLoggedIn,
@@ -72,7 +65,7 @@ export default function AuthModal() {
       if (typeof callback === "function") {
         callback();
       }
-    }, CLOSE_DURATION);
+    }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : CLOSE_DURATION);
   }, []);
 
   const handleNavigate = (path) => {
@@ -88,10 +81,15 @@ export default function AuthModal() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    const root = document.getElementById("root");
+    const wasInert = root?.inert;
+    if (root) root.inert = true;
+
     primaryRef.current?.focus();
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         closeModal();
         return;
       }
@@ -121,6 +119,7 @@ export default function AuthModal() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
+      if (root) root.inert = wasInert;
       previousFocusRef.current?.focus?.();
     };
   }, [visible, closeModal]);
@@ -130,7 +129,7 @@ export default function AuthModal() {
   return createPortal(
     <div
       className={`bakeu-auth-overlay ${isClosing ? "is-closing" : ""}`}
-      onMouseDown={(event) => {
+      onClick={(event) => {
         if (event.target === event.currentTarget) {
           closeModal();
         }
@@ -150,49 +149,15 @@ export default function AuthModal() {
           onClick={() => closeModal()}
           aria-label={translateText("Закрыть окно")}
         >
-          <X size={18} />
+          <X size={19} aria-hidden="true" />
         </button>
 
-        <div className="bakeu-auth-logo">
-          <span>🥐</span>
-        </div>
-
-        <div className="bakeu-auth-eyebrow">
-          <Sparkles size={13} />
-          <span>BAKEU MARKETPLACE</span>
-        </div>
-
-        <h2 id="bakeu-auth-title">
-          {translateText("Добро пожаловать")}
-          <span>{translateText(" в BakeU")}</span>
-        </h2>
-
-        <p id="bakeu-auth-description" className="bakeu-auth-description">
-          {translateText(
-            "Откройте для себя мир свежей выпечки и любимых десертов. Покупайте, продавайте и вдохновляйтесь вместе с нами.",
-          )}
-        </p>
-
-        <div className="bakeu-auth-features">
-          <div className="bakeu-auth-feature">
-            <div className="bakeu-auth-feature-icon">
-              <ShoppingBag size={17} />
-            </div>
-            <div>
-              <strong>{translateText("Для покупателей")}</strong>
-              <span>{translateText("Вкусное рядом")}</span>
-            </div>
-          </div>
-
-          <div className="bakeu-auth-feature">
-            <div className="bakeu-auth-feature-icon">
-              <Store size={17} />
-            </div>
-            <div>
-              <strong>{translateText("Для продавцов")}</strong>
-              <span>{translateText("Развивайте бизнес")}</span>
-            </div>
-          </div>
+        <div className="bakeu-auth-intro">
+          <img className="bakeu-auth-logo" src="/images/logo-bear.png" width="2172" height="724" alt="BakeU" />
+          <h2 id="bakeu-auth-title">{translateText("Добро пожаловать")}</h2>
+          <p id="bakeu-auth-description">
+            {translateText("Войдите, чтобы оформлять заказы и сохранять любимую выпечку.")}
+          </p>
         </div>
 
         <div className="bakeu-auth-actions">
@@ -203,7 +168,7 @@ export default function AuthModal() {
             onClick={() => handleNavigate("/register")}
           >
             {translateText("Создать аккаунт")}
-            <ArrowRight size={18} />
+            <ArrowRight size={18} aria-hidden="true" />
           </button>
 
           <button
@@ -223,10 +188,6 @@ export default function AuthModal() {
           {translateText("Продолжить без регистрации")}
         </button>
 
-        <div className="bakeu-auth-footer">
-          <ShieldCheck size={14} />
-          <span>{translateText("Удобные покупки с BakeU")}</span>
-        </div>
       </section>
     </div>,
     document.body,
