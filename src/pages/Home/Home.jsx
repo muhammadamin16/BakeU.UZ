@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Check,
-  Plus, Search, ShoppingBag, Sparkles, X,
+  MapPin, Plus, Search, ShoppingBag, Sparkles, X,
 } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { getLocale, matchesLocalizedSearch, translateText } from "../../i18n/index.js";
-import TopBanner from "../../components/TopBanner/TopBanner";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
 import { useCartStore } from "../../store/cartStore";
@@ -121,11 +120,26 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
 
   return (
     <div className="bu-home">
-      <TopBanner onCategoryClick={(value) => {
-        updateQuery("");
-        updateCategory(value);
-        scrollToProducts();
-      }} />
+      <section className="bu-welcome" aria-labelledby="bu-welcome-title">
+        <div className="bu-welcome__copy">
+          <h1 id="bu-welcome-title">{translateText("Свежая выпечка к вашему столу")}</h1>
+          <p>{translateText("Выбирайте торты, хлеб и домашнюю выпечку от местных пекарей.")}</p>
+          <div className="bu-welcome__actions">
+            <button type="button" className="bu-welcome__browse" onClick={scrollToProducts}>
+              {translateText("Смотреть каталог")} <ArrowDown size={18} aria-hidden="true" />
+            </button>
+            <Link to="/map" className="bu-map">
+              <MapPin size={18} aria-hidden="true" /> {translateText("Открыть карту")}
+            </Link>
+          </div>
+        </div>
+        <div className="bu-welcome__photo">
+          <picture>
+            <source media="(max-width: 600px)" srcSet="/images/banners/winter-bakery-small.webp" />
+            <img src="/images/banners/winter-bakery.webp" alt="" fetchPriority="high" />
+          </picture>
+        </div>
+      </section>
 
       <section id="home-catalog" ref={catalogRef} tabIndex={-1} className="bu-catalog" aria-labelledby="bu-catalog-title">
         <div className="bu-catalog__top">
