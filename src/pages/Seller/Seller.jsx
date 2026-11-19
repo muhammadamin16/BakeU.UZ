@@ -4,7 +4,8 @@ import { Check, Search, ShoppingBag, Store, X } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
-import { useCatalog, categories } from "../../store/sellerData";
+import { useCatalog } from "../../store/sellerData";
+import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop.jsx";
 import "./Seller.css";
@@ -80,9 +81,7 @@ function SellerCatalog({ tab }) {
       </header>
 
       <section className="seller-product-section" aria-label={t(showSellers ? "Продавцы" : "Товары")}>
-        {!showSellers && <div className="seller-categories" aria-label={t("Категории")}>
-          {categories.map((c) => <button key={c} type="button" className={category === c ? "is-active" : ""} aria-pressed={category === c} onClick={() => updateCategory(c)}>{t(c)}</button>)}
-        </div>}
+        {!showSellers && <CatalogCategories products={products} value={category} onChange={updateCategory} />}
         <div className="seller-results">
           <span>{showSellers ? visibleShops.length : visibleProducts.length} {t(showSellers ? "магазинов" : "товаров")}</span>
           {(query || (!showSellers && category !== "Все")) && <button type="button" onClick={reset}>{t("Сбросить")} <X size={14} /></button>}

@@ -7,6 +7,7 @@ import {
 import { useProductBatchSize } from "../../hooks/useProductBatchSize";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
+import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
 import { ProductCard, ShopCard } from "../Seller/SellerParts";
 import { categories, useCatalog } from "../../store/sellerData";
@@ -14,7 +15,6 @@ import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
 const PREVIEW_BATCHES = 3;
-const CATEGORY_ICONS = { "Все": "✦", "Торты": "🍰", "Печенье": "🍪", "Хлеб": "🥖", "Самса": "🥟" };
 export default function Home() {
   const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
@@ -112,17 +112,7 @@ export default function Home() {
           </label>
         </div>
 
-        <div className="bu-categories" role="group" aria-label={translateText("Категории товаров")}>
-          {categories.map((item) => {
-            const count = item === "Все" ? products.length : products.filter((p) => p.category === item).length;
-            return (
-              <button key={item} type="button" className={`bu-category${category === item ? " is-active" : ""}`} aria-pressed={category === item} onClick={() => updateCategory(item)}>
-                <span className="bu-category__emoji" aria-hidden="true">{CATEGORY_ICONS[item] || "•"}</span>
-                {translateText(item)} <span className="bu-category__count">{count}</span>
-              </button>
-            );
-          })}
-        </div>
+        <CatalogCategories products={products} value={category} onChange={updateCategory} />
 
         <div className="bu-results">
           <span>{translateText(isFiltered ? "Найдено товаров" : "Всего товаров")}: <strong>{visibleProducts.length}</strong></span>

@@ -200,8 +200,7 @@
 }
 
 /* Олтинранг тугмалар */
-[data-season="winter"] .bu-home .bu-button--primary,
-[data-season="winter"] .bu-home .bu-category.is-active {
+[data-season="winter"] .bu-home .bu-button--primary {
   background: linear-gradient(#ffda6f, #ffad23);
   border: 1px solid #ffe2a2;
   color: #4f2b0f;
@@ -287,8 +286,7 @@
   font-family: Arial, sans-serif;
 }
 
-[data-season="winter"] .bu-home .bu-search,
-[data-season="winter"] .bu-home .bu-category {
+[data-season="winter"] .bu-home .bu-search {
   background: #fff8f5bd;
   border: 1px solid #fff;
 
@@ -422,21 +420,8 @@
     height: 36px;
   }
 
-  [data-season="winter"] .bu-home .bu-category {
-    min-height: 34px;
-    padding: 7px 10px;
-    gap: 6px;
-    font-size: 10px;
-  }
 
-  [data-season="winter"] .bu-home .bu-category__count {
-    min-width: 17px;
-    height: 17px;
-  }
 
-  [data-season="winter"] .bu-home .bu-category > span:first-child {
-    font-size: 14px;
-  }
 }
 
 /* Телефон */
