@@ -98,7 +98,7 @@ export default function Cart() {
                     <strong>{translateText(money(p.price * qty))}</strong>
                     <button
                       className="bu-icon"
-                      aria-label={translateText(`Удалить ${p.name}`)}
+                      aria-label={translateText(`Удалить. ${p.name}`)}
                       onClick={() => remove(id)}
                     >
                       <Trash2 size={19} />
