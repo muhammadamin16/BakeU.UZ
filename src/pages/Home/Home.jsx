@@ -21,10 +21,8 @@ export default function Home() {
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
   const [batches, setBatches] = useState(1);
-  const [shopBatches, setShopBatches] = useState(1);
   const batchSize = useProductBatchSize();
   const catalogRef = useRef(null);
-  const shopsRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
@@ -44,8 +42,7 @@ export default function Home() {
   const displayedProducts = visibleProducts.slice(0, batchSize * batches);
   const remaining = visibleProducts.length - displayedProducts.length;
   const expanded = batches > 1;
-  const displayedShops = shops.slice(0, batchSize * shopBatches);
-  const remainingShops = shops.length - displayedShops.length;
+  const displayedShops = shops.slice(0, batchSize);
 
   const isFiltered = query.trim() !== "" || category !== "Все";
 
@@ -180,7 +177,7 @@ export default function Home() {
       </section>
 
       {shops.length > 0 && (
-        <section className="bu-makers" ref={shopsRef} aria-labelledby="bu-makers-title">
+        <section className="bu-makers" aria-labelledby="bu-makers-title">
           <div className="bu-makers__heading">
             <h2 id="bu-makers-title">{translateText("Знакомьтесь, кондитеры")}</h2>
             <Link to="/seller?tab=sellers">{translateText("Все продавцы")} <ArrowUpRight size={18} aria-hidden="true" /></Link>
@@ -195,25 +192,9 @@ export default function Home() {
               {translateText("Показано магазинов")} {displayedShops.length} / {shops.length}
             </p>
             <div className="bu-load-more__buttons">
-              {shopBatches < PREVIEW_BATCHES && remainingShops > 0 ? (
-                <button type="button" className="bu-load-more__primary" onClick={() => setShopBatches((current) => Math.min(current + 1, PREVIEW_BATCHES))}>
-                  {translateText("Больше продавцов")}
-                  <span className="bu-load-more__count">+{Math.min(batchSize, remainingShops)}</span>
-                  <ArrowDown size={17} aria-hidden="true" />
-                </button>
-              ) : (
-                <Link className="bu-load-more__primary" to="/seller?tab=sellers">
-                  {translateText("Больше продавцов")} <ArrowUpRight size={17} aria-hidden="true" />
-                </Link>
-              )}
-              {shopBatches > 1 && (
-                <button type="button" className="bu-load-more__secondary" onClick={() => {
-                  setShopBatches(1);
-                  window.requestAnimationFrame(() => shopsRef.current?.scrollIntoView({ block: "start" }));
-                }}>
-                  {translateText("Свернуть")} <ArrowUp size={16} aria-hidden="true" />
-                </button>
-              )}
+              <Link className="bu-load-more__primary" to="/seller?tab=sellers">
+                {translateText("Больше продавцов")} <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
             </div>
           </div>
         </section>
