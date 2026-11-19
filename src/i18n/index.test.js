@@ -88,3 +88,14 @@ test("catalog search accepts both languages regardless of interface language", (
     assert.equal(matchesLocalizedSearch("non", "Шоколадный торт"), false);
   }
 });
+
+test("demo catalog product names translate inside accessible labels and search", () => {
+  const name = "Пшеничный хлеб";
+  assert.equal(translateText(name, "uz"), "Buğdoy noni");
+  assert.equal(translateText(name, "ru"), name);
+  assert.equal(
+    translateText(`Добавить в корзину: ${name}`, "uz"),
+    "Savatga qöşiş: Buğdoy noni",
+  );
+  assert.ok(matchesLocalizedSearch(normalizeSearch("bug‘doy"), name));
+});

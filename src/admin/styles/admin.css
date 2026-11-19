@@ -75,7 +75,7 @@ body:has(.ad-app) {
 }
 .ad-content {
   padding: 20px 18px 16px;
-  max-width: 1600px;
+  max-width: var(--site-max-width);
   margin: auto;
 }
 .ad-page-title {

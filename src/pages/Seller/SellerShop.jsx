@@ -5,7 +5,7 @@ import {
   publicShareUrl,
 } from "../../platform/device.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { translateText } from "../../i18n/index.js";
+import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
 import { useEffect, useState } from "react";
@@ -138,10 +138,9 @@ function ShopProfile({ shopId }) {
 
   const categories = ["Все", ...new Set(shopProducts.map((p) => p.category))];
 
+  const query = normalizeSearch(search.trim());
   const visibleProducts = shopProducts.filter((p) => {
-    const matchesSearch = normalizeSearch(
-      p.name + " " + translateText(p.name),
-    ).includes(normalizeSearch(search));
+    const matchesSearch = matchesLocalizedSearch(query, p.name);
 
     const matchesCategory = category === "Все" || p.category === category;
 

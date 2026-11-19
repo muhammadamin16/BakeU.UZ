@@ -99,7 +99,6 @@ export default function Home() {
       <section id="home-catalog" ref={catalogRef} className="bu-catalog" aria-labelledby="bu-catalog-title">
         <div className="bu-catalog__top">
           <div className="bu-catalog__heading">
-            <span className="bu-overline">BAKEU COLLECTION</span>
             <h2 id="bu-catalog-title">{translateText("Топ товары")}</h2>
             <Link className="bu-all-products" to="/seller?tab=products">
               {translateText("Смотреть все товары")} <ArrowUpRight size={17} aria-hidden="true" />

@@ -8,7 +8,9 @@
   --ad-soft: rgba(255, 242, 228, 0.58);
   --ad-glass: linear-gradient(135deg, #ffffffb8, #fff7f382);
   --ad-shadow: inset 0 1px 0 #ffffffed, 0 8px 30px #79535e0a;
+  max-width: var(--site-max-width);
   min-height: 100dvh;
+  margin-inline: auto;
   background-color: #f5e9e8;
   background-image:
     radial-gradient(ellipse at 75% 10%, #ede5fa99, transparent 55%),
@@ -35,7 +37,7 @@
 .ad-app .ad-page-title { margin-bottom: 24px; }
 
 .ad-app .ad-sidebar {
-  inset: 18px auto 18px 18px;
+  inset: 18px auto 18px max(18px, calc((100% - var(--site-max-width)) / 2 + 18px));
   width: var(--ad-sidebar-width);
   padding: 18px 12px;
   border: 1px solid #ffffffd9;

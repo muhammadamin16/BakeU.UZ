@@ -61,7 +61,7 @@ export default function AppRoutes() {
     <>
       {!isAuthPage && <Header />}
 
-      <main className="container">
+      <main className={isHome ? "container site-content--home" : "container"}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />

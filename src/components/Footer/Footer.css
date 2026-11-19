@@ -19,6 +19,10 @@
   font-family: Arial, system-ui, sans-serif;
 }
 
+.site-content--home ~ .bake-footer {
+  margin-top: 0;
+}
+
 .bake-footer,
 .bake-footer * {
   box-sizing: border-box;

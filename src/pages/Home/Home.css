@@ -6,7 +6,7 @@
   --bu-paper: #fffcf7;
   --bu-accent: #b7673e;
   margin: 0 auto;
-  padding: 22px 0 100px;
+  padding: 22px 0 0;
   color: var(--bu-ink);
 }
 .bu-home * {
@@ -26,12 +26,6 @@
 .bu-home :is(a, button, input):focus-visible {
   outline: 3px solid #d99461;
   outline-offset: 3px;
-}
-.bu-overline {
-  font-size: 11px;
-  letter-spacing: 0.19em;
-  font-weight: 800;
-  color: #b16b46;
 }
 .bu-map {
   display: flex;
