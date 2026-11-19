@@ -2,8 +2,6 @@ import { createMiniAppAuth } from "./miniAppAuth.js";
 import { createServer } from "node:http";
 import { createRateLimiter } from "../middleware/rateLimit.js";
 import { HttpError } from "./auth.js";
-import { applicationMessage } from "../utils/formatMessage.js";
-import { applicationKeyboard } from "../keyboards/adminKeyboard.js";
 async function readJson(req) {
   if (
     !(req.headers["content-type"] || "")
@@ -141,26 +139,24 @@ export function createApiServer({ auth, repo, config }) {
           }
           throw new HttpError(404, "Маршрут не найден.");
         }
-        if (path === "/api/shop/apply" && req.method === "POST") {
+        if (path === "/api/shop/open" && req.method === "POST") {
           const session = auth.authenticate(req.headers.authorization);
           const data = await readJson(req);
           const shop = typeof data.shop === "string" ? data.shop.trim() : "";
           const address = typeof data.address === "string" ? data.address.trim() : "";
           if (shop.length < 2 || shop.length > 150 || address.length < 2 || address.length > 250)
-            throw new HttpError(400, "Укажите название магазина и адрес (от 2 символов).");
-          const result = repo.applyForShop(session.user.id, shop, address);
-          if (result.invalidRole)
-            throw new HttpError(403, "Заявку может отправить только покупатель.");
-          if (!result.existing) {
-            for (const adminId of config.adminIds) {
-              repo.queue(adminId, {
-                text: applicationMessage(result.application),
-                parse_mode: "HTML",
-                reply_markup: applicationKeyboard(result.application.id),
-              }, `application:${result.application.id}:${adminId}`);
-            }
+            throw new HttpError(400, "Укажите название и адрес магазина (от 2 символов).");
+          let lat = null, lng = null;
+          if (data.lat !== undefined || data.lng !== undefined) {
+            lat = Number(data.lat);
+            lng = Number(data.lng);
+            if (data.lat == null || data.lng == null || !Number.isFinite(lat) ||
+                !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+              throw new HttpError(400, "Некорректная точка на карте.");
           }
-          return send(result.existing ? 200 : 201, result);
+          const result = repo.openShop(session.user.id, shop, address, lat, lng);
+          if (result.missing) throw new HttpError(404, "Аккаунт не найден.");
+          return send(200, { user: result.user, existing: result.existing });
         }
         if (path === "/api/auth/register" && req.method === "POST")
           throw new HttpError(410, "Регистрация доступна только после подтверждения телефона в Telegram.");
