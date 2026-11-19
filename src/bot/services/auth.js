@@ -38,8 +38,15 @@ export function validateProfile(input, { roleRequired = true } = {}) {
     throw new HttpError(400, "Выберите покупателя или продавца.");
   const out = { firstName, lastName, email, phone, role };
   if (role === "seller") {
-    out.company = typeof input.company === "string" ? input.company.trim().slice(0, 150) : "";
-    out.location = typeof input.location === "string" ? input.location.trim().slice(0, 250) : "";
+    out.company = text(input.company, "Название магазина", 150);
+    out.location = text(input.location, "Адрес магазина", 250);
+    if (input.lat !== undefined || input.lng !== undefined) {
+      const lat = Number(input.lat), lng = Number(input.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+        throw new HttpError(400, "Укажите корректное место на карте.");
+      out.lat = lat;
+      out.lng = lng;
+    }
   }
   return out;
 }
