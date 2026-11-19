@@ -72,7 +72,7 @@ function SellerCatalog({ tab }) {
   };
 
   return (
-    <main className="seller-page seller-page--professional">
+    <main className="seller-page seller-page--professional product-catalog">
       <header className="seller-header">
         <div className="seller-header__top">
           <div className="seller-heading">
@@ -102,7 +102,7 @@ function SellerCatalog({ tab }) {
         {showSellers ? (
           <div className="seller-shops">{shownShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
         ) : (
-          <div className="seller-products">{shown.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
+          <div className="product-grid">{shown.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
         )}
         {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
         {total > PAGE_SIZE && <div className="seller-pagination">

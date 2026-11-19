@@ -1,25 +1,18 @@
 /* Compact glass cards — do not duplicate in Seller.css */
-.seller-product,.seller-shop{box-sizing:border-box;min-width:0;overflow:hidden;border:1px solid rgba(255,255,255,.68);border-radius:20px;background:rgba(255,252,247,.63);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 5px 22px rgba(67,32,21,.045);transition:transform .25s,box-shadow .25s,border-color .25s}
-.seller-product:hover,.seller-shop:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(67,32,21,.09);border-color:rgba(184,107,67,.25)}
-.seller-product{display:flex;flex-direction:column;height:100%}.seller-product__image{position:relative;aspect-ratio:5/4;background:#f3e6d9;overflow:hidden}.seller-product__image-link{display:block;width:100%;height:100%}.seller-product__image-link img,.seller-shop__preview img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .45s}.seller-product:hover .seller-product__image-link img,.seller-shop__preview:hover img{transform:scale(1.05)}.sp-image-fallback{display:grid;place-items:center;width:100%;height:100%;min-height:75px;color:#b49b87;background:linear-gradient(135deg,#f3e6d9,#f9f2e9)}.seller-product__favorite{position:absolute;top:10px;right:10px;z-index:2}.seller-product__count{position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:4px;padding:6px 9px;border-radius:9px;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);color:#432015;font-size:11px;font-weight:800}
-.seller-product__body{display:flex;flex:1;flex-direction:column;gap:6px;padding:12px}.seller-product__shop{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8b7364!important;font-size:11px}.seller-product__shop svg{flex:none}.seller-product__title{margin:0;min-height:2.7em;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:14px;line-height:1.35;letter-spacing:-.015em;font-weight:750}.seller-product__title a{color:#432015!important}.seller-product__bottom {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: auto;
+.seller-shop{box-sizing:border-box;min-width:0;overflow:hidden;border:1px solid rgba(255,255,255,.68);border-radius:20px;background:rgba(255,252,247,.63);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 5px 22px rgba(67,32,21,.045);transition:transform .25s,box-shadow .25s,border-color .25s}
+.seller-shop:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(67,32,21,.09);border-color:rgba(184,107,67,.25)}
+.seller-shop__preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 450ms ease;
 }
+.seller-shop__preview:hover img { transform: scale(1.05); }
 
-.seller-product__price {
-  color: #432015;
-  font-size: 15px;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
 .seller-shop{display:flex;flex-direction:column;gap:15px;padding:19px}.seller-shop__top{display:flex;align-items:center;gap:12px;min-width:0}.seller-shop__logo{display:grid;place-items:center;flex:0 0 53px;width:53px;height:53px;overflow:hidden;border-radius:16px;background:var(--shop-color,#dca978);color:white;font-size:16px;font-weight:800}.seller-shop__logo img{width:100%;height:100%;object-fit:cover}.seller-shop__identity{flex:1;min-width:0}.seller-shop__identity h2{margin:0 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;line-height:1.3;color:#432015}.seller-shop__rating{display:flex;align-items:center;gap:5px;color:#b47b32;font-size:12px}.seller-shop__rating strong{color:#432015}.seller-shop__rating-count{color:#8b7364}.seller-shop__arrow{flex:none;color:#8b7364}.seller-shop__previews{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.seller-shop__preview{display:block;aspect-ratio:1;min-width:0;overflow:hidden;border-radius:12px;background:#f4e9dc}.seller-shop__no-products{grid-column:1/-1;padding:18px 0;color:#8b7364;font-size:12px}.seller-shop__open{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;margin-top:auto;border:1px solid rgba(67,32,21,.10);border-radius:12px;background:rgba(255,255,255,.48);font-size:12px;font-weight:750;color:#432015!important;transition:background .2s}.seller-shop__open:hover{background:rgba(255,255,255,.85)}
-@media(max-width:700px){.seller-product,.seller-shop{border-radius:16px}.seller-product__body{padding:11px;gap:7px}.seller-product__title{font-size:13px}.seller-product__price{font-size:13px}.seller-product__shop{font-size:10px}.seller-shop{padding:15px}.seller-shop__logo{flex-basis:47px;width:47px;height:47px}}
-@media(prefers-reduced-motion:reduce){.seller-product,.seller-shop,.seller-product__image-link img,.seller-shop__preview img{transition:none!important}}
+@media(max-width:700px){.seller-shop{border-radius:16px}.seller-shop{padding:15px}.seller-shop__logo{flex-basis:47px;width:47px;height:47px}}
+@media(prefers-reduced-motion:reduce){.seller-shop,.seller-shop__preview img{transition:none!important}}
 
 /* Distinct seller storefront cards — image-led, minimal glass */
 .seller-shops .seller-shop--editorial{display:flex;flex-direction:column;gap:0;padding:0;isolation:isolate;border-radius:22px;background:rgba(255,253,250,.58);border:1px solid rgba(255,255,255,.72);box-shadow:0 10px 28px rgba(67,32,21,.055);overflow:hidden}

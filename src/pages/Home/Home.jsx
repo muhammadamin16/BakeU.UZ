@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Check,
+  ArrowDown, ArrowRight, ArrowUp, ArrowUpRight,
   MapPin, Search, ShoppingBag, Sparkles, X,
 } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { getLocale, matchesLocalizedSearch, translateText } from "../../i18n/index.js";
+import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
-import CartQuantity from "../../components/CartQuantity/CartQuantity";
-import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
+import ProductCard from "../../components/ProductCard/ProductCard";
 import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/homeData";
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
@@ -26,37 +25,6 @@ const MAKERS = [
   { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
   { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
 ];
-
-function ProductCard({ product, quantity, onAdd }) {
-  const productUrl = `/product/${encodeURIComponent(product.id)}`;
-  const sellerUrl = `/profile?shop=${encodeURIComponent(product.sellerId ?? "")}`;
-  return (
-    <article className="bu-product">
-      <div className="bu-product__image" style={{ backgroundColor: product.color || "#f1e8dc" }}>
-        <Link className="bu-product__image-link" to={productUrl} aria-label={translateText(`Подробнее: ${product.name}`)}>
-          <img src={product.image} alt={translateText(product.name)} loading="lazy" decoding="async" />
-        </Link>
-        <div className="bu-product__favorite"><FavoriteButton product={product} /></div>
-        {quantity > 0 && (
-          <span className="bu-product__quantity"><Check size={13} aria-hidden="true" /> {translateText("В корзине:")} {quantity}</span>
-        )}
-      </div>
-      <div className="bu-product__body">
-        <div className="bu-product__meta">
-          <Link to={sellerUrl} className="bu-shop-link">{translateText(product.sellerName || "BakeU")}</Link>
-          <span className="bu-product__category">{translateText(product.category || "")}</span>
-        </div>
-        <h3><Link to={productUrl}>{translateText(product.name)}</Link></h3>
-        <div className="bu-product__bottom">
-          <span className="bu-product__price">
-            {Number(product.price || 0).toLocaleString(getLocale())} <small>{translateText("сум")}</small>
-          </span>
-          <CartQuantity product={product} quantity={quantity} onAdd={onAdd} />
-        </div>
-      </div>
-    </article>
-  );
-}
 
 export default function Home({ catalog = demoProducts, subscriptions = demoSubscriptions }) {
   const [now, setNow] = useState(() => Date.now());
@@ -125,7 +93,7 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   };
 
   return (
-    <main className="bu-home">
+    <main className="bu-home product-catalog">
       <TopBanner onCategoryClick={openCatalog} />
 
       <Link to="/map" className="bu-map">
@@ -172,9 +140,15 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
 
         {visibleProducts.length > 0 ? (
           <>
-            <div className="bu-products">
+            <div className="product-grid">
               {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} quantity={items?.[product.id] ?? 0} onAdd={handleAdd} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  sellerUrl={product.sellerId ? `/profile?shop=${encodeURIComponent(product.sellerId)}` : undefined}
+                  quantity={items?.[product.id] ?? 0}
+                  onAdd={handleAdd}
+                />
               ))}
             </div>
 

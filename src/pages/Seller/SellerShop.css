@@ -350,20 +350,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
-.shop-products .seller-product {
-  min-width: 0;
-  background: #ffffff75;
-  border: 1px solid #fff;
-  border-radius: 20px;
-  overflow: hidden;
-}
-.shop-products .seller-product__body {
-  padding: 12px;
-}
-.shop-products .seller-product h2 {
-  font-size: 14px;
-  line-height: 1.4;
-}
 .shop-no-products {
   display: grid;
   justify-items: center;

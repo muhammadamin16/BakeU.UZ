@@ -253,8 +253,7 @@
 
 /* Олтинранг тугмалар */
 [data-season="winter"] .bu-home .bu-button--primary,
-[data-season="winter"] .bu-home .bu-category.is-active,
-[data-season="winter"] .bu-home .bu-product__add {
+[data-season="winter"] .bu-home .bu-category.is-active {
   background: linear-gradient(#ffda6f, #ffad23);
   border: 1px solid #ffe2a2;
   color: #4f2b0f;
@@ -341,8 +340,7 @@
 }
 
 [data-season="winter"] .bu-home .bu-search,
-[data-season="winter"] .bu-home .bu-category,
-[data-season="winter"] .bu-home .bu-product {
+[data-season="winter"] .bu-home .bu-category {
   background: #fff8f5bd;
   border: 1px solid #fff;
 

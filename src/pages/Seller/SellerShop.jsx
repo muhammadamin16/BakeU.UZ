@@ -428,6 +428,7 @@ function ShopProfile({ shopId }) {
                 <ProductCard
                   key={product.id}
                   product={product}
+                  shop={shop}
                   quantity={items?.[product.id] ?? 0}
                   onAdd={(item) => {
                     add(item);
