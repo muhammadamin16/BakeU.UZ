@@ -30,7 +30,7 @@ const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
 
 const AUTH_PATHS = ["/login", "/register"];
 
-const NO_FOOTER_PREFIXES = ["/ai", "/profile", "/checkout", "/orders"];
+const NO_FOOTER_PREFIXES = ["/ai", "/profile", "/checkout", "/orders", "/map"];
 
 function matchesPath(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);

@@ -421,7 +421,7 @@ export default function MapPage() {
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [mapInstance, setMapInstance] = useState(null);
 
-  const cardRefs = useRef({});
+  const listRef = useRef(null);
   const posRef = useRef(null);
   const wantNearRef = useRef(false);
 
@@ -632,12 +632,8 @@ export default function MapPage() {
     ? `/product/${selected?.id}`
     : `/seller?shop=${selectedShop}`;
 
-  /* Tanlanganda ro'yxatda ko'rinishga keltirish */
   useEffect(() => {
-    cardRefs.current[selectedId]?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    });
+    if (selectedId !== null) listRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [selectedId]);
 
   const reset = () => {
@@ -736,7 +732,42 @@ export default function MapPage() {
             </div>
           )}
 
-          <div className="map-list">
+          <div
+            ref={listRef}
+            className="map-list"
+            role="region"
+            aria-label={translateText("Найдено")}
+            tabIndex={0}
+          >
+            {selected && (
+              <div className="map-detail">
+                <img src={selected.image} alt="" className="map-detail__img" />
+                <div className="map-detail__info">
+                  <h3>{translateText(selected.name)}</h3>
+                  <p>{translateText(meta(selected))}</p>
+                  <span className="map-card__star">
+                    <Star size={12} fill="#f4b41b" stroke="#f4b41b" />
+                    {translateText(selected.rating.toFixed(1))}
+                  </span>
+                </div>
+                <div className="map-detail__actions">
+                  <Link className="map-btn map-btn--dark" to={detailPath}>
+                    {translateText("Подробнее")}
+                  </Link>
+                  <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
+                    {translateText("Написать")}
+                  </Link>
+                </div>
+                <button
+                  type="button"
+                  className="map-detail__close"
+                  onClick={() => setSelectedId(null)}
+                  aria-label={translateText("Закрыть")}
+                >
+                  <X size={16} strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
             {filtered.length === 0 ? (
               <div className="map-empty">
                 <p>
@@ -762,11 +793,9 @@ export default function MapPage() {
               filtered.map((item, index) => (
                 <button
                   key={item.id}
-                  ref={(el) => {
-                    cardRefs.current[item.id] = el;
-                  }}
                   type="button"
                   className={`map-card ${selectedId === item.id ? "is-selected" : ""}`}
+                  aria-pressed={selectedId === item.id}
                   onClick={() => setSelectedId(item.id)}
                 >
                   <img
@@ -990,36 +1019,6 @@ export default function MapPage() {
               </div>
             )}
           </div>
-
-          {selected && (
-            <div className="map-detail">
-              <img src={selected.image} alt="" className="map-detail__img" />
-              <div className="map-detail__info">
-                <h3>{translateText(selected.name)}</h3>
-                <p>{translateText(meta(selected))}</p>
-                <span className="map-card__star">
-                  <Star size={12} fill="#f4b41b" stroke="#f4b41b" />
-                  {translateText(selected.rating.toFixed(1))}
-                </span>
-              </div>
-              <div className="map-detail__actions">
-                <Link className="map-btn map-btn--dark" to={detailPath}>
-                  {translateText("Подробнее")}
-                </Link>
-                <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
-                  {translateText("Написать")}
-                </Link>
-              </div>
-              <button
-                type="button"
-                className="map-detail__close"
-                onClick={() => setSelectedId(null)}
-                aria-label={translateText("Закрыть")}
-              >
-                <X size={16} strokeWidth={2.2} />
-              </button>
-            </div>
-          )}
 
           <button
             type="button"

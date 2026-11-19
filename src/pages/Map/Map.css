@@ -21,7 +21,6 @@
 
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
-  padding-bottom: 20px;
 }
 
 .map button {
@@ -32,9 +31,10 @@
 
 .map-layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 22px;
-  min-height: calc(95vh - 200px);
+  height: clamp(440px, calc(100dvh - var(--nav-space) - 112px), 840px);
 }
 
 /* ---------- Umumiy shisha sirt ---------- */
@@ -162,6 +162,8 @@
   gap: 10px;
   padding: 4px 14px 20px;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(67, 32, 21, 0.25) transparent;
 }
@@ -247,7 +249,6 @@
 
 .map-area {
   position: relative;
-  min-height: 560px;
   overflow: hidden;
   isolation: isolate;
   border-radius: 30px;
@@ -447,16 +448,14 @@
 /* ---------- Tanlangan element kartochkasi ---------- */
 
 .map-detail {
-  position: absolute;
-  bottom: 56px;
-  left: 20px;
-  z-index: 1000;
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
-  min-width: 340px;
-  padding: 14px 44px 14px 14px;
-  border-radius: 26px;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 22px;
   animation: mapSlideUp 0.25s ease;
 }
 
@@ -467,6 +466,11 @@
   border-radius: 18px;
   object-fit: cover;
   background: #e7dbce;
+}
+
+.map-detail__info {
+  padding-inline-end: 26px;
+  overflow-wrap: anywhere;
 }
 
 .map-detail__info h3 {
@@ -489,9 +493,14 @@
 }
 
 .map-detail__actions {
+  grid-column: 1 / -1;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-left: auto;
+}
+
+.map-detail__actions .map-btn {
+  flex: 1 0 auto;
 }
 
 .map-detail__close {
@@ -758,31 +767,20 @@
 
 @media (max-width: 1100px) {
   .map-layout {
-    grid-template-columns: 320px 1fr;
-  }
-
-  .map-detail {
-    min-width: 0;
-    right: 20px;
-    bottom: 84px;
-    flex-wrap: wrap;
+    grid-template-columns: 320px minmax(0, 1fr);
   }
 }
 
 @media (max-width: 900px) {
   .map-layout {
-    grid-template-columns: 1fr;
-    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(340px, 54dvh, 480px) clamp(300px, 48dvh, 420px);
+    gap: 16px;
+    height: auto;
   }
 
-  /* telefonda xarita tepada, ro'yxat pastda */
   .map-area {
     order: -1;
-    min-height: 480px;
-  }
-
-  .map-sidebar {
-    max-height: 360px;
   }
 }
 
@@ -838,26 +836,9 @@
     right: 14px;
   }
 
-  .map-detail {
-    right: 14px;
-    bottom: 70px;
-    left: 14px;
-    gap: 12px;
-    padding: 12px 40px 12px 12px;
-  }
-
   .map-detail__img {
     width: 52px;
     height: 52px;
-  }
-
-  .map-detail__actions {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .map-btn {
-    flex: 1;
   }
 
   .map-near {
