@@ -1,5 +1,20 @@
 import { PRODUCT_CATEGORIES } from "../pages/Product/productDetails";
 import { useShopStore } from "./shopStore";
+const DEMO_BAKERIES = [
+  { id: "anhor", name: "Anhor Bakery", initials: "AB", color: "#ecd4b7", specialty: "Хлеб", image: "bread", items: [["Пшеничный хлеб", 8500], ["Хлеб на закваске", 18000]] },
+  { id: "bodom", name: "Bodom Bakes", initials: "BB", color: "#ead6c9", specialty: "Печенье", image: "cookie", items: [["Миндальное печенье", 22000], ["Песочное печенье", 17000]] },
+  { id: "rayhon", name: "Rayhon Tandir", initials: "RT", color: "#dddcc8", specialty: "Самса", image: "somsa", items: [["Самса с говядиной", 11000], ["Самса с тыквой", 8000]] },
+  { id: "zarafshon", name: "Zarafshon Cakes", initials: "ZC", color: "#efd5d7", specialty: "Торты", image: "cake", items: [["Бисквитный торт", 82000], ["Торт с шоколадным кремом", 99000]] },
+  { id: "navbahor", name: "Navbahor Non", initials: "NN", color: "#eadbc0", specialty: "Хлеб", image: "bread", items: [["Ржаной хлеб", 13000], ["Пшеничная буханка", 10500]] },
+  { id: "vanil", name: "Vanil Studio", initials: "VS", color: "#e6d9ef", specialty: "Торты", image: "cake", items: [["Ванильный торт", 87000], ["Торт с какао", 94000]] },
+  { id: "asal", name: "Asal Cookies", initials: "AC", color: "#f0ddbe", specialty: "Печенье", image: "cookie", items: [["Медовое печенье", 19000], ["Печенье с орехами", 24500]] },
+  { id: "chashma", name: "Chashma Tandir", initials: "CT", color: "#ede0cb", specialty: "Самса", image: "somsa", items: [["Самса с курицей", 9500], ["Самса с картофелем", 7500]] },
+  { id: "dolchin", name: "Dolchin Bakery", initials: "DB", color: "#e5cbb8", specialty: "Печенье", image: "cookie", items: [["Печенье с корицей", 18000], ["Овсяное печенье", 16000]] },
+  { id: "zamin", name: "Zamin Bread", initials: "ZB", color: "#dfd7c1", specialty: "Хлеб", image: "bread", items: [["Цельнозерновой хлеб", 16000], ["Хлеб с семенами", 17500]] },
+  { id: "nilufar", name: "Nilufar Sweets", initials: "NS", color: "#eed6e3", specialty: "Торты", image: "cake", items: [["Шоколадный бисквит", 76000], ["Торт с ванильным кремом", 89000]] },
+  { id: "samar", name: "Samar Tandir", initials: "ST", color: "#f0d6b9", specialty: "Самса", image: "somsa", items: [["Слоёная самса", 10000], ["Самса с зеленью", 8500]] },
+];
+
 export const products = [
   {
     id: "cake",
@@ -33,6 +48,16 @@ export const products = [
     image: "/images/products/somsa.jpg",
     shopId: "bakeu",
   },
+  ...DEMO_BAKERIES.flatMap(({ id, specialty, image, items }) =>
+    items.map(([name, price], index) => ({
+      id: `demo-${id}-${index + 1}`,
+      name,
+      category: specialty,
+      price,
+      image: `/images/products/${image}.jpg`,
+      shopId: `demo-${id}`,
+    })),
+  ),
 ];
 
 // Демо-маълумотлар: телефон, username, манзил ва координаталарни ҳақиқийсига алмаштиринг
@@ -140,6 +165,20 @@ export const shops = [
       },
     ],
   },
+  ...DEMO_BAKERIES.map(({ id, name, initials, color, specialty }) => ({
+    id: `demo-${id}`,
+    demo: true,
+    name: `${name} · Demo`,
+    initials,
+    color,
+    description: specialty,
+    about: "Демо-магазин",
+    reviewsCount: 0,
+    reviews: [],
+    address: "Ташкент",
+    lat: 41.3111,
+    lng: 69.2797,
+  })),
 ];
 
 export const categories = ["Все", ...PRODUCT_CATEGORIES];
