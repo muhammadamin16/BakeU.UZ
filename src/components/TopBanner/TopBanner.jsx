@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Pause, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { translateText } from "../../i18n/index.js";
 import "./TopBanner.css";
 
@@ -41,12 +41,11 @@ const carouselSlides = [...slides, slides[0]];
 export default function TopBanner({ onCategoryClick }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [transitionEnabled, setTransitionEnabled] = useState(true);
-  const [progressCycle, setProgressCycle] = useState(0);
-  const [playing, setPlaying] = useState(
+  const [canAutoplay] = useState(
     () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const [ctaFocused, setCtaFocused] = useState(false);
-  const isPlaying = playing && !ctaFocused;
+  const isPlaying = canAutoplay && !ctaFocused;
 
   const currentRef = useRef(0);
   const movingRef = useRef(false);
@@ -54,8 +53,6 @@ export default function TopBanner({ onCategoryClick }) {
   const touchStartRef = useRef(null);
   const raf1Ref = useRef(null);
   const raf2Ref = useRef(null);
-
-  const activeIndex = currentIndex % slides.length;
 
   const finishTransition = useCallback(() => {
     window.clearTimeout(fallbackRef.current);
@@ -94,7 +91,6 @@ export default function TopBanner({ onCategoryClick }) {
 
       setTransitionEnabled(true);
       setCurrentIndex(nextIndex);
-      setProgressCycle((value) => value + 1);
 
       window.clearTimeout(fallbackRef.current);
 
@@ -116,7 +112,7 @@ export default function TopBanner({ onCategoryClick }) {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isPlaying, currentIndex, progressCycle, moveTo]);
+  }, [isPlaying, currentIndex, moveTo]);
 
   const handleTransitionEnd = (event) => {
     if (event.target !== event.currentTarget) return;
@@ -244,38 +240,6 @@ export default function TopBanner({ onCategoryClick }) {
         })}
       </div>
 
-      <div className="top-banner__controls">
-        <div className="top-banner__pagination">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              className="top-banner__indicator"
-              onClick={() => moveTo(index)}
-              aria-label={`${translateText("Слайд")} ${index + 1}`}
-              aria-current={index === activeIndex ? "true" : undefined}
-            >
-              <span className="top-banner__indicator-track" aria-hidden="true">
-                {index === activeIndex && (
-                  <span
-                    key={progressCycle}
-                    className={`top-banner__progress${isPlaying ? "" : " is-paused"}`}
-                    style={{ animationDuration: `${AUTO_DELAY}ms` }}
-                  />
-                )}
-              </span>
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="top-banner__playback"
-          onClick={() => setPlaying((value) => !value)}
-          aria-label={translateText(playing ? "Приостановить слайды" : "Запустить слайды")}
-        >
-          {playing ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
-        </button>
-      </div>
     </section>
   );
 }
