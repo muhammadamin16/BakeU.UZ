@@ -17,50 +17,7 @@
   text-wrap: balance;
 }
 
-.bu-home h2 { font-size: clamp(32px, 4vw, 48px); }
-
-.bu-welcome {
-  display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
-  overflow: hidden;
-  border: 1px solid #d8dfd1;
-  border-radius: 28px;
-  background: #f3f0e3;
-}
-
-.bu-welcome__copy {
-  align-self: center;
-  padding: clamp(24px, 4vw, 58px);
-}
-
-.bu-welcome h1 {
-  max-width: 12ch;
-  font-size: clamp(43px, 5.5vw, 78px);
-  line-height: 0.99;
-}
-
-.bu-welcome p {
-  max-width: 35ch;
-  margin-block: 20px 26px;
-  color: var(--bu-muted);
-  font-size: clamp(15px, 1.4vw, 17px);
-  line-height: 1.55;
-}
-
-.bu-welcome__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.bu-welcome__photo { position: relative; min-height: 420px; background: #d9d7c6; }
-.bu-welcome__photo img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.bu-home h2 { font-size: clamp(27px, 3vw, 40px); }
 
 .bu-home :is(
   .bu-welcome__browse, .bu-map, .bu-all-products, .bu-category,
@@ -263,14 +220,9 @@
 
 @media (max-width: 900px) {
   .bu-products { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .bu-welcome__photo { min-height: 330px; }
 }
 
 @media (max-width: 650px) {
-  .bu-welcome { grid-template-columns: 1fr; border-radius: 20px; }
-  .bu-welcome__photo { min-height: 0; aspect-ratio: 1.6; }
-  .bu-welcome h1 { font-size: clamp(39px, 8.2vw, 54px); }
-  .bu-welcome p { margin-block: 14px 18px; }
   .bu-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bu-makers__grid { grid-template-columns: 1fr; }
   .bu-maker { display: grid; grid-template-columns: minmax(90px, 35%) 1fr; }
