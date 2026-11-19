@@ -132,19 +132,24 @@ export default function Home() {
         {visibleProducts.length > 0 ? (
           <>
             <div className="product-grid">
-              {displayedProducts.map((product) => (
-                <ProductCard
+              {displayedProducts.map((product, index) => (
+                <div
                   key={product.id}
-                  product={product}
-                  shop={shopById.get(String(product.shopId))}
-                  quantity={items?.[product.id] ?? 0}
-                  onAdd={handleAdd}
-                />
+                  className={index >= batchSize ? "bu-grid-entry bu-grid-entry--revealed" : "bu-grid-entry"}
+                  style={{ "--reveal-delay": `${(index % batchSize) * 35}ms` }}
+                >
+                  <ProductCard
+                    product={product}
+                    shop={shopById.get(String(product.shopId))}
+                    quantity={items?.[product.id] ?? 0}
+                    onAdd={handleAdd}
+                  />
+                </div>
               ))}
             </div>
 
             <div className="bu-load-more">
-              <p className="bu-load-more__label">
+              <p className="bu-load-more__label" aria-live="polite">
                 {translateText(`Показано ${displayedProducts.length} из ${visibleProducts.length} товаров`)}
               </p>
               <div className="bu-load-more__track" role="progressbar" aria-label={translateText("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={displayedProducts.length}>
@@ -191,7 +196,15 @@ export default function Home() {
           </div>
 
           <div className="product-grid seller-shops">
-            {displayedShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}
+            {displayedShops.map((shop, index) => (
+              <div
+                key={shop.id}
+                className={index >= shopsPerRow ? "bu-grid-entry bu-grid-entry--revealed" : "bu-grid-entry"}
+                style={{ "--reveal-delay": `${(index % shopsPerRow) * 35}ms` }}
+              >
+                <ShopCard shop={shop} products={products} />
+              </div>
+            ))}
           </div>
 
           <div className="bu-load-more">
