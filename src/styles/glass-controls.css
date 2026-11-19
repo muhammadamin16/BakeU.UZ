@@ -15,7 +15,7 @@
   input:is([type="submit"], [type="button"], [type="reset"]),
   a[role="button"],
   a:is(.bu-button, .ck-button, .pd-button, .bw-btn, .map-btn, .shop-route-button,
-    .bakeu-header__icon, .bake-footer__store, .bu-all-products, .bu-helper, .bu-map,
+    .bakeu-header__icon, .bake-footer__store, .bu-all-products, .bu-load-more__primary, .bu-helper, .bu-map,
     .bu-continue, .ck-back, .ck-text-button, .seller-shop__open, .ad-btn,
     .bu-makers__heading > a, .seller-tabs > a, .shop-contact-item,
     .bk-telegram-open, .mini-secondary, .mini-admin-entry, .mini-welcome-footer > a,

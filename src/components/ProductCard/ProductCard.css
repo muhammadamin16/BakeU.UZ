@@ -174,12 +174,6 @@
   }
 }
 
-@media (max-width: 480px) {
-  .product-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .product-card {
     transition: none;

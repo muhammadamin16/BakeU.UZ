@@ -4,6 +4,7 @@ import {
   ArrowDown, ArrowRight, ArrowUp, ArrowUpRight,
   MapPin, Search, ShoppingBag, Sparkles, X,
 } from "lucide-react";
+import { useProductBatchSize } from "../../hooks/useProductBatchSize";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
@@ -12,7 +13,6 @@ import { demoProducts, demoSubscriptions, eligibleProducts } from "../../store/h
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
-const PAGE_SIZE = 8;
 const CATEGORIES = [
   { name: "Все", icon: "✦" },
   { name: "Торты", icon: "🍰" },
@@ -31,7 +31,8 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
-  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [expanded, setExpanded] = useState(false);
+  const batchSize = useProductBatchSize();
   const catalogRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
@@ -58,18 +59,17 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
     });
   }, [featured, category, query]);
 
-  const displayedProducts = visibleProducts.slice(0, limit);
+  const displayedProducts = visibleProducts.slice(0, expanded ? batchSize * 2 : batchSize);
   const remaining = Math.max(0, visibleProducts.length - displayedProducts.length);
   const isFiltered = query.trim() !== "" || category !== "Все";
-  const expanded = limit > PAGE_SIZE;
 
   const updateQuery = (value) => {
     setQuery(value);
-    setLimit(PAGE_SIZE);
+    setExpanded(false);
   };
   const updateCategory = (value) => {
     setCategory(value);
-    setLimit(PAGE_SIZE);
+    setExpanded(false);
   };
 
   const scrollToProducts = () => {
@@ -79,16 +79,16 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
   const openCatalog = (nextCategory = "Все") => {
     setQuery("");
     setCategory(CATEGORIES.some((item) => item.name === nextCategory) ? nextCategory : "Все");
-    setLimit(PAGE_SIZE);
+    setExpanded(false);
     window.requestAnimationFrame(scrollToProducts);
   };
-  const resetFilters = () => { setQuery(""); setCategory("Все"); setLimit(PAGE_SIZE); };
+  const resetFilters = () => { setQuery(""); setCategory("Все"); setExpanded(false); };
   const handleAdd = (product) => {
     add(product);
     setNotice(product.name);
   };
   const collapseProducts = () => {
-    setLimit(PAGE_SIZE);
+    setExpanded(false);
     window.requestAnimationFrame(scrollToProducts);
   };
 
@@ -152,30 +152,32 @@ export default function Home({ catalog = demoProducts, subscriptions = demoSubsc
               ))}
             </div>
 
-            {(remaining > 0 || expanded) && (
-              <div className="bu-load-more">
-                <p className="bu-load-more__label">
-                  {translateText(`Показано ${displayedProducts.length} из ${visibleProducts.length} товаров`)}
-                </p>
-                <div className="bu-load-more__track" role="progressbar" aria-label={translateText("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={displayedProducts.length}>
-                  <span style={{ width: `${(displayedProducts.length / visibleProducts.length) * 100}%` }} />
-                </div>
-                <div className="bu-load-more__buttons">
-                  {remaining > 0 && (
-                    <button type="button" className="bu-load-more__primary" onClick={() => setLimit((previous) => Math.min(previous + PAGE_SIZE, visibleProducts.length))}>
-                      {translateText("Больше товаров")}
-                      <span className="bu-load-more__count">+{Math.min(PAGE_SIZE, remaining)}</span>
-                      <ArrowDown size={17} aria-hidden="true" />
-                    </button>
-                  )}
-                  {expanded && (
-                    <button type="button" className="bu-load-more__secondary" onClick={collapseProducts}>
-                      {translateText("Свернуть")} <ArrowUp size={16} aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
+            <div className="bu-load-more">
+              <p className="bu-load-more__label">
+                {translateText(`Показано ${displayedProducts.length} из ${visibleProducts.length} товаров`)}
+              </p>
+              <div className="bu-load-more__track" role="progressbar" aria-label={translateText("Показано товаров")} aria-valuemin={0} aria-valuemax={visibleProducts.length} aria-valuenow={displayedProducts.length}>
+                <span style={{ width: `${(displayedProducts.length / visibleProducts.length) * 100}%` }} />
               </div>
-            )}
+              <div className="bu-load-more__buttons">
+                {!expanded && remaining > 0 ? (
+                  <button type="button" className="bu-load-more__primary" onClick={() => setExpanded(true)}>
+                    {translateText("Больше товаров")}
+                    <span className="bu-load-more__count">+{Math.min(batchSize, remaining)}</span>
+                    <ArrowDown size={17} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <Link className="bu-load-more__primary" to="/seller?tab=products&all=1">
+                    {translateText("Больше товаров")} <ArrowUpRight size={17} aria-hidden="true" />
+                  </Link>
+                )}
+                {expanded && (
+                  <button type="button" className="bu-load-more__secondary" onClick={collapseProducts}>
+                    {translateText("Свернуть")} <ArrowUp size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            </div>
           </>
         ) : (
           <div className="bu-empty">
