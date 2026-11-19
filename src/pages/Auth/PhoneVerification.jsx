@@ -7,7 +7,7 @@ export default function PhoneVerification({ botUrl, busy, error, onVerify, onEdi
   return (
     <>
       <header className="bk-head">
-        <h1 id="bk-auth-title">{t("Подтверждение телефона")}</h1>
+        <h1 id="bk-auth-title">{t("Подтверждение телефона.")}</h1>
         <p>{t("Откройте Telegram, нажмите Start, поделитесь своим номером и введите код из бота.")}</p>
       </header>
       {botUrl && (
