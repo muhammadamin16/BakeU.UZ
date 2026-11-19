@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Check, ImageOff, Plus, Star, Store } from "lucide-react";
+import { ArrowUpRight, Check, ImageOff, Star, Store } from "lucide-react";
 import { translateText } from "../../i18n/index.js";
+import CartQuantity from "../../components/CartQuantity/CartQuantity";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
 import { products as catalogProducts, getShop } from "../../store/sellerData";
 import { formatPrice, shopUrl } from "./format";
@@ -40,7 +41,10 @@ export function ProductCard({ product, quantity = 0, onAdd }) {
     <div className="seller-product__body">
       {shop && <Link to={sellerLink(shop.id)} className="seller-product__shop"><Store size={12} />{t(shop.name)}</Link>}
       <h2 className="seller-product__title"><Link to={productLink(product.id)}>{t(product.name)}</Link></h2>
-      <div className="seller-product__bottom"><strong className="seller-product__price">{formatPrice(product.price)}</strong><button type="button" className="seller-product__add" onClick={() => onAdd?.(product)} disabled={!onAdd} aria-label={`${t("Добавить в корзину")}: ${t(product.name)}`}><Plus size={19} /></button></div>
+      <div className="seller-product__bottom">
+        <strong className="seller-product__price">{formatPrice(product.price)}</strong>
+        <CartQuantity product={product} quantity={quantity} onAdd={onAdd} />
+      </div>
     </div>
   </article>;
 }

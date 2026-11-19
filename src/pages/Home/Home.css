@@ -355,39 +355,6 @@
   letter-spacing: 0;
   color: #9a8170;
 }
-.bu-product__stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: auto;
-}
-
-.bu-product__stepper output {
-  min-width: 1.5ch;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
-}
-
-.bu-product__add {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 12px;
-  background: #432015;
-  color: #fff;
-  transition:
-    transform 0.2s,
-    background 0.2s;
-}
-.bu-product__add:hover {
-  background: #a65b36;
-  transform: scale(1.06);
-}
 /* Progressive product disclosure */
 .bu-load-more {
   display: flex;
@@ -710,11 +677,6 @@
   }
   .bu-product__price small {
     font-size: 9px;
-  }
-  .bu-product__add {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
   }
   .bu-product__quantity {
     font-size: 9px;
