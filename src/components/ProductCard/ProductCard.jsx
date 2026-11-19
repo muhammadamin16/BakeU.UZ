@@ -4,6 +4,7 @@ import { Check, ImageOff } from "lucide-react";
 import { getLocale, translateText as t } from "../../i18n/index.js";
 import CartQuantity from "../CartQuantity/CartQuantity";
 import FavoriteButton from "../FavoriteButton/FavoriteButton";
+import PhotoCarousel from "../PhotoCarousel/PhotoCarousel";
 import "./ProductCard.css";
 
 export function ProductImage({ product }) {
@@ -25,15 +26,21 @@ export default function ProductCard({ product, quantity = 0, onAdd, sellerName, 
   return (
     <article className="product-card">
       <div className="product-card__image">
-        <Link className="product-card__image-link" to={productUrl} aria-label={t(`Подробнее: ${product.name}`)}>
-          <ProductImage product={product} />
-        </Link>
-        <div className="product-card__favorite"><FavoriteButton product={product} /></div>
-        {quantity > 0 && (
-          <span className="product-card__badge" aria-hidden="true">
-            <Check size={13} /> {t("В корзине:")} {quantity}
-          </span>
-        )}
+        <PhotoCarousel
+          product={product}
+          renderImage={(image) => (
+            <Link className="product-card__image-link" to={productUrl} aria-label={t(`Подробнее: ${product.name}`)}>
+              <ProductImage product={{ image, name: product.name }} />
+            </Link>
+          )}
+        >
+          <div className="product-card__favorite"><FavoriteButton product={product} /></div>
+          {quantity > 0 && (
+            <span className="product-card__badge" aria-hidden="true">
+              <Check size={13} /> {t("В корзине:")} {quantity}
+            </span>
+          )}
+        </PhotoCarousel>
       </div>
 
       <div className="product-card__body">

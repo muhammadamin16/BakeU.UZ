@@ -154,15 +154,12 @@ export default function Checkout() {
     }
   }
   return (
-    <div className="ck-page">
+    <div className="ck-page ck-checkout">
       <Link to="/cart" className="ck-back">
         <ArrowLeft size={17} />
         {translateText("В корзину")}
       </Link>
       <header className="ck-page-heading">
-        <span className="ck-eyebrow">
-          {translateText("ВАША ВЫПЕЧКА · ВАШЕ ВРЕМЯ")}
-        </span>
         <h1>{translateText("Оформление заказа")}</h1>
         <p>
           {translateText(

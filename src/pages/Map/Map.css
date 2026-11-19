@@ -2,6 +2,30 @@
    MAP PAGE — sayt ranglariga moslangan, shisha uslubidagi xarita
    ===================================================== */
 
+html:has(.site-content--map),
+body:has(.site-content--map) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body:has(.site-content--map) {
+  padding-bottom: 0;
+}
+
+#root:has(.site-content--map) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom, 0px));
+}
+
+.site-content--map {
+  flex: 1;
+  min-height: 0;
+  padding-block: 12px;
+}
+
 .map {
   --ink: #432015;
   --paper: #fffcf7;
@@ -19,6 +43,7 @@
   --glass-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.95),
     inset 0 -1px 2px rgba(255, 255, 255, 0.3), 0 6px 20px rgba(78, 49, 25, 0.1);
 
+  height: 100%;
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -33,8 +58,8 @@
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
-  gap: 22px;
-  height: clamp(440px, calc(100dvh - var(--nav-space) - 112px), 840px);
+  gap: 14px;
+  height: 100%;
 }
 
 /* ---------- Umumiy shisha sirt ---------- */
@@ -81,13 +106,18 @@
 /* ---------- Chap panel ---------- */
 
 .map-sidebar {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
-  border-radius: 30px;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a58471 transparent;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 245, 228, 0.3));
+  background: #fffaf4;
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   backdrop-filter: blur(20px) saturate(140%);
   box-shadow: var(--glass-shadow);
@@ -95,13 +125,14 @@
 
 .map-tabs {
   display: flex;
-  gap: 10px;
-  padding: 18px 18px 10px;
+  flex: none;
+  gap: 6px;
+  padding: 10px 12px 6px;
 }
 
 .map-tab {
   flex: 1;
-  padding: 13px 16px;
+  padding: 9px 10px;
   border-radius: 100px;
   color: var(--muted);
   font-size: 15px;
@@ -155,17 +186,11 @@
 }
 
 .map-list {
-  flex: 1;
-  min-height: 0;
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
-  gap: 10px;
-  padding: 4px 14px 20px;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(67, 32, 21, 0.25) transparent;
+  gap: 8px;
+  padding: 4px 12px 14px;
 }
 
 .map-card {
@@ -297,14 +322,23 @@
 
 /* ---------- Yuqori panel ---------- */
 
+.map-sidebar > h1 {
+  padding: 14px 14px 0;
+  font-size: 21px;
+  line-height: 1.2;
+}
+
 .map-toolbar {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  right: 18px;
-  z-index: 1000;
   display: flex;
-  gap: 12px;
+  flex: none;
+  gap: 8px;
+  padding: 10px 12px 0;
+}
+
+.map-toolbar .map-round {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
 }
 
 .map-search {
@@ -313,8 +347,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 52px;
-  padding: 0 14px 0 20px;
+  height: 42px;
+  padding: 0 10px 0 13px;
   border-radius: 100px;
   color: #725a48;
 }
@@ -367,8 +401,8 @@
 
 .map-controls {
   position: absolute;
-  top: 86px;
-  right: 18px;
+  top: 12px;
+  right: 12px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -569,18 +603,12 @@
 }
 
 .map-geo-error {
-  position: absolute;
-  bottom: 84px;
-  right: 20px;
-  z-index: 1000;
-  max-width: 280px;
-  padding: 10px 16px;
-  border-radius: 16px;
+  flex: none;
+  margin: 10px 12px 2px;
   background: var(--ink);
   color: var(--paper);
   font-size: 13px;
   font-weight: 700;
-  animation: mapSlideUp 0.25s ease;
 }
 
 @keyframes mapSlideUp {
@@ -774,9 +802,8 @@
 @media (max-width: 900px) {
   .map-layout {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: clamp(340px, 54dvh, 480px) clamp(300px, 48dvh, 420px);
-    gap: 16px;
-    height: auto;
+    grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 10px;
   }
 
   .map-area {
@@ -811,29 +838,19 @@
     font-size: 13px;
   }
 
-  .map-toolbar {
-    top: 14px;
-    left: 14px;
-    right: 14px;
-  }
-
-  .map-search {
-    height: 46px;
-    padding: 0 10px 0 16px;
-  }
-
   .map-search input {
-    font-size: 13px;
-  }
-
-  .map-toolbar .map-round {
-    width: 46px;
-    height: 46px;
+    font-size: 16px;
   }
 
   .map-controls {
-    top: 72px;
-    right: 14px;
+    top: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  .map-controls .map-round {
+    width: 36px;
+    height: 36px;
   }
 
   .map-detail__img {
@@ -846,11 +863,6 @@
     right: 14px;
     padding: 12px 16px;
     font-size: 12px;
-  }
-
-  .map-geo-error {
-    right: 14px;
-    bottom: 66px;
   }
 
   .map-credits {
@@ -882,8 +894,8 @@
 
 .map-zone {
   position: absolute;
-  top: 82px;
-  left: 18px;
+  top: 12px;
+  left: 12px;
   z-index: 1000;
   display: inline-flex;
   align-items: center;
@@ -953,20 +965,18 @@
   }
 
   .map-zone {
-    top: 68px;
-    left: 14px;
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 64px);
   }
 }
 
 /* ---------- Geolokatsiya xabari va qo'lda belgilash ---------- */
 
 .map .map-geo-error {
-  right: 20px;
-  bottom: 84px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 330px;
   padding: 14px 16px;
   border-radius: 20px;
   line-height: 1.45;
@@ -1002,8 +1012,8 @@
 
 .map .map-pick {
   position: absolute;
-  top: 82px;
-  left: 18px;
+  top: 12px;
+  left: 12px;
   z-index: 1000;
   display: inline-flex;
   align-items: center;
@@ -1041,16 +1051,10 @@
 }
 
 @media (max-width: 600px) {
-  .map .map-geo-error {
-    right: 14px;
-    left: 14px;
-    bottom: 66px;
-    max-width: none;
-  }
-
   .map .map-pick {
-    top: 68px;
-    left: 14px;
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 64px);
   }
 }
 
@@ -1100,13 +1104,6 @@
   border-color: var(--ink);
   background: var(--ink);
   color: var(--gold);
-}
-
-/* ---------- Geolokatsiya kartochkasi: tugmalar joylashuvi ---------- */
-
-.map .map-geo-error {
-  max-height: calc(100% - 170px);
-  overflow-y: auto;
 }
 
 .map-geo-error__actions {

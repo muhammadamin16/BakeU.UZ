@@ -673,3 +673,22 @@
 .ck-order-list {
   margin-top: 18px;
 }
+
+
+.ck-page.ck-checkout {
+  padding: 12px 0 16px;
+}
+
+.ck-checkout .ck-back,
+.ck-checkout .ck-page-heading {
+  margin-bottom: 14px;
+}
+
+.ck-checkout .ck-layout,
+.ck-checkout .ck-main {
+  gap: 14px;
+}
+
+.ck-checkout .ck-card {
+  padding: clamp(14px, 2vw, 20px);
+}

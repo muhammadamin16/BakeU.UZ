@@ -20,6 +20,7 @@ import { useCartStore } from "../../store/cartStore";
 import { useWorkspace, followShop } from "../../store/workspaceStore";
 import { accountId } from "../../store/localAccount";
 import FavoriteButton from "../../components/FavoriteButton/FavoriteButton";
+import PhotoCarousel from "../../components/PhotoCarousel/PhotoCarousel";
 import ProductImage from "../../components/ProductImage/ProductImage";
 import {
   detailsFor,
@@ -44,7 +45,6 @@ function ProductView({ id }) {
   );
   const navigate = useNavigate();
   const [variantId, setVariantId] = useState(""),
-    [photo, setPhoto] = useState(0),
     [notice, setNotice] = useState("");
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -72,7 +72,6 @@ function ProductView({ id }) {
   const variant = p.variants.find((v) => v.id === variantId) || p.variants[0];
   const selection = cartSelection(p, variant),
     qty = cart.items[selection.id] || 0;
-  const photos = [...new Set([p.image, ...(p.images || [])].filter(Boolean))];
   const following =
     account &&
     follows.some(
@@ -122,30 +121,13 @@ function ProductView({ id }) {
           className="pd-gallery"
           aria-label={translateText("Фотографии товара")}
         >
-          <div className="pd-main-photo">
-            <ProductImage src={photos[photo]} name={p.name} />
+          <PhotoCarousel
+            product={p}
+            renderImage={(src) => <ProductImage src={src} name={p.name} />}
+            thumbnails
+          >
             <FavoriteButton product={p} />
-          </div>
-          {photos.length > 1 && (
-            <div className="pd-thumbs">
-              {photos.map((src, i) => (
-                <button
-                  type="button"
-                  key={src}
-                  aria-label={translateText("Фото " + (i + 1))}
-                  aria-pressed={i === photo}
-                  onClick={() => setPhoto(i)}
-                >
-                  <img src={src} alt="" />
-                </button>
-              ))}
-            </div>
-          )}
-          <p className="pd-caption">
-            {translateText(
-              "Детали заказа и оформление можно обсудить с продавцом.",
-            )}
-          </p>
+          </PhotoCarousel>
         </section>
         <section className="pd-panel pd-buy">
           <span className="pd-kicker">

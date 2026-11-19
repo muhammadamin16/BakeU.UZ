@@ -2,7 +2,7 @@
   --pd-ink: #432015;
   --pd-accent: #b85d24;
   color: var(--pd-ink);
-  padding: 26px 0 140px;
+  padding: 16px 0 24px;
 }
 .pd-page * {
   box-sizing: border-box;
@@ -26,8 +26,8 @@
 .pd-crumb {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 14px;
   font-size: 13px;
   color: #846953;
 }
@@ -38,58 +38,39 @@
 }
 .pd-top {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 .pd-panel {
   border: 1px solid #fff;
   border-radius: 26px;
   background: linear-gradient(130deg, #fffaf4db, #f5e9dcb3);
-  padding: 26px;
+  padding: 20px;
   box-shadow: 0 12px 30px #43201508;
   min-width: 0;
 }
-.pd-main-photo {
-  position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  background: #f3e9dc;
-  aspect-ratio: 1/1;
+.pd-gallery {
+  --photo-ratio: 4 / 3;
+  --photo-radius: 22px;
+}
+
+.pd-gallery .photo-carousel__frame {
   border: 1px solid white;
 }
-.pd-main-photo > .bu-image {
+
+.pd-gallery .photo-carousel__image > .bu-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
-.pd-main-photo .bu-favorite {
+
+.pd-gallery .bu-favorite {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
 }
-.pd-thumbs {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-  overflow: auto;
-}
-.pd-thumbs button {
-  padding: 3px;
-  border: 2px solid transparent;
-  border-radius: 15px;
-  background: #fff8ed;
-  flex: 0 0 78px;
-}
-.pd-thumbs button[aria-pressed="true"] {
-  border-color: #b85d24;
-}
-.pd-thumbs img {
-  width: 68px;
-  height: 65px;
-  object-fit: cover;
-  border-radius: 10px;
-}
+
 .pd-kicker {
   text-transform: uppercase;
   color: #a26030;
@@ -98,10 +79,10 @@
   letter-spacing: 1.6px;
 }
 .pd-buy h1 {
-  font-size: clamp(28px, 3vw, 42px);
+  font-size: clamp(26px, 2.6vw, 36px);
   letter-spacing: -1.3px;
   line-height: 1.12;
-  margin: 14px 0 18px;
+  margin: 8px 0 12px;
 }
 .pd-shop-link {
   display: flex;
@@ -118,12 +99,12 @@
   font-size: 14px;
   line-height: 1.8;
   color: #765d4d;
-  margin: 22px 0;
+  margin: 14px 0;
 }
 .pd-options {
   border: 0;
   padding: 0;
-  margin: 20px 0;
+  margin: 14px 0;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -156,7 +137,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin: 18px 0;
+  margin: 12px 0;
 }
 .pd-specs div {
   padding: 12px;
@@ -178,7 +159,7 @@
   align-items: baseline;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 22px 0;
+  margin: 14px 0;
 }
 .pd-price strong {
   font-size: 30px;
@@ -296,12 +277,6 @@
   line-height: 1.8;
   color: #765d4d;
   margin: 0 0 14px;
-}
-.pd-caption {
-  font-size: 11px;
-  line-height: 1.7;
-  color: #8b7463;
-  margin: 12px 0;
 }
 .pd-seller {
   overflow: hidden;
@@ -445,9 +420,6 @@
   }
   .pd-buy h1 {
     font-size: 30px;
-  }
-  .pd-gallery .pd-main-photo {
-    aspect-ratio: 1.15;
   }
   .pd-panel {
     border-radius: 22px;
