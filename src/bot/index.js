@@ -143,8 +143,12 @@ async function main() {
           repo.setOffset(update.update_id + 1);
         }
       } catch (error) {
-        if (stopping) break;
-        if ([401, 409].includes(error.code)) throw error;
+        if (stopping) break;if (error.code === 401) throw error;
+
+if (error.code === 409) {
+  await delay(15000);
+  continue;
+}
         await delay(
           Math.min(Math.max(Number(error.retryAfter || 0) * 1000, 3000), 60000),
         );
