@@ -3,25 +3,12 @@ import { authReturnTo, authLink } from "../../../store/navigation";
 import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../bot/client/accountApi";
 import { useState } from "react";
 
-const PENDING_KEY = "bakeu-telegram-pending-registration";
-function readPendingRegistration() {
-  try {
-    const record = JSON.parse(sessionStorage.getItem(PENDING_KEY) || "null");
-    return record && record.expiresAt > Date.now() ? record : null;
-  } catch {
-    return null;
-  }
-}
-
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Eye,
-  EyeOff,
   Loader2,
-  LockKeyhole,
   ShoppingBag,
   Store,
   TriangleAlert,
@@ -32,12 +19,15 @@ import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";
 import PhoneInput from "../PhoneInput";
 import { completeUzPhone } from "../uzPhone";
+import PhoneVerification from "../PhoneVerification";
+import { readPhoneChallenge, savePhoneChallenge } from "../phoneChallenge";
+
+const PENDING_KEY = "bakeu-telegram-pending-registration";
 
 const EMPTY = {
   firstName: "",
   lastName: "",
   phone: "",
-  password: "",
 };
 
 const ROLES = [
@@ -88,15 +78,13 @@ export default function Register() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = authReturnTo(params);
-  const [pending] = useState(readPendingRegistration);
+  const [pending] = useState(() => readPhoneChallenge(PENDING_KEY));
   const [step, setStep] = useState(() => pending ? 3 : 1);
   const [role, setRole] = useState(() => pending?.role || "client");
   const [form, setForm] = useState(EMPTY);
-  const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [pendingToken, setPendingToken] = useState(() => pending?.token || "");
-  const [verificationCode, setVerificationCode] = useState("");
   const [botUrl, setBotUrl] = useState(() => pending?.botUrl || "");
 
   if (isLoggedIn()) return <Navigate to={returnTo} replace />;
@@ -115,14 +103,11 @@ export default function Register() {
     if (
       !form.firstName.trim() ||
       !form.lastName.trim() ||
-      !form.phone.trim() ||
-      !form.password
+      !form.phone.trim()
     )
       return setError("Заполните все обязательные поля.");
     if (!completeUzPhone(form.phone))
       return setError("Введите номер в формате +998 XX XXX XX XX.");
-    if (form.password.length < 8)
-      return setError("Пароль должен содержать минимум 8 символов.");
 
     setBusy(true);
     try {
@@ -130,13 +115,7 @@ export default function Register() {
         throw Error("Для подтверждения через Telegram подключите BakeU Bot API.");
       }
       const result = await startTelegramRegistration({ ...form, phone: completeUzPhone(form.phone) }, role);
-      const pendingRecord = {
-        token: result.token,
-        botUrl: result.botUrl,
-        role,
-        expiresAt: Date.now() + (result.expiresIn || 600) * 1000,
-      };
-      sessionStorage.setItem(PENDING_KEY, JSON.stringify(pendingRecord));
+      savePhoneChallenge(PENDING_KEY, result, { role });
       setPendingToken(result.token);
       setBotUrl(result.botUrl);
       setStep(3);
@@ -147,13 +126,12 @@ export default function Register() {
     }
   }
 
-  async function confirmCode(event) {
-    event.preventDefault();
-    if (busy || !pendingToken || verificationCode.length !== 6) return;
+  async function confirmCode(code) {
+    if (busy || !pendingToken) return;
     setBusy(true);
     setError("");
     try {
-      await verifyTelegramRegistration(pendingToken, verificationCode.trim());
+      await verifyTelegramRegistration(pendingToken, code);
       sessionStorage.removeItem(PENDING_KEY);
       navigate(returnTo, { replace: true });
     } catch (e) {
@@ -212,61 +190,20 @@ export default function Register() {
           </button>
         </>
       ) : step === 3 ? (
-        <>
-          <header className="bk-head">
-            <h1 id="bk-auth-title">{translateText("Подтверждение телефона")}</h1>
-            <p>{translateText("Откройте Telegram, нажмите Start, поделитесь своим номером и введите код из бота.")}</p>
-          </header>
-          {botUrl && (
-            <p className="bk-switch">
-              <a href={botUrl} target="_blank" rel="noopener noreferrer" className="bk-telegram-open">
-                {translateText("Открыть Telegram бот")}
-              </a>
-            </p>
-          )}
-          <p className="bk-note">{translateText("После получения кода вернитесь сюда. Код действителен 10 минут.")}</p>
-          <form className="bk-form" onSubmit={confirmCode}>
-            <div className="bk-field">
-              <label htmlFor="reg-code">{translateText("Код из Telegram")}</label>
-              <div className="bk-input">
-                <input
-                  id="reg-code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  placeholder="000000"
-                  value={verificationCode}
-                  onChange={(e) => {
-                    setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6));
-                    setError("");
-                  }}
-                  required
-                />
-              </div>
-            </div>
-            {error && <p className="bk-alert" role="alert">{translateText(error)}</p>}
-            <button className="bk-primary" type="submit" disabled={busy || verificationCode.length !== 6}>
-              {translateText("Подтвердить код")} <ArrowRight size={18} />
-            </button>
-          </form>
-          <button
-            className="bk-restart-registration"
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              sessionStorage.removeItem(PENDING_KEY);
-              setPendingToken("");
-              setVerificationCode("");
-              setBotUrl("");
-              setError("");
-              setStep(2);
-            }}
-          >
-            {translateText("Изменить данные")}
-          </button>
-        </>
+        <PhoneVerification
+          botUrl={botUrl}
+          busy={busy}
+          error={error}
+          onVerify={confirmCode}
+          onCodeChange={() => setError("")}
+          onEdit={() => {
+            sessionStorage.removeItem(PENDING_KEY);
+            setPendingToken("");
+            setBotUrl("");
+            setError("");
+            setStep(2);
+          }}
+        />
       ) : (
         <>
           <header className="bk-head">
@@ -312,40 +249,13 @@ export default function Register() {
               placeholder={translateText("Ваша фамилия")}
               autoComplete="family-name"
             />
-            <div className="bk-field">
+            <div className="bk-field bk-field--wide">
               <label htmlFor="reg-phone">{translateText("Телефон")}</label>
               <PhoneInput
                 id="reg-phone"
                 value={form.phone}
                 onChange={(value) => update("phone", value)}
               />
-            </div>
-
-            <div className="bk-field bk-field--wide">
-              <label htmlFor="reg-password">{translateText("Пароль")}</label>
-              <div className="bk-input">
-                <LockKeyhole size={18} />
-                <input
-                  id="reg-password"
-                  type={visible ? "text" : "password"}
-                  autoComplete="new-password"
-                  placeholder={translateText("Минимум 8 символов")}
-                  value={form.password}
-                  onChange={(e) => update("password", e.target.value)}
-                  minLength={8}
-                  required
-                />
-                <button
-                  type="button"
-                  className="bk-eye"
-                  onClick={() => setVisible((v) => !v)}
-                  aria-label={translateText(
-                    visible ? "Скрыть пароль" : "Показать пароль",
-                  )}
-                >
-                  {visible ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
             </div>
 
             {error && (

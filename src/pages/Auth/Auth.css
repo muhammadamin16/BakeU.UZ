@@ -13,6 +13,7 @@
   display: grid;
   grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
   width: min(100%, 920px);
+  height: clamp(440px, calc(100svh - var(--nav-space) - 70px), 680px);
   border: 1px solid #ead9cc;
   border-radius: 26px;
   overflow: hidden;
@@ -21,12 +22,13 @@
 }
 
 .bk-auth-visual {
-  min-height: 540px;
   background: #79513b url("/images/banners/bakery.webp") 72% center / cover no-repeat;
 }
 
 .bk-auth-panel {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
   padding: clamp(20px, 4vw, 44px);
 }
 
@@ -133,17 +135,6 @@
   font-weight: 750;
 }
 
-.bk-eye {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid;
-  border-radius: 8px;
-}
-
 .bk-roles { margin-bottom: 15px; }
 .bk-role {
   position: relative;
@@ -220,6 +211,7 @@
 @media (max-width: 740px) {
   .bk-card { display: block; max-width: 510px; border-radius: 20px; }
   .bk-auth-visual { display: none; }
+  .bk-auth-panel { height: 100%; }
 }
 @media (max-width: 480px) {
   .bk-form--grid { grid-template-columns: minmax(0, 1fr); }

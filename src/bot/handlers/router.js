@@ -42,7 +42,7 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
         return telegram.send(chatId, { text: "Ссылка устарела. Вернитесь в BakeU и запросите новый код." });
       repo.setState(chatId, { kind: "verify_phone", token: verifyStart[1] });
       return telegram.send(chatId, {
-        text: "🔐 BakeU: подтвердите номер, указанный при регистрации. Нажмите кнопку ниже.",
+        text: "🔐 BakeU: подтвердите номер, указанный на сайте. Нажмите кнопку ниже.",
         reply_markup: {
           keyboard: [[{ text: "📱 Поделиться своим номером", request_contact: true }]],
           resize_keyboard: true,
@@ -57,7 +57,7 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
         return telegram.send(chatId, { text: "Отправьте именно свой номер кнопкой ниже." });
       const code = auth?.sendTelegramVerification(pendingContactState.token, user.id, contact.phone_number);
       if (!code)
-        return telegram.send(chatId, { text: "Номер не совпадает с номером регистрации или срок ссылки истёк." });
+        return telegram.send(chatId, { text: "Номер не совпадает с указанным на сайте или срок ссылки истёк." });
       repo.clearState(chatId);
       return telegram.send(chatId, {
         text: `✅ BakeU: ваш код подтверждения — ${code}\n\nВведите его на сайте. Код действует до 10 минут.`,

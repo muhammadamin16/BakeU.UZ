@@ -53,20 +53,60 @@ export function createAuth(repo, config, notifications) {
     );
     return { user, token };
   };
+  const startChallenge = (fields, passwordHash = "", salt = "") => {
+    if (!config.botUsername)
+      throw new HttpError(503, "Telegram бот временно не настроен.");
+    const token = randomBytes(24).toString("hex");
+    repo.savePendingRegistration(tokenHash(token), fields, passwordHash, salt, Date.now() + 10 * 60000);
+    return { token, botUrl: `https://t.me/${config.botUsername}?start=verify_${token}`, expiresIn: 600 };
+  };
+  const verifyChallenge = (input, purpose) => {
+    if (typeof input?.token !== "string" || !/^[a-f0-9]{48}$/.test(input.token) ||
+        typeof input.code !== "string" || !/^\d{6}$/.test(input.code))
+      throw new HttpError(400, "Некорректный код.");
+    const hash = tokenHash(input.token);
+    const pending = repo.pendingRegistration(hash);
+    if (!pending || !pending.telegram_id || !pending.code_hash)
+      throw new HttpError(400, "Сначала подтвердите номер в Telegram.");
+    const fields = JSON.parse(pending.fields);
+    if ((fields.purpose ?? "register") !== purpose)
+      throw new HttpError(400, "Некорректный код.");
+    if (pending.attempts >= 5 || !repo.pendingAttempt(hash))
+      throw new HttpError(429, "Слишком много попыток.");
+    if (tokenHash(hash + ":" + input.code) !== pending.code_hash)
+      throw new HttpError(400, "Неверный код.");
+    if (!repo.deletePending(hash))
+      throw new HttpError(400, "Некорректный код.");
+    return { pending, fields };
+  };
   return {
     startRegistration: async (input) => {
       const fields = validateProfile(input);
-      if (typeof input.password !== "string" || input.password.length < 8 || input.password.length > 128)
+      if (input.password !== undefined &&
+          (typeof input.password !== "string" || input.password.length < 8 || input.password.length > 128))
         throw new HttpError(400, "Пароль: от 8 до 128 символов.");
       if (repo.findUserByPhone(fields.phone))
         throw new HttpError(409, "Этот номер уже зарегистрирован.");
-      if (!config.botUsername)
-        throw new HttpError(503, "Telegram бот временно не настроен.");
-      const token = randomBytes(24).toString("hex");
       const salt = randomBytes(16).toString("hex");
-      const passwordHash = (await scrypt(input.password, salt, 64)).toString("hex");
-      repo.savePendingRegistration(tokenHash(token), fields, passwordHash, salt, Date.now() + 10 * 60000);
-      return { token, botUrl: `https://t.me/${config.botUsername}?start=verify_${token}`, expiresIn: 600 };
+      const passwordHash = input.password === undefined
+        ? randomBytes(64).toString("hex")
+        : (await scrypt(input.password, salt, 64)).toString("hex");
+      return startChallenge(fields, passwordHash, salt);
+    },
+    startLogin: (input) => {
+      const phone = text(input?.phone, "Телефон", 30).replace(/[^0-9]/g, "");
+      if (!/^998\d{9}$/.test(phone))
+        throw new HttpError(400, "Телефон должен быть в формате +998 XX XXX XX XX.");
+      const userId = repo.findUserByPhone(phone)?.id ?? null;
+      return startChallenge({ phone, userId, purpose: "login" });
+    },
+    verifyLogin: (input) => {
+      const { fields } = verifyChallenge(input, "login");
+      const record = repo.findUserByPhone(fields.phone);
+      if (!record || record.id !== fields.userId)
+        throw new HttpError(404, "Аккаунт не найден. Зарегистрируйтесь.");
+      const user = repo.user(record.id);
+      return { ...session(user), application: repo.applicationForUser(user.id) };
     },
     beginTelegramVerification: (token, telegramId) => {
       if (!/^[a-f0-9]{48}$/.test(token)) return false;
@@ -85,18 +125,7 @@ export function createAuth(repo, config, notifications) {
       return code;
     },
     verifyRegistration: (input) => {
-      if (typeof input?.token !== "string" || !/^[a-f0-9]{48}$/.test(input.token) ||
-          typeof input.code !== "string" || !/^\d{6}$/.test(input.code))
-        throw new HttpError(400, "Некорректный код.");
-      const hash = tokenHash(input.token);
-      const pending = repo.pendingRegistration(hash);
-      if (!pending || !pending.telegram_id || !pending.code_hash)
-        throw new HttpError(400, "Сначала подтвердите номер в Telegram.");
-      if (pending.attempts >= 5) throw new HttpError(429, "Слишком много попыток.");
-      repo.pendingAttempt(hash);
-      if (tokenHash(hash + ":" + input.code) !== pending.code_hash)
-        throw new HttpError(400, "Неверный код.");
-      const fields = JSON.parse(pending.fields);
+      const { pending, fields } = verifyChallenge(input, "register");
       if (repo.findUserByPhone(fields.phone))
         throw new HttpError(409, "Этот номер уже зарегистрирован.");
       let user;
@@ -107,7 +136,6 @@ export function createAuth(repo, config, notifications) {
           throw new HttpError(409, "Этот номер уже зарегистрирован.");
         throw error;
       }
-      repo.deletePending(hash);
       return { ...session(user), application: repo.applicationForUser(user.id) };
     },
     register: async (input) => {

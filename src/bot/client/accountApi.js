@@ -83,3 +83,11 @@ export async function verifyTelegramRegistration(token, code) {
   const result = await request("/auth/verify-registration", "POST", { token, code });
   return cache(result);
 }
+
+export async function startTelegramLogin(phone) {
+  return request("/auth/start-login", "POST", { phone });
+}
+export async function verifyTelegramLogin(token, code) {
+  const result = await request("/auth/verify-login", "POST", { token, code });
+  return cache(result);
+}

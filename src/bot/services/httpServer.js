@@ -142,7 +142,7 @@ export function createApiServer({ auth, repo, config }) {
         if (path === "/api/auth/register" && req.method === "POST")
           throw new HttpError(410, "Регистрация доступна только после подтверждения телефона в Telegram.");
         if (
-          ["/api/auth/login", "/api/auth/start-registration", "/api/auth/verify-registration"].includes(path) &&
+          ["/api/auth/login", "/api/auth/start-registration", "/api/auth/verify-registration", "/api/auth/start-login", "/api/auth/verify-login"].includes(path) &&
           req.method === "POST"
         ) {
           const ip = config.trustProxy
@@ -158,11 +158,14 @@ export function createApiServer({ auth, repo, config }) {
           concurrentAuth++;
           try {
             const data = await readJson(req);
-            const result = path.endsWith("/start-registration")
-              ? await auth.startRegistration(data)
-              : path.endsWith("/verify-registration")
-                ? auth.verifyRegistration(data)
-                : await auth.login(data);
+            const handler = {
+              "/api/auth/login": auth.login,
+              "/api/auth/start-registration": auth.startRegistration,
+              "/api/auth/verify-registration": auth.verifyRegistration,
+              "/api/auth/start-login": auth.startLogin,
+              "/api/auth/verify-login": auth.verifyLogin,
+            }[path];
+            const result = await handler(data);
             return send(path.endsWith("/verify-registration") ? 201 : 200, result);
           } finally {
             concurrentAuth--;

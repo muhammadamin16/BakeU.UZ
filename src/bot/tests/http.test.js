@@ -84,3 +84,43 @@ test("HTTP API handles CORS, server registration, login, authenticated profile a
     s.db.close();
   }
 });
+
+test("passwordless Telegram registration and login issue separate one-time challenges", async () => {
+  const s = setup();
+  const server = createApiServer(s);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api/auth`;
+  const post = (path, body) => fetch(base + path, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+  const { firstName, lastName, phone, role } = fields();
+  try {
+    const signup = await post("/start-registration", { firstName, lastName, phone, role });
+    assert.equal(signup.status, 200);
+    const registration = await signup.json();
+    assert.equal(s.auth.beginTelegramVerification(registration.token, "777"), true);
+    const registrationCode = s.auth.sendTelegramVerification(registration.token, "777", phone);
+    const registered = await post("/verify-registration", { token: registration.token, code: registrationCode });
+    assert.equal(registered.status, 201);
+    const { user } = await registered.json();
+
+    const login = await post("/start-login", { phone });
+    assert.equal(login.status, 200);
+    const { token } = await login.json();
+    assert.equal(s.auth.beginTelegramVerification(token, "777"), true);
+    assert.equal(s.auth.sendTelegramVerification(token, "999", phone), null);
+    assert.equal(s.auth.sendTelegramVerification(token, "777", "+998 90 111 22 33"), null);
+    const code = s.auth.sendTelegramVerification(token, "777", phone);
+    assert.match(code, /^\d{6}$/);
+    assert.equal((await post("/verify-registration", { token, code })).status, 400);
+    const invalidCode = code === "000000" ? "111111" : "000000";
+    assert.equal((await post("/verify-login", { token, code: invalidCode })).status, 400);
+    const result = await post("/verify-login", { token, code });
+    assert.equal(result.status, 200);
+    assert.equal((await result.json()).user.id, user.id);
+    assert.equal((await post("/verify-login", { token, code })).status, 400);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    s.db.close();
+  }
+});
