@@ -43,6 +43,7 @@ export default function AppRoutes() {
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
+  const compactFooter = isHome || pathname === "/seller";
   const showFooter =
     !isAuthPage &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
@@ -61,7 +62,7 @@ export default function AppRoutes() {
     <>
       {!isAuthPage && <Header />}
 
-      <main className={isHome ? "container site-content--home" : "container"}>
+      <main className={compactFooter ? "container site-content--compact-footer" : "container"}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />

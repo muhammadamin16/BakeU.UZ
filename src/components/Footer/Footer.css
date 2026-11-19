@@ -19,7 +19,7 @@
   font-family: Arial, system-ui, sans-serif;
 }
 
-.site-content--home ~ .bake-footer {
+.site-content--compact-footer ~ .bake-footer {
   margin-top: 0;
 }
 
