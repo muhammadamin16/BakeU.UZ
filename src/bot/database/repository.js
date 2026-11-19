@@ -85,13 +85,7 @@ export function createRepository(db) {
           now,
         );
         let app = null;
-        if (fields.role === "seller" && fields.company && fields.location) {
-          const aid = randomUUID();
-          db.prepare(
-            "INSERT INTO applications(id,user_id,shop,address,created_at) VALUES(?,?,?,?,?)",
-          ).run(aid, id, fields.company, fields.location, now);
-          app = api.application(aid);
-        }
+        // Seller accounts are ready immediately after Telegram phone verification.
         notify?.(user, app);
         return user;
       }),
@@ -155,21 +149,20 @@ export function createRepository(db) {
       application(
         db.prepare("SELECT * FROM applications WHERE user_id=?").get(id),
       ),
-    applyForShop: (userId, shop, address) =>
+    openShop: (userId, shop, address, lat, lng) =>
       transaction(db, () => {
         const owner = api.user(userId);
-        if (!owner || owner.role !== "client")
-          return { invalidRole: true };
-        const existing = api.applicationForUser(userId);
-        if (existing && existing.status !== "Отклонено")
-          return { application: existing, existing: true };
-        if (existing) db.prepare("DELETE FROM applications WHERE user_id=?").run(userId);
-        const now = new Date().toISOString();
-        const id = randomUUID();
-        db.prepare(
-          "INSERT INTO applications(id,user_id,shop,address,created_at) VALUES(?,?,?,?,?)",
-        ).run(id, userId, shop, address, now);
-        return { application: api.application(id), existing: false };
+        if (!owner) return { missing: true };
+        if (owner.role === "seller") return { user: owner, existing: true };
+        const user = {
+          ...owner, role: "seller", company: shop, location: address,
+          ...(lat !== null && lng !== null ? { lat, lng } : {}),
+        };
+        db.prepare("UPDATE users SET role=?,profile=? WHERE id=?")
+          .run("seller", JSON.stringify(user), userId);
+        // Older pending applications must not appear as requests for approval.
+        db.prepare("DELETE FROM applications WHERE user_id=?").run(userId);
+        return { user: api.user(userId), existing: false };
       }),
     decide: (id, status, adminId, reason = "") =>
       transaction(db, () => {
