@@ -8,27 +8,23 @@ import { useProductBatchSize } from "../../hooks/useProductBatchSize";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
-import { ProductCard } from "../Seller/SellerParts";
+import { ProductCard, ShopCard } from "../Seller/SellerParts";
 import { categories, useCatalog } from "../../store/sellerData";
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
 const PREVIEW_BATCHES = 3;
 const CATEGORY_ICONS = { "Все": "✦", "Торты": "🍰", "Печенье": "🍪", "Хлеб": "🥖", "Самса": "🥟" };
-const MAKERS = [
-  { id: "shahzoda", name: "Shahzoda Family", description: "Торты для особенных моментов.", image: "/images/products/cake.jpg", initials: "SF" },
-  { id: "sweet-home", name: "Sweet Home", description: "Печенье и сладости к чаю", image: "/images/products/cookie.jpg", initials: "SH" },
-  { id: "bakeu", name: "BakeU Bakery", description: "Домашний хлеб и ароматная самса", image: "/images/products/bread.jpg", initials: "BU" },
-];
-
 export default function Home() {
   const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
   const [batches, setBatches] = useState(1);
+  const [shopBatches, setShopBatches] = useState(1);
   const batchSize = useProductBatchSize();
   const catalogRef = useRef(null);
+  const shopsRef = useRef(null);
   const add = useCartStore((state) => state.add);
   const items = useCartStore((state) => state.items);
 
@@ -48,6 +44,8 @@ export default function Home() {
   const displayedProducts = visibleProducts.slice(0, batchSize * batches);
   const remaining = visibleProducts.length - displayedProducts.length;
   const expanded = batches > 1;
+  const displayedShops = shops.slice(0, batchSize * shopBatches);
+  const remainingShops = shops.length - displayedShops.length;
 
   const isFiltered = query.trim() !== "" || category !== "Все";
 
@@ -181,20 +179,45 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bu-makers" aria-labelledby="bu-makers-title">
-        <div className="bu-makers__heading">
-          <div><span className="bu-overline">MADE WITH LOVE</span><h2 id="bu-makers-title">{translateText("Знакомьтесь, кондитеры")}</h2></div>
-          <Link to="/seller?tab=sellers">{translateText("Все продавцы")} <ArrowUpRight size={18} aria-hidden="true" /></Link>
-        </div>
-        <div className="bu-makers__grid">
-          {MAKERS.map((shop) => (
-            <Link key={shop.id} className="bu-maker" to={`/profile?shop=${encodeURIComponent(shop.id)}`} aria-label={translateText(`Открыть профиль: ${shop.name}`)}>
-              <div className="bu-maker__photo"><img src={shop.image} alt="" loading="lazy" decoding="async" /></div>
-              <div className="bu-maker__info"><span className="bu-maker__avatar">{shop.initials}</span><strong>{shop.name}</strong><span>{translateText(shop.description)}</span><small>{translateText("Открыть профиль")} <ArrowUpRight size={13} /></small></div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {shops.length > 0 && (
+        <section className="bu-makers" ref={shopsRef} aria-labelledby="bu-makers-title">
+          <div className="bu-makers__heading">
+            <h2 id="bu-makers-title">{translateText("Знакомьтесь, кондитеры")}</h2>
+            <Link to="/seller?tab=sellers">{translateText("Все продавцы")} <ArrowUpRight size={18} aria-hidden="true" /></Link>
+          </div>
+
+          <div className="product-grid seller-shops">
+            {displayedShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}
+          </div>
+
+          <div className="bu-load-more">
+            <p className="bu-load-more__label" aria-live="polite">
+              {translateText("Показано магазинов")} {displayedShops.length} / {shops.length}
+            </p>
+            <div className="bu-load-more__buttons">
+              {shopBatches < PREVIEW_BATCHES && remainingShops > 0 ? (
+                <button type="button" className="bu-load-more__primary" onClick={() => setShopBatches((current) => Math.min(current + 1, PREVIEW_BATCHES))}>
+                  {translateText("Больше продавцов")}
+                  <span className="bu-load-more__count">+{Math.min(batchSize, remainingShops)}</span>
+                  <ArrowDown size={17} aria-hidden="true" />
+                </button>
+              ) : (
+                <Link className="bu-load-more__primary" to="/seller?tab=sellers">
+                  {translateText("Больше продавцов")} <ArrowUpRight size={17} aria-hidden="true" />
+                </Link>
+              )}
+              {shopBatches > 1 && (
+                <button type="button" className="bu-load-more__secondary" onClick={() => {
+                  setShopBatches(1);
+                  window.requestAnimationFrame(() => shopsRef.current?.scrollIntoView({ block: "start" }));
+                }}>
+                  {translateText("Свернуть")} <ArrowUp size={16} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Link to="/ai" className="bu-helper">
         <span className="bu-helper__icon"><Sparkles size={24} aria-hidden="true" /></span>

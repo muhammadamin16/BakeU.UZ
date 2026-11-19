@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Check, Search, ShoppingBag, Store, X } from "lucide-react";
+import { Check, Search, ShoppingBag, Store, X } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
@@ -9,7 +9,6 @@ import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop.jsx";
 import "./Seller.css";
 
-const SHOP_BATCH_SIZE = 16;
 const t = (value) => translateText(String(value ?? ""));
 
 export default function Seller() {
@@ -25,9 +24,7 @@ function SellerCatalog({ tab }) {
   const { products, shops } = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
-  const [batches, setBatches] = useState(1);
   const [notice, setNotice] = useState(null);
-  const sectionRef = useRef(null);
   const add = useCartStore((s) => s.add);
   const items = useCartStore((s) => s.items);
   const showSellers = tab === "sellers";
@@ -49,11 +46,9 @@ function SellerCatalog({ tab }) {
 
   const updateQuery = (value) => {
     setQuery(value);
-    setBatches(1);
   };
   const updateCategory = (value) => {
     setCategory(value);
-    setBatches(1);
   };
   useEffect(() => {
     if (!notice) return undefined;
@@ -61,15 +56,8 @@ function SellerCatalog({ tab }) {
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const shownShops = visibleShops.slice(0, batches * SHOP_BATCH_SIZE);
-  const totalShops = visibleShops.length;
-  const shownCount = shownShops.length;
-  const reset = () => { setQuery(""); setCategory("Все"); setBatches(1); };
+  const reset = () => { setQuery(""); setCategory("Все"); };
   const addProduct = (product) => { add(product); setNotice(product.name); };
-  const collapse = () => {
-    setBatches(1);
-    requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  };
 
   return (
     <main className="seller-page seller-page--professional product-catalog">
@@ -91,7 +79,7 @@ function SellerCatalog({ tab }) {
         </div>
       </header>
 
-      <section className="seller-product-section" ref={sectionRef} aria-label={t(showSellers ? "Продавцы" : "Товары")}>
+      <section className="seller-product-section" aria-label={t(showSellers ? "Продавцы" : "Товары")}>
         {!showSellers && <div className="seller-categories" aria-label={t("Категории")}>
           {categories.map((c) => <button key={c} type="button" className={category === c ? "is-active" : ""} aria-pressed={category === c} onClick={() => updateCategory(c)}>{t(c)}</button>)}
         </div>}
@@ -100,19 +88,12 @@ function SellerCatalog({ tab }) {
           {(query || (!showSellers && category !== "Все")) && <button type="button" onClick={reset}>{t("Сбросить")} <X size={14} /></button>}
         </div>
         {showSellers ? (
-          <div className="seller-shops">{shownShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
+          <div className="product-grid seller-shops">{visibleShops.map((shop) => <ShopCard key={shop.id} shop={shop} products={products} />)}</div>
         ) : (
           <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-product-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
         )}
         {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
-        {showSellers && totalShops > SHOP_BATCH_SIZE && <div className="seller-pagination">
-          <span>{shownCount} / {totalShops}</span>
-          <div className="seller-pagination__track" role="progressbar" aria-label={t("Показано магазинов")} aria-valuemin={0} aria-valuemax={totalShops} aria-valuenow={shownCount}><span style={{ width: `${shownCount / totalShops * 100}%` }} /></div>
-          <div className="seller-pagination__buttons">
-            {shownCount < totalShops && <button type="button" className="seller-pagination__more" onClick={() => setBatches((current) => current + 1)}>{t("Больше магазинов")} <ArrowDown size={17} /></button>}
-            {batches > 1 && <button type="button" className="seller-pagination__less" onClick={collapse}>{t("Свернуть")} <ArrowUp size={16} /></button>}
-          </div>
-        </div>}
+
       </section>
       <div className={`seller-notice seller-notice--toast ${notice ? "is-visible" : ""}`} role="status" aria-live="polite"><Check size={17} />{notice && t(`Добавлено в корзину: ${notice}`)}</div>
     </main>

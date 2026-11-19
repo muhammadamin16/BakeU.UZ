@@ -359,81 +359,15 @@
 }
 .bu-makers {
   margin-top: 90px;
+  scroll-margin-top: 110px;
 }
 .bu-makers__heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: end;
   gap: 16px;
   margin-bottom: 25px;
-}
-.bu-makers__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-.bu-maker {
-  display: flex;
-  overflow: hidden;
-  min-height: 174px;
-  border: 1px solid #eee0d2;
-  border-radius: 21px;
-  background: #fffdfa;
-  transition:
-    transform 0.25s,
-    box-shadow 0.25s;
-}
-.bu-maker:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 32px #43201513;
-}
-.bu-maker__photo {
-  width: 40%;
-  min-width: 0;
-  background: #efe2d4;
-}
-.bu-maker__photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.bu-maker__info {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 9px;
-  padding: 15px;
-  min-width: 0;
-}
-.bu-maker__avatar {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #f0dfd0;
-  color: #8e5436;
-  font-size: 11px;
-  font-weight: 850;
-}
-.bu-maker__info strong {
-  font-size: 15px;
-}
-.bu-maker__info > span:not(.bu-maker__avatar) {
-  font-size: 12px;
-  color: #8b7364;
-  line-height: 1.45;
-}
-.bu-maker__info small {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #a65b36;
-  font-size: 11px;
-  font-weight: 750;
 }
 .bu-helper {
   display: flex;
@@ -448,14 +382,6 @@
 .bu-helper__icon {
   background: #432015;
   color: #fff;
-}
-@media (max-width: 1050px) {
-  .bu-makers__grid {
-    gap: 12px;
-  }
-  .bu-maker__photo {
-    width: 34%;
-  }
 }
 @media (max-width: 760px) {
   .bu-home {
@@ -476,15 +402,6 @@
   }
   .bu-makers {
     margin-top: 60px;
-  }
-  .bu-makers__grid {
-    grid-template-columns: 1fr;
-  }
-  .bu-maker {
-    min-height: 150px;
-  }
-  .bu-maker__photo {
-    width: 32%;
   }
   .bu-helper__action,
   .bu-map__action {
