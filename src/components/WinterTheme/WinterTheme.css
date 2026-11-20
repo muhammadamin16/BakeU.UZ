@@ -577,33 +577,46 @@
     height: 29px;
   }
 }
-/* BakeU New Year — calm monochrome bakery backdrop */
-:root[data-season="winter"] {
-  --bg: #fffaf5;
-}
 
+/* Neutral winter canvas: no background artwork */
+:root[data-season="winter"] {
+  --bg: #f8f5f0;
+}
 :root[data-season="winter"] body,
 :root[data-season="winter"] #root {
-  background-color: #fffaf5;
+  background-color: var(--bg);
+  background-image: none;
 }
 
-:root[data-season="winter"] body {
-  background-image: url("/images/winter/bakeu-new-year-monochrome.svg");
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+/* Lightweight, non-interactive snowfall above all customer pages */
+.bakeu-snowfall {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  contain: strict;
 }
-
-/* Keep the artwork visible through the page canvas. */
-:root[data-season="winter"] #root {
-  background: transparent;
+.bakeu-snowfall__flake {
+  position: absolute;
+  top: -14px;
+  left: var(--snow-x);
+  width: var(--snow-size);
+  height: var(--snow-size);
+  border-radius: 50%;
+  background: rgba(143, 163, 177, var(--snow-opacity));
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.75);
+  animation: bakeu-snow-fall var(--snow-duration) linear var(--snow-delay) infinite;
+  will-change: transform;
 }
-
+@keyframes bakeu-snow-fall {
+  from { transform: translate3d(0, -3vh, 0); }
+  to { transform: translate3d(var(--snow-drift), 110vh, 0); }
+}
 @media (max-width: 640px) {
-  :root[data-season="winter"] body {
-    background-size: auto 100vh;
-    background-position: center top;
-    background-attachment: scroll;
-  }
+  .bakeu-snowfall__flake:nth-child(n + 33) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bakeu-snowfall { display: none; }
 }
