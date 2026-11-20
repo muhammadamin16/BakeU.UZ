@@ -6,10 +6,11 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
     locks?.request("bakeu-go-session", action) ?? action();
 
   async function call(path, { method = "GET", body, headers, credentials = "omit" } = {}) {
+    const multipart = body instanceof FormData;
     const response = await fetchImpl(base + path, {
       method, credentials,
-      headers: { ...(body !== undefined && { "Content-Type": "application/json" }), ...headers },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { ...(body !== undefined && !multipart && { "Content-Type": "application/json" }), ...headers },
+      body: body === undefined || multipart ? body : JSON.stringify(body),
       signal: AbortSignal.timeout(15000),
     });
     const data = response.status === 204 ? null : await response.json().catch(() => null);

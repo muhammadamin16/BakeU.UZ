@@ -1,5 +1,10 @@
 import { createGoSession } from "./goSession.js";
 
-const base = (import.meta.env.VITE_GO_API_URL || "").trim().replace(/\/$/, "");
-export const serverStorefrontEnabled = Boolean(base);
-export const goAccount = serverStorefrontEnabled ? createGoSession(base) : null;
+export const goAPIBase = (import.meta.env.VITE_GO_API_URL || "").trim().replace(/\/$/, "");
+export const serverStorefrontEnabled = Boolean(goAPIBase);
+export const goAccount = serverStorefrontEnabled ? createGoSession(goAPIBase) : null;
+
+export function productImageURL(path) {
+  if (typeof path !== "string" || !/^\/api\/images\/[a-f0-9]{24}$/i.test(path)) return "";
+  return goAPIBase.replace(/\/api$/, "") + path;
+}
