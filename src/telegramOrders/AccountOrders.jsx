@@ -1,0 +1,506 @@
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
+import { createWebsiteOrdersClient } from "./client.js";
+import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
+import ServerNotifications from "./ServerNotifications.jsx";
+import DeliveryFields from "./DeliveryFields.jsx";
+import { goAccount as sharedGoAccount, goAPIBase } from "../api/goAccount.js";
+import "./orders.css";
+const configured = (
+  goAPIBase ||
+  import.meta.env.VITE_GO_BACKEND_URL ||
+  ""
+).trim();
+const SellerSettings = lazy(
+  () => import("../pages/Profile/seller/ServerStorefront.jsx"),
+);
+const botBase = (
+  import.meta.env.VITE_ACCOUNT_API_URL ||
+  (import.meta.env.DEV
+    ? "/api"
+    : "https://bakeuuz-production.up.railway.app/api")
+).trim();
+function CatalogCheckout({ transport, client, onCreated }) {
+  const [catalog, setCatalog] = useState({
+      products: [],
+      markets: [],
+      error: "",
+    }),
+    [qty, setQty] = useState({}),
+    [choices, setChoices] = useState({}),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(() => crypto.randomUUID());
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const products = await transport.request("/products", {
+          signal: controller.signal,
+        });
+        const markets = [];
+        let after = "";
+        do {
+          const result = await transport.request(
+            "/markets?limit=100&after=" + encodeURIComponent(after),
+            { signal: controller.signal },
+          );
+          markets.push(...result.items);
+          after = result.next || "";
+        } while (after && markets.length < 10000);
+        if (active)
+          setCatalog({
+            products: Array.isArray(products) ? products : [],
+            markets,
+            error: "",
+          });
+      } catch {
+        if (active)
+          setCatalog({
+            products: [],
+            markets: [],
+            error: "Не удалось загрузить товары.",
+          });
+      }
+    })();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [transport]);
+  const selected = catalog.products.filter((p) => qty[p.id] > 0);
+  const groups = catalog.markets.filter((m) =>
+    selected.some((p) => p.sellerId === m.sellerId),
+  );
+  const update = () => {
+    setAttempt(crypto.randomUUID());
+    setError("");
+  };
+  return (
+    <form
+      className="tg-orders-panel"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (busy) return;
+        setBusy(true);
+        setError("");
+        try {
+          const deliveries = Object.fromEntries(
+            groups.map((m) => [
+              m.id,
+              choices[m.id] || {
+                fulfillment: m.fulfillment === "pickup" ? "pickup" : "delivery",
+              },
+            ]),
+          );
+          await client.checkout({
+            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id] })),
+            deliveries,
+            requestId: attempt,
+          });
+          setQty({});
+          setChoices({});
+          setAttempt(crypto.randomUUID());
+          onCreated();
+        } catch (failure) {
+          setError(failure.message || "Заказ не сохранён.");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <fieldset disabled={busy}>
+        <h2>Оформить заказ</h2>
+        <p>
+          Выберите товары. Оплата и стоимость доставки согласуются с продавцом.
+        </p>
+        {catalog.error && <p role="alert">{catalog.error}</p>}
+        {catalog.products.map((p) => (
+          <label
+            key={p.id}
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              margin: "12px 0",
+            }}
+          >
+            {p.imageURLs?.[0] && (
+              <img
+                src={new URL(p.imageURLs[0], transport.base).href}
+                width="64"
+                height="64"
+                alt={p.title}
+                style={{ objectFit: "cover", borderRadius: 14 }}
+              />
+            )}
+            <span>
+              {p.title} · {Number(p.price).toLocaleString("ru-RU")} сум
+            </span>
+            <input
+              aria-label={"Количество: " + p.title}
+              type="number"
+              min="0"
+              max="1000"
+              value={qty[p.id] || 0}
+              disabled={busy}
+              onChange={(e) => {
+                setQty({ ...qty, [p.id]: Number(e.target.value) });
+                update();
+              }}
+            />
+          </label>
+        ))}
+        {!catalog.error && !catalog.products.length && <p>Товаров пока нет.</p>}
+        {groups.map((m) => (
+          <section key={m.id}>
+            <h3>{m.name}</h3>
+            <p>{m.address}</p>
+            <DeliveryFields
+              value={
+                choices[m.id] || {
+                  fulfillment:
+                    m.fulfillment === "pickup" ? "pickup" : "delivery",
+                }
+              }
+              pickupAvailable={m.fulfillment !== "delivery"}
+              deliveryAvailable={m.fulfillment !== "pickup"}
+              onChange={(value) => {
+                if (busy) return;
+                setChoices({ ...choices, [m.id]: value });
+                update();
+              }}
+            />
+          </section>
+        ))}
+        {error && <p role="alert">{error}</p>}
+        <button disabled={busy || !selected.length || groups.length === 0}>
+          {busy ? "Сохраняем заказ…" : "Оформить заказ"}
+        </button>
+      </fieldset>
+    </form>
+  );
+}
+function ConnectedAccount({ transport, challenge }) {
+  const [account, setAccount] = useState(null),
+    [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [confirmed, setConfirmed] = useState(false),
+    [revision, setRevision] = useState(0);
+  const uid = account?.uid,
+    role = account?.role;
+  const pinned = useMemo(
+    () => pinGoAccount(transport, uid, role),
+    [transport, uid, role],
+  );
+  const client = useMemo(
+    () => createWebsiteOrdersClient(pinned.request),
+    [pinned],
+  );
+
+  return (
+    <div className="tg-orders-panel">
+      <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
+      {!account && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (busy) return;
+            setBusy(true);
+            setError("");
+            try {
+              const user = await transport.login(email, password);
+              if (challenge) {
+                await client.confirmLink(challenge, password);
+                setConfirmed(true);
+              }
+              setAccount(user);
+            } catch (failure) {
+              await transport.logout().catch(() => {});
+              setError(failure.message || "Войти не удалось.");
+            } finally {
+              setPassword("");
+              setBusy(false);
+            }
+          }}
+        >
+          <p>
+            Войдите в существующий аккаунт BakeU. Привязка не создаёт аккаунт и
+            не объединяет пользователей по номеру телефона.
+          </p>
+          <label>
+            Email
+            <input
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label>
+            Пароль
+            <input
+              type="password"
+              autoComplete="current-password"
+              maxLength={72}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <button disabled={busy}>
+            {busy
+              ? "Проверяем…"
+              : challenge
+                ? "Войти и привязать Telegram"
+                : "Войти"}
+          </button>
+        </form>
+      )}
+      {error && <p role="alert">{error}</p>}
+      {confirmed && (
+        <p role="status">
+          Telegram успешно привязан. Вернитесь в бот и нажмите «Мои заказы» или
+          «Я продавец».
+        </p>
+      )}
+      {account && (
+        <>
+          <p>{account.name}</p>
+          <button
+            onClick={async () => {
+              await transport.logout().catch(() => {});
+              setAccount(null);
+              setConfirmed(false);
+            }}
+          >
+            Выйти
+          </button>
+          <ServerProfile
+            key={account.uid}
+            account={account}
+            transport={pinned}
+            onSaved={setAccount}
+          />
+          {account.role === "seller" && transport.shared && (
+            <Suspense fallback={<p>Загрузка настроек…</p>}>
+              <SellerSettings />
+            </Suspense>
+          )}
+          <ServerOrdersPanel
+            client={client}
+            sessionKey={account.uid + ":" + revision}
+            transitionsEnabled
+          />
+          <ServerNotifications
+            client={client}
+            sessionKey={account.uid + ":" + revision}
+          />
+          {account.role === "customer" && (
+            <CatalogCheckout
+              client={client}
+              transport={pinned}
+              onCreated={() => setRevision((v) => v + 1)}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+function ServerProfile({ account, transport, onSaved }) {
+  const [form, setForm] = useState({
+      name: account.name || "",
+      phone: account.phone || "",
+      address: account.address || "",
+    }),
+    [busy, setBusy] = useState(false),
+    [status, setStatus] = useState("");
+  return (
+    <details>
+      <summary>Настройки профиля</summary>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setStatus("");
+          try {
+            const user = await transport.request("/profile", {
+              method: "POST",
+              body: form,
+            });
+            onSaved(user);
+            setStatus("Профиль сохранён.");
+          } catch (error) {
+            setStatus(error.message || "Сохранить не удалось.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <fieldset disabled={busy}>
+          {["name", "phone", "address"].map((key, index) => (
+            <label key={key}>
+              {["Имя", "Телефон", "Адрес"][index]}
+              <input
+                required={key !== "address"}
+                value={form[key]}
+                maxLength={key === "address" ? 500 : 150}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              />
+            </label>
+          ))}
+          <button>Сохранить</button>
+        </fieldset>
+        {status && <p role="status">{status}</p>}
+      </form>
+    </details>
+  );
+}
+export default function AccountOrders() {
+  const [params] = useSearchParams();
+  const challenge = params.get("challenge") || "";
+  const [connection, setConnection] = useState({
+    transport: null,
+    error: "",
+    loading: true,
+  });
+  useEffect(() => {
+    let active = true;
+    discoverGoApi({ configured, botBase })
+      .then((base) => {
+        const transport =
+          sharedGoAccount && goAPIBase
+            ? {
+                base,
+                shared: true,
+                request: sharedGoAccount.requestWithOptions,
+                login: sharedGoAccount.login,
+                logout: sharedGoAccount.logout,
+              }
+            : createGoTransport(base, {
+                browserSession:
+                  import.meta.env.VITE_GO_BROWSER_SESSIONS === "true",
+              });
+        transport.base = base;
+        if (active) setConnection({ transport, error: "", loading: false });
+      })
+      .catch((error) => {
+        if (active)
+          setConnection({
+            transport: null,
+            error: error.message,
+            loading: false,
+          });
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return (
+    <div style={{ maxWidth: 960, margin: "24px auto", paddingBottom: 100 }}>
+      <Link to="/">← На главную</Link>
+      {connection.loading && <p role="status">Подключаемся…</p>}
+      {connection.error && <p role="alert">{connection.error}</p>}
+      {connection.transport && (
+        <ConnectedAccount
+          key={challenge}
+          transport={connection.transport}
+          challenge={challenge}
+        />
+      )}
+    </div>
+  );
+}
+
+export function ServerStorefront() {
+  const id = window.location.hash.split("?")[0].split("/shop/")[1] || "";
+  const [state, setState] = useState({
+    market: null,
+    products: [],
+    base: "",
+    error: "",
+  });
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        if (!/^[a-f0-9]{24}$/.test(id)) throw new Error("Магазин не найден.");
+        const base = await discoverGoApi({ configured, botBase });
+        const api = createGoTransport(base);
+        const market = await api.request("/markets/" + id, {
+          signal: controller.signal,
+        });
+        const products = await api.request(
+          "/products?sellerId=" + encodeURIComponent(market.sellerId),
+          { signal: controller.signal },
+        );
+        if (active)
+          setState({
+            market,
+            products: Array.isArray(products) ? products : [],
+            base,
+            error: "",
+          });
+      } catch (error) {
+        if (active)
+          setState({
+            market: null,
+            products: [],
+            base: "",
+            error: error.message,
+          });
+      }
+    })();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [id]);
+  return (
+    <main
+      className="tg-orders-panel"
+      style={{ maxWidth: 960, margin: "24px auto" }}
+    >
+      <Link to="/">← На главную</Link>
+      {state.error && <p role="alert">{state.error}</p>}
+      {state.market && (
+        <>
+          <h1>{state.market.name}</h1>
+          <p>{state.market.description}</p>
+          <p>
+            {state.market.address ||
+              [state.market.city, state.market.area].filter(Boolean).join(", ")}
+          </p>
+          {state.products
+            .filter((p) => p.sellerId === state.market.sellerId)
+            .map((p) => (
+              <article key={p.id}>
+                {p.imageURLs?.[0] && (
+                  <img
+                    src={new URL(p.imageURLs[0], state.base).href}
+                    width="100"
+                    height="100"
+                    alt={p.title}
+                  />
+                )}
+                <h2>{p.title}</h2>
+                <p>{p.description}</p>
+                <strong>{Number(p.price).toLocaleString("ru-RU")} сум</strong>
+              </article>
+            ))}
+          <Link to={"/account/orders?shop=" + id}>
+            Выбрать товары и оформить заказ
+          </Link>
+        </>
+      )}
+    </main>
+  );
+}

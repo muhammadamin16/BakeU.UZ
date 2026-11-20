@@ -25,9 +25,7 @@ export interface Delivery {
   location?: { latitude: number; longitude: number } | null;
 }
 export function createWebsiteOrdersClient(request: GoRequest): {
-  load(
-    signal?: AbortSignal,
-  ): Promise<{
+  load(signal?: AbortSignal): Promise<{
     user: { uid: string; role: "customer" | "seller" };
     orders: GoOrder[];
   }>;
@@ -42,7 +40,8 @@ export function createWebsiteOrdersClient(request: GoRequest): {
   ): Promise<GoOrder>;
   checkout(input: {
     items: { productId: string; qty: number }[];
-    delivery: Delivery;
+    delivery?: Delivery;
+    deliveries?: Record<string, Delivery>;
     requestId: string;
   }): Promise<{ orders: GoOrder[] }>;
   notifications(

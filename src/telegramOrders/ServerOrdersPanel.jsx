@@ -70,6 +70,7 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false }) {
           )}
           <OrderProgress order={order} />
           {transitionsEnabled &&
+            order.workflowVersion >= 2 &&
             state.user?.role === "seller" &&
             nextStatuses(order.status, order.fulfillment).map((status) => (
               <button

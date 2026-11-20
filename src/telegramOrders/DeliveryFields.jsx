@@ -19,6 +19,7 @@ export default function DeliveryFields({
   value,
   onChange,
   pickupAvailable = true,
+  deliveryAvailable = true,
 }) {
   const id = useId();
   const [map, setMap] = useState(false),
@@ -49,7 +50,9 @@ export default function DeliveryFields({
           })
         }
       >
-        <option value="delivery">Доставка по договорённости</option>
+        {deliveryAvailable && (
+          <option value="delivery">Доставка по договорённости</option>
+        )}
         {pickupAvailable && <option value="pickup">Самовывоз</option>}
       </select>
       {value.fulfillment !== "pickup" && (

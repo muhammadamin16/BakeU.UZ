@@ -21,6 +21,7 @@ async function main() {
   });
   const publicSite = new URL(config.siteUrl);
   const ordersSettings = readOrdersConfig(process.env);
+  console.log(`Telegram orders: ${ordersSettings.enabled ? "enabled" : "disabled (configure TELEGRAM_ORDERS_ENABLED, GO_BACKEND_URL and TELEGRAM_BRIDGE_TOKEN)"}.`);
   console.log(
     `Launch mode: ${config.useWebApp ? "Telegram Mini App (web_app)" : "Website link (url)"}.`,
   );
@@ -44,7 +45,7 @@ async function main() {
     telegram = createTelegram(config.token),
     notifications = createNotifications(repo, config);
   const auth = createAuth(repo, config, notifications);
-  const server = createApiServer({ auth, repo, config });
+  const server = createApiServer({ auth, repo, config, ordersSettings });
   const orders = createOrdersIntegration({settings:ordersSettings,config,telegram});
   const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders });
   const legacyFlush = createOutboxWorker(repo, telegram);

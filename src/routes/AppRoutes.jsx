@@ -24,6 +24,13 @@ import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
+const AccountOrders = lazy(() => import("../telegramOrders/AccountOrders.jsx"));
+const ServerStorefront = lazy(() =>
+  import("../telegramOrders/AccountOrders.jsx").then((module) => ({
+    default: module.ServerStorefront,
+  })),
+);
+
 const AdminRoutes = lazy(() => import("../admin/routes/AdminRoutes"));
 const MapPage = lazy(() => import("../pages/Map/Map"));
 const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
@@ -55,6 +62,21 @@ export default function AppRoutes() {
     !isMap &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
+  if (
+    matchesPath(pathname, "/telegram/link") ||
+    matchesPath(pathname, "/account/orders")
+  )
+    return (
+      <Suspense fallback={loading}>
+        <AccountOrders />
+      </Suspense>
+    );
+  if (matchesPath(pathname, "/shop"))
+    return (
+      <Suspense fallback={loading}>
+        <ServerStorefront />
+      </Suspense>
+    );
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
   if (matchesPath(pathname, "/admin"))
     return (
@@ -76,6 +98,22 @@ export default function AppRoutes() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />
+          <Route
+            path="/telegram/link"
+            element={
+              <Suspense fallback={loading}>
+                <AccountOrders />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/account/orders"
+            element={
+              <Suspense fallback={loading}>
+                <AccountOrders />
+              </Suspense>
+            }
+          />
           <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route

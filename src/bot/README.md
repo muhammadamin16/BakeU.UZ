@@ -129,3 +129,7 @@ All runtime imports must stay inside this build context, with Linux-correct file
 `npm run bot:test` now includes a regression that copies only the deployable bot files into a temporary isolated folder and starts the real entrypoint with `--miniapp --check`, for both orders feature settings. It excludes private environment/data and never contacts Telegram. A local image can be built from the repository root with `docker build -t bakeu-bot-import-fix src/bot`.
 
 The startup fix was also checked in the actual Docker image on Node **v24.22.3**, with networking disabled and a test-only Telegram transport: the real entrypoint bound `0.0.0.0:3000`, `/health` returned HTTP 200, and SIGTERM shut it down with exit code 0. This checks container startup, not live Telegram authentication or production deployment.
+
+## Go bridge implementation
+
+The shared Go bridge now exists in the paired backend integration branch. See [activation](../../docs/telegram-orders/ACTIVATION.md) for actual endpoints, proof/order pages and protected Railway variables. The feature flag remains off until both services are reviewed/configured. The bot-only build boundary remains unchanged.
