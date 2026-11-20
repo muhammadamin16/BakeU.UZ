@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { goAccount as api } from "../../../api/goAccount.js";
 import { translateText } from "../../../i18n/index.js";
+import { createWebsiteOrdersClient } from "../../../telegramOrders/client.js";
+import ServerOrdersPanel from "../../../telegramOrders/ServerOrdersPanel.jsx";
 import ServerProducts from "./ServerProducts.jsx";
 
 const fields = [
@@ -19,6 +21,14 @@ export default function ServerStorefront() {
   const [needsLogin, setNeedsLogin] = useState(false);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
+  const sellerId = shop?.sellerId;
+  const ordersClient = useMemo(() => sellerId ? createWebsiteOrdersClient(async (path, options) => {
+    const result = await api.requestWithOptions(path, options);
+    if (path === "/me" && (result.uid !== sellerId || result.role !== "seller")) {
+      throw Error("Сессия продавца изменилась. Откройте настройки магазина снова.");
+    }
+    return result;
+  }) : null, [sellerId]);
   useEffect(() => {
     let active = true;
     loadShop().then((data) => {
@@ -111,7 +121,13 @@ export default function ServerStorefront() {
             </fieldset>
           </form>
           {shop.status !== "approved" && <p>{translateText("Редактирование доступно после одобрения магазина.")}</p>}
-          {shop.status === "approved" && <ServerProducts key={shop.sellerId} sellerId={shop.sellerId} />}
+          {shop.status === "approved" && <ServerProducts key={sellerId} sellerId={sellerId} />}
+          {ordersClient && (
+            <>
+              <h3>{translateText("Заказы")}</h3>
+              <ServerOrdersPanel client={ordersClient} sessionKey={sellerId} />
+            </>
+          )}
         </>
       ) : null}
       {!needsLogin && !busy && (

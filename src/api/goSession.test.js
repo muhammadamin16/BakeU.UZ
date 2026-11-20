@@ -33,3 +33,25 @@ test("restores from a cookie and coalesces concurrent JWT refresh after 401", as
   await api.logout();
   await assert.rejects(api.request("/market/mine"), { status: 401 });
 });
+
+test("orders client reads Go orders through refresh and honors cancellation", async () => {
+  const { createWebsiteOrdersClient } = await import("../telegramOrders/client.js");
+  const order = { id: "order", sellerId: "seller", items: [], total: 100 };
+  const paths = [];
+  const api = createGoSession("/api", {
+    fetchImpl: async (path, options) => {
+      paths.push(path);
+      if (path.endsWith("/auth/refresh")) return Response.json({ token: "go-access" });
+      assert.equal(options.headers.Authorization, "Bearer go-access");
+      if (path.endsWith("/me")) return Response.json({ uid: "seller", role: "seller" });
+      return Response.json({ incoming: [order], placed: [] });
+    },
+  });
+  const client = createWebsiteOrdersClient(api.requestWithOptions);
+  const signal = new AbortController();
+  assert.deepEqual((await client.load(signal.signal)).orders, [order]);
+  assert.deepEqual(paths, ["/api/auth/refresh", "/api/me", "/api/orders"]);
+  signal.abort();
+  await assert.rejects(client.load(signal.signal), { name: "AbortError" });
+  assert.equal(paths.length, 3);
+});
