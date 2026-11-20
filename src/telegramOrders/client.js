@@ -59,7 +59,7 @@ export function createWebsiteOrdersClient(request) {
         headers: { "Idempotency-Key": requestId },
       });
     },
-    async checkout({ items, delivery, requestId }) {
+    async checkout({ items, delivery, deliveries, requestId }) {
       await requireWorkflowV2();
       if (!Array.isArray(items) || !items.length || !requestId)
         throw new Error("Сначала проверьте корзину.");
@@ -71,7 +71,9 @@ export function createWebsiteOrdersClient(request) {
             productId: item.productId,
             qty: item.qty,
           })),
-          ...deliveryPayload(delivery),
+          ...(deliveries
+            ? { deliveries: checkoutDeliveries(deliveries) }
+            : deliveryPayload(delivery)),
         },
       });
       if (
@@ -96,4 +98,14 @@ export function createWebsiteOrdersClient(request) {
       return result.items;
     },
   };
+}
+
+// Multi-shop choices share one atomic checkout and one idempotency key.
+export function checkoutDeliveries(deliveries) {
+  return Object.fromEntries(
+    Object.entries(deliveries).map(([shopId, delivery]) => [
+      shopId,
+      deliveryPayload(delivery),
+    ]),
+  );
 }

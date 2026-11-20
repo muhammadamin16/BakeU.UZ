@@ -209,7 +209,12 @@ export function createOrdersIntegration({
       ]);
     keyboard.push(
       [b("🥐 Мои товары", "bo:products"), b("📊 Статистика", "bo:stats")],
-      [{ text: "⚙️ Настройки", url: firstPartyLink(config, "/profile") }],
+      [
+        {
+          text: "⚙️ Настройки",
+          url: firstPartyLink(config, "/account/orders"),
+        },
+      ],
       [
         {
           text: "🌐 Открыть магазин",
@@ -413,8 +418,11 @@ export function createOrdersIntegration({
           const keyboard = [
             [
               {
-                text: "🥐 Управлять товарами",
-                url: firstPartyLink(config, "/profile"),
+                text: "🥐 Товары на сайте",
+                url: firstPartyLink(
+                  config,
+                  `/shop/${encodeURIComponent(who.shopId)}`,
+                ),
               },
             ],
           ];

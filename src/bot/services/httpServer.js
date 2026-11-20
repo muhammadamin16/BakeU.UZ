@@ -26,7 +26,7 @@ async function readJson(req) {
     throw new HttpError(400, "Ожидается объект.");
   return result;
 }
-export function createApiServer({ auth, repo, config }) {
+export function createApiServer({ auth, repo, config, ordersSettings = { enabled: false } }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 15 * 60000 });
   let concurrentAuth = 0;
   const miniAuth = createMiniAppAuth(repo, config);
@@ -64,6 +64,8 @@ export function createApiServer({ auth, repo, config }) {
           return res.end();
         }
         const path = new URL(req.url, "http://localhost").pathname;
+        if (path === "/api/telegram/config" && req.method === "GET")
+          return send(200, { enabled: ordersSettings.enabled, apiBase: ordersSettings.enabled ? ordersSettings.baseUrl + "/api" : "" });
         if (path === "/health" && req.method === "GET")
           return send(200, { ok: true, service: "bakeu-bot-api" });
         if (path === "/api/miniapp/session" && req.method === "POST") {
