@@ -5,7 +5,7 @@ import { showMain, publicAction } from "./public.js";
 import { adminAction } from "./admin.js";
 import { applicationMessage } from "../utils/formatMessage.js";
 import { backAdmin } from "../keyboards/adminKeyboard.js";
-export function createUpdateHandler({ repo, telegram, config, notifications, auth }) {
+export function createUpdateHandler({ repo, telegram, config, notifications, auth, orders }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 60000 });
   return async (update) => {
     const callback = update.callback_query;
@@ -28,7 +28,9 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
       user,
       message: msg,
       callback: Boolean(callback),
+      orders,
     };
+    ctx.showMain = () => showMain(ctx);
     const data = callback?.data || "";
     if (callback) await telegram.answer(callback.id);
     if (!admin && !allow(chatId)) return;
@@ -64,6 +66,7 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
         reply_markup: { remove_keyboard: true },
       });
     }
+    if (orders && await orders.handle(ctx, update)) { repo.clearState(chatId); return; }
     if (command === "/id")
       return telegram.send(chatId, { text: `Ваш Telegram ID: ${user.id}` });
     if (command === "/start" || command === "/cancel") {

@@ -1,0 +1,57 @@
+.tg-orders-panel,
+.tg-orders-delivery {
+  padding: 24px;
+  border: 1px solid #ead6cc;
+  border-radius: 24px;
+  background: #fff8f0;
+  color: #482d22;
+  display: grid;
+  gap: 16px;
+}
+.tg-orders-panel article {
+  padding: 20px;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid #ead6cc;
+}
+.tg-orders-panel button,
+.tg-orders-delivery button {
+  padding: 12px 18px;
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid #b8794c;
+  background: #fff;
+  color: #482d22;
+  cursor: pointer;
+}
+.tg-orders-panel button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.tg-orders-panel input,
+.tg-orders-delivery input,
+.tg-orders-delivery textarea,
+.tg-orders-delivery select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #ead6cc;
+  border-radius: 12px;
+  background: #fff;
+}
+.tg-orders-progress ol {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+}
+.tg-orders-progress [aria-current="step"] {
+  color: #824416;
+  background: #f8e6ce;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-weight: 700;
+}

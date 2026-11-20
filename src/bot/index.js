@@ -11,6 +11,8 @@ import {
 import { createAuth } from "./services/auth.js";
 import { createApiServer } from "./services/httpServer.js";
 import { createUpdateHandler } from "./handlers/router.js";
+import { readOrdersConfig } from './orders/config.js';
+import { createOrdersIntegration } from './orders/integration.js';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let startupStage = "configuration";
 async function main() {
@@ -18,6 +20,7 @@ async function main() {
     miniApp: process.argv.includes("--miniapp"),
   });
   const publicSite = new URL(config.siteUrl);
+  const ordersSettings = readOrdersConfig(process.env);
   console.log(
     `Launch mode: ${config.useWebApp ? "Telegram Mini App (web_app)" : "Website link (url)"}.`,
   );
@@ -42,8 +45,10 @@ async function main() {
     notifications = createNotifications(repo, config);
   const auth = createAuth(repo, config, notifications);
   const server = createApiServer({ auth, repo, config });
-  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth });
-  const flush = createOutboxWorker(repo, telegram);
+  const orders = createOrdersIntegration({settings:ordersSettings,config,telegram});
+  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders });
+  const legacyFlush = createOutboxWorker(repo, telegram);
+  const flush = async () => { await legacyFlush(); await orders.flush(); };
   // Validate token and switch from webhook to polling without discarding pending updates.
   startupStage = "telegram";
   const me = await telegram.call("getMe");
