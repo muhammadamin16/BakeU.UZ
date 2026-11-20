@@ -16,6 +16,14 @@ No service secret belongs in a `VITE_` variable. The existing
 `TELEGRAM_ORDERS_ENABLED` separately controls the order bridge/worker.
 Keep flags off until both services support the protocol. Never fall back to
 SQLite registration on a Go failure: show the actual error and retry instead.
+If the phone flag is enabled without a Go API URL, registration stays unavailable
+rather than silently creating a legacy SQLite user.
+
+The main map reads the paginated public Go markets and products when the Go API
+is configured. Shops without valid coordinates are omitted from the map. Its
+existing device-location/distance controls work with those server points, and
+details open the real storefront or preselected server checkout. A failed server
+request shows a retry action and never substitutes demo shops.
 
 The ordinary `/login` and `/register` routes use Telegram contact proof plus a
 six-digit code, then establish the shared Go secure-cookie session. `/profile`
