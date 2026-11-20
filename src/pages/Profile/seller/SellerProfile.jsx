@@ -10,6 +10,8 @@ import { validateProductDetails } from "../../Product/validateProductDetails";
 import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
 import ShopImageEditor from "./ShopImageEditor";
+import ServerStorefront from "./ServerStorefront";
+import { serverStorefrontEnabled } from "../../../api/goAccount.js";
 import { Orders, Reviews, Sales } from "../Activity";
 import { useWorkspace, setAutoReply } from "../../../store/workspaceStore";
 import { useEffect, useState } from "react";
@@ -505,7 +507,7 @@ export default function SellerProfile({ account, onLogout }) {
             )}
           </section>
         )}
-        {tab === "settings" && (
+        {tab === "settings" && (serverStorefrontEnabled ? <ServerStorefront /> : (
           <form className="bw-card" onSubmit={save}>
             <h2>{translateText("Настройки магазина")}</h2>
             <p>{translateText("Добавьте обложку и логотип. Перемещайте фото пальцем или мышью, настройте масштаб и нажмите «Применить».")}</p>
@@ -586,7 +588,7 @@ export default function SellerProfile({ account, onLogout }) {
               </button>
             </div>
           </form>
-        )}
+        ))}
         {tab === "orders" && <Orders account={account} ownerId={id} />}
         {tab === "reviews" && <Reviews account={account} ownerId={id} />}
         {tab === "stats" && <Sales ownerId={id} />}
