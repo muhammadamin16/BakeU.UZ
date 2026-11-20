@@ -8,6 +8,8 @@ import { useCatalog } from "../../store/sellerData";
 import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop.jsx";
+import ServerCatalog from "./ServerCatalog.jsx";
+import { serverStorefrontEnabled } from "../../api/goAccount.js";
 import "./Seller.css";
 
 const t = (value) => translateText(String(value ?? ""));
@@ -16,6 +18,7 @@ export default function Seller() {
   const [params] = useSearchParams();
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
+  if (serverStorefrontEnabled && !shopId && tab === "products") return <ServerCatalog />;
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
     : <SellerCatalog key={tab} tab={tab} />;

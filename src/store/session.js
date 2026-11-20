@@ -1,3 +1,4 @@
+import { goAccount } from "../api/goAccount.js";
 import { logoutServer } from "../bot/client/accountApi";
 const PROFILE_KEY = "bakeu-demo-profile";
 const CHAT_ROLE_KEY = "bakeu-chat-role";
@@ -25,6 +26,7 @@ export function isLoggedIn() {
 /** Chiqish: sessiya ma'lumotlarini tozalaydi va modal holatini tiklaydi. */
 export function clearSession() {
   void logoutServer().catch(() => {});
+  void goAccount?.logout().catch(() => {});
   try {
     sessionStorage.removeItem(PROFILE_KEY);
     sessionStorage.removeItem(CHAT_ROLE_KEY);
