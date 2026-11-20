@@ -1,5 +1,5 @@
 import { BridgeError, validateIdentity, validateOrder } from "./api.js";
-import { ownOrder } from "../../telegramOrders/domain.js";
+import { ownOrder } from "./domain.js";
 import { orderCard } from "./views.js";
 const messages = {
   accepted: "✅ Продавец принял заказ",
