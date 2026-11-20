@@ -60,16 +60,19 @@ export function createWebsiteOrdersClient(request) {
         headers: { "Idempotency-Key": requestId },
       });
     },
-    async checkout({ items, delivery, deliveries, requestId }) {
+    async checkout({ items, delivery, deliveries, requestId, cartRevision }) {
       const capabilities = await requireWorkflowV2();
       if (!Array.isArray(items) || !items.length || !requestId)
         throw new Error("Сначала проверьте корзину.");
       if (items.some((item) => item.variantId) && capabilities.variantSnapshots !== true)
         throw new Error("Сервер ещё не поддерживает заказ выбранного варианта товара.");
+      if (cartRevision !== undefined && capabilities.cartRevision !== true)
+        throw Error("Сервер ещё не поддерживает безопасное оформление корзины.");
       const result = await request("/orders", {
         method: "POST",
         headers: { "Idempotency-Key": requestId },
         body: {
+          ...(cartRevision !== undefined ? { cartRevision } : {}),
           items: items.map((item) => ({
             productId: item.productId,
             qty: item.qty,
