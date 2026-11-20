@@ -55,3 +55,24 @@ test("orders client reads Go orders through refresh and honors cancellation", as
   await assert.rejects(client.load(signal.signal), { name: "AbortError" });
   assert.equal(paths.length, 3);
 });
+
+test("legacy Go order API stays read-only when Telegram checkout is attempted", async () => {
+  const { createWebsiteOrdersClient } = await import("../telegramOrders/client.js");
+  const writes = [];
+  const api = createGoSession("/api", {
+    fetchImpl: async (path, options) => {
+      if (path === "/api/auth/refresh") return Response.json({ token: "go-access" });
+      assert.equal(options.headers.Authorization, "Bearer go-access");
+      if (options.method !== "GET") writes.push(path);
+      assert.equal(path, "/api/orders/capabilities");
+      return Response.json({ error: "route unavailable" }, { status: 404 });
+    },
+  });
+  const orders = createWebsiteOrdersClient(api.requestWithOptions);
+  await assert.rejects(orders.checkout({
+    items: [{ productId: "cake", qty: 1 }],
+    requestId: "staging-checkout",
+  }), { status: 404 });
+  await assert.rejects(orders.transition({ id: "order", status: "pending" }, "accepted", "staging-transition"), { status: 404 });
+  assert.deepEqual(writes, []);
+});
