@@ -59,6 +59,17 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
   }
 
   return {
+    startPhone(body) {
+      return authRequest("/auth/phone/start", body);
+    },
+    async verifyPhone(id, code) {
+      return locked(async () => {
+        const data = await authRequest("/auth/phone/verify", { id, code });
+        if (!data?.token || !data.user?.uid) throw new Error("Вход не подтверждён сервером.");
+        access = data.token;
+        return data.user;
+      });
+    },
     async login(email, password) {
       return locked(async () => {
         const data = await authRequest("/auth/login", { email, password });

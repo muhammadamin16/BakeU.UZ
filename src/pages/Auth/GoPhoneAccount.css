@@ -1,0 +1,10 @@
+.go-phone-auth { display:grid; gap:16px; color:#4c3027; }
+.go-phone-auth h1 { font-size:clamp(24px,4vw,32px); margin:0; }
+.go-phone-auth p { margin:0; line-height:1.6; }
+.go-phone-auth label { display:grid; gap:7px; font-size:14px; font-weight:600; }
+.go-phone-auth input,.go-phone-auth select { box-sizing:border-box; width:100%; min-height:46px; padding:11px 14px; color:inherit; background:#fff9; border:1px solid #fff; border-radius:14px; font:inherit; }
+.go-phone-auth input:focus-visible,.go-phone-auth select:focus-visible,.go-phone-auth button:focus-visible,.go-phone-auth a:focus-visible { outline:3px solid #b77b48; outline-offset:3px; }
+.go-phone-auth button,.go-phone-link { display:block; min-height:46px; padding:12px 16px; color:#4c3027; background:linear-gradient(120deg,#ffe7b8,#eac08b); border:1px solid #fff; border-radius:14px; font:inherit; text-align:center; cursor:pointer; }
+.go-phone-auth button:disabled { opacity:.6; cursor:wait; }
+.go-phone-auth a { color:#8a4c28; }
+.go-phone-error { color:#9e2b26; background:#fff3f1; border-radius:12px; padding:12px; }

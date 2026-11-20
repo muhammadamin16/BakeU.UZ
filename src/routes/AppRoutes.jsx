@@ -20,6 +20,8 @@ import Home from "../pages/Home/Home";
 import Chat from "../pages/Messages/Chat";
 
 import Login from "../pages/Auth/Login/Login";
+import GoPhoneAccount from "../pages/Auth/GoPhoneAccount.jsx";
+import { goPhoneAccountsEnabled } from "../api/goAccount.js";
 import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
@@ -135,9 +137,9 @@ export default function AppRoutes() {
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="login" /> : <Login />} />
+          <Route path="/register" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="register" register /> : <Register />} />
+          <Route path="/profile" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Profile />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

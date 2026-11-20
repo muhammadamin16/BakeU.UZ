@@ -5,7 +5,7 @@ import { createWebsiteOrdersClient } from "./client.js";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
-import { goAccount as sharedGoAccount, goAPIBase } from "../api/goAccount.js";
+import { goAccount as sharedGoAccount, goAPIBase, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import "./orders.css";
 const configured = (
   goAPIBase ||
@@ -218,6 +218,12 @@ function ConnectedAccount({ transport, challenge, productId }) {
     () => pinGoAccount(transport, uid, role),
     [transport, uid, role],
   );
+  const sellerApi = useMemo(() => ({
+    request: (path, method, body) => pinned.request(path, { method, body }),
+    requestWithOptions: pinned.request,
+    login: transport.login,
+    logout: transport.logout,
+  }), [pinned, transport]);
   const client = useMemo(
     () => createWebsiteOrdersClient(pinned.request),
     [pinned],
@@ -226,6 +232,7 @@ function ConnectedAccount({ transport, challenge, productId }) {
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
+      {!account && goPhoneAccountsEnabled && <p><Link to="/login">Войти по подтверждённому телефону</Link> · <Link to="/register">Создать аккаунт</Link></p>}
       {restoring && <p role="status">Восстанавливаем сессию…</p>}
       {!account && !restoring && (
         <form
@@ -311,7 +318,7 @@ function ConnectedAccount({ transport, challenge, productId }) {
           />
           {account.role === "seller" && transport.shared && (
             <Suspense fallback={<p>Загрузка настроек…</p>}>
-              <SellerSettings />
+              <SellerSettings accountApi={sellerApi} />
             </Suspense>
           )}
           <ServerOrdersPanel
@@ -348,6 +355,7 @@ function ServerProfile({ account, transport, onSaved }) {
   return (
     <details>
       <summary>Настройки профиля</summary>
+      {account.verifiedPhoneE164 && <p>Подтверждённый номер аккаунта: <strong>{account.verifiedPhoneE164}</strong>. Телефон ниже — контакт для заказов.</p>}
       <form
         onSubmit={async (e) => {
           e.preventDefault();

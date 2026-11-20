@@ -4,7 +4,8 @@ import { translateText } from "../../../i18n/index.js";
 
 const emptyProduct = { title: "", description: "", category: "", price: "", available: true, variants: [] };
 
-export default function ServerProducts({ sellerId }) {
+export default function ServerProducts({ sellerId, accountApi = api }) {
+  const api = accountApi;
   const [products, setProducts] = useState([]);
   const [draft, setDraft] = useState(emptyProduct);
   const [busy, setBusy] = useState(true);
@@ -17,7 +18,7 @@ export default function ServerProducts({ sellerId }) {
       .catch((error) => { if (active) setNotice(error.message); })
       .finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
-  }, [sellerId]);
+  }, [sellerId, api]);
 
   async function save(event) {
     event.preventDefault();

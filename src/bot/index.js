@@ -12,6 +12,7 @@ import { createAuth } from "./services/auth.js";
 import { createApiServer } from "./services/httpServer.js";
 import { createUpdateHandler } from "./handlers/router.js";
 import { readOrdersConfig } from './orders/config.js';
+import { createOrdersApi } from './orders/api.js';
 import { createOrdersIntegration } from './orders/integration.js';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let startupStage = "configuration";
@@ -47,7 +48,8 @@ async function main() {
   const auth = createAuth(repo, config, notifications);
   const server = createApiServer({ auth, repo, config, ordersSettings });
   const orders = createOrdersIntegration({settings:ordersSettings,config,telegram});
-  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders });
+  const phoneAccounts = ordersSettings.accountsEnabled ? createOrdersApi(ordersSettings) : null;
+  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders, phoneAccounts });
   const legacyFlush = createOutboxWorker(repo, telegram);
   const flush = async () => { await legacyFlush(); await orders.flush(); };
   // Validate token and switch from webhook to polling without discarding pending updates.

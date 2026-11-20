@@ -23,7 +23,7 @@ test("Railway bot-only build context loads the entrypoint with orders enabled or
         );
       },
     });
-    for (const enabled of ["false", "true"]) {
+    for (const [enabled, accountsEnabled] of [["false", "false"], ["true", "false"], ["false", "true"], ["true", "true"]]) {
       const result = spawnSync(
         process.execPath,
         ["index.js", "--miniapp", "--check"],
@@ -41,6 +41,7 @@ test("Railway bot-only build context loads the entrypoint with orders enabled or
             PORT: "3000",
             DATABASE_PATH: join(temp, "test-data", "bakeu.sqlite"),
             TELEGRAM_ORDERS_ENABLED: enabled,
+            GO_ACCOUNTS_ENABLED: accountsEnabled,
             GO_BACKEND_URL: "https://backend.example",
             TELEGRAM_BRIDGE_TOKEN: "test_only_bridge_".repeat(3),
           },
