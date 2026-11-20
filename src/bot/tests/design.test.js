@@ -17,14 +17,14 @@ test("start sends branded photo; only admins see management button", async () =>
     assert.equal(card.type, "photo");
     assert.equal(card.parse_mode, "HTML");
     assert.ok(card.caption.includes("<b>BakeU"));
-    assert.equal(card.reply_markup.inline_keyboard.flat().length, 7);
+    assert.equal(card.reply_markup.inline_keyboard.flat().length, 8);
     await handle(message(12345, "/start"));
     assert.ok(
       telegram.messages[1].reply_markup.inline_keyboard
         .flat()
         .some((b) => b.callback_data === "admin:home"),
     );
-    assert.equal(mainKeyboard(config).inline_keyboard.flat().length, 7);
+    assert.equal(mainKeyboard(config).inline_keyboard.flat().length, 8);
   } finally {
     s.db.close();
   }

@@ -1,5 +1,19 @@
 # Validation results
 
+## Buyer/seller menu revision
+
+Branch `codex/telegram-buyer-seller-menu`, based on `Amin/f774e6d`, checked on 2026-11-20:
+
+- 54 bot tests passed inside `node:24-bookworm-slim` on Node **v24.22.3**, with network disabled. This includes the new menu/role intent, numbered current-page selection, stale/account-changed/support isolation, seller-not-found distinction, both owning participants' saved location, pickup/invalid GPS denial and normalized seller notifications.
+- Scoped ESLint, `git diff --check` and website `npm run build` passed. The existing application chunk-size warning remains.
+- Docker image built from **only `src/bot`**, using the unchanged Dockerfile and `.dockerignore`.
+- Full entrypoint startup in that image, with Railway-style `PORT=3000`, orders enabled, network disabled and a test-only Telegram transport: bound `0.0.0.0:3000`, `/health` returned HTTP 200 and SIGTERM exited 0.
+- The committed isolated-folder regression passed with orders both enabled and disabled. No website sibling files or production credentials/data were copied into that test.
+
+Go was inspected read-only at `main/489d20e`. The Telegram bridge/binding/outbox and full order workflow are still missing. These checks prove the bot-side behavior against test contracts and its deploy packaging, not live Telegram delivery, Mongo persistence or a production end-to-end purchase. See `MENU-UPDATE.md` for precise dependencies. No production deployment/database mutation or automatic merge was performed.
+
+## Original integration validation (historical)
+
 Checked in the isolated `codex/telegram-orders` checkout on 2026-11-20.
 
 | Check | Result |

@@ -4,7 +4,7 @@ Node.js **24 LTS** or newer is required (built-in SQLite, fetch, env-file suppor
 
 ## What is included
 
-- Six existing public buttons: BakeU website, Telegram, Instagram, email, support, about; plus one account/role button for the optional shared-Go orders integration.
+- Six existing public buttons: BakeU website, Telegram, Instagram, email, support, about; plus both **Мои заказы** and **Я продавец** for the optional shared-Go orders integration. Public buttons do not grant private-data access.
 - Website opens with a URL button; set `USE_WEB_APP=true` for an HTTPS Telegram Mini App instead.
 - `/start`, `/cancel`, `/id`; numeric-ID-only private admin panel via `/admin`.
 - Admin statistics; paginated server customers and sellers; store applications; approve/reject with a reason; support ticket list and replies.
@@ -118,7 +118,7 @@ After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bo
 
 ## Shared Go/MongoDB orders (opt-in)
 
-The separate [Telegram orders integration](../../docs/telegram-orders/README.md) adds confirmed role menus, account-link challenges, seller/buyer orders and a server outbox worker. It is **disabled by default** until the shared Go API and website route implement the documented contract. Commerce data never falls back to this legacy SQLite account database. See the linked handoff for exact backend dependencies, website mounting and staging checks; existing setup sections above describe the legacy account/admin/support service.
+The separate [Telegram orders integration](../../docs/telegram-orders/README.md) adds public buyer/seller entry buttons with confirmed role checks, account-link challenges, numbered/paginated seller/buyer orders, saved delivery location and a server outbox worker. It is **disabled by default** until the shared Go API and website route implement the documented contract. Commerce data never falls back to this legacy SQLite account database. See the linked handoff for exact backend dependencies, website mounting and staging checks; existing setup sections above describe the legacy account/admin/support service.
 
 ## Railway build boundary
 

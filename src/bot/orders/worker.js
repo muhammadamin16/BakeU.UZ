@@ -37,11 +37,9 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
         throw new BridgeError(502);
       for (const job of batch.jobs) {
         if (receipts.has(job.id)) continue;
+        let who;
         try {
-          const who = validateIdentity(
-            job.recipient,
-            job.recipient?.telegramId,
-          );
+          who = validateIdentity(job.recipient, job.recipient?.telegramId);
           validateOrder(job.order);
           if (
             !who ||
@@ -67,12 +65,12 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
         let result;
         try {
           const payload = orderCard(job.order, {
-            seller: job.recipient.user.role === "SELLER",
+            seller: who.user.role === "SELLER",
             notification: job.kind === "order.created",
           });
           if (job.kind === "order.status_changed")
             payload.text = `<b>${messages[job.order.status]}</b>\n\n${payload.text}`;
-          result = await telegram.send(job.recipient.telegramId, {
+          result = await telegram.send(who.telegramId, {
             ...payload,
             parse_mode: "HTML",
           });

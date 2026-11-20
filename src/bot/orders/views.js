@@ -45,14 +45,14 @@ export function transitionButtons(order) {
 }
 export function orderCard(
   order,
-  { seller = false, page = 0, notification = false } = {},
+  { seller = false, page = 0, notification = false, returnTo, siteUrl } = {},
 ) {
   const start = page * 6;
   const items = order.items.slice(start, start + 6);
   const rows = items
     .map(
       (item) =>
-        `• ${text(item.title, 80)} × ${item.qty} — ${money(item.price * item.qty)}`,
+        `• ${text(item.title, 80)} × ${item.qty} · ${money(item.price)} / шт. = ${money(item.price * item.qty)}`,
     )
     .join("\n");
   const history = (order.history || [])
@@ -67,7 +67,9 @@ export function orderCard(
       ? "🔔 НОВЫЙ ЗАКАЗ"
       : "✅ Ваш заказ успешно оформлен!"
     : "📦 ЗАКАЗ";
-  const body = `<b>${heading} #${text(order.number || order.id, 40)}</b>\n\n🏬 ${text(order.shopName)}${seller ? `\n👤 ${text(order.buyerName)}\n📱 ${text(order.buyerPhone, 24)}` : ""}\n\n${rows}\n\n<b>💰 Итого: ${money(order.total)}</b>\nСтатус: ${text(statusLabels[order.status])}\n${order.fulfillment === "pickup" ? "🏬 Самовывоз" : "🚚 Доставка"}\n📍 ${text(order.address, 240)}\n🕒 ${at(order.scheduledAt)}\nСоздан: ${at(order.createdAt)}${order.comment ? `\n💬 ${text(order.comment, 300)}` : ""}${history ? `\n\n<b>История статусов</b>\n${history}` : ""}`;
+  const coordinates =
+    order.fulfillment === "delivery" && validCoordinates(order.location);
+  const body = `<b>${heading} #${text(order.number || order.id, 40)}</b>\nOrder ID: <code>${text(order.id, 36)}</code>\n\n🏬 ${text(order.shopName)}${seller ? `\n👤 ${text(order.buyerName)}\n📱 ${text(order.buyerPhone, 24)}` : ""}\n\n${rows}\n\n<b>💰 Итого: ${money(order.total)}</b>\nСтатус: ${text(statusLabels[order.status])}\n${order.fulfillment === "pickup" ? "🏬 Самовывоз" : "🚚 Доставка"}\n📍 ${text(order.address, 240)}${coordinates ? `\nКоординаты: ${order.location.latitude.toFixed(6)}, ${order.location.longitude.toFixed(6)}` : ""}\n🕒 ${at(order.scheduledAt)}\nСоздан: ${at(order.createdAt)}${order.comment ? `\n💬 ${text(order.comment, 300)}` : ""}${history ? `\n\n<b>История статусов</b>\n${history}` : ""}`;
   const keyboard = seller ? transitionButtons(order) : [];
   if (page > 0)
     keyboard.push([
@@ -77,12 +79,17 @@ export function orderCard(
     keyboard.push([
       button("Следующие товары ›", `bo:detail:${order.id}:${page + 1}`),
     ]);
-  if (seller && validCoordinates(order.location))
-    keyboard.push([button("📍 Локация", `bo:location:${order.id}`)]);
+  if (coordinates)
+    keyboard.push([button("📍 Открыть карту", `bo:location:${order.id}`)]);
   if (seller && /^\+[1-9]\d{7,14}$/.test(order.buyerPhone || ""))
     keyboard.push([button("📞 Связаться", `bo:contact:${order.id}`)]);
   if (notification)
     keyboard.push([button("📦 Подробнее", `bo:detail:${order.id}:0`)]);
+  keyboard.push([button("🔄 Обновить", `bo:detail:${order.id}:${page}`)]);
+  keyboard.push([
+    button("🔙 Назад", returnTo || (seller ? "bo:seller" : "bo:buyer")),
+  ]);
+  if (siteUrl) keyboard.push([{ text: "🥐 Открыть BakeU", url: siteUrl }]);
   keyboard.push(mainBack);
   return { text: body, reply_markup: { inline_keyboard: keyboard } };
 }

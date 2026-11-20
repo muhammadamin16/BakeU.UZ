@@ -14,7 +14,8 @@ export default function TelegramLinkConfirm({ client, challengeId }) {
       </p>
       {done ? (
         <p role="status">
-          Привязка подтверждена сервером. Вернитесь в бот и нажмите «Мой BakeU».
+          Привязка подтверждена сервером. Вернитесь в бот и нажмите «Мои заказы»
+          или «Я продавец».
         </p>
       ) : (
         <form
