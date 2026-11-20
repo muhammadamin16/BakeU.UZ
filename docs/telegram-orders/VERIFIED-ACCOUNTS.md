@@ -44,6 +44,20 @@ logout/relogin to the same UID, and the seller application/logo/GPS path.
 
 ## Remaining work before a full migration
 
+Mini App customer/seller identity now uses a fresh server-verified Telegram
+launch and one-use Go login-ticket exchange. It creates no SQLite customer
+identity or session. The account UID/cookie/access session is the same as the
+website; changed actors and revoked sessions fail closed. The legacy Node
+capability remains only for the existing admin-only Mini App API and is never
+accepted as a Go token. Signed initData must be recent, and unlinked actors are
+guided to own-contact registration or explicit account proof in the bot.
+
+Verified on HTTPS Chromium with actual Node HMAC verification, the Go bridge and
+disposable MongoDB: shared UID after reload, rejection of stale other-account
+cookies, logout-all revocation without automatic login, and explicit reentry.
+The Telegram SDK and signed launch were simulated with a test-only bot key.
+Current automated checks: 63 bot tests and 9 session/catalog/Mini App tests.
+
 Variant checkout now preserves stable IDs, displays the selected server price,
 and shows its immutable name/price snapshot in the order history and Telegram
 cards. The client checks `variantSnapshots` before submitting a variant, so an
@@ -52,8 +66,8 @@ variant IDs across edits. A real HTTPS purchase/replay/status/reload passed on
 the disposable MongoDB, including a product photo upload and catalog preselection.
 
 No production activation or legacy data migration happened. Restore/audit real
-SQLite and Mongo backups before any explicit user migration. Node Mini App auth,
-native secure token storage, the legacy
+SQLite and Mongo backups before any explicit user migration. Native secure token
+storage and platform launch testing, the legacy
 browser cart/favorites/subscriptions, server chat and full Go admin RBAC still
 need their own implementation and verification. Existing GridFS photos remain
 in place; moving them to S3/R2 requires a separately configured storage service.

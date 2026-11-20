@@ -1,4 +1,6 @@
 import { miniLaunch } from "./telegram";
+import { goAccount, goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { createGoMiniSession } from "./goSession.js";
 const base = (import.meta.env.VITE_ACCOUNT_API_URL || "/api").replace(
   /\/$/,
   "",
@@ -82,9 +84,15 @@ async function verify() {
     expiresAt: result.expiresAt,
   };
 }
-export function authenticateMiniApp() {
+const goMini = createGoMiniSession({
+  goAccount,
+  openLaunch: (initData) => miniRequest("/go-session", { method: "POST", body: { initData }, token: "" }),
+  readAdmin: () => miniRequest("/me"),
+  setAdminToken: setToken,
+});
+export function authenticateMiniApp(options) {
   if (!pending)
-    pending = verify().finally(() => {
+    pending = (goPhoneAccountsEnabled ? goMini.authenticate(miniLaunch.initData, options) : verify()).finally(() => {
       pending = null;
     });
   return pending;

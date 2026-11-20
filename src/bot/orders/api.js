@@ -77,7 +77,7 @@ export function validateOrder(order) {
 /** @returns {import('./contracts').TelegramBridge} */
 export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
   async function request(actor, path, method = "GET", body, key) {
-    if (!(config.enabled || config.accountsEnabled && path === "/auth/phone/contact")) throw new BridgeError();
+    if (!(config.enabled || config.accountsEnabled && ["/auth/phone/contact", "/auth/launch"].includes(path))) throw new BridgeError();
     if (actor != null && !/^[1-9]\d{0,19}$/.test(String(actor)))
       throw new BridgeError(403);
     let response;
@@ -119,6 +119,10 @@ export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
     }
   }
   return {
+    launchSession: (actor) => {
+      if (!config.accountsEnabled) throw new BridgeError();
+      return request(actor, "/auth/launch", "POST", {});
+    },
     phoneCode: (actor, id, phone) => {
       if (!config.accountsEnabled || !/^[a-f0-9]{48}$/.test(id)) throw new BridgeError(400);
       return request(actor, "/auth/phone/contact", "POST", { id, phone });

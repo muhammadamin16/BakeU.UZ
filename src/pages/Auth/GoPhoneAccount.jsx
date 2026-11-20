@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { goAccount } from "../../api/goAccount.js";
 import AuthShell from "./AuthShell.jsx";
+import { useMiniApp } from "../../miniapp/context.js";
 import "./GoPhoneAccount.css";
 
 export default function GoPhoneAccount({ register = false }) {
   const navigate = useNavigate();
+  const mini = useMiniApp();
   const [draft, setDraft] = useState({ phone: "", name: "", email: "", password: "", role: "customer", marketName: "", address: "" });
   const [pending, setPending] = useState(null);
   const [code, setCode] = useState("");
@@ -20,6 +22,7 @@ export default function GoPhoneAccount({ register = false }) {
       if (pending) {
         if (Date.parse(pending.expiresAt) <= Date.now()) throw new Error("Код устарел. Запросите новый.");
         await goAccount.verifyPhone(pending.id, code);
+        if (mini.isMiniMode) await mini.retry();
         navigate("/account/orders", { replace: true });
       } else {
         const result = await goAccount.startPhone({ ...draft, purpose: register ? "register" : "login" });

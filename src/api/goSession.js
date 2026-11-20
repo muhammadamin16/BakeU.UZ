@@ -59,6 +59,15 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
   }
 
   return {
+    async exchangeTelegram(ticket) {
+      return locked(async () => {
+        access = "";
+        const data = await authRequest("/auth/phone/telegram", { ticket });
+        if (!data?.token || !data.user?.uid) throw new Error("Вход не подтверждён сервером.");
+        access = data.token;
+        return data.user;
+      });
+    },
     startPhone(body) {
       return authRequest("/auth/phone/start", body);
     },
@@ -83,8 +92,8 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
     requestWithOptions,
     async logout() {
       return locked(async () => {
-        await authRequest("/auth/logout");
-        access = "";
+        try { await authRequest("/auth/logout"); }
+        finally { access = ""; }
       });
     },
   };
