@@ -36,9 +36,16 @@ logout/relogin to the same UID, and the seller application/logo/GPS path.
 
 ## Remaining work before a full migration
 
+Variant checkout now preserves stable IDs, displays the selected server price,
+and shows its immutable name/price snapshot in the order history and Telegram
+cards. The client checks `variantSnapshots` before submitting a variant, so an
+older Go API cannot silently bill the base product. The seller editor retains
+variant IDs across edits. A real HTTPS purchase/replay/status/reload passed on
+the disposable MongoDB, including a product photo upload and catalog preselection.
+
 No production activation or legacy data migration happened. Restore/audit real
 SQLite and Mongo backups before any explicit user migration. Node Mini App auth,
-native secure token storage, stable variant IDs/checkout snapshots, the legacy
+native secure token storage, the legacy
 browser cart/favorites/subscriptions, server chat and full Go admin RBAC still
 need their own implementation and verification. Existing GridFS photos remain
 in place; moving them to S3/R2 requires a separately configured storage service.

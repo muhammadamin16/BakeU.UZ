@@ -29,6 +29,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
     }),
     [qty, setQty] = useState(() => productId ? { [productId]: 1 } : {}),
     [choices, setChoices] = useState({}),
+    [variants, setVariants] = useState({}),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -98,12 +99,13 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
             ]),
           );
           await client.checkout({
-            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id] })),
+            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id], ...(variants[p.id] ? { variantId: variants[p.id] } : {}) })),
             deliveries,
             requestId: attempt,
           });
           setQty({});
           setChoices({});
+          setVariants({});
           setAttempt(crypto.randomUUID());
           setSaved(true);
           onCreated();
@@ -121,7 +123,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
         </p>
         {catalog.error && <p role="alert">{catalog.error}</p>}
         {catalog.products.map((p) => (
-          <label
+          <div
             key={p.id}
             style={{
               display: "flex",
@@ -140,8 +142,12 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
               />
             )}
             <span>
-              {p.title} · {Number(p.price).toLocaleString("ru-RU")} сум
+              {p.title} · {Number(p.variants?.find((v) => v.id === variants[p.id])?.price ?? p.price).toLocaleString("ru-RU")} сум
             </span>
+            {p.variants?.some((variant) => variant.id) && <select aria-label={"Вариант: " + p.title} value={variants[p.id] || ""} disabled={busy} onChange={(event) => { setVariants({ ...variants, [p.id]: event.target.value }); update(); }}>
+              <option value="">Базовый вариант — {Number(p.price).toLocaleString("ru-RU")} сум</option>
+              {p.variants.filter((variant) => variant.id).map((variant) => <option key={variant.id} value={variant.id}>{variant.name} — {Number(variant.price).toLocaleString("ru-RU")} сум</option>)}
+            </select>}
             <input
               aria-label={"Количество: " + p.title}
               type="number"
@@ -154,7 +160,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
                 update();
               }}
             />
-          </label>
+          </div>
         ))}
         {!catalog.error && !catalog.products.length && <p>Товаров пока нет.</p>}
         {groups.map((m) => (
@@ -474,7 +480,7 @@ export function ServerStorefront() {
           signal: controller.signal,
         });
         const products = await api.request(
-          "/products?sellerId=" + encodeURIComponent(market.sellerId),
+          "/products?seller=" + encodeURIComponent(market.sellerId),
           { signal: controller.signal },
         );
         if (active)

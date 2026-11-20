@@ -28,7 +28,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
       const payload = {
         title: draft.title.trim(), description: draft.description, category: draft.category,
         price: Number(draft.price), available: draft.available,
-        variants: (draft.variants || []).map(({ name, price }) => ({ name, price: Number(price) })),
+        variants: (draft.variants || []).map(({ id, name, price }) => ({ ...(id ? { id } : {}), name, price: Number(price) })),
       };
       const item = await api.request(draft.id ? `/products/${encodeURIComponent(draft.id)}` : "/products",
         draft.id ? "PUT" : "POST", payload);

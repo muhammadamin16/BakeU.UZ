@@ -13,6 +13,7 @@ export function createWebsiteOrdersClient(request) {
       capabilities.deliveryScheduling !== true
     )
       throw new Error("Сервер ещё не поддерживает полное оформление заказов.");
+    return capabilities;
   }
   return {
     async load(signal) {
@@ -60,9 +61,11 @@ export function createWebsiteOrdersClient(request) {
       });
     },
     async checkout({ items, delivery, deliveries, requestId }) {
-      await requireWorkflowV2();
+      const capabilities = await requireWorkflowV2();
       if (!Array.isArray(items) || !items.length || !requestId)
         throw new Error("Сначала проверьте корзину.");
+      if (items.some((item) => item.variantId) && capabilities.variantSnapshots !== true)
+        throw new Error("Сервер ещё не поддерживает заказ выбранного варианта товара.");
       const result = await request("/orders", {
         method: "POST",
         headers: { "Idempotency-Key": requestId },
@@ -70,6 +73,7 @@ export function createWebsiteOrdersClient(request) {
           items: items.map((item) => ({
             productId: item.productId,
             qty: item.qty,
+            ...(item.variantId ? { variantId: item.variantId } : {}),
           })),
           ...(deliveries
             ? { deliveries: checkoutDeliveries(deliveries) }
