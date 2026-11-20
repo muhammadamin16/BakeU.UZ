@@ -1,5 +1,7 @@
 # Contract for the shared Go/MongoDB owner
 
+Current implementation/activation: [ACTIVATION.md](./ACTIVATION.md). Earlier missing-endpoint notes below describe the pre-integration baseline.
+
 These are required APIs, not endpoints implemented in this website branch. Existing business collections, authenticated user IDs and product/shop ownership remain authoritative. Add fields/collections to the **same** Mongo database and existing application service; do not introduce a separate Telegram account/order store.
 
 The executable clients are `src/bot/orders/api.js` and `src/telegramOrders/client.js`.

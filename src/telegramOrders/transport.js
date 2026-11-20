@@ -1,5 +1,7 @@
-export function validateGoBase(value) {
-  const url = new URL(value);
+export function validateGoBase(value, origin = globalThis.location?.origin) {
+  if (value.startsWith("//"))
+    throw new Error("Адрес сервера BakeU настроен неправильно.");
+  const url = new URL(value, origin);
   if (
     url.username ||
     url.password ||
@@ -102,6 +104,25 @@ export function createGoTransport(
       } finally {
         token = "";
       }
+    },
+  };
+}
+
+// Keep a page bound to the account it displayed, including across a shared-session refresh.
+export function pinGoAccount(transport, uid, role) {
+  if (!uid) return transport;
+  const verify = (user) => {
+    if (user?.uid !== uid || user.role !== role)
+      throw new Error("Сессия изменилась. Войдите в аккаунт заново.");
+  };
+  return {
+    ...transport,
+    async request(path, options = {}) {
+      if (options.method && !["GET", "HEAD"].includes(options.method))
+        verify(await transport.request("/me"));
+      const result = await transport.request(path, options);
+      if (path === "/me") verify(result);
+      return result;
     },
   };
 }

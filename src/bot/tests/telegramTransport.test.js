@@ -7,6 +7,7 @@ import {
   discoverGoApi,
   createGoTransport,
   validateGoBase,
+  pinGoAccount,
 } from "../../telegramOrders/transport.js";
 import { createWebsiteOrdersClient } from "../../telegramOrders/client.js";
 
@@ -127,4 +128,21 @@ test("multi-shop checkout has one request key and independently validated fulfil
     latitude: 0,
     longitude: 0,
   });
+});
+
+test("pinned page refuses reads and writes after a shared Go account switch", async () => {
+  const calls = [];
+  const transport = {
+    request: async (path) => {
+      calls.push(path);
+      return { uid: "other", role: "customer" };
+    },
+  };
+  const pinned = pinGoAccount(transport, "buyer", "customer");
+  await assert.rejects(() => pinned.request("/me"), /Сессия/);
+  await assert.rejects(
+    () => pinned.request("/orders", { method: "POST", body: {} }),
+    /Сессия/,
+  );
+  assert.deepEqual(calls, ["/me", "/me"]);
 });

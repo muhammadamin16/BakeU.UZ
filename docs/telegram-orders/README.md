@@ -1,5 +1,7 @@
 # Telegram orders integration — handoff
 
+Current implementation/activation: [ACTIVATION.md](./ACTIVATION.md). Earlier missing-endpoint notes below describe the pre-integration baseline.
+
 Current branch: `codex/telegram-buyer-seller-menu`, based on `Amin` at `f774e6d` (includes the PR #6 Railway build-boundary fix).
 Backend inspected read-only: `BakeU-Backend/main` at `489d20e`.
 

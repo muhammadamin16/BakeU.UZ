@@ -1,5 +1,7 @@
 # Validation results
 
+Current implementation/activation: [ACTIVATION.md](./ACTIVATION.md). Earlier missing-endpoint notes below describe the pre-integration baseline.
+
 ## Buyer/seller menu revision
 
 Branch `codex/telegram-buyer-seller-menu`, based on `Amin/f774e6d`, checked on 2026-11-20:

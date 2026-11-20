@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { discoverGoApi, createGoTransport } from "./transport.js";
+import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
+import { goAccount as sharedGoAccount, goAPIBase } from "../api/goAccount.js";
 import "./orders.css";
-const configured = (import.meta.env.VITE_GO_BACKEND_URL || "").trim();
+const configured = (
+  goAPIBase ||
+  import.meta.env.VITE_GO_BACKEND_URL ||
+  ""
+).trim();
+const SellerSettings = lazy(
+  () => import("../pages/Profile/seller/ServerStorefront.jsx"),
+);
 const botBase = (
   import.meta.env.VITE_ACCOUNT_API_URL ||
   (import.meta.env.DEV
@@ -176,10 +184,6 @@ function CatalogCheckout({ transport, client, onCreated }) {
   );
 }
 function ConnectedAccount({ transport, challenge }) {
-  const client = useMemo(
-    () => createWebsiteOrdersClient(transport.request),
-    [transport],
-  );
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -187,6 +191,17 @@ function ConnectedAccount({ transport, challenge }) {
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [revision, setRevision] = useState(0);
+  const uid = account?.uid,
+    role = account?.role;
+  const pinned = useMemo(
+    () => pinGoAccount(transport, uid, role),
+    [transport, uid, role],
+  );
+  const client = useMemo(
+    () => createWebsiteOrdersClient(pinned.request),
+    [pinned],
+  );
+
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
@@ -232,7 +247,6 @@ function ConnectedAccount({ transport, challenge }) {
             <input
               type="password"
               autoComplete="current-password"
-              minLength={8}
               maxLength={72}
               required
               value={password}
@@ -270,9 +284,14 @@ function ConnectedAccount({ transport, challenge }) {
           <ServerProfile
             key={account.uid}
             account={account}
-            transport={transport}
+            transport={pinned}
             onSaved={setAccount}
           />
+          {account.role === "seller" && transport.shared && (
+            <Suspense fallback={<p>Загрузка настроек…</p>}>
+              <SellerSettings />
+            </Suspense>
+          )}
           <ServerOrdersPanel
             client={client}
             sessionKey={account.uid + ":" + revision}
@@ -285,7 +304,7 @@ function ConnectedAccount({ transport, challenge }) {
           {account.role === "customer" && (
             <CatalogCheckout
               client={client}
-              transport={transport}
+              transport={pinned}
               onCreated={() => setRevision((v) => v + 1)}
             />
           )}
@@ -356,9 +375,19 @@ export default function AccountOrders() {
     let active = true;
     discoverGoApi({ configured, botBase })
       .then((base) => {
-        const transport = createGoTransport(base, {
-          browserSession: import.meta.env.VITE_GO_BROWSER_SESSIONS === "true",
-        });
+        const transport =
+          sharedGoAccount && goAPIBase
+            ? {
+                base,
+                shared: true,
+                request: sharedGoAccount.requestWithOptions,
+                login: sharedGoAccount.login,
+                logout: sharedGoAccount.logout,
+              }
+            : createGoTransport(base, {
+                browserSession:
+                  import.meta.env.VITE_GO_BROWSER_SESSIONS === "true",
+              });
         transport.base = base;
         if (active) setConnection({ transport, error: "", loading: false });
       })

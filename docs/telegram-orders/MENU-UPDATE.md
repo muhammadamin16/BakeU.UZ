@@ -1,5 +1,7 @@
 # Buyer/seller menu and saved location
 
+Current implementation/activation: [ACTIVATION.md](./ACTIVATION.md). Earlier missing-endpoint notes below describe the pre-integration baseline.
+
 This revision supersedes the earlier role-only main menu. Branch: `codex/telegram-buyer-seller-menu`, based on `Amin/f774e6d`. Go was inspected read-only at `main/489d20e`; its Telegram bridge/binding/outbox and complete order workflow are still absent. No Go, shared auth or Mongo code is changed here.
 
 The branch is published. GitHub API rejected automated Draft PR creation; the [prepared Draft PR description and comparison link](./MENU-PR-DRAFT.md) are saved for review. This is not approval to merge or deploy.
