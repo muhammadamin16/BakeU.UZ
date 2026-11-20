@@ -1,4 +1,4 @@
-import { statusLabels, validCoordinates } from "../../telegramOrders/domain.js";
+import { statusLabels, validCoordinates } from "./domain.js";
 export class BridgeError extends Error {
   constructor(status = 503) {
     super(

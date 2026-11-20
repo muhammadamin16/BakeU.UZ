@@ -5,7 +5,7 @@ import {
   nextStatuses,
   statusLabels,
   validCoordinates,
-} from "../../telegramOrders/domain.js";
+} from "./domain.js";
 export const text = (value, max = 160) => {
   let result = "";
   for (const char of String(value ?? "—")) {

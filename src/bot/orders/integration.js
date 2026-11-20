@@ -6,7 +6,7 @@ import {
   nextStatuses,
   statusLabels,
   validCoordinates,
-} from "../../telegramOrders/domain.js";
+} from "./domain.js";
 import { renderScreen } from "../services/screens.js";
 import {
   orderCard,
