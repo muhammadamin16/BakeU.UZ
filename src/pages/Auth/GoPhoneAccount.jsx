@@ -31,6 +31,7 @@ export default function GoPhoneAccount({ register = false }) {
     } catch (failure) { setError(failure.message || "Не удалось подтвердить аккаунт."); }
     finally { setBusy(false); }
   }
+  if (!goAccount) return <AuthShell><div className="go-phone-auth"><h1 id="bk-auth-title">Аккаунт BakeU</h1><p role="alert">Вход и регистрация временно недоступны. Повторите позже.</p><Link to="/">На главную</Link></div></AuthShell>;
   return <AuthShell><form className="go-phone-auth" onSubmit={submit}>
     <h1 id="bk-auth-title">{register ? "Создать аккаунт BakeU" : "Войти в BakeU"}</h1>
     <p>Подтвердите номер через Telegram. Аккаунт и заказы сохраняются на сервере.</p>
