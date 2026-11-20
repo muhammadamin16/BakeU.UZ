@@ -577,3 +577,33 @@
     height: 29px;
   }
 }
+/* BakeU New Year — calm monochrome bakery backdrop */
+:root[data-season="winter"] {
+  --bg: #fffaf5;
+}
+
+:root[data-season="winter"] body,
+:root[data-season="winter"] #root {
+  background-color: #fffaf5;
+}
+
+:root[data-season="winter"] body {
+  background-image: url("/images/winter/bakeu-new-year-monochrome.svg");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Keep the artwork visible through the page canvas. */
+:root[data-season="winter"] #root {
+  background: transparent;
+}
+
+@media (max-width: 640px) {
+  :root[data-season="winter"] body {
+    background-size: auto 100vh;
+    background-position: center top;
+    background-attachment: scroll;
+  }
+}
