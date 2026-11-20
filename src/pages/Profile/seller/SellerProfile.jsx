@@ -9,6 +9,7 @@ import ProductFields from "../../Product/ProductFields";
 import { validateProductDetails } from "../../Product/validateProductDetails";
 import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
+import ShopImageEditor from "./ShopImageEditor";
 import { Orders, Reviews, Sales } from "../Activity";
 import { useWorkspace, setAutoReply } from "../../../store/workspaceStore";
 import { useEffect, useState } from "react";
@@ -304,26 +305,34 @@ export default function SellerProfile({ account, onLogout }) {
             </div>
             <div className="bw-two">
               <Sales ownerId={id} />
-              <section className="bw-card">
-                <h2>{translateText("Начните с магазина")}</h2>
-                <p>
-                  {translateText(
-                    "Добавьте обложку, контакты и адрес, затем разместите первый товар.",
-                  )}
-                </p>
-                <button className="bw-btn" onClick={() => setTab("settings")}>
-                  {translateText("Настроить магазин ")}
-                  <Settings size={16} />
-                </button>
-                <h3>{translateText("Быстрый доступ")}</h3>
+              <section className="bw-card bw-shop-overview">
+                <div className="bw-heading">
+                  <div>
+                    <span className="bw-kicker">{translateText("ВИТРИНА МАГАЗИНА")}</span>
+                    <h2>{translateText(saved ? "Ваш магазин" : "Оформите магазин")}</h2>
+                  </div>
+                  <button type="button" className="bw-btn" onClick={() => { setDraft(initial()); setTab("settings"); }}>
+                    <Pencil size={16} />{translateText("Редактировать")}
+                  </button>
+                </div>
+                <div className="bw-shop-preview-cover">
+                  {saved?.banner ? <img src={saved.banner} alt={translateText("Обложка магазина")} /> : <span>{translateText("Здесь будет обложка магазина")}</span>}
+                </div>
+                <div className="bw-shop-preview-identity">
+                  <span className="bw-avatar">
+                    {saved?.logo ? <img src={saved.logo} alt={translateText("Логотип магазина")} /> : (saved?.initials || draft.initials)}
+                  </span>
+                  <div>
+                    <h3>{translateText(saved?.name || draft.name || "Мой магазин")}</h3>
+                    <p>{translateText(saved?.address || draft.address || "Добавьте адрес магазина")}</p>
+                  </div>
+                </div>
+                <p>{translateText(saved?.about || "Добавьте фото, логотип и описание — покупатели увидят ваш магазин именно таким.")}</p>
                 <div className="bw-actions">
-                  <button className="bw-btn" onClick={() => setTab("products")}>
-                    {translateText("Мои товары · ")}
-                    {products.length}
+                  <button type="button" className="bw-btn primary" onClick={() => { setDraft(initial()); setTab("settings"); }}>
+                    <Settings size={16}/>{translateText(saved ? "Изменить оформление" : "Настроить магазин")}
                   </button>
-                  <button className="bw-btn" onClick={() => setTab("messages")}>
-                    {translateText("Сообщения")}
-                  </button>
+                  <button type="button" className="bw-btn" onClick={() => setTab("products")}>{translateText("Мои товары · ")}{products.length}</button>
                 </div>
               </section>
             </div>
@@ -499,41 +508,20 @@ export default function SellerProfile({ account, onLogout }) {
         {tab === "settings" && (
           <form className="bw-card" onSubmit={save}>
             <h2>{translateText("Настройки магазина")}</h2>
-            <div
-              className="bw-cover"
-              style={
-                draft.banner
-                  ? { backgroundImage: `url(${draft.banner})` }
-                  : undefined
-              }
-            >
-              <label className="bw-btn">
-                {translateText("Изменить баннер")}
-                <input
-                  hidden
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => upload(e, "banner")}
-                />
-              </label>
+            <p>{translateText("Добавьте обложку и логотип. Перемещайте фото пальцем или мышью, настройте масштаб и нажмите «Применить».")}</p>
+            <h3>{translateText("Обложка магазина")}</h3>
+            <ShopImageEditor key={id + "-banner"} type="banner" value={draft.banner} onChange={(image) => update("banner", image)} onError={setNotice} />
+            <h3>{translateText("Логотип магазина")}</h3>
+            <ShopImageEditor key={id + "-logo"} type="logo" value={draft.logo} onChange={(image) => update("logo", image)} onError={setNotice} />
+            <h3>{translateText("Предварительный просмотр")}</h3>
+            <div className="bw-shop-preview-cover">
+              {draft.banner ? <img src={draft.banner} alt={translateText("Предпросмотр обложки")} /> : <span>{translateText("Обложка магазина")}</span>}
             </div>
-            <div className="bw-actions">
+            <div className="bw-shop-preview-identity">
               <span className="bw-avatar">
-                {draft.logo ? (
-                  <img src={draft.logo} alt={translateText("Логотип")} />
-                ) : (
-                  draft.initials
-                )}
+                {draft.logo ? <img src={draft.logo} alt={translateText("Предпросмотр логотипа")} /> : draft.initials}
               </span>
-              <label className="bw-btn">
-                {translateText("Изменить логотип")}
-                <input
-                  hidden
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => upload(e, "logo")}
-                />
-              </label>
+              <div><h3>{translateText(draft.name || "Мой магазин")}</h3><p>{translateText(draft.address || "Адрес магазина")}</p></div>
             </div>
             <div className="bw-fields">
               {translateText(field("Название магазина", "name"))}
