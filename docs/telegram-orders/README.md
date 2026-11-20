@@ -3,6 +3,8 @@
 Branch: `codex/telegram-orders`. Website baseline: `Amin` at `5eeb055`.
 Backend inspected read-only: `BakeU-Backend/main` at `b4a55d4`.
 
+The branch is pushed. GitHub API rejected automated Draft PR creation; the [prepared PR description and comparison link](./PULL_REQUEST.md) are saved for review. No PR or merge is implied by this handoff.
+
 ## What this branch implements
 
 - Existing winter welcome, Mini App link, social/support/email/about navigation and numeric-ID admin permissions remain in place.
