@@ -1,3 +1,4 @@
+import { seedLegacyApplication } from "./helpers.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
@@ -100,7 +101,8 @@ test("admin authority is rechecked on server; body role and normal account token
 test("server Mini App API protects real registrations and application decisions", async () => {
   const s = setup();
   s.config = { ...s.config, token, adminIds: ["12345"] };
-  const { application } = await s.auth.register(fields("seller"));
+  const { user } = await s.auth.register(fields("seller"));
+  const application = seedLegacyApplication(s.db, s.repo, user);
   const server = createApiServer(s);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${server.address().port}/api/miniapp`;
