@@ -43,8 +43,16 @@ export default function AppRoutes() {
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
   const isHome = pathname === "/";
+  const isMap = matchesPath(pathname.toLowerCase(), "/map");
+  const compactFooter = isHome || pathname === "/seller";
+  const contentClass = isMap
+    ? "container site-content--map"
+    : compactFooter
+      ? "container site-content--compact-footer"
+      : "container";
   const showFooter =
     !isAuthPage &&
+    !isMap &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
@@ -61,7 +69,7 @@ export default function AppRoutes() {
     <>
       {!isAuthPage && <Header />}
 
-      <main className={isHome ? "container site-content--home" : "container"}>
+      <main className={contentClass}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />

@@ -1,5 +1,10 @@
 /* BakeU — minimal translucent catalog */
 .seller-page{--seller-ink:#432015;--seller-muted:#8b7364;--seller-line:rgba(67,32,21,.09);--seller-glass:rgba(255,252,247,.66);margin:0 auto;padding:32px 0 115px;color:var(--seller-ink);font-family:inherit}
+
+.site-content--compact-footer .seller-page {
+  padding-bottom: 0;
+}
+
 .seller-page,.seller-page *,.seller-page *::before,.seller-page *::after{box-sizing:border-box}
 .seller-page a{text-decoration:none;color:inherit}.seller-page button,.seller-page input{font:inherit}.seller-page button{cursor:pointer}.seller-page :is(a,button,input):focus-visible{outline:3px solid #c8865d;outline-offset:3px}
 .seller-header{display:flex;flex-direction:column;gap:23px;margin-bottom:26px}.seller-header__top{display:flex;align-items:center;justify-content:space-between;gap:20px}.seller-heading h1{margin:0 0 7px;font-size:clamp(28px,3.5vw,42px);line-height:1.1;letter-spacing:-.045em;font-weight:800}.seller-heading p{margin:0;color:var(--seller-muted);font-size:13px}

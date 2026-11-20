@@ -13,7 +13,7 @@ export default function Cart() {
     0,
   );
   return (
-    <main className="bu-shopping">
+    <main className="bu-shopping bu-cart">
       <div className="bu-heading">
         <h1>{translateText("Корзина")}</h1>
         {rows.length > 0 && (

@@ -6,10 +6,9 @@
   --cart-border: rgba(255, 255, 255, 0.9);
   --cart-glass: rgba(255, 250, 242, 0.42);
 
-  width: min(1280px, 100%);
   min-height: calc(100dvh - 90px);
   margin: 0 auto;
-  padding: 42px 24px calc(120px + env(safe-area-inset-bottom));
+  padding: 42px 0 calc(120px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   color: var(--cart-text);
   font-family: inherit;
@@ -441,11 +440,6 @@
 }
 
 @media (max-width: 480px) {
-  .bu-shopping {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-
   .bu-shopping .bu-heading {
     margin-bottom: 20px;
   }
@@ -516,4 +510,3 @@
     animation: none !important;
   }
 }
-@media(max-width:480px){.bu-shopping{padding-left:0;padding-right:0}}

@@ -460,7 +460,16 @@ export default function MapPage() {
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [mapInstance, setMapInstance] = useState(null);
 
-  const cardRefs = useRef({});
+  useEffect(() => {
+    if (!mapInstance) return;
+    const observer = new ResizeObserver(() => mapInstance.invalidateSize({ pan: false }));
+    observer.observe(mapInstance.getContainer());
+    return () => observer.disconnect();
+  }, [mapInstance]);
+
+  const sidebarRef = useRef(null);
+  const detailRef = useRef(null);
+  const geoNoticeRef = useRef(null);
   const posRef = useRef(null);
   const wantNearRef = useRef(false);
 
@@ -671,13 +680,12 @@ export default function MapPage() {
     ? `/product/${selected?.id}`
     : `/seller?shop=${selectedShop}`;
 
-  /* Tanlanganda ro'yxatda ko'rinishga keltirish */
   useEffect(() => {
-    cardRefs.current[selectedId]?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    });
-  }, [selectedId]);
+    const sidebar = sidebarRef.current;
+    const target = geoNoticeRef.current || detailRef.current;
+    if (!sidebar || !target) return;
+    sidebar.scrollTo({ top: target.offsetTop - 6, behavior: "instant" });
+  }, [selectedId, geoError]);
 
   const reset = () => {
     setQuery("");
@@ -709,7 +717,118 @@ export default function MapPage() {
     <main className="map">
       <div className="map-layout">
         {/* ===== Chap panel ===== */}
-        <aside className="map-sidebar">
+        <aside className="map-sidebar" ref={sidebarRef} aria-labelledby="map-heading" tabIndex={0}>
+          <h1 id="map-heading">{translateText("Карта")}</h1>
+          <div className="map-toolbar">
+            <label className="map-search">
+              <Search size={20} strokeWidth={1.8} />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={translateText("Искать в этой области")}
+                aria-label={translateText("Искать в этой области")}
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="map-search__clear"
+                  onClick={() => setQuery("")}
+                  aria-label={translateText("Очистить")}
+                >
+                  <X size={16} strokeWidth={2.2} />
+                </button>
+              )}
+            </label>
+            <button
+              type="button"
+              className="map-round"
+              onClick={reset}
+              aria-label={translateText("Сбросить")}
+            >
+              <RefreshCw size={18} strokeWidth={2} />
+            </button>
+          </div>
+          {geoError && (
+            <div
+              className={`map-geo-error ${geoError === "approx" ? "is-info" : ""}`}
+              ref={geoNoticeRef}
+              role="alert"
+            >
+              <p>
+                {translateText(
+                  geoError === "denied"
+                    ? `${GEO_MESSAGES.denied} ${deniedHelp()}`
+                    : GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable,
+                )}
+              </p>
+
+              {geoDebug && geoError !== "approx" && (
+                <details className="map-geo-error__debug">
+                  <summary>{translateText("Технические детали")}</summary>
+                  <code>{translateText(geoDebug)}</code>
+                </details>
+              )}
+
+              {geoError === "approx" ? (
+                <div className="map-geo-error__actions">
+                  <button
+                    type="button"
+                    className="map-geo-error__btn is-primary"
+                    onClick={startPick}
+                  >
+                    {translateText("Указать точнее")}
+                  </button>
+                  <button
+                    type="button"
+                    className="map-geo-error__btn"
+                    onClick={() => setGeoError("")}
+                  >
+                    {translateText("Ок")}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="map-geo-error__actions is-stacked">
+                    <button
+                      type="button"
+                      className="map-geo-error__btn is-primary"
+                      onClick={startPick}
+                    >
+                      {translateText("Указать на карте")}
+                    </button>
+                    {["denied", "unavailable", "timeout"].includes(
+                      geoError,
+                    ) && (
+                      <button
+                        type="button"
+                        className="map-geo-error__btn"
+                        onClick={retryGeo}
+                        disabled={loadingGeo}
+                      >
+                        {translateText("Повторить")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="map-geo-error__btn"
+                      onClick={() => setGeoError("")}
+                    >
+                      {translateText("Закрыть")}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="map-geo-error__link"
+                    onClick={approxLocate}
+                    disabled={loadingGeo}
+                  >
+                    {translateText("Определить примерно по сети.")}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
           <div className="map-tabs" role="tablist">
             {[
               ["sellers", "Продавцы"],
@@ -776,6 +895,35 @@ export default function MapPage() {
           )}
 
           <div className="map-list">
+            {selected && (
+              <div className="map-detail" ref={detailRef}>
+                <img src={selected.image} alt="" className="map-detail__img" />
+                <div className="map-detail__info">
+                  <h3>{translateText(selected.name)}</h3>
+                  <p>{translateText(meta(selected))}</p>
+                  <span className="map-card__star">
+                    <Star size={12} fill="#f4b41b" stroke="#f4b41b" />
+                    {translateText(selected.rating.toFixed(1))}
+                  </span>
+                </div>
+                <div className="map-detail__actions">
+                  <Link className="map-btn map-btn--dark" to={detailPath}>
+                    {translateText("Подробнее")}
+                  </Link>
+                  <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
+                    {translateText("Написать")}
+                  </Link>
+                </div>
+                <button
+                  type="button"
+                  className="map-detail__close"
+                  onClick={() => setSelectedId(null)}
+                  aria-label={translateText("Закрыть")}
+                >
+                  <X size={16} strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
             {filtered.length === 0 ? (
               <div className="map-empty">
                 <p>
@@ -801,11 +949,9 @@ export default function MapPage() {
               filtered.map((item, index) => (
                 <button
                   key={item.id}
-                  ref={(el) => {
-                    cardRefs.current[item.id] = el;
-                  }}
                   type="button"
                   className={`map-card ${selectedId === item.id ? "is-selected" : ""}`}
+                  aria-pressed={selectedId === item.id}
                   onClick={() => setSelectedId(item.id)}
                 >
                   <img
@@ -842,36 +988,6 @@ export default function MapPage() {
 
         {/* ===== Xarita ===== */}
         <section className={`map-area ${pickMode ? "is-picking" : ""}`}>
-          <div className="map-toolbar">
-            <label className="map-search">
-              <Search size={20} strokeWidth={1.8} />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={translateText("Искать в этой области")}
-              />
-              {query && (
-                <button
-                  type="button"
-                  className="map-search__clear"
-                  onClick={() => setQuery("")}
-                  aria-label={translateText("Очистить")}
-                >
-                  <X size={16} strokeWidth={2.2} />
-                </button>
-              )}
-            </label>
-            <button
-              type="button"
-              className="map-round"
-              onClick={reset}
-              aria-label={translateText("Сбросить")}
-            >
-              <RefreshCw size={18} strokeWidth={2} />
-            </button>
-          </div>
-
           {nearMe && userPos && !pickMode && (
             <div className="map-zone" aria-live="polite">
               <span className="map-zone__dot" />
@@ -1030,36 +1146,6 @@ export default function MapPage() {
             )}
           </div>
 
-          {selected && (
-            <div className="map-detail">
-              <img src={selected.image} alt="" className="map-detail__img" />
-              <div className="map-detail__info">
-                <h3>{translateText(selected.name)}</h3>
-                <p>{translateText(meta(selected))}</p>
-                <span className="map-card__star">
-                  <Star size={12} fill="#f4b41b" stroke="#f4b41b" />
-                  {translateText(selected.rating.toFixed(1))}
-                </span>
-              </div>
-              <div className="map-detail__actions">
-                <Link className="map-btn map-btn--dark" to={detailPath}>
-                  {translateText("Подробнее")}
-                </Link>
-                <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
-                  {translateText("Написать")}
-                </Link>
-              </div>
-              <button
-                type="button"
-                className="map-detail__close"
-                onClick={() => setSelectedId(null)}
-                aria-label={translateText("Закрыть")}
-              >
-                <X size={16} strokeWidth={2.2} />
-              </button>
-            </div>
-          )}
-
           <button
             type="button"
             className={`map-near ${nearMe ? "is-active" : ""}`}
@@ -1084,85 +1170,6 @@ export default function MapPage() {
             </div>
           )}
 
-          {geoError && (
-            <div
-              className={`map-geo-error ${geoError === "approx" ? "is-info" : ""}`}
-              role="alert"
-            >
-              <p>
-                {translateText(
-                  geoError === "denied"
-                    ? `${GEO_MESSAGES.denied} ${deniedHelp()}`
-                    : GEO_MESSAGES[geoError] || GEO_MESSAGES.unavailable,
-                )}
-              </p>
-
-              {geoDebug && geoError !== "approx" && (
-                <details className="map-geo-error__debug">
-                  <summary>{translateText("Технические детали")}</summary>
-                  <code>{translateText(geoDebug)}</code>
-                </details>
-              )}
-
-              {geoError === "approx" ? (
-                <div className="map-geo-error__actions">
-                  <button
-                    type="button"
-                    className="map-geo-error__btn is-primary"
-                    onClick={startPick}
-                  >
-                    {translateText("Указать точнее")}
-                  </button>
-                  <button
-                    type="button"
-                    className="map-geo-error__btn"
-                    onClick={() => setGeoError("")}
-                  >
-                    {translateText("Ок")}
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="map-geo-error__actions is-stacked">
-                    <button
-                      type="button"
-                      className="map-geo-error__btn is-primary"
-                      onClick={startPick}
-                    >
-                      {translateText("Указать на карте")}
-                    </button>
-                    {["denied", "unavailable", "timeout"].includes(
-                      geoError,
-                    ) && (
-                      <button
-                        type="button"
-                        className="map-geo-error__btn"
-                        onClick={retryGeo}
-                        disabled={loadingGeo}
-                      >
-                        {translateText("Повторить")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="map-geo-error__btn"
-                      onClick={() => setGeoError("")}
-                    >
-                      {translateText("Закрыть")}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="map-geo-error__link"
-                    onClick={approxLocate}
-                    disabled={loadingGeo}
-                  >
-                    {translateText("Определить примерно по сети.")}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
         </section>
       </div>
     </main>

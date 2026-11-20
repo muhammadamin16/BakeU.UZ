@@ -38,6 +38,10 @@ export const products = [
     category: "Хлеб",
     price: 3400,
     image: "/images/products/bread.jpg",
+    images: [
+      "/images/products/bread-crust.webp",
+      "/images/products/bread-crumb.webp",
+    ],
     shopId: "bakeu",
   },
   {

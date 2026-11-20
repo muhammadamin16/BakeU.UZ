@@ -20,8 +20,6 @@
   z-index: 1100;
   isolation: isolate;
   width: 100%;
-  max-width: var(--site-max-width);
-  margin-inline: auto;
   padding-top: env(safe-area-inset-top, 0px);
   background-color: rgba(255, 252, 247, var(--hd-opacity));
   -webkit-backdrop-filter: blur(var(--hd-blur)) saturate(160%);

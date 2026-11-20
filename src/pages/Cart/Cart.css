@@ -1,1 +1,45 @@
 @import "../../styles/shopping.css";
+
+
+.bu-cart {
+  min-height: 0;
+  padding: 16px 0 8px;
+}
+
+.bu-cart .bu-heading {
+  margin-bottom: 16px;
+}
+
+.bu-cart .bu-cart-layout {
+  gap: 16px;
+}
+
+.bu-cart .bu-rows {
+  gap: 10px;
+}
+
+.bu-cart .bu-row {
+  gap: 12px;
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  padding: 10px 14px 10px 10px;
+}
+
+.bu-cart .bu-row > .bu-image {
+  width: 82px;
+  height: 82px;
+}
+
+.bu-cart .bu-total {
+  padding: 18px;
+}
+
+@media (max-width: 1000px) {
+  .bu-cart .bu-row {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .bu-cart .bu-row > .bu-image {
+    width: 76px;
+    height: 76px;
+  }
+}
