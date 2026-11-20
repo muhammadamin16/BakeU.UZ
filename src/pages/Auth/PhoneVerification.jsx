@@ -12,7 +12,7 @@ export default function PhoneVerification({ botUrl, busy, error, onVerify, onEdi
       </header>
       {botUrl && (
         <a href={botUrl} target="_blank" rel="noopener noreferrer" className="bk-telegram-open">
-          <Send size={17} aria-hidden="true" /> {t("Открыть Telegram бот")}
+          <Send size={17} aria-hidden="true" /> {t("Открыть Telegram бот.")}
         </a>
       )}
       <p className="bk-note">{t("После получения кода вернитесь сюда. Код действителен 10 минут.")}</p>
