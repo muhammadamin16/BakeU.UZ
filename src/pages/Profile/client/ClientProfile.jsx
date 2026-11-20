@@ -1,3 +1,5 @@
+import ShopLocationPicker from "../../../components/ShopLocationPicker/ShopLocationPicker";
+import { openSellerShop, accountApiEnabled } from "../../../bot/client/accountApi";
 import { translateText } from "../../../i18n/index.js";
 import "./ClientProfile.css";
 import ProfileChat from "../ProfileChat";
@@ -32,6 +34,7 @@ export default function ClientProfile({
   onLogout,
   onSave,
   initialShop,
+  onBecomeSeller,
 }) {
   const follows = useWorkspace((s) => s.follows).filter(
     (f) => f.buyerId === accountId(account),
@@ -48,6 +51,8 @@ export default function ClientProfile({
     [section, setSection] = useState(initialShop ? "messages" : "overview"),
     [notice, setNotice] = useState(""),
     [address, setAddress] = useState("");
+  const [shopForm, setShopForm] = useState({ firstName: account.firstName || "", lastName: account.lastName || "", phone: account.phone || "", shop: "", address: "", lat: null, lng: null });
+  const [shopBusy, setShopBusy] = useState(false);
   const threads = useWorkspace((s) => s.threads).filter(
     (t) => t.buyerId === accountId(account),
   );
@@ -69,6 +74,38 @@ export default function ClientProfile({
     ["addresses", "Мои адреса", MapPin],
     ["settings", "Настройки", Settings],
   ];
+  async function submitShop(event) {
+    event.preventDefault();
+    if (shopBusy) return;
+    if (!accountApiEnabled || !account.server) {
+      setNotice("Для открытия магазина войдите в серверный аккаунт BakeU.");
+      return;
+    }
+    if (!shopForm.firstName.trim() || !shopForm.lastName.trim() || !shopForm.phone.trim() || !shopForm.shop.trim() || !shopForm.address.trim()) {
+      setNotice("Заполните все обязательные поля.");
+      return;
+    }
+    setShopBusy(true);
+    setNotice("");
+    try {
+      // The verified phone remains unchanged. Name may be updated before seller activation.
+      if (shopForm.firstName.trim() !== account.firstName || shopForm.lastName.trim() !== account.lastName) {
+        await onSave({ ...account, firstName: shopForm.firstName.trim(), lastName: shopForm.lastName.trim() });
+      }
+      const result = await openSellerShop({
+        shop: shopForm.shop.trim(),
+        address: shopForm.address.trim(),
+        ...(shopForm.lat != null && shopForm.lng != null
+          ? { lat: shopForm.lat, lng: shopForm.lng } : {}),
+      });
+      onBecomeSeller?.(result.user);
+      setNotice("Магазин открыт!");
+    } catch (error) {
+      setNotice(error.message || "Не удалось открыть магазин.");
+    } finally {
+      setShopBusy(false);
+    }
+  }
   function openConversation(shopId) {
     setChatShop(shopId);
     setSection("messages");
@@ -78,7 +115,7 @@ export default function ClientProfile({
       <button type="button" className="cu-row" onClick={action}>
         <Icon size={20} />
         <span>{translateText(label)}</span>
-        {translateText(extra)}
+        {extra}
         <ChevronRight size={17} />
       </button>
     );
@@ -164,10 +201,16 @@ export default function ClientProfile({
                   account.nickname ? `@${account.nickname}` : account.email,
                 )}
               </p>
+              <div className="cu-profile-actions">
               <button className="bw-btn" onClick={() => setSection("settings")}>
                 <Pencil size={16} />
                 {translateText("Редактировать профиль")}
               </button>
+                <button type="button" className="bw-btn primary" onClick={() => setSection("open-shop")}>
+                  <Store size={16} />
+                  {translateText("Открыть магазин")}
+                </button>
+              </div>
             </div>
           </div>
           <div className="cu-stats">
@@ -298,23 +341,10 @@ export default function ClientProfile({
                   )}
                 </section>
                 <section className="cu-card cu-mobile-menu">
-                  {translateText(
-                    row("Мои заказы", ShoppingBag, () => setSection("orders")),
-                  )}
-                  {translateText(
-                    row("Избранное", Heart, () => setSection("favorites")),
-                  )}
-                  {row(
-                    "Сообщения",
-                    MessageCircle,
-                    () => setSection("messages"),
-                    unread > 0 ? (
-                      <b className="cu-count">{translateText(unread)}</b>
-                    ) : null,
-                  )}
-                  {translateText(
-                    row("Мои отзывы", Star, () => setSection("reviews")),
-                  )}
+                  {row("Мои заказы", ShoppingBag, () => setSection("orders"))}
+                  {row("Избранное", Heart, () => setSection("favorites"))}
+                  {row("Сообщения", MessageCircle, () => setSection("messages"), unread > 0 ? <b className="cu-count">{unread}</b> : null)}
+                  {row("Мои отзывы", Star, () => setSection("reviews"))}
                 </section>
                 <section className="cu-card">
                   <div className="cu-card-title">
@@ -415,27 +445,11 @@ export default function ClientProfile({
                 </section>
                 <section className="cu-card cu-settings">
                   <h2>{translateText("Настройки аккаунта")}</h2>
-                  {translateText(
-                    row("Личные данные", UserRound, () =>
-                      setSection("settings"),
-                    ),
-                  )}
-                  {translateText(
-                    row("Телефон и email", Mail, () => setSection("settings")),
-                  )}
-                  {translateText(
-                    row("Любимые магазины", Store, () =>
-                      setSection("following"),
-                    ),
-                  )}
-                  {translateText(
-                    row("Мои отзывы", Star, () => setSection("reviews")),
-                  )}
-                  {translateText(
-                    row("Безопасность", ShieldCheck, () =>
-                      setSection("security"),
-                    ),
-                  )}
+                  {row("Личные данные", UserRound, () => setSection("settings"))}
+                  {row("Телефон и email", Mail, () => setSection("settings"))}
+                  {row("Любимые магазины", Store, () => setSection("following"))}
+                  {row("Мои отзывы", Star, () => setSection("reviews"))}
+                  {row("Безопасность", ShieldCheck, () => setSection("security"))}
                 </section>
               </div>
             </div>
@@ -475,6 +489,28 @@ export default function ClientProfile({
               )}
             </section>
           </>
+        )}
+        {section === "open-shop" && (
+          <section className="cu-card cu-shop-registration">
+            <span className="cu-eyebrow">{translateText("BAKEU ДЛЯ ПРОДАВЦОВ")}</span>
+            <h2><Store size={22} /> {translateText("Открыть свой магазин")}</h2>
+            <p>{translateText("Заполните данные магазина. Аккаунт продавца откроется сразу, без заявки и ожидания администратора.")}</p>
+            <form className="cu-shop-form" onSubmit={submitShop}>
+              <label className="bw-field"><span>{translateText("Имя")}</span><input autoComplete="given-name" required value={shopForm.firstName} onChange={e => setShopForm(s => ({...s, firstName: e.target.value}))} /></label>
+              <label className="bw-field"><span>{translateText("Фамилия")}</span><input autoComplete="family-name" required value={shopForm.lastName} onChange={e => setShopForm(s => ({...s, lastName: e.target.value}))} /></label>
+              <label className="bw-field"><span>{translateText("Название магазина")}</span><input required minLength={2} maxLength={150} value={shopForm.shop} onChange={e => setShopForm(s => ({...s, shop: e.target.value}))} placeholder={translateText("Например, Домашние торты")} /></label>
+              <label className="bw-field"><span>{translateText("Номер телефона")}</span><input required type="tel" autoComplete="tel" readOnly value={shopForm.phone} title={translateText("Подтверждённый номер аккаунта")} /></label>
+              <div className="cu-shop-form-wide">
+                <ShopLocationPicker
+                  id="profile-shop-location"
+                  value={{ address: shopForm.address, lat: shopForm.lat, lng: shopForm.lng }}
+                  onChange={(value) => setShopForm(s => ({ ...s, address: value.address, lat: value.lat, lng: value.lng }))}
+                />
+              </div>
+              <p className="cu-shop-form-wide">{translateText("Магазин откроется сразу. Повторно подтверждать номер телефона не требуется.")}</p>
+              <button className="bw-btn primary cu-shop-form-wide" type="submit" disabled={shopBusy}>{translateText(shopBusy ? "Открываем магазин…" : "Открыть магазин")}</button>
+            </form>
+          </section>
         )}
         {section === "favorites" && (
           <section className="cu-card">

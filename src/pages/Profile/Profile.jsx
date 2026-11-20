@@ -32,7 +32,6 @@ export default function Profile() {
     }
   });
 
-  const [serverApplication, setServerApplication] = useState(null);
   const [serverError, setServerError] = useState("");
   useEffect(() => {
     if (!accountApiEnabled || !account?.server) return;
@@ -41,7 +40,10 @@ export default function Profile() {
       try {
         const result = await getServerProfile();
         if (!cancelled) {
-          setServerApplication(result.application);
+          if (result.user?.role && result.user.role !== account.role) {
+            setAccount(result.user);
+            sessionStorage.setItem("bakeu-demo-profile", JSON.stringify(result.user));
+          }
           setServerError("");
         }
       } catch (error) {
@@ -82,25 +84,23 @@ export default function Profile() {
 
   return (
     <main className="bw-page">
-      {serverApplication && (
-        <p className="bw-demo">
-          {translateText("Заявка магазина «")}
-          {translateText(serverApplication.shop)}»:{" "}
-          {translateText(serverApplication.status)}
-          {translateText(
-            serverApplication.reason ? ` · ${serverApplication.reason}` : "",
-          )}
-        </p>
-      )}
       {serverError && (
-        <p className="bw-demo" role="status">
+        <div className="bw-demo" role="alert">
           {translateText(serverError)}
-        </p>
+          {/сессия|войдите|401/i.test(serverError) && (
+            <button type="button" className="bw-btn" onClick={() => {
+              clearSession();
+              navigate("/login", { replace: true });
+            }}>
+              {translateText("Войти снова")}
+            </button>
+          )}
+        </div>
       )}
       <p className="bw-demo">
         {translateText(
           account.server
-            ? "Аккаунт хранится на сервере. Заявка магазина проверяется администратором в Telegram. Товары, заказы и чат этого кабинета пока работают локально."
+            ? "Аккаунт хранится на сервере. Товары, заказы и сообщения этого кабинета пока работают локально."
             : "Демо-кабинет · изменения сохраняются в этом браузере. Чат и заказы работают локально; оплата и доставка сообщений требуют сервера.",
         )}
       </p>
@@ -118,6 +118,7 @@ export default function Profile() {
           onLogout={logout}
           onSave={saveAccount}
           initialShop={params.get("chat")}
+          onBecomeSeller={(user) => setAccount(user)}
         />
       )}
     </main>

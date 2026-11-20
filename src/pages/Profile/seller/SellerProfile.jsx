@@ -11,7 +11,7 @@ import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
 import { Orders, Reviews, Sales } from "../Activity";
 import { useWorkspace, setAutoReply } from "../../../store/workspaceStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -25,6 +25,7 @@ import {
   LogOut,
   ExternalLink,
   Pencil,
+  ShoppingBag,
 } from "lucide-react";
 import {
   useShopStore,
@@ -82,8 +83,8 @@ export default function SellerProfile({ account, onLogout }) {
       telegram: "",
       instagram: "",
       address: account.location || "",
-      lat: 41.3111,
-      lng: 69.2797,
+      lat: Number.isFinite(Number(account.lat)) && account.lat != null ? Number(account.lat) : "",
+      lng: Number.isFinite(Number(account.lng)) && account.lng != null ? Number(account.lng) : "",
       open: "09:00",
       close: "20:00",
       color: "#ead9bd",
@@ -97,6 +98,15 @@ export default function SellerProfile({ account, onLogout }) {
     [notice, setNotice] = useState(""),
     [editor, setEditor] = useState(null),
     [query, setQuery] = useState("");
+  useEffect(() => {
+    if (!saved && account.company && account.location) {
+      saveShop({
+        ...initial(),
+        description: "Домашняя выпечка на заказ",
+        initials: account.company.slice(0, 2).toUpperCase(),
+      });
+    }
+  }, [saved, account.company, account.location, id, saveShop]);
   const products = Object.values(allProducts).filter((p) => p.shopId === id);
   const update = (key, value) => setDraft((d) => ({ ...d, [key]: value }));
   async function upload(event, key, product = false) {
@@ -124,10 +134,8 @@ export default function SellerProfile({ account, onLogout }) {
     if (
       !draft.name.trim() ||
       !draft.address.trim() ||
-      !Number.isFinite(Number(draft.lat)) ||
-      Math.abs(Number(draft.lat)) > 90 ||
-      !Number.isFinite(Number(draft.lng)) ||
-      Math.abs(Number(draft.lng)) > 180
+      (draft.lat !== "" && draft.lat != null && (!Number.isFinite(Number(draft.lat)) || Math.abs(Number(draft.lat)) > 90)) ||
+      (draft.lng !== "" && draft.lng != null && (!Number.isFinite(Number(draft.lng)) || Math.abs(Number(draft.lng)) > 180))
     ) {
       setNotice("Заполните название, адрес и корректные координаты.");
       return;
@@ -144,8 +152,8 @@ export default function SellerProfile({ account, onLogout }) {
         ...draft,
         telegram,
         instagram,
-        lat: Number(draft.lat),
-        lng: Number(draft.lng),
+        lat: draft.lat === "" || draft.lat == null ? null : Number(draft.lat),
+        lng: draft.lng === "" || draft.lng == null ? null : Number(draft.lng),
         description: draft.about.slice(0, 140),
         hours: `Ежедневно, ${draft.open}–${draft.close}`,
         nickname: draft.nickname.replace(/^@/, ""),
@@ -242,6 +250,10 @@ export default function SellerProfile({ account, onLogout }) {
             </p>
           </div>
           <div className="bw-actions">
+            <Link className="bw-btn" to="/seller?tab=products">
+              <ShoppingBag size={17} />
+              {translateText("Для заказа")}
+            </Link>
             {saved && (
               <Link
                 className="bw-btn"
