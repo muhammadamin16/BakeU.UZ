@@ -14,9 +14,9 @@ import { createOutboxWorker } from "../services/adminNotifications.js";
 import { mainKeyboard } from "../keyboards/mainKeyboard.js";
 import { readConfig } from "../config/index.js";
 import { createRateLimiter } from "../middleware/rateLimit.js";
-test("main menu has six buttons and working website link", () => {
+test("main menu has seven buttons and working website link", () => {
   const buttons = mainKeyboard(config).inline_keyboard.flat();
-  assert.equal(buttons.length, 6);
+  assert.equal(buttons.length, 7);
   assert.equal(buttons[0].url, "https://bakeu.uz");
   assert.ok(buttons.some((x) => x.callback_data === "support"));
 });

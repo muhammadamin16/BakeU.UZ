@@ -5,12 +5,13 @@ const siteButton = (config) => ({
     ? { web_app: { url: miniAppUrl(config) } }
     : { url: config.siteUrl }),
 });
-export function mainKeyboard(config, { admin = false } = {}) {
+export function mainKeyboard(config, { admin = false, role = null } = {}) {
   const external = (text, url, key) =>
     url ? { text, url } : { text, callback_data: key };
   return {
     inline_keyboard: [
       [siteButton(config)],
+      ...(role === 'SELLER' ? [[{text:'🏬 Мой магазин',callback_data:'bo:shop'}]] : role === 'CLIENT' ? [[{text:'📦 Мои заказы',callback_data:'bo:buyer'}]] : !admin ? [[{text:'🔐 Мой BakeU',callback_data:'bo:account'}]] : []),
       [
         external("📣 Telegram-канал", config.telegramUrl, "contact:telegram"),
         external("📸 Instagram", config.instagramUrl, "contact:instagram"),

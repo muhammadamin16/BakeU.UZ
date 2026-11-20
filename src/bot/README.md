@@ -4,7 +4,7 @@ Node.js **24 LTS** or newer is required (built-in SQLite, fetch, env-file suppor
 
 ## What is included
 
-- Six public buttons: BakeU website, Telegram, Instagram, email, support, about.
+- Six existing public buttons: BakeU website, Telegram, Instagram, email, support, about; plus one account/role button for the optional shared-Go orders integration.
 - Website opens with a URL button; set `USE_WEB_APP=true` for an HTTPS Telegram Mini App instead.
 - `/start`, `/cancel`, `/id`; numeric-ID-only private admin panel via `/admin`.
 - Admin statistics; paginated server customers and sellers; store applications; approve/reject with a reason; support ticket list and replies.
@@ -115,3 +115,7 @@ See `../miniapp/README.md` for the winter welcome screen, launch setup, Vercel/V
 If you deploy elsewhere, set optional `MINI_APP_URL=https://your-real-https-site` in `src/bot/.env`. The active Mini App origin is added to the configured CORS allowlist. For the old SITE_URL/USE_WEB_APP behavior, use `npm run bot:website` from the repository root.
 
 After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bot`, and send `/start` to get a fresh button. Existing Telegram messages retain their original keyboards. Button icons vary by Telegram client; use the printed launch mode or the actual opening behavior rather than the arrow glyph to identify the mode. The HTTPS account/admin API still needs a public backend; this launch fix does not deploy or tunnel localhost.
+
+## Shared Go/MongoDB orders (opt-in)
+
+The separate [Telegram orders integration](../../docs/telegram-orders/README.md) adds confirmed role menus, account-link challenges, seller/buyer orders and a server outbox worker. It is **disabled by default** until the shared Go API and website route implement the documented contract. Commerce data never falls back to this legacy SQLite account database. See the linked handoff for exact backend dependencies, website mounting and staging checks; existing setup sections above describe the legacy account/admin/support service.
