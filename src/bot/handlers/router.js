@@ -66,7 +66,11 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
         reply_markup: { remove_keyboard: true },
       });
     }
-    if (orders && await orders.handle(ctx, update)) { repo.clearState(chatId); return; }
+    if (orders && await orders.handle(ctx, update)) {
+      // Only UI navigation/selection IDs live here; actual orders stay in Go/Mongo.
+      if (repo.getState(chatId)?.kind !== "orders") repo.clearState(chatId);
+      return;
+    }
     if (command === "/id")
       return telegram.send(chatId, { text: `Ваш Telegram ID: ${user.id}` });
     if (command === "/start" || command === "/cancel") {

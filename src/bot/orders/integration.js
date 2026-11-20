@@ -1,4 +1,9 @@
-import { BridgeError, createOrdersApi, validateOrder } from "./api.js";
+import {
+  BridgeError,
+  createOrdersApi,
+  validateIdentity,
+  validateOrder,
+} from "./api.js";
 import {
   normalizePhone,
   ownOrder,
@@ -18,6 +23,13 @@ import {
 } from "./views.js";
 import { createOrdersWorker } from "./worker.js";
 const b = (text, callback_data) => ({ text, callback_data });
+const roleFor = (intent) => (intent === "seller" ? "SELLER" : "CLIENT");
+const listCallback = (audience, view, page) =>
+  `bo:list:${audience}:${view}:${page}`;
+const validView = (view) =>
+  Object.hasOwn(statusLabels, view) ||
+  ["all", "active", "history"].includes(view);
+
 export function createOrdersIntegration({
   settings,
   config,
@@ -25,21 +37,43 @@ export function createOrdersIntegration({
   api = createOrdersApi(settings),
 }) {
   const display = (ctx, payload) => renderScreen(ctx, payload);
+  const ui = (ctx) => {
+    const state = ctx.repo?.getState(ctx.chatId);
+    return state?.kind === "orders" ? state : null;
+  };
+  // Navigation metadata only: no contacts, prices, snapshots or order histories.
+  const remember = (ctx, state) =>
+    ctx.repo?.setState(ctx.chatId, {
+      kind: "orders",
+      expiresAt: Date.now() + 300000,
+      ...state,
+    });
+  const forget = (ctx) => {
+    if (ui(ctx)) ctx.repo?.clearState(ctx.chatId);
+  };
+  async function currentIdentity(ctx) {
+    const data = await api.identity(String(ctx.user.id));
+    return data == null ? null : validateIdentity(data, String(ctx.user.id));
+  }
   async function identity(ctx, role) {
-    const record = await api.identity(String(ctx.user.id));
+    const record = await currentIdentity(ctx);
     if (!record) throw new BridgeError(401);
     if (role && record.user.role !== role) throw new BridgeError(403);
     return record;
   }
-  async function linking(ctx) {
+  async function linking(ctx, intent) {
+    remember(ctx, { screen: "link", intent });
     return display(ctx, {
-      text: "Добро пожаловать в BakeU!\n\nЕсли у вас уже есть аккаунт, подтвердите номер телефона, чтобы получить доступ к своему профилю. Затем подтвердите привязку в своём аккаунте на сайте.",
+      text:
+        intent === "seller"
+          ? "<b>🏬 Кабинет продавца BakeU</b>\n\nУ вас уже есть аккаунт продавца?\nПодтвердите номер телефона, указанный при регистрации. Затем подтвердите владение существующим аккаунтом на сайте. Бот не создаёт аккаунт продавца."
+          : "<b>📦 МОИ ЗАКАЗЫ</b>\n\nПодтвердите свой номер телефона и владение существующим аккаунтом BakeU на сайте, чтобы открыть историю покупок.",
       reply_markup: {
         inline_keyboard: [
-          [b("📱 Подтвердить номер", "bo:phone")],
+          [b("📱 Подтвердить номер", `bo:phone:${intent}`)],
           [
             {
-              text: "🥐 Создать аккаунт",
+              text: "🥐 Зарегистрироваться на BakeU",
               url: firstPartyLink(config, "/register"),
             },
           ],
@@ -50,9 +84,147 @@ export function createOrdersIntegration({
   }
   async function owned(ctx, id) {
     const who = await identity(ctx);
-    const order = await api.order(String(ctx.user.id), id);
-    if (!ownOrder(who, order)) throw new BridgeError(403);
+    const order = validateOrder(await api.order(String(ctx.user.id), id));
+    if (order.id !== id || !ownOrder(who, order)) throw new BridgeError(403);
     return { who, order };
+  }
+  function backToList(ctx, order, who) {
+    const state = ui(ctx);
+    const intent = who.user.role === "SELLER" ? "seller" : "buyer";
+    if (
+      state?.intent === intent &&
+      state.screen === "list" &&
+      state.orderIds.includes(order.id)
+    )
+      return listCallback(intent, state.view, state.page);
+    if (
+      state?.intent === intent &&
+      /^bo:list:(seller|buyer):[a-z_]+:\d{1,5}$/.test(state.returnTo || "")
+    )
+      return state.returnTo;
+    return intent === "seller" ? "bo:seller" : "bo:buyer";
+  }
+  async function showOrder(ctx, order, who, page = 0) {
+    const returnTo = backToList(ctx, order, who);
+    remember(ctx, {
+      screen: "detail",
+      intent: who.user.role === "SELLER" ? "seller" : "buyer",
+      returnTo,
+    });
+    return display(
+      ctx,
+      orderCard(order, {
+        seller: who.user.role === "SELLER",
+        page,
+        returnTo,
+        siteUrl: config.siteUrl,
+      }),
+    );
+  }
+  async function showList(ctx, audience, view = "all", page = 0) {
+    if (!validView(view) || !Number.isInteger(page) || page < 0 || page > 99999)
+      throw new BridgeError(400);
+    const who = await identity(ctx, roleFor(audience));
+    const result = await api.list(String(ctx.user.id), audience, view, page);
+    if (
+      !Array.isArray(result.orders) ||
+      result.orders.length > 5 ||
+      result.orders.some((order) => !ownOrder(who, validateOrder(order)))
+    )
+      throw new BridgeError(502);
+    const rows = result.orders.map(
+      (order, index) =>
+        `${index + 1}. #${text(order.number || order.id, 40)}${audience === "seller" ? ` — ${text(order.buyerName, 60)}` : ""} — ${money(order.total)} — ${text(statusLabels[order.status])}`,
+    );
+    const keyboard = result.orders.map((order, index) => [
+      b(
+        `${index + 1}. #${String(order.number || order.id).slice(0, 30)}`,
+        `bo:detail:${order.id}:0`,
+      ),
+    ]);
+    if (page > 0)
+      keyboard.push([
+        b("‹ Предыдущая страница", listCallback(audience, view, page - 1)),
+      ]);
+    if (
+      Number.isInteger(result.nextPage) &&
+      result.nextPage > page &&
+      result.nextPage <= 99999
+    )
+      keyboard.push([
+        b(
+          "Следующая страница ›",
+          listCallback(audience, view, result.nextPage),
+        ),
+      ]);
+    keyboard.push([b("🔄 Обновить", listCallback(audience, view, page))]);
+    if (audience === "buyer")
+      keyboard.push([
+        b("🔥 Активные", listCallback(audience, "active", 0)),
+        b("🕘 История", listCallback(audience, "history", 0)),
+        b("📦 Все", listCallback(audience, "all", 0)),
+      ]);
+    keyboard.push(
+      [b("🔙 Назад", audience === "seller" ? "bo:seller" : "main")],
+      [{ text: "🥐 Открыть BakeU", url: config.siteUrl }],
+      mainBack,
+    );
+    remember(ctx, {
+      screen: "list",
+      intent: audience,
+      userId: who.user.id,
+      shopId: who.shopId || null,
+      view,
+      page,
+      orderIds: result.orders.map((order) => order.id),
+    });
+    return display(ctx, {
+      text: `<b>${audience === "seller" ? "📦 ЗАКАЗЫ МАГАЗИНА" : "📦 МОИ ЗАКАЗЫ"}</b>\n\n${rows.length ? rows.join("\n") + "\n\nНажмите номер заказа или отправьте число из текущего списка (1–5)." : audience === "seller" ? "📭 Пока нет заказов." : "📭 У вас пока нет заказов."}`,
+      reply_markup: { inline_keyboard: keyboard },
+    });
+  }
+  async function showShop(ctx) {
+    const who = await identity(ctx, "SELLER");
+    const shop = await api.shop(String(ctx.user.id));
+    if (
+      shop.id !== who.shopId ||
+      shop.ownerId !== who.user.id ||
+      !Number.isInteger(shop.productCount) ||
+      shop.productCount < 0 ||
+      !Number.isFinite(shop.revenue) ||
+      shop.revenue < 0 ||
+      shop.revenue > 1e12 ||
+      !Object.keys(statusLabels).every(
+        (status) =>
+          Number.isSafeInteger(shop.counts?.[status]) &&
+          shop.counts[status] >= 0,
+      )
+    )
+      throw new BridgeError(502);
+    remember(ctx, { screen: "shop", intent: "seller" });
+    const keyboard = [[b("📦 Мои заказы", listCallback("seller", "all", 0))]];
+    for (const status of Object.keys(statusLabels))
+      keyboard.push([
+        b(statusLabels[status], listCallback("seller", status, 0)),
+      ]);
+    keyboard.push(
+      [b("🥐 Мои товары", "bo:products"), b("📊 Статистика", "bo:stats")],
+      [{ text: "⚙️ Настройки", url: firstPartyLink(config, "/profile") }],
+      [
+        {
+          text: "🌐 Открыть магазин",
+          url: firstPartyLink(config, `/shop/${encodeURIComponent(shop.id)}`),
+        },
+      ],
+      mainBack,
+    );
+    return display(ctx, {
+      text: shopCard(shop),
+      reply_markup: { inline_keyboard: keyboard },
+    });
+  }
+  async function destination(ctx, intent) {
+    return intent === "seller" ? showShop(ctx) : showList(ctx, "buyer");
   }
   return {
     flush: createOrdersWorker(api, telegram, { enabled: settings.enabled }),
@@ -64,12 +236,25 @@ export function createOrdersIntegration({
       }
     },
     async handle(ctx, update) {
-      const data = update.callback_query?.data || "";
-      const contact = update.message?.contact;
-      const back = update.message?.text === "🔙 Назад";
-      if (!data.startsWith("bo:") && !contact && !back) return false;
+      const data = update.callback_query?.data || "",
+        contact = update.message?.contact;
+      const message = update.message?.text?.trim() || "",
+        state = ui(ctx);
+      const numeric = /^\d+$/.test(message) && state?.screen === "list";
+      const back = message === "🔙 Назад";
+      if (!data.startsWith("bo:") && !contact && !back && !numeric)
+        return false;
+      const intent =
+        /^bo:(buyer|list:buyer|phone:buyer|account:buyer)(:|$)/.test(data)
+          ? "buyer"
+          : /^bo:(seller|shop|stats|products|list:seller|phone:seller|account:seller)(:|$)/.test(
+                data,
+              )
+            ? "seller"
+            : state?.intent || "buyer";
       try {
         if (back) {
+          forget(ctx);
           await telegram.send(ctx.chatId, {
             text: "Главное меню",
             reply_markup: { remove_keyboard: true },
@@ -79,6 +264,49 @@ export function createOrdersIntegration({
         }
         if (!settings.enabled) throw new BridgeError();
         const actor = String(ctx.user.id);
+        if (numeric) {
+          if (state.expiresAt <= Date.now()) {
+            forget(ctx);
+            await display(ctx, {
+              text: "Список устарел. Откройте заказы заново.",
+              reply_markup: { inline_keyboard: [mainBack] },
+            });
+            return true;
+          }
+          const who = await identity(ctx, roleFor(state.intent));
+          if (
+            who.user.id !== state.userId ||
+            (who.shopId || null) !== state.shopId
+          ) {
+            forget(ctx);
+            throw new BridgeError(409);
+          }
+          const selection = Number(message);
+          if (
+            !Number.isSafeInteger(selection) ||
+            selection < 1 ||
+            selection > state.orderIds.length
+          ) {
+            await display(ctx, {
+              text: "Выберите номер из текущего списка заказов.",
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    b(
+                      "🔄 Обновить список",
+                      listCallback(state.intent, state.view, state.page),
+                    ),
+                  ],
+                  mainBack,
+                ],
+              },
+            });
+            return true;
+          }
+          const result = await owned(ctx, state.orderIds[selection - 1]);
+          await showOrder(ctx, result.order, result.who);
+          return true;
+        }
         if (contact) {
           if (String(contact.user_id || "") !== actor) {
             await telegram.send(ctx.chatId, {
@@ -86,21 +314,22 @@ export function createOrdersIntegration({
             });
             return true;
           }
-          const existing = await api.identity(actor);
+          const existing = await currentIdentity(ctx);
           if (existing) {
             await telegram.send(ctx.chatId, {
               text: "Аккаунт уже привязан.",
               reply_markup: { remove_keyboard: true },
             });
-            await ctx.showMain();
+            await destination(ctx, intent);
             return true;
           }
           const challenge = await api.startLink(
             actor,
             normalizePhone(contact.phone_number),
+            roleFor(intent),
           );
-          const url = new URL(challenge.confirmationUrl);
-          const expected = new URL(config.siteUrl);
+          const url = new URL(challenge.confirmationUrl),
+            expected = new URL(config.siteUrl);
           if (
             url.origin !== expected.origin ||
             url.pathname !== expected.pathname ||
@@ -115,6 +344,7 @@ export function createOrdersIntegration({
             Date.parse(challenge.expiresAt) > Date.now() + 600000
           )
             throw new BridgeError(502);
+          remember(ctx, { screen: "link", intent });
           await telegram.send(ctx.chatId, {
             text: "Номер получен. Доступ ещё не выдан: войдите в существующий аккаунт и подтвердите привязку на сайте. Нового аккаунта бот не создаёт.",
             reply_markup: { remove_keyboard: true },
@@ -124,20 +354,17 @@ export function createOrdersIntegration({
             reply_markup: {
               inline_keyboard: [
                 [{ text: "🔐 Подтвердить в BakeU", url: url.href }],
-                [b("🔄 Проверить привязку", "bo:account")],
+                [b("🔄 Проверить привязку", `bo:account:${intent}`)],
                 mainBack,
               ],
             },
           });
           return true;
         }
-        if (data === "bo:account") {
-          const who = await api.identity(actor);
-          if (!who) await linking(ctx);
-          else await ctx.showMain();
-        } else if (data === "bo:phone") {
+        if (/^bo:phone(?::(buyer|seller))?$/.test(data)) {
+          remember(ctx, { screen: "link", intent });
           await telegram.send(ctx.chatId, {
-            text: "📱 Нажмите кнопку, чтобы отправить свой контакт. Сам по себе телефон не предоставляет доступ к аккаунту.",
+            text: "📱 Отправьте свой контакт кнопкой ниже. Совпадения телефона недостаточно: затем подтвердите существующий аккаунт на сайте.",
             reply_markup: {
               keyboard: [
                 [{ text: "📱 Подтвердить номер", request_contact: true }],
@@ -147,66 +374,27 @@ export function createOrdersIntegration({
               one_time_keyboard: true,
             },
           });
-        } else if (data === "bo:shop" || data === "bo:stats") {
-          const who = await identity(ctx, "SELLER");
-          const shop = await api.shop(actor);
-          if (
-            shop.id !== who.shopId ||
-            shop.ownerId !== who.user.id ||
-            !Number.isInteger(shop.productCount) ||
-            !Number.isFinite(shop.revenue) ||
-            shop.revenue < 0 ||
-            shop.revenue > 1e12 ||
-            !Object.keys(statusLabels).every(
-              (status) =>
-                Number.isSafeInteger(shop.counts?.[status]) &&
-                shop.counts[status] >= 0,
-            )
-          )
-            throw new BridgeError(502);
-          await display(ctx, {
-            text: shopCard(shop),
-            reply_markup: {
-              inline_keyboard: [
-                [b("📦 Новые заказы", "bo:list:seller:pending:0")],
-                [b("👨‍🍳 В приготовлении", "bo:list:seller:preparing:0")],
-                [
-                  b("✅ Принятые", "bo:list:seller:accepted:0"),
-                  b("🥐 Готовые", "bo:list:seller:ready:0"),
-                ],
-                [b("🚚 Доставка", "bo:list:seller:delivering:0")],
-                [b("✅ Завершённые заказы", "bo:list:seller:completed:0")],
-                [b("📬 Доставленные", "bo:list:seller:delivered:0")],
-                [
-                  b("❌ Отменённые", "bo:list:seller:cancelled:0"),
-                  b("🚫 Отклонённые", "bo:list:seller:rejected:0"),
-                ],
-                [
-                  b("📊 Статистика", "bo:stats"),
-                  b("🥐 Мои товары", "bo:products"),
-                ],
-                [
-                  {
-                    text: "⚙️ Настройки магазина",
-                    url: firstPartyLink(config, "/profile"),
-                  },
-                ],
-                [
-                  {
-                    text: "🌐 Открыть магазин на сайте",
-                    url: firstPartyLink(
-                      config,
-                      `/shop/${encodeURIComponent(shop.id)}`,
-                    ),
-                  },
-                ],
-                mainBack,
-              ],
-            },
-          });
+        } else if (/^bo:account(?::(buyer|seller))?$/.test(data)) {
+          const who = await currentIdentity(ctx);
+          if (!who) await linking(ctx, intent);
+          else
+            await destination(
+              ctx,
+              data === "bo:account" && !state
+                ? who.user.role === "SELLER"
+                  ? "seller"
+                  : "buyer"
+                : intent,
+            );
+        } else if (["bo:seller", "bo:shop", "bo:stats"].includes(data))
+          await showShop(ctx);
+        else if (data === "bo:buyer") await showList(ctx, "buyer");
+        else if (/^bo:list:(seller|buyer):[a-z_]+:\d{1,5}$/.test(data)) {
+          const [, , audience, view, page] = data.split(":");
+          await showList(ctx, audience, view, Number(page));
         } else if (/^bo:products(?::\d{1,5})?$/.test(data)) {
-          const who = await identity(ctx, "SELLER");
-          const result = await api.products(actor);
+          const who = await identity(ctx, "SELLER"),
+            result = await api.products(actor);
           if (
             result.ownerId !== who.user.id ||
             result.shopId !== who.shopId ||
@@ -234,7 +422,8 @@ export function createOrdersIntegration({
             keyboard.push([b("‹ Назад", `bo:products:${page - 1}`)]);
           if (start + 8 < result.items.length && page < 99999)
             keyboard.push([b("Далее ›", `bo:products:${page + 1}`)]);
-          keyboard.push(mainBack);
+          keyboard.push([b("🔙 Назад", "bo:seller")], mainBack);
+          remember(ctx, { screen: "products", intent: "seller" });
           await display(ctx, {
             text: result.items.length
               ? "<b>🥐 Мои товары</b>\n\n" +
@@ -245,78 +434,10 @@ export function createOrdersIntegration({
               : "🥐 У вас пока нет товаров. Добавьте первый товар на BakeU.",
             reply_markup: { inline_keyboard: keyboard },
           });
-        } else if (data === "bo:buyer") {
-          await identity(ctx, "CLIENT");
-          await display(ctx, {
-            text: "<b>📦 МОИ ЗАКАЗЫ BAKEU</b>",
-            reply_markup: {
-              inline_keyboard: [
-                [b("🔥 Активные заказы", "bo:list:buyer:active:0")],
-                [b("🕘 История заказов", "bo:list:buyer:history:0")],
-                [{ text: "🥐 Открыть BakeU", url: config.siteUrl }],
-                mainBack,
-              ],
-            },
-          });
-        } else if (/^bo:list:(seller|buyer):[a-z_]+:\d{1,5}$/.test(data)) {
-          const [, , audience, view, pageText] = data.split(":");
-          const page = Number(pageText);
-          const who = await identity(
-            ctx,
-            audience === "seller" ? "SELLER" : "CLIENT",
-          );
-          if (
-            !Object.hasOwn(statusLabels, view) &&
-            !["active", "history"].includes(view)
-          )
-            throw new BridgeError(400);
-          const result = await api.list(actor, audience, view, page);
-          if (
-            !Array.isArray(result.orders) ||
-            result.orders.length > 5 ||
-            result.orders.some((order) => !ownOrder(who, validateOrder(order)))
-          )
-            throw new BridgeError(502);
-          const keyboard = result.orders.map((order) => [
-            b(
-              `#${String(order.number || order.id).slice(0, 30)} · ${statusLabels[order.status]}`,
-              `bo:detail:${order.id}:0`,
-            ),
-          ]);
-          if (page > 0)
-            keyboard.push([
-              b("‹ Назад", `bo:list:${audience}:${view}:${page - 1}`),
-            ]);
-          if (
-            Number.isInteger(result.nextPage) &&
-            result.nextPage > page &&
-            result.nextPage <= 99999
-          )
-            keyboard.push([
-              b("Далее ›", `bo:list:${audience}:${view}:${result.nextPage}`),
-            ]);
-          keyboard.push(
-            [{ text: "🥐 Открыть BakeU", url: config.siteUrl }],
-            mainBack,
-          );
-          await display(ctx, {
-            text: result.orders.length
-              ? "<b>📦 Заказы</b>\nВыберите заказ для просмотра сохранённых данных и истории."
-              : audience === "seller"
-                ? "📭 Пока нет заказов."
-                : "📭 У вас пока нет заказов.\n\nОткройте BakeU и выберите любимую домашнюю выпечку!",
-            reply_markup: { inline_keyboard: keyboard },
-          });
         } else if (/^bo:detail:[A-Za-z0-9_-]{1,36}:\d{1,2}$/.test(data)) {
           const [, , id, page] = data.split(":");
           const result = await owned(ctx, id);
-          await display(
-            ctx,
-            orderCard(result.order, {
-              seller: result.who.user.role === "SELLER",
-              page: Number(page),
-            }),
-          );
+          await showOrder(ctx, result.order, result.who, Number(page));
         } else if (/^bo:act:[A-Za-z0-9_-]{1,36}:[a-z]:[a-z]$/.test(data)) {
           const [, , id, fromCode, toCode] = data.split(":");
           const { who, order } = await owned(ctx, id);
@@ -328,12 +449,14 @@ export function createOrdersIntegration({
             !nextStatuses(from, order.fulfillment).includes(target)
           )
             throw new BridgeError(409);
-          const changed = await api.transition(
-            actor,
-            id,
-            from,
-            target,
-            `tg:${update.callback_query.id}`,
+          const changed = validateOrder(
+            await api.transition(
+              actor,
+              id,
+              from,
+              target,
+              `tg:${update.callback_query.id}`,
+            ),
           );
           if (
             !ownOrder(who, changed) ||
@@ -341,12 +464,17 @@ export function createOrdersIntegration({
             changed.status !== target
           )
             throw new BridgeError(502);
-          await display(ctx, orderCard(changed, { seller: true }));
+          await showOrder(ctx, changed, who);
         } else if (/^bo:(location|contact):[A-Za-z0-9_-]{1,36}$/.test(data)) {
           const [, action, id] = data.split(":");
           const { who, order } = await owned(ctx, id);
-          if (who.user.role !== "SELLER") throw new BridgeError(403);
-          if (action === "location" && validCoordinates(order.location))
+          if (action === "contact" && who.user.role !== "SELLER")
+            throw new BridgeError(403);
+          if (
+            action === "location" &&
+            order.fulfillment === "delivery" &&
+            validCoordinates(order.location)
+          )
             await telegram.call("sendLocation", {
               chat_id: ctx.chatId,
               latitude: order.location.latitude,
@@ -357,12 +485,32 @@ export function createOrdersIntegration({
               text:
                 action === "contact"
                   ? `📞 ${String(order.buyerPhone || "Телефон не указан").slice(0, 30)}`
-                  : `📍 ${String(order.address || "Адрес не указан").slice(0, 300)}`,
+                  : `📍 ${String(order.address || "Адрес не указан").slice(0, 500)}`,
             });
         } else throw new BridgeError(400);
       } catch (error) {
-        if (error.status === 401) await linking(ctx);
-        else
+        if (error.status === 401) await linking(ctx, intent);
+        else if (
+          error.status === 404 &&
+          error.code === "SELLER_NOT_FOUND" &&
+          intent === "seller"
+        ) {
+          remember(ctx, { screen: "link", intent });
+          await display(ctx, {
+            text: "❌ Аккаунт продавца не найден. Зарегистрируйтесь на BakeU.",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "🥐 Зарегистрироваться на BakeU",
+                    url: firstPartyLink(config, "/register"),
+                  },
+                ],
+                mainBack,
+              ],
+            },
+          });
+        } else
           await display(ctx, {
             text:
               error instanceof BridgeError

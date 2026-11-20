@@ -147,16 +147,13 @@ const context = (telegram, id = "888") => ({
   showMain: async () => {},
 });
 
-test("one role button; configured admin and branded main screen remain available", async () => {
-  for (const [role, expected, absent] of [
-    ["SELLER", "bo:shop", "bo:buyer"],
-    ["CLIENT", "bo:buyer", "bo:shop"],
-    [null, "bo:account", "bo:shop"],
-  ]) {
-    const buttons = mainKeyboard(config, { role }).inline_keyboard.flat();
-    assert.equal(buttons.filter((b) => b.callback_data === expected).length, 1);
+test("both main-menu entries are public; configured admin and branded welcome remain available", async () => {
+  for (const admin of [false, true]) {
+    const buttons = mainKeyboard(config, { admin }).inline_keyboard.flat();
+    for (const action of ["bo:buyer", "bo:seller"])
+      assert.equal(buttons.filter((b) => b.callback_data === action).length, 1);
     assert.equal(
-      buttons.some((b) => b.callback_data === absent),
+      buttons.some((b) => b.text.includes("Мой BakeU")),
       false,
     );
   }
@@ -174,16 +171,18 @@ test("one role button; configured admin and branded main screen remain available
     for (const id of [888, 999, 777, 12345])
       await handle(message(id, "/start"));
     assert.equal(telegram.messages[0].type, "photo");
-    const keys = telegram.messages.map((m) =>
-      m.reply_markup.inline_keyboard.flat().map((b) => b.callback_data),
+    for (const card of telegram.messages) {
+      const buttons = card.reply_markup.inline_keyboard.flat();
+      assert.ok(buttons.some((b) => b.callback_data === "bo:buyer"));
+      assert.ok(buttons.some((b) => b.callback_data === "bo:seller"));
+    }
+    assert.ok(
+      telegram.messages
+        .at(-1)
+        .reply_markup.inline_keyboard.flat()
+        .some((b) => b.callback_data === "admin:home"),
     );
-    assert.ok(keys[0].includes("bo:shop"));
-    assert.ok(!keys[0].includes("bo:buyer"));
-    assert.ok(keys[1].includes("bo:buyer"));
-    assert.ok(!keys[1].includes("bo:shop"));
-    assert.ok(keys[2].includes("bo:account"));
-    assert.ok(keys[3].includes("admin:home"));
-    await handle(callback(999, "bo:shop"));
+    await handle(callback(999, "bo:seller"));
     assert.match(lastText(telegram), /прав/);
     await handle(callback(888, "bo:buyer"));
     assert.match(lastText(telegram), /прав/);
@@ -662,5 +661,382 @@ test("V2 checkout sends product references and delivery only, awaits committed s
       BOT_TOKEN: "x".repeat(40),
       TELEGRAM_BRIDGE_TOKEN: "x".repeat(40),
     }),
+  );
+});
+
+test("seller entry preserves contact intent and requires existing-account proof; groups and foreign contacts cannot link", async () => {
+  const s = setup(),
+    telegram = mockTelegram(),
+    f = fixture(),
+    linkCalls = [];
+  const original = f.api.startLink;
+  f.api.startLink = async (...args) => {
+    linkCalls.push(args);
+    return original(...args);
+  };
+  const orders = createOrdersIntegration({
+    settings: { enabled: true },
+    config,
+    telegram,
+    api: f.api,
+  });
+  const handle = createUpdateHandler({ ...s, telegram, orders });
+  try {
+    await handle(callback(777, "bo:seller"));
+    assert.match(lastText(telegram), /Кабинет продавца/);
+    await handle(callback(777, "bo:phone:seller"));
+    assert.equal(
+      telegram.messages.at(-1).reply_markup.keyboard[0][0].request_contact,
+      true,
+    );
+    const contact = message(777, "");
+    contact.message.contact = { user_id: 999, phone_number: "998901234567" };
+    await handle(contact);
+    assert.equal(linkCalls.length, 0);
+    contact.message.contact.user_id = 777;
+    contact.message.chat.type = "group";
+    await handle(contact);
+    assert.equal(linkCalls.length, 0);
+    contact.message.chat.type = "private";
+    await handle(contact);
+    assert.deepEqual(linkCalls[0], ["777", "+998901234567", "SELLER"]);
+    assert.match(telegram.messages.at(-2).text, /Доступ ещё не выдан/);
+    assert.equal(s.db.prepare("SELECT COUNT(*) AS n FROM users").get().n, 0);
+    assert.equal(s.repo.getState("777").intent, "seller");
+    await handle(callback(777, "bo:account:seller"));
+    assert.match(lastText(telegram), /Кабинет продавца/);
+  } finally {
+    s.db.close();
+  }
+});
+
+test("seller not-found is distinct from an unavailable endpoint; role aliases normalize without granting privileges", async () => {
+  const f = fixture(),
+    telegram = mockTelegram();
+  let failure = new BridgeError(404, "SELLER_NOT_FOUND");
+  f.api.startLink = async () => {
+    throw failure;
+  };
+  const orders = createOrdersIntegration({
+    settings: { enabled: true },
+    config,
+    telegram,
+    api: f.api,
+  });
+  const s = setup(),
+    ctx = { ...context(telegram, "777"), repo: s.repo };
+  try {
+    await orders.handle(ctx, callback(777, "bo:seller"));
+    await orders.handle(ctx, {
+      message: { contact: { user_id: 777, phone_number: "998901234567" } },
+    });
+    assert.match(lastText(telegram), /Аккаунт продавца не найден/);
+    assert.ok(
+      telegram.edits
+        .at(-1)
+        .reply_markup.inline_keyboard.flat()
+        .some((b) => b.url?.includes("/register")),
+    );
+    failure = new BridgeError(404);
+    await orders.handle(ctx, {
+      message: { contact: { user_id: 777, phone_number: "998901234567" } },
+    });
+    assert.match(lastText(telegram), /Раздел пока недоступен/);
+    assert.ok(!lastText(telegram).includes("продавца не найден"));
+    for (const role of ["client", "buyer", "customer"])
+      assert.equal(
+        validateIdentity(
+          {
+            ...identity("CLIENT", "999"),
+            user: { id: "buyer-1", role, status: "active" },
+          },
+          "999",
+        ).user.role,
+        "CLIENT",
+      );
+    assert.equal(
+      validateIdentity(
+        {
+          ...identity(),
+          user: { id: "seller-1", role: "seller", status: "active" },
+        },
+        "888",
+      ).user.role,
+      "SELLER",
+    );
+    assert.throws(() =>
+      validateIdentity(
+        {
+          ...identity(),
+          user: { id: "seller-1", role: "constructor", status: "active" },
+        },
+        "888",
+      ),
+    );
+    assert.throws(() =>
+      validateIdentity(
+        {
+          ...identity(),
+          user: { id: "seller-1", role: "seller", status: "frozen" },
+        },
+        "888",
+      ),
+    );
+  } finally {
+    s.db.close();
+  }
+});
+
+test("numbered seller list uses only the current page and rechecks owner after handler recreation", async () => {
+  const s = setup(),
+    telegram = mockTelegram(),
+    f = fixture(),
+    reads = [];
+  const saved = [order(), order({ id: "order-2", number: "BU-1002" })];
+  f.api.list = async (actor, audience, view, page) => {
+    assert.equal(actor, "888");
+    assert.equal(audience, "seller");
+    assert.equal(view, "all");
+    return {
+      orders: page === 0 ? saved : [saved[1]],
+      nextPage: page === 0 ? 1 : null,
+    };
+  };
+  f.api.order = async (actor, id) => {
+    reads.push(id);
+    return saved.find((o) => o.id === id);
+  };
+  const orders = createOrdersIntegration({
+    settings: { enabled: true },
+    config,
+    telegram,
+    api: f.api,
+  });
+  let handle = createUpdateHandler({ ...s, telegram, orders });
+  try {
+    await handle(callback(888, "bo:list:seller:all:0"));
+    assert.match(lastText(telegram), /1\. #BU-1001 — Али — 85/);
+    assert.equal(s.repo.getState("888").orderIds.length, 2);
+    assert.ok(!JSON.stringify(s.repo.getState("888")).includes("buyerPhone"));
+    handle = createUpdateHandler({ ...s, telegram, orders });
+    await handle(message(888, "2"));
+    assert.deepEqual(reads, ["order-2"]);
+    assert.match(telegram.messages.at(-1).text, /Order ID: <code>order-2/);
+    assert.ok(
+      telegram.messages
+        .at(-1)
+        .reply_markup.inline_keyboard.flat()
+        .some((b) => b.callback_data === "bo:list:seller:all:0"),
+    );
+    await handle(callback(888, "bo:list:seller:all:1"));
+    await handle(message(888, "2"));
+    assert.deepEqual(reads, ["order-2"]);
+    assert.match(telegram.messages.at(-1).text, /номер из текущего списка/);
+    await handle(message(888, "1"));
+    assert.deepEqual(reads, ["order-2", "order-2"]);
+    await handle(callback(888, "bo:list:seller:all:0"));
+    f.api.identity = async () => ({
+      ...identity(),
+      user: { id: "new-owner", role: "SELLER", status: "active" },
+      shopId: "new-shop",
+    });
+    await handle(message(888, "1"));
+    assert.deepEqual(reads, ["order-2", "order-2"]);
+    assert.equal(s.repo.getState("888"), null);
+  } finally {
+    s.db.close();
+  }
+});
+
+test("buyer history is server-owned, refreshes current status, and ignores expired selection or support numbers", async () => {
+  const s = setup(),
+    telegram = mockTelegram(),
+    f = fixture();
+  let reads = 0;
+  const original = f.api.order;
+  f.api.order = async (...args) => {
+    reads++;
+    return original(...args);
+  };
+  f.api.list = async (actor, audience, view) => {
+    assert.equal(actor, "999");
+    assert.equal(audience, "buyer");
+    assert.equal(view, "all");
+    return { orders: [f.saved], nextPage: null };
+  };
+  const orders = createOrdersIntegration({
+    settings: { enabled: true },
+    config,
+    telegram,
+    api: f.api,
+  });
+  const handle = createUpdateHandler({ ...s, telegram, orders });
+  try {
+    await handle(callback(999, "bo:buyer"));
+    assert.match(lastText(telegram), /МОИ ЗАКАЗЫ/);
+    await handle(message(999, "1"));
+    assert.equal(reads, 1);
+    f.saved = order({
+      status: "preparing",
+      history: [
+        ...f.saved.history,
+        { status: "preparing", at: "2026-11-20T12:00:00Z" },
+      ],
+    });
+    await handle(callback(999, "bo:detail:order-1:0"));
+    assert.match(lastText(telegram), /Готовится/);
+    assert.equal(reads, 2);
+    assert.ok(
+      telegram.edits
+        .at(-1)
+        .reply_markup.inline_keyboard.flat()
+        .some((b) => b.text === "🔄 Обновить"),
+    );
+    await handle(callback(999, "bo:buyer"));
+    s.repo.setState("999", {
+      ...s.repo.getState("999"),
+      expiresAt: Date.now() - 1,
+    });
+    await handle(message(999, "1"));
+    assert.equal(reads, 2);
+    assert.match(telegram.messages.at(-1).text, /устарел/);
+    await handle(callback(999, "support"));
+    await handle(message(999, "1"));
+    assert.equal(reads, 2);
+    assert.match(telegram.messages.at(-1).text, /вопрос/);
+  } finally {
+    s.db.close();
+  }
+});
+
+test("saved delivery location is available only to owning participants; pickup and address-only orders never send GPS", async () => {
+  const f = fixture(),
+    telegram = mockTelegram(),
+    calls = [];
+  telegram.call = async (method, body) => calls.push({ method, body });
+  f.saved = order({
+    location: { latitude: 0, longitude: 0, chat_id: "intruder" },
+  });
+  const orders = createOrdersIntegration({
+    settings: { enabled: true },
+    config,
+    telegram,
+    api: f.api,
+  });
+  await orders.handle(
+    context(telegram, "999"),
+    callback(999, "bo:detail:order-1:0"),
+  );
+  assert.match(lastText(telegram), /Координаты: 0\.000000, 0\.000000/);
+  assert.ok(
+    telegram.edits
+      .at(-1)
+      .reply_markup.inline_keyboard.flat()
+      .some((b) => b.text === "📍 Открыть карту"),
+  );
+  await orders.handle(
+    context(telegram, "999"),
+    callback(999, "bo:location:order-1"),
+  );
+  assert.deepEqual(calls, [
+    {
+      method: "sendLocation",
+      body: { chat_id: "999", latitude: 0, longitude: 0 },
+    },
+  ]);
+  await orders.handle(
+    context(telegram, "777"),
+    callback(777, "bo:location:order-1"),
+  );
+  assert.equal(calls.length, 1);
+  f.saved = order({
+    customerId: "intruder",
+    location: { latitude: 41, longitude: 69 },
+  });
+  await orders.handle(
+    context(telegram, "999"),
+    callback(999, "bo:location:order-1"),
+  );
+  assert.equal(calls.length, 1);
+  f.saved = order();
+  await orders.handle(context(telegram), callback(888, "bo:location:order-1"));
+  assert.match(telegram.messages.at(-1).text, /Ташкент/);
+  assert.equal(calls.length, 1);
+  f.saved = order({
+    fulfillment: "pickup",
+    location: { latitude: 41, longitude: 69 },
+  });
+  assert.ok(
+    !orderCard(f.saved, { seller: true })
+      .reply_markup.inline_keyboard.flat()
+      .some((b) => b.callback_data?.startsWith("bo:location:")),
+  );
+  await orders.handle(context(telegram), callback(888, "bo:location:order-1"));
+  assert.equal(calls.length, 1);
+  f.saved = order({ location: { latitude: 91, longitude: 69 } });
+  await orders.handle(context(telegram), callback(888, "bo:location:order-1"));
+  assert.equal(calls.length, 1);
+});
+
+test("bridge sends requested role and all-view contract; missing bridge is not seller-not-found", async () => {
+  const calls = [];
+  let responseCode = 404;
+  const api = createOrdersApi(
+    { enabled: true, baseUrl: "https://backend.example", token: "test-only" },
+    {
+      fetchImpl: async (url, options) => {
+        calls.push({ url, options });
+        return new Response(
+          JSON.stringify(
+            responseCode === 404 ? {} : { code: "SELLER_NOT_FOUND" },
+          ),
+          { status: 404 },
+        );
+      },
+    },
+  );
+  await assert.rejects(
+    () => api.startLink("888", "+998901234567", "SELLER"),
+    (e) => e.status === 404 && !e.code,
+  );
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    phone: "+998901234567",
+    requestedRole: "SELLER",
+  });
+  responseCode = 400;
+  await assert.rejects(
+    () => api.startLink("888", "+998901234567", "SELLER"),
+    (e) => e.code === "SELLER_NOT_FOUND",
+  );
+  await assert.rejects(() => api.list("888", "seller", "all", 1));
+  assert.match(calls.at(-1).url, /audience=seller&view=all&page=1/);
+});
+
+test("normalized seller role keeps seller notification actions and the confirmed recipient", async () => {
+  const telegram = mockTelegram();
+  const job = {
+    id: "alias-event",
+    leaseToken: "lease",
+    kind: "order.created",
+    recipient: {
+      ...identity(),
+      botStarted: true,
+      user: { id: "seller-1", role: "seller", status: "active" },
+    },
+    order: order(),
+  };
+  const api = {
+    claim: async () => ({ jobs: [job] }),
+    begin: async () => ({ started: true }),
+    ack: async () => {},
+    fail: async () => assert.fail("confirmed owner must not be rejected"),
+  };
+  await createOrdersWorker(api, telegram, { enabled: true })();
+  assert.equal(telegram.messages[0].id, "888");
+  assert.match(telegram.messages[0].text, /НОВЫЙ ЗАКАЗ/);
+  assert.ok(
+    telegram.messages[0].reply_markup.inline_keyboard
+      .flat()
+      .some((b) => b.callback_data === "bo:act:order-1:p:a"),
   );
 });

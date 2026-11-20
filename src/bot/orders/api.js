@@ -1,6 +1,6 @@
 import { statusLabels, validCoordinates } from "./domain.js";
 export class BridgeError extends Error {
-  constructor(status = 503) {
+  constructor(status = 503, code) {
     super(
       status === 409
         ? "Данные изменились. Обновите экран и повторите действие."
@@ -11,24 +11,39 @@ export class BridgeError extends Error {
             : "Сервис заказов временно недоступен.",
     );
     this.status = status;
+    if (["SELLER_NOT_FOUND", "ACCOUNT_NOT_FOUND"].includes(code))
+      this.code = code;
   }
 }
 export const validId = (id) =>
   typeof id === "string" && /^[A-Za-z0-9_-]{1,36}$/.test(id);
 export function validateIdentity(data, telegramId) {
   if (data?.linked === false) return null;
+  const roles = {
+    CLIENT: "CLIENT",
+    SELLER: "SELLER",
+    ADMIN: "ADMIN",
+    client: "CLIENT",
+    buyer: "CLIENT",
+    customer: "CLIENT",
+    seller: "SELLER",
+    admin: "ADMIN",
+  };
+  const role = Object.hasOwn(roles, data?.user?.role || "")
+    ? roles[data.user.role]
+    : null;
   if (
     !/^[1-9]\d{0,19}$/.test(String(telegramId)) ||
     !data ||
     data.confirmed !== true ||
     String(data.telegramId) !== String(telegramId) ||
     !validId(data.user?.id) ||
-    !["CLIENT", "SELLER", "ADMIN"].includes(data.user?.role) ||
+    !role ||
     data.user.status !== "active" ||
-    (data.user.role === "SELLER" && !validId(data.shopId))
+    (role === "SELLER" && !validId(data.shopId))
   )
     throw new BridgeError(502);
-  return data;
+  return { ...data, user: { ...data.user, role } };
 }
 export function validateOrder(order) {
   if (
@@ -85,8 +100,18 @@ export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
     } catch {
       throw new BridgeError();
     }
-    if (!response.ok)
-      throw new BridgeError(response.status === 401 ? 503 : response.status);
+    if (!response.ok) {
+      let code;
+      try {
+        code = (await response.json())?.code;
+      } catch {
+        /* Missing API is not an account-not-found result. */
+      }
+      throw new BridgeError(
+        response.status === 401 ? 503 : response.status,
+        code,
+      );
+    }
     try {
       return await response.json();
     } catch {
@@ -96,8 +121,14 @@ export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
   return {
     identity: async (actor) =>
       validateIdentity(await request(actor, "/me"), actor),
-    startLink: (actor, phone) =>
-      request(actor, "/link/challenges", "POST", { phone }),
+    startLink: (actor, phone, requestedRole = "CLIENT") => {
+      if (!["CLIENT", "SELLER"].includes(requestedRole))
+        throw new BridgeError(400);
+      return request(actor, "/link/challenges", "POST", {
+        phone,
+        requestedRole,
+      });
+    },
     shop: (actor) => request(actor, "/shop"),
     products: (actor) => request(actor, "/shop/products"),
     list: (actor, audience, view, page = 0) =>

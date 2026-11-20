@@ -50,10 +50,9 @@ export interface TelegramBridge {
   startLink(
     actor: string,
     phone: string,
+    requestedRole?: "CLIENT" | "SELLER",
   ): Promise<{ id: string; expiresAt: string; confirmationUrl: string }>;
-  shop(
-    actor: string,
-  ): Promise<{
+  shop(actor: string): Promise<{
     id: string;
     ownerId: string;
     name: string;
@@ -63,9 +62,7 @@ export interface TelegramBridge {
     revenue: number;
     counts: Record<Status, number>;
   }>;
-  products(
-    actor: string,
-  ): Promise<{
+  products(actor: string): Promise<{
     ownerId: string;
     shopId: string;
     items: { id: string; title: string; price: number }[];
@@ -73,7 +70,7 @@ export interface TelegramBridge {
   list(
     actor: string,
     audience: "seller" | "buyer",
-    view: string,
+    view: Status | "all" | "active" | "history",
     page?: number,
   ): Promise<{ orders: Order[]; nextPage: number | null }>;
   order(actor: string, id: string): Promise<Order>;

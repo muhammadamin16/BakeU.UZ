@@ -1,16 +1,16 @@
 # Telegram orders integration — handoff
 
-Branch: `codex/telegram-orders`. Website baseline: `Amin` at `5eeb055`.
-Backend inspected read-only: `BakeU-Backend/main` at `b4a55d4`.
+Current branch: `codex/telegram-buyer-seller-menu`, based on `Amin` at `f774e6d` (includes the PR #6 Railway build-boundary fix).
+Backend inspected read-only: `BakeU-Backend/main` at `489d20e`.
 
-The branch is pushed. GitHub API rejected automated Draft PR creation; the [prepared PR description and comparison link](./PULL_REQUEST.md) are saved for review. No PR or merge is implied by this handoff.
+The current menu revision is described in [the buyer/seller menu handoff](./MENU-UPDATE.md). `PULL_REQUEST.md` and the original validation record describe the earlier PR #5 and are historical, including its superseded role-only main menu.
 
 ## What this branch implements
 
 - Existing winter welcome, Mini App link, social/support/email/about navigation and numeric-ID admin permissions remain in place.
-- Main-menu role comes from a confirmed backend binding: SELLER gets only **Мой магазин**, CLIENT only **Мои заказы**, unlinked users **Мой BakeU**. A backend outage cannot reveal private data.
+- Both **Мои заказы** and **Я продавец** are visible to everyone; the old **Мой BakeU** button is removed. Every private action still requires a confirmed backend identity and the matching buyer/seller role. A backend outage cannot reveal private data.
 - A private own-contact check and E.164 normalization start a short-lived account-link challenge. Phone matching does not grant access. The authenticated website must prove ownership before the bot receives a confirmed identity.
-- Seller shop statistics, products with pagination, all nine order-status lists, snapshot details, contact/location and guarded status buttons. Buyer active/history lists and server history. Every private action reloads backend identity and checks ownership.
+- Seller shop statistics, products, all-orders/status lists, numbered current-page selection, snapshot details, contact/location, refresh/back navigation and guarded status buttons. Buyers get server-backed all/active/history lists. Every private action reloads backend identity and checks ownership; both owning buyer and seller can explicitly open the saved delivery location.
 - Server-to-server API adapter and TypeScript declarations; notification worker consumes server leases, records Telegram receipts and distinguishes retryable rejection, blocked, failed and uncertain delivery.
 - Separate website client and React components for server orders/progress, a server notification inbox, link confirmation, delivery address/date/time/comment, opt-in map and GPS. These components do not use SQLite, localStorage or legacy account tokens.
 - Offline unit/HTTP adapter tests. No real Telegram messages, production database writes or deployments were performed.
@@ -35,7 +35,7 @@ TELEGRAM_BRIDGE_TOKEN=separate-random-service-secret-at-least-32-characters
 
 Keep the flag `false` until the contract and website confirmation route are ready. `GO_BACKEND_URL` may include a trailing `/api`; HTTPS is required except on loopback in local tests. The bridge secret must differ from `BOT_TOKEN`, must be checked by Go with its own service-auth middleware, and must never use a `VITE_` prefix or enter a browser bundle. Reuse the existing bot process; do not start two polling processes with one bot token.
 
-The existing bot's SQLite remains only for its pre-existing accounts/admin/support/poll cursor/legacy notifications. The new commerce integration never queries it for an order or a shared user identity. The parallel backend migration owns removal of legacy account paths; this branch does not migrate data.
+The existing bot's SQLite remains only for its pre-existing accounts/admin/support/poll cursor/legacy notifications. The new commerce integration never queries it for an order or a shared user identity. It stores only expiring UI selection references (at most five order IDs, actor UID/shop ID and page/filter), never order snapshots, prices, phone numbers or histories. Selection rechecks the current Go identity and fetches the order again. The parallel backend migration owns removal of legacy account paths; this branch does not migrate data.
 
 ## Validation and acceptance
 
