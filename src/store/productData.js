@@ -11,6 +11,7 @@ export function productData(product) {
     name: product.name || product.title || "Товар",
     productId: String(product.productId || product.id),
     variantLabel: product.variantLabel || "",
+    variantId: typeof product.variantId === "string" ? product.variantId : "",
     unit: product.unit || "шт.",
     shopId: product.shopId || product.sellerId || "",
     price,
