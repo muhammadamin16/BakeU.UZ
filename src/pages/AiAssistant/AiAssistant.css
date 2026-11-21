@@ -16,6 +16,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
   --ai-sidebar: color-mix(in srgb, var(--market-hero-wash) 55%, var(--paper));
   --ai-tint: var(--market-icon-bg);
   --ai-line: var(--line);
+  --ai-content-gutter: max(clamp(16px, 3vw, 36px), calc((100% - 860px) / 2));
   --ai-bottom: calc(var(--nav-space, 110px) + env(safe-area-inset-bottom, 0px));
   width: 100%;
   height: calc(100vh - var(--ai-top, 0px) - var(--ai-bottom));
@@ -229,7 +230,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  padding: 20px max(19px, calc((100% - 740px) / 2));
+  padding: 20px var(--ai-content-gutter);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -240,7 +241,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 205px;
+  min-height: clamp(182px, 26dvh, 236px);
   padding: 24px 39% 24px clamp(16px, 3vw, 32px);
   border: 1px solid var(--market-card-edge);
   border-radius: 22px;
@@ -296,7 +297,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
 .ai-bubble--error { border-color: #e5b6b2; color: #8d302c; }
 .ai-bubble__action { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; color: var(--ai-accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
-.ai-composer { flex: none; padding: 2px max(14px, calc((100% - 740px) / 2)) 12px; }
+.ai-composer { flex: none; padding: 2px var(--ai-content-gutter) 12px; }
 .ai-composer p { margin-top: 7px; color: var(--ai-muted); font-size: 11px; text-align: center; }
 .ai__form {
   display: flex;
@@ -355,11 +356,12 @@ html.ai-lock .bakeu-snowfall { display: none; }
 }
 
 @media (max-width: 520px) {
+  .ai-chatpane { --ai-content-gutter: 10px; }
   .ai-history { width: 100%; padding: 12px; border-inline-end: 0; }
   .ai-history__top h2 { font-size: 17px; }
   .ai__header { min-height: 58px; padding: 7px 10px; }
   .ai__badge { display: none; }
-  .ai__messages { padding: 11px 10px; }
+  .ai__messages { padding-block: 11px; }
   .ai-welcome__hero { min-height: 138px; padding: 15px 30% 15px 13px; border-radius: 13px; }
   .ai-welcome h2 { font-size: clamp(27px, 7vw, 35px); }
   .ai-welcome p { margin-top: 6px; font-size: 12px; }
@@ -370,7 +372,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
   .ai-chip__copy { font-size: 12px; }
   .ai-chip__copy span { font-size: 11px; }
   .ai-chip__arrow { display: none; }
-  .ai-composer { padding-inline: 10px; padding-bottom: 8px; }
+  .ai-composer { padding-bottom: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
