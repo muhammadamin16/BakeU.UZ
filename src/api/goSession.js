@@ -9,7 +9,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
     const multipart = body instanceof FormData;
     const timeout = AbortSignal.timeout(15000);
     const response = await fetchImpl(base + path, {
-      method, credentials,
+      method, credentials, redirect: "error",
       headers: { ...(body !== undefined && !multipart && { "Content-Type": "application/json" }), ...headers },
       body: body === undefined || multipart ? body : JSON.stringify(body),
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
