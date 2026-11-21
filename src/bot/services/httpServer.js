@@ -66,6 +66,10 @@ export function createApiServer({ auth, repo, config, ordersSettings = { enabled
           return res.end();
         }
         const path = new URL(req.url, "http://localhost").pathname;
+        if (ordersSettings.accountsEnabled && (
+          req.method === "POST" && ["/api/auth/register", "/api/auth/start-registration", "/api/auth/verify-registration", "/api/shop/open"].includes(path) ||
+          req.method === "PATCH" && path === "/api/auth/me"
+        )) return send(409, { code: "GO_ACCOUNTS_REQUIRED", error: "Откройте серверный кабинет BakeU и подтвердите вход. Старые аккаунты сохранены; перенос требует подтверждения владельца." });
         if (path === "/api/telegram/config" && req.method === "GET")
           return send(200, { enabled: ordersSettings.enabled, apiBase: ordersSettings.enabled ? ordersSettings.baseUrl + "/api" : "" });
         if (path === "/health" && req.method === "GET")

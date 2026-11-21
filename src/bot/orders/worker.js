@@ -1,6 +1,7 @@
 import { BridgeError, validateIdentity, validateOrder } from "./api.js";
 import { ownOrder } from "./domain.js";
 import { orderCard } from "./views.js";
+import { createWorkerDiagnostics } from "../services/workerDiagnostics.js";
 const messages = {
   accepted: "✅ Продавец принял заказ",
   preparing: "👨‍🍳 Ваш заказ готовится",
@@ -15,8 +16,10 @@ const messages = {
 
 // MongoDB owns leases, attempts, deduplication and the website inbox. This map
 // only retries delivery receipts while this process remains alive; it is not an order store.
-export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
+export function createOrdersWorker(api, telegram, { enabled = false, log = console.warn, now = Date.now } = {}) {
   let busy = false;
+  let claimFailures = 0, nextClaim = 0;
+  const diagnose = createWorkerDiagnostics("mongo_orders", { log, now });
   const receipts = new Map();
   async function ack(id, receipt) {
     try {
@@ -24,6 +27,7 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
       receipts.delete(id);
     } catch (error) {
       if (error.status === 409) receipts.delete(id);
+      diagnose("ack", error);
     }
   }
   return async () => {
@@ -32,7 +36,15 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
     try {
       for (const [id, receipt] of receipts) await ack(id, receipt);
       if (receipts.size >= 500) return;
-      const batch = await api.claim();
+      if (now() < nextClaim) return;
+      let batch;
+      try { batch = await api.claim(); claimFailures = 0; nextClaim = 0; }
+      catch (error) {
+        claimFailures++;
+        nextClaim = now() + Math.min(60000, 2000 * 2 ** Math.min(claimFailures - 1, 5));
+        diagnose("claim", error);
+        return;
+      }
       if (!Array.isArray(batch.jobs) || batch.jobs.length > 10)
         throw new BridgeError(502);
       for (const job of batch.jobs) {
@@ -46,10 +58,11 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
             job.recipient.botStarted !== true ||
             !ownOrder(who, job.order) ||
             !["order.created", "order.status_changed"].includes(job.kind) ||
-            (job.kind === "order.status_changed" && who.user.role !== "CLIENT")
+            (job.kind === "order.status_changed" && !((who.user.role === "CLIENT" || who.user.canBuy === true) && job.order.customerId === who.user.id))
           )
             throw new BridgeError(403);
-        } catch {
+        } catch (error) {
+          diagnose("validate", error);
           await api.fail(job, { state: "blocked", code: 403 });
           continue;
         }
@@ -58,14 +71,15 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
         let attempt;
         try {
           attempt = await api.begin(job);
-        } catch {
+        } catch (error) {
+          diagnose("begin", error);
           continue;
         }
         if (attempt.started !== true) continue;
         let result;
         try {
           const payload = orderCard(job.order, {
-            seller: who.user.role === "SELLER",
+            seller: who.user.role === "SELLER" && job.order.sellerId === who.user.id && job.order.shopId === who.shopId,
             notification: job.kind === "order.created",
           });
           if (job.kind === "order.status_changed")
@@ -78,6 +92,7 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
             throw new Error("Unknown Telegram receipt");
         } catch (error) {
           const code = Number(error.code) || 0;
+          diagnose("telegram_send", { httpStatus: code, category: code === 429 ? "telegram_rate_limited" : code === 403 ? "telegram_blocked" : code >= 400 && code < 500 ? "telegram_failed" : "telegram_uncertain" });
           const failure =
             code === 429
               ? {
@@ -99,7 +114,8 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
                   : { state: "uncertain", code };
           try {
             await api.fail(job, failure);
-          } catch {
+          } catch (error) {
+            diagnose("failure_receipt", error);
             /* Durable sending state is recovered by Go's lease sweeper. */
           }
           continue;
@@ -111,6 +127,8 @@ export function createOrdersWorker(api, telegram, { enabled = false } = {}) {
         receipts.set(job.id, receipt);
         await ack(job.id, receipt);
       }
+    } catch (error) {
+      diagnose("batch", error);
     } finally {
       busy = false;
     }

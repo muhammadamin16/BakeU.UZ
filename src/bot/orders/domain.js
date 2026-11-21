@@ -57,12 +57,11 @@ export function validCoordinates(value) {
 }
 export function ownOrder(identity, order) {
   if (!identity?.confirmed || !identity.user || !order) return false;
-  if (identity.user.role === "SELLER")
-    return (
+  if (identity.user.role === "SELLER" && (
       order.sellerId === identity.user.id && order.shopId === identity.shopId
-    );
+    )) return true;
   return (
-    identity.user.role === "CLIENT" && order.customerId === identity.user.id
+    (identity.user.role === "CLIENT" || identity.user.role === "SELLER" && identity.user.canBuy === true) && order.customerId === identity.user.id
   );
 }
 export function deliveryInstant(date, time, now = Date.now()) {

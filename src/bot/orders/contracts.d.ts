@@ -13,7 +13,7 @@ export interface Identity {
   linked: true;
   confirmed: true;
   telegramId: string;
-  user: { id: string; role: Role; status: "active" };
+  user: { id: string; role: Role; status: "active"; canBuy?: boolean };
   shopId?: string;
   botStarted?: boolean;
 }

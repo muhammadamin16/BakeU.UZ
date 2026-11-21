@@ -1,6 +1,7 @@
 import { statusLabels, validCoordinates } from "./domain.js";
+import { networkCategory } from "../services/workerDiagnostics.js";
 export class BridgeError extends Error {
-  constructor(status = 503, code) {
+  constructor(status = 503, code, details = {}) {
     super(
       status === 409
         ? "Данные изменились. Обновите экран и повторите действие."
@@ -11,6 +12,9 @@ export class BridgeError extends Error {
             : "Сервис заказов временно недоступен.",
     );
     this.status = status;
+    this.name = "BridgeError";
+    this.httpStatus = details.httpStatus ?? status;
+    this.category = details.category || "invalid_contract";
     if (["SELLER_NOT_FOUND", "ACCOUNT_NOT_FOUND"].includes(code))
       this.code = code;
   }
@@ -43,7 +47,7 @@ export function validateIdentity(data, telegramId) {
     (role === "SELLER" && !validId(data.shopId))
   )
     throw new BridgeError(502);
-  return { ...data, user: { ...data.user, role } };
+  return { ...data, user: { ...data.user, role, ...(Object.hasOwn(data.user,"canBuy") ? { canBuy: data.user.canBuy === true && ["CLIENT","SELLER"].includes(role) } : {}) } };
 }
 export function validateOrder(order) {
   if (
@@ -77,7 +81,7 @@ export function validateOrder(order) {
 /** @returns {import('./contracts').TelegramBridge} */
 export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
   async function request(actor, path, method = "GET", body, key) {
-    if (!(config.enabled || config.accountsEnabled && ["/auth/phone/contact", "/auth/launch"].includes(path))) throw new BridgeError();
+    if (!(config.enabled || config.accountsEnabled && ["/auth/phone/contact", "/auth/launch"].includes(path))) throw new BridgeError(503, undefined, { category: "configuration_disabled", httpStatus: 0 });
     if (actor != null && !/^[1-9]\d{0,19}$/.test(String(actor)))
       throw new BridgeError(403);
     let response;
@@ -97,8 +101,8 @@ export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
           body: body === undefined ? undefined : JSON.stringify(body),
         },
       );
-    } catch {
-      throw new BridgeError();
+    } catch (error) {
+      throw new BridgeError(503, undefined, { category: networkCategory(error), httpStatus: 0 });
     }
     if (!response.ok) {
       let code;
@@ -110,12 +114,13 @@ export function createOrdersApi(config, { fetchImpl = fetch } = {}) {
       throw new BridgeError(
         response.status === 401 ? 503 : response.status,
         code,
+        { httpStatus: response.status, category: ({ 401: "bridge_unauthorized", 403: "bridge_forbidden", 404: "route_missing", 429: "upstream_rate_limited" })[response.status] || "upstream_unavailable" },
       );
     }
     try {
       return await response.json();
     } catch {
-      throw new BridgeError(502);
+      throw new BridgeError(502, undefined, { category: "invalid_json", httpStatus: response.status });
     }
   }
   return {
