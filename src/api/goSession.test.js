@@ -97,3 +97,22 @@ test("legacy Go order API stays read-only when Telegram checkout is attempted", 
   await assert.rejects(orders.transition({ id: "order", status: "pending" }, "accepted", "staging-transition"), { status: 404 });
   assert.deepEqual(writes, []);
 });
+
+test("password and refresh requests refuse redirects", async () => {
+  const calls = [];
+  const session = createGoSession("/api", { fetchImpl: async (path, options) => {
+    calls.push(path);
+    assert.equal(options.redirect, "error");
+    if (path === "/api/auth/login") return Response.json({ token: "login", user: { uid: "test" } });
+    if (path === "/api/auth/refresh") return Response.json({ token: "refreshed" });
+    return Response.json({ uid: "test" });
+  } });
+  await session.login("test@example.invalid", "test password");
+  const fresh = createGoSession("/api", { fetchImpl: async (path, options) => {
+    calls.push(path);
+    assert.equal(options.redirect, "error");
+    return Response.json(path.endsWith("/refresh") ? { token: "refreshed" } : { uid: "test" });
+  } });
+  await fresh.request("/me");
+  assert.deepEqual(calls, ["/api/auth/login", "/api/auth/refresh", "/api/me"]);
+});

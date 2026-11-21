@@ -39,7 +39,7 @@ export default function ServerCatalog({ initialQuery = "" }) {
           return (
             <article className="bw-card" key={item.id}>
               {image && <img src={image} alt={item.title} width="160" loading="lazy" />}
-              <h2>{item.title}</h2>
+              <h2><Link to={`/product/${encodeURIComponent(item.id)}`}>{item.title}</Link></h2>
               <p>{item.description}</p>
               <p>{item.price.toLocaleString()} UZS</p>
               {item.variants?.length > 0 && (
