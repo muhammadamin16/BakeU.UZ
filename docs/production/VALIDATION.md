@@ -81,3 +81,14 @@ before TLS (CONNECT403, destination000), so no production HTTP result is inferre
 GitHub API/PR creation may also be restricted; branch push and PR creation are
 reported separately in the final response. A health200 alone cannot close any
 unverified live identity, persistence, checkout or notification acceptance item.
+
+An actual Go API process restart was also performed against the same disposable
+Mongo database. Re-login returned the original UID, and the accepted order with
+history, cart quantity and favorites were all preserved.
+
+Both feature branches were pushed and remote SHAs verified. Draft PR creation was
+attempted for website→Amin and backend→main; GitHub API returned Forbidden before
+creating either PR. These are **comparison links, not created PRs**:
+
+- https://github.com/muhammadamin16/BakeU.UZ/compare/Amin...codex/production-integration-audit-20261121
+- https://github.com/muhammadamin16/BakeU-Backend/compare/main...codex/production-integration-audit-20261121
