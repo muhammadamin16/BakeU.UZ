@@ -3,7 +3,7 @@
 // frontend has no /api proxy: phone verification belongs to the Node bot API,
 // not to the Go/MongoDB backend or the static website.
 const configuredBase = (import.meta.env.VITE_ACCOUNT_API_URL || "").trim().replace(/\/$/, "");
-const productionBotAPI = "https://bakeuuz-production.up.railway.app/api";
+const productionBotAPI = "https://bakeu-bot-production.up.railway.app/api";
 const railwayWebsiteHosts = new Set([
   "bakeu-website-production.up.railway.app",
   "bakeu.uz",
