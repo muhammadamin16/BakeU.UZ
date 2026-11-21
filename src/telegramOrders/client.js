@@ -1,7 +1,7 @@
 import { deliveryPayload, statusLabels } from "./domain.js";
 // Inject the Go-authenticated transport owned by the account integration. Never
 // read the legacy Node/SQLite session or cache orders in browser storage.
-export function createWebsiteOrdersClient(request) {
+export function createWebsiteOrdersClient(request, { audience = "auto" } = {}) {
   if (typeof request !== "function")
     throw new Error("An authenticated Go API transport is required.");
   async function requireWorkflowV2() {
@@ -21,17 +21,19 @@ export function createWebsiteOrdersClient(request) {
       if (!user?.uid || !["seller", "customer"].includes(user.role))
         throw new Error("Войдите в аккаунт BakeU.");
       const result = await request("/orders", { signal });
-      const orders = user.role === "seller" ? result.incoming : result.placed;
+      const selling = audience === "seller" || audience === "auto" && user.role === "seller";
+      if (selling && user.role !== "seller") throw new Error("Нет доступа к заказам продавца.");
+      const orders = selling ? result.incoming : result.placed;
       if (
         !Array.isArray(orders) ||
         orders.some((o) =>
-          user.role === "seller"
+          selling
             ? o.sellerId !== user.uid
             : o.customerId !== user.uid,
         )
       )
         throw new Error("Неверный ответ сервера заказов.");
-      return { user, orders };
+      return { user, orders, audience: selling ? "seller" : "buyer" };
     },
     async confirmLink(challengeId, password) {
       if (

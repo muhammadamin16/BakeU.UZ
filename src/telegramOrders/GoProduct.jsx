@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { goAccount, goAPIBase, productImageURL } from "../api/goAccount.js";
 import { useCartStore } from "../store/cartStore.js";
 import { createServerCart, lineKey } from "./serverCart.js";
+import FavoriteButton from "../components/FavoriteButton/FavoriteButton.jsx";
 import "./orders.css";
 
 export default function GoProduct() {
@@ -49,11 +50,11 @@ function CatalogProduct({ id }) {
         setNotice("Товар сохранён в гостевой корзине.");
         return;
       }
-      if (buyer.role !== "customer") throw Error("Для покупки войдите в аккаунт покупателя.");
+      if (!["customer", "seller"].includes(buyer.role)) throw Error("Для покупки войдите в аккаунт.");
       const request = async (path, options) => {
         const account = await goAccount.request("/me");
-        if (account.uid !== buyer.uid || account.role !== "customer") throw Error("Аккаунт изменился. Повторите действие.");
-        return goAccount.requestWithOptions(path, options);
+        if (account.uid !== buyer.uid) throw Error("Аккаунт изменился. Повторите действие.");
+        return goAccount.requestWithOptions(path, { ...options, headers: { ...options?.headers, "X-BakeU-Account": buyer.uid } });
       };
       const cart = createServerCart(request);
       const snapshot = await cart.load();
@@ -76,6 +77,7 @@ function CatalogProduct({ id }) {
       {!product && goAPIBase && !notice && <p role="status">Загрузка товара…</p>}
       {product && <>
         <h1>{product.title}</h1>
+        <FavoriteButton product={{ ...product, name: product.title }} />
         {image && <img src={image} width="160" alt={product.title} />}
         <p>{product.description}</p>
         <p>{Number(selected?.price ?? product.price).toLocaleString("ru-RU")} UZS</p>

@@ -120,7 +120,7 @@ export function pinGoAccount(transport, uid, role) {
     async request(path, options = {}) {
       if (options.method && !["GET", "HEAD"].includes(options.method))
         verify(await transport.request("/me"));
-      const result = await transport.request(path, options);
+      const result = await transport.request(path, { ...options, headers: { ...options.headers, "X-BakeU-Account": uid } });
       if (path === "/me") verify(result);
       return result;
     },

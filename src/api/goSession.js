@@ -1,6 +1,8 @@
 export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = globalThis.navigator?.locks } = {}) {
   let access = "";
   let pending;
+  const listeners = new Set();
+  const notify = (user) => listeners.forEach((listener) => listener(user));
   const sessionMode = { "X-BakeU-Session": "browser" };
   const locked = (action) =>
     locks?.request("bakeu-go-session", action) ?? action();
@@ -65,6 +67,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
         const data = await authRequest("/auth/phone/telegram", { ticket });
         if (!data?.token || !data.user?.uid) throw new Error("Вход не подтверждён сервером.");
         access = data.token;
+        notify(data.user);
         return data.user;
       });
     },
@@ -76,6 +79,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
         const data = await authRequest("/auth/phone/verify", { id, code });
         if (!data?.token || !data.user?.uid) throw new Error("Вход не подтверждён сервером.");
         access = data.token;
+        notify(data.user);
         return data.user;
       });
     },
@@ -83,6 +87,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
       return locked(async () => {
         const data = await authRequest("/auth/login", { email, password });
         access = data.token;
+        notify(data.user);
         return data.user;
       });
     },
@@ -90,10 +95,14 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
       return requestWithOptions(path, { method, body });
     },
     requestWithOptions,
+    subscribeAccount(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
     async logout() {
       return locked(async () => {
         try { await authRequest("/auth/logout"); }
-        finally { access = ""; }
+        finally { access = ""; notify(null); }
       });
     },
   };

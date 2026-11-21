@@ -73,6 +73,7 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false, orderId
           {transitionsEnabled &&
             order.workflowVersion >= 2 &&
             state.user?.role === "seller" &&
+            state.audience !== "buyer" && order.sellerId === state.user.uid &&
             nextStatuses(order.status, order.fulfillment).map((status) => (
               <button
                 key={status}

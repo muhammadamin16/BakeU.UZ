@@ -11,6 +11,10 @@ import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
 import { goAccount as sharedGoAccount, goAPIBase, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import "./orders.css";
+import SellerSummary from "./SellerSummary.jsx";
+import { translateText as t } from "../i18n/index.js";
+const OpenOwnShop = lazy(() => import("./OpenOwnShop.jsx"));
+const MarketModeration = lazy(() => import("./MarketModeration.jsx"));
 const configured = (
   goAPIBase ||
   import.meta.env.VITE_GO_BACKEND_URL ||
@@ -23,7 +27,7 @@ const botBase = (
   import.meta.env.VITE_ACCOUNT_API_URL ||
   (import.meta.env.DEV
     ? "/api"
-    : "https://bakeuuz-production.up.railway.app/api")
+    : "https://bakeu-bot-production.up.railway.app/api")
 ).trim();
 function CatalogCheckout({ transport, client, onCreated, productId }) {
   const [catalog, setCatalog] = useState({
@@ -304,6 +308,7 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [revision, setRevision] = useState(0);
+  const [ordersAudience, setOrdersAudience] = useState("auto");
   const [restoring, setRestoring] = useState(() => transport.shared && !challenge);
   useEffect(() => {
     if (!transport.shared || challenge) return;
@@ -334,9 +339,10 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
     logout: transport.logout,
   }), [pinned, transport]);
   const client = useMemo(
-    () => createWebsiteOrdersClient(pinned.request),
-    [pinned],
+    () => createWebsiteOrdersClient(pinned.request, { audience: ordersAudience }),
+    [pinned, ordersAudience],
   );
+  const buyerClient = useMemo(() => createWebsiteOrdersClient(pinned.request, { audience: "buyer" }), [pinned]);
 
   return (
     <div className="tg-orders-panel">
@@ -352,11 +358,13 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
             setBusy(true);
             setError("");
             try {
-              const user = await transport.login(email, password);
+              const logged = await transport.login(email, password);
               if (challenge) {
-                await client.confirmLink(challenge, password);
+                await createWebsiteOrdersClient(pinGoAccount(transport, logged.uid, logged.role).request).confirmLink(challenge, password);
                 setConfirmed(true);
               }
+              const user = await transport.request("/me", { headers: { "X-BakeU-Account": logged.uid } });
+              if (user.uid !== logged.uid) throw new Error("Сессия изменилась. Войдите снова.");
               setAccount(user);
             } catch (failure) {
               await transport.logout().catch(() => {});
@@ -426,14 +434,22 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
             transport={pinned}
             onSaved={setAccount}
           />
-          {account.role === "seller" && transport.shared && (
+          {account.capabilities?.openShop && <Suspense fallback={<p>Загрузка…</p>}><OpenOwnShop key={account.uid} account={account} transport={pinned} onOpened={async () => {
+            const fresh = await transport.request("/me", { headers: { "X-BakeU-Account": account.uid } });
+            if (fresh.uid !== account.uid || fresh.role !== "seller") throw new Error("Сессия изменилась. Обновите страницу.");
+            setAccount(fresh);
+          }} /></Suspense>}
+          {account.capabilities?.admin && <Suspense fallback={<p>Загрузка…</p>}><MarketModeration transport={pinned} /></Suspense>}
+          {account.role === "seller" && <SellerSummary transport={pinned} />}
+          {account.role === "seller" && transport.shared && !account.capabilities?.openShop && (
             <Suspense fallback={<p>Загрузка настроек…</p>}>
               <SellerSettings accountApi={sellerApi} />
             </Suspense>
           )}
+          {account.role === "seller" && <div role="group" aria-label={t("Раздел заказов")}><button type="button" onClick={() => setOrdersAudience("buyer")}>{t("Мои покупки")}</button><button type="button" onClick={() => setOrdersAudience("seller")}>{t("Заказы моего магазина")}</button></div>}
           <ServerOrdersPanel
             client={client}
-            sessionKey={account.uid + ":" + revision}
+            sessionKey={account.uid + ":" + ordersAudience + ":" + revision}
             transitionsEnabled
             orderId={orderId}
           />
@@ -441,13 +457,13 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
             client={client}
             sessionKey={account.uid + ":" + revision}
           />
-          {account.role === "customer" && (
+          {["customer", "seller"].includes(account.role) && (
             <CatalogCheckout
               key={account.uid + ":" + productId}
               productId={productId}
-              client={client}
+              client={buyerClient}
               transport={pinned}
-              onCreated={() => setRevision((v) => v + 1)}
+              onCreated={() => { setOrdersAudience("buyer"); setRevision((v) => v + 1); }}
             />
           )}
         </>

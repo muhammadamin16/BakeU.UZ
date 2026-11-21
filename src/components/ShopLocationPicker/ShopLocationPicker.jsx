@@ -18,7 +18,7 @@ function MoveMap({ coords }) {
   const map = useMap();
   useEffect(() => {
     if (coords) map.flyTo([coords.lat, coords.lng], 15, { duration: 0.5 });
-  }, [map, coords?.lat, coords?.lng]);
+  }, [map, coords]);
   return null;
 }
 function PickOnClick({ onPick }) {

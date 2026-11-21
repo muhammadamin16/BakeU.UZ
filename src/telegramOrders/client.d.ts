@@ -24,10 +24,11 @@ export interface Delivery {
   comment?: string;
   location?: { latitude: number; longitude: number } | null;
 }
-export function createWebsiteOrdersClient(request: GoRequest): {
+export function createWebsiteOrdersClient(request: GoRequest, options?: { audience?: "auto" | "buyer" | "seller" }): {
   load(signal?: AbortSignal): Promise<{
     user: { uid: string; role: "customer" | "seller" };
     orders: GoOrder[];
+    audience: "buyer" | "seller";
   }>;
   confirmLink(
     challengeId: string,
