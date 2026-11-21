@@ -21,6 +21,7 @@ import Chat from "../pages/Messages/Chat";
 
 import Login from "../pages/Auth/Login/Login";
 import GoPhoneAccount from "../pages/Auth/GoPhoneAccount.jsx";
+import { publicGoCatalogEnabled } from "../api/usePublicCatalog.js";
 import { goPhoneAccountsEnabled } from "../api/goAccount.js";
 import { miniLaunch } from "../miniapp/telegram.js";
 import Register from "../pages/Auth/Register/Register";
@@ -116,7 +117,7 @@ export default function AppRoutes() {
       <main className={contentClass}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/product/:id" element={goPhoneAccountsEnabled && /^[a-f0-9]{24}$/i.test(pathname.split("/").at(-1)) ? <Suspense fallback={loading}><GoProduct /></Suspense> : <Product />} />
+          <Route path="/product/:id" element={publicGoCatalogEnabled ? <Suspense fallback={loading}><GoProduct /></Suspense> : <Product />} />
           <Route path="/cart" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Cart />} />
           <Route path="/checkout" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Checkout />} />
           <Route path="/orders" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Orders />} />
