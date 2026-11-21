@@ -45,11 +45,12 @@ export default function AppRoutes() {
   const isHome = pathname === "/";
   const isMap = matchesPath(pathname.toLowerCase(), "/map");
   const compactFooter = isHome || pathname === "/seller";
-  const contentClass = isMap
-    ? "container site-content--map"
-    : compactFooter
-      ? "container site-content--compact-footer"
-      : "container";
+  const contentClass = [
+    "container",
+    isMap && "site-content--map",
+    compactFooter && "site-content--compact-footer",
+    pathname === "/ai" && "site-content--ai",
+  ].filter(Boolean).join(" ");
   const showFooter =
     !isAuthPage &&
     !isMap &&
