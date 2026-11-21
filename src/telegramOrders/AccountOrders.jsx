@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
+import { createServerCart, includesSavedCart, restoreCart } from "./serverCart.js";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
@@ -33,6 +34,37 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const cart = useMemo(() => createServerCart(transport.request), [transport]);
+  const [savedLines, setSavedLines] = useState(null);
+  const [loadingCart, setLoadingCart] = useState(true);
+  const [cartNotice, setCartNotice] = useState("");
+  const [needsCartReview, setNeedsCartReview] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    cart.load(controller.signal).then((items) => {
+      if (!controller.signal.aborted) setSavedLines(items);
+    }).catch((failure) => {
+      if (!controller.signal.aborted) setCartNotice(failure.message || "Не удалось загрузить корзину.");
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoadingCart(false);
+    });
+    return () => controller.abort();
+  }, [cart]);
+  async function changeCart(action, line) {
+    setBusy(true);
+    setCartNotice("");
+    try {
+      const items = await cart[action](line);
+      setSavedLines(items);
+      if (!items.length) setNeedsCartReview(false);
+      setCartNotice("Серверная корзина обновлена.");
+    } catch (failure) {
+      setCartNotice(failure.message || "Не удалось обновить корзину.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const [attempt, setAttempt] = useState(() => crypto.randomUUID());
   useEffect(() => {
     let active = true;
@@ -87,9 +119,23 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
+        if (needsCartReview) {
+          setError("Проверьте сохранённые позиции перед оформлением.");
+          return;
+        }
         setBusy(true);
         setError("");
         try {
+          const items = selected.map((p) => ({
+            productId: p.id,
+            qty: qty[p.id],
+            ...(variants[p.id] ? { variantId: variants[p.id] } : {}),
+          }));
+          const latestCart = await cart.load();
+          setSavedLines(latestCart);
+          if (!includesSavedCart(latestCart, items)) {
+            throw Error("Корзина содержит другие позиции. Загрузите её в оформление или обновите сохранённые позиции.");
+          }
           const deliveries = Object.fromEntries(
             groups.map((m) => [
               m.id,
@@ -99,7 +145,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
             ]),
           );
           await client.checkout({
-            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id], ...(variants[p.id] ? { variantId: variants[p.id] } : {}) })),
+            items,
             deliveries,
             requestId: attempt,
           });
@@ -107,6 +153,8 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
           setChoices({});
           setVariants({});
           setAttempt(crypto.randomUUID());
+          setSavedLines(null);
+          await cart.load().then(setSavedLines).catch(() => setCartNotice("Обновите корзину, чтобы загрузить актуальные позиции."));
           setSaved(true);
           onCreated();
         } catch (failure) {
@@ -116,12 +164,44 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
         }
       }}
     >
-      <fieldset disabled={busy}>
+      <fieldset disabled={busy || loadingCart}>
         <h2>Оформить заказ</h2>
         <p>
           Выберите товары. Оплата и стоимость доставки согласуются с продавцом.
         </p>
         {catalog.error && <p role="alert">{catalog.error}</p>}
+        <section aria-label="Серверная корзина">
+          <h3>Сохранённая корзина</h3>
+          {cartNotice && <p role="status">{cartNotice}</p>}
+          <button type="button" onClick={() => changeCart("load")}>Обновить корзину</button>
+          {savedLines?.length === 0 && <p>Сохранённых товаров пока нет.</p>}
+          {savedLines?.length > 0 && (
+            <>
+              <button type="button" disabled={!catalog.products.length} onClick={() => {
+                const restored = restoreCart(savedLines, catalog.products);
+                setQty(restored.qty);
+                setVariants(restored.variants);
+                setChoices({});
+                setNeedsCartReview(restored.skipped.length > 0);
+                setCartNotice(restored.skipped.length ? "В корзине есть недоступные товары или несколько вариантов одного товара. Удалите лишние строки и загрузите корзину снова." : "Корзина загружена.");
+                update();
+              }}>Загрузить в оформление</button>
+              <ul>
+                {savedLines.map((line) => {
+                  const product = catalog.products.find(({ id }) => id === line.productId);
+                  const variant = product?.variants?.find(({ id }) => id === line.variantId);
+                  return (
+                    <li key={JSON.stringify([line.productId, line.variantId])}>
+                      {product?.title || "Недоступный товар"}{line.variantId ? ` · ${variant?.name || "Недоступный вариант"}` : ""} × {line.qty}
+                      {" "}<button type="button" onClick={() => changeCart("remove", line)}>Убрать из корзины</button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </section>
+
         {catalog.products.map((p) => (
           <div
             key={p.id}
@@ -160,6 +240,11 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
                 update();
               }}
             />
+            <button type="button" disabled={!qty[p.id]}
+              onClick={() => changeCart("save", { productId: p.id, variantId: variants[p.id] || "", qty: qty[p.id] })}>
+              Сохранить в корзине
+            </button>
+
           </div>
         ))}
         {!catalog.error && !catalog.products.length && <p>Товаров пока нет.</p>}
