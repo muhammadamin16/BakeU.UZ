@@ -7,18 +7,17 @@ html.ai-lock body {
 html.ai-lock .bakeu-snowfall { display: none; }
 
 .ai {
-  --ai-ink: #352319;
-  --ai-muted: #6c5b50;
-  --ai-accent: #8b4128;
-  --ai-accent-hover: #71331f;
-  --ai-paper: #fffdf9;
+  --ai-ink: var(--market-ink, var(--ink));
+  --ai-muted: var(--market-muted, #725c4e);
+  --ai-accent: var(--market-accent);
+  --ai-accent-hover: var(--ai-ink);
+  --ai-paper: var(--paper);
   --ai-raised: #fff;
-  --ai-sidebar: #f6f2ed;
-  --ai-tint: #f6e7dc;
-  --ai-line: #e7ded5;
+  --ai-sidebar: color-mix(in srgb, var(--market-hero-wash) 55%, var(--paper));
+  --ai-tint: var(--market-icon-bg);
+  --ai-line: var(--line);
   --ai-bottom: calc(var(--nav-space, 110px) + env(safe-area-inset-bottom, 0px));
   width: 100%;
-  max-width: 1240px;
   height: calc(100vh - var(--ai-top, 0px) - var(--ai-bottom));
   height: calc(100dvh - var(--ai-top, 0px) - var(--ai-bottom));
   min-height: 0;
@@ -37,14 +36,14 @@ html.ai-lock .bakeu-snowfall { display: none; }
 .ai__card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(248px, 25%) minmax(0, 1fr);
+  grid-template-columns: clamp(248px, 22vw, 320px) minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
   isolation: isolate;
   border: 1px solid var(--ai-line);
-  border-radius: 24px;
+  border-radius: 26px;
   background: var(--ai-paper);
-  box-shadow: 0 12px 34px #3523190d;
+  box-shadow: var(--market-card-shadow);
 }
 
 .ai-history {
@@ -243,23 +242,22 @@ html.ai-lock .bakeu-snowfall { display: none; }
   justify-content: center;
   min-height: 205px;
   padding: 24px 39% 24px clamp(16px, 3vw, 32px);
-  border: 1px solid #e9d5c0;
-  border-radius: 19px;
+  border: 1px solid var(--market-card-edge);
+  border-radius: 22px;
   background:
-    linear-gradient(90deg, #f9eddd 0%, #f9eddd 37%, #f9edddda 53%, #f9eddd00 76%),
+    linear-gradient(90deg, var(--market-hero-wash) 37%, color-mix(in srgb, var(--market-hero-wash) 86%, transparent) 53%, transparent 76%),
     url("/images/banners/cakes.webp") center right / cover;
 }
 
 .ai-welcome h2 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(32px, 4vw, 55px);
-  font-weight: 400;
-  letter-spacing: -.055em;
-  line-height: 1.02;
+  font-size: clamp(27px, 3vw, 39px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.1;
   text-wrap: balance;
 }
 
-.ai-welcome p { max-width: 290px; margin-top: 10px; color: #584438; font-size: 14px; line-height: 1.5; }
+.ai-welcome p { max-width: 290px; margin-top: 10px; color: var(--ai-muted); font-size: 14px; line-height: 1.5; }
 .ai-welcome__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 12px; }
 
 .ai-chip {
@@ -269,9 +267,9 @@ html.ai-lock .bakeu-snowfall { display: none; }
   gap: 9px;
   min-height: 68px;
   padding: 9px 11px;
-  border: 1px solid var(--ai-line);
-  border-radius: 13px;
-  background: var(--ai-raised);
+  border: 1px solid var(--market-card-edge);
+  border-radius: 15px;
+  background: var(--market-feature-bg);
   text-align: start;
 }
 
@@ -339,7 +337,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
     transition: transform 180ms ease, visibility 0s 180ms;
   }
   .ai-history.is-open { visibility: visible; transform: none; transition-delay: 0s; }
-  .ai-backdrop { position: absolute; z-index: 1; inset: 0; display: block; border: 0; background: #35231966; }
+  .ai-backdrop { position: absolute; z-index: 1; inset: 0; display: block; border: 0; background: color-mix(in srgb, var(--ai-ink) 40%, transparent); }
 }
 
 @media (max-width: 600px) {
