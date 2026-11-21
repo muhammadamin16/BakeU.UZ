@@ -18,15 +18,16 @@ export default function Seller() {
   const [params] = useSearchParams();
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
-  if (serverStorefrontEnabled && !shopId && tab === "products") return <ServerCatalog />;
+  const initialQuery = params.get("q") || "";
+  if (serverStorefrontEnabled && !shopId && tab === "products") return <ServerCatalog key={initialQuery} initialQuery={initialQuery} />;
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
-    : <SellerCatalog key={tab} tab={tab} />;
+    : <SellerCatalog key={JSON.stringify([tab, initialQuery])} tab={tab} initialQuery={initialQuery} />;
 }
 
-function SellerCatalog({ tab }) {
+function SellerCatalog({ tab, initialQuery }) {
   const { products, shops } = useCatalog();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
   const add = useCartStore((s) => s.add);
@@ -38,7 +39,7 @@ function SellerCatalog({ tab }) {
   const visibleProducts = useMemo(() => products.filter((p) => {
     const shop = shopById.get(String(p.shopId));
     return (category === "Все" || category === p.category) &&
-      (!normalized || matchesLocalizedSearch(normalized, p.name, shop?.name));
+      (!normalized || matchesLocalizedSearch(normalized, p.name, p.category, shop?.name));
   }), [products, shopById, category, normalized]);
   const visibleShops = useMemo(() => shops.filter((s) => {
     return !normalized ||

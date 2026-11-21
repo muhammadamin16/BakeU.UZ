@@ -4,10 +4,10 @@ import { goAPIBase, productImageURL } from "../../api/goAccount.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 
-export default function ServerCatalog() {
+export default function ServerCatalog({ initialQuery = "" }) {
   const [items, setItems] = useState(null);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${goAPIBase}/products`, { credentials: "omit", signal: controller.signal })
@@ -39,7 +39,7 @@ export default function ServerCatalog() {
           return (
             <article className="bw-card" key={item.id}>
               {image && <img src={image} alt={item.title} width="160" loading="lazy" />}
-              <h2>{item.title}</h2>
+              <h2><Link to={`/product/${encodeURIComponent(item.id)}`}>{item.title}</Link></h2>
               <p>{item.description}</p>
               <p>{item.price.toLocaleString()} UZS</p>
               {item.variants?.length > 0 && (

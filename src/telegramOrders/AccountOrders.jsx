@@ -3,6 +3,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
 import { createServerCart, includesSavedCart, lineKey, restoreCart } from "./serverCart.js";
+import { useCartStore } from "../store/cartStore.js";
+import { planGuestImport } from "./guestCart.js";
+import GuestCart from "./GuestCart.jsx";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
@@ -71,6 +74,27 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
     }
   }
 
+  const guestItems = useCartStore((state) => state.items);
+  const guestProducts = useCartStore((state) => state.products);
+  async function importGuestCart() {
+    setBusy(true);
+    let imported = 0;
+    try {
+      let snapshot = await cart.load();
+      const { lines, skipped } = planGuestImport(guestItems, guestProducts, catalog.products, snapshot.items);
+      for (const line of lines) {
+        snapshot = await cart.save(line, snapshot.revision);
+        imported++;
+        setSavedCart(snapshot);
+      }
+      setSavedCart(snapshot);
+      setCartNotice(`Добавлено: ${imported}. Пропущено: ${skipped}. Гостевая корзина сохранена отдельно.`);
+    } catch (error) {
+      setCartNotice(`Добавлено: ${imported}. ${error.status === 409 ? "Корзина изменилась. Повторите перенос." : error.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
   const attempt = useRef(null);
   useEffect(() => {
     let active = true;
@@ -184,6 +208,11 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
         {catalog.error && <p role="alert">{catalog.error}</p>}
         <section aria-label="Серверная корзина">
           <h3>Сохранённая корзина</h3>
+          {Object.keys(guestItems).length > 0 && (
+            <button type="button" disabled={!catalog.products.length} onClick={importGuestCart}>
+              Добавить доступные позиции из гостевой корзины
+            </button>
+          )}
           {cartNotice && <p role="status">{cartNotice}</p>}
           <button type="button" onClick={() => changeCart("load")}>Обновить корзину</button>
           {savedLines?.length === 0 && <p>Сохранённых товаров пока нет.</p>}
@@ -267,7 +296,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
     </form>
   );
 }
-function ConnectedAccount({ transport, challenge, productId }) {
+function ConnectedAccount({ transport, challenge, productId, orderId }) {
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -314,6 +343,7 @@ function ConnectedAccount({ transport, challenge, productId }) {
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
       {!account && goPhoneAccountsEnabled && <p><Link to="/login">Войти по подтверждённому телефону</Link> · <Link to="/register">Создать аккаунт</Link></p>}
       {restoring && <p role="status">Восстанавливаем сессию…</p>}
+      {!challenge && !account && !restoring && goPhoneAccountsEnabled && <GuestCart />}
       {!account && !restoring && (
         <form
           onSubmit={async (e) => {
@@ -405,6 +435,7 @@ function ConnectedAccount({ transport, challenge, productId }) {
             client={client}
             sessionKey={account.uid + ":" + revision}
             transitionsEnabled
+            orderId={orderId}
           />
           <ServerNotifications
             client={client}
@@ -478,6 +509,7 @@ function ServerProfile({ account, transport, onSaved }) {
 export default function AccountOrders() {
   const [params] = useSearchParams();
   const challenge = params.get("challenge") || "";
+  const orderId = params.get("order") || "";
   const requestedProduct = params.get("product") || "";
   const productId = /^[A-Za-z0-9_-]{1,36}$/.test(requestedProduct) ? requestedProduct : "";
   const [connection, setConnection] = useState({
@@ -528,6 +560,7 @@ export default function AccountOrders() {
           transport={connection.transport}
           challenge={challenge}
           productId={productId}
+          orderId={orderId}
         />
       )}
     </div>

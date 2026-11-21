@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import OrderProgress from "./OrderProgress";
 import { nextStatuses, statusLabels } from "./domain.js";
-function OrdersSession({ client, sessionKey, transitionsEnabled = false }) {
+function OrdersSession({ client, sessionKey, transitionsEnabled = false, orderId = "" }) {
   const [state, setState] = useState({
     loading: true,
     orders: [],
@@ -40,14 +40,15 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false }) {
   }, [client, sessionKey, revision]);
   // Session-specific subtree prevents showing an earlier user's data while a
   // new account's first request is pending. Mount this panel with key=sessionKey.
+  const visibleOrders = orderId ? state.orders.filter((order) => order.id === orderId) : state.orders;
   return (
     <section className="tg-orders-panel" aria-label="Серверные заказы">
       {state.loading && <p role="status">Загрузка заказов…</p>}
       {state.error && <p role="alert">{state.error}</p>}
-      {!state.loading && !state.error && !state.orders.length && (
-        <p>📭 Пока нет заказов.</p>
+      {!state.loading && !state.error && !visibleOrders.length && (
+        <p>{orderId ? "Заказ не найден." : "📭 Пока нет заказов."}</p>
       )}
-      {state.orders.map((order) => (
+      {visibleOrders.map((order) => (
         <article key={order.id}>
           <h3>Заказ #{order.number || order.id}</h3>
           <p>{order.shopName || "Магазин"}</p>

@@ -95,11 +95,16 @@
   background: linear-gradient(#ffe8b8d9, #ffb854d9);
 }
 
-/* Бош саҳифа */
-[data-season="winter"] .bu-home {
-  --bu-ink: #45261e;
-  --bu-accent: #b83c1d;
-  --bu-muted: #80645d;
+/* Shared marketplace surfaces for the winter theme */
+[data-season="winter"] {
+  --market-ink: #45261e;
+  --market-muted: #80645d;
+  --market-accent: #a13a23;
+  --market-icon-bg: #f6ded7;
+  --market-feature-bg: linear-gradient(110deg, #ffffffbf, #f1eafa91);
+  --market-card-edge: #fff;
+  --market-card-shadow: inset 0 1px 3px #fff, 0 6px 17px #9882a11a;
+  --market-hero-wash: #fff0ec;
 }
 
 /* Асосий баннер */
@@ -261,12 +266,7 @@
 [data-season="winter"] .bu-home .bu-map {
   position: relative;
   margin-top: 22px;
-  border: 1px solid #fff;
-  background: linear-gradient(110deg, #ffffffbf, #f1eafa91);
-
-  box-shadow:
-    inset 0 1px 3px #fff,
-    0 6px 17px #9882a11a;
+  box-shadow: var(--market-card-shadow);
 
   backdrop-filter: blur(12px);
 }

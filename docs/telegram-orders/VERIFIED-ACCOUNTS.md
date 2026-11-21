@@ -71,3 +71,37 @@ storage and platform launch testing, the legacy
 browser cart/favorites/subscriptions, server chat and full Go admin RBAC still
 need their own implementation and verification. Existing GridFS photos remain
 in place; moving them to S3/R2 requires a separately configured storage service.
+
+## Unified shopping staging check
+
+Deploy the Website integration and its matching Go integration to an isolated
+environment before enabling VITE_GO_PHONE_ACCOUNTS. Point VITE_GO_API_URL at
+the final same-site HTTPS API or a same-origin proxy, enable Go refresh
+sessions, and allow the exact browser origin. Use test bot credentials and keep
+the Go bridge credential in protected backend/bot variables only.
+
+In the new browser flow, /cart, /checkout, /profile and order history resolve
+to the Go account cabinet. A guest can keep product/variant lines locally and
+explicitly copy compatible lines after sign-in. The server quantities win for
+duplicates. Demo IDs, missing products and unmapped options remain on the
+device. A revision conflict stops the transfer; already confirmed lines remain
+saved and another attempt skips them.
+
+To repeat the HTTPS browser regression locally, use a disposable MongoDB
+replica set on 127.0.0.1:18673 and a fresh bakeu_unified_browser database. Run
+the integrated Go binary on port 18674 with that database,
+AUTH_REFRESH_SESSIONS=true and AUTH_BROWSER_ORIGINS=https://localhost:18675.
+Leave AUTH_PHONE_ACCOUNTS off in this fixture only, since the script uses the
+legacy email endpoint to seed throwaway test accounts. The Go integration
+suite separately checks verified registration. Serve Vite on port 18676 with
+VITE_GO_API_URL=/api and VITE_GO_PHONE_ACCOUNTS=true. With Playwright and
+mongosh available, run:
+
+```sh
+BAKEU_TEST_TLS_DIR=/path/to/localhost-certificates node scripts/check-unified-shopping.mjs
+```
+
+The TLS directory must contain key.pem and cert.pem. The script starts the
+HTTPS proxy on port 18675. It accepts a self-signed localhost certificate
+only for this test. BAKEU_PLAYWRIGHT_MODULE, BAKEU_TEST_CHROMIUM, and
+BAKEU_TEST_MONGOSH may point to tools installed outside the repo.

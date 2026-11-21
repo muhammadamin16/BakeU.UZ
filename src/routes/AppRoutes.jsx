@@ -3,7 +3,7 @@ import { translateText } from "../i18n/index.js";
 import { useMiniApp } from "../miniapp/context";
 import Welcome from "../miniapp/pages/Welcome";
 import AdminGate from "../miniapp/components/AdminGate";
-import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams, Link } from "react-router-dom";
 
 import Header from "../components/Header/Header";
 import MobileNav from "../components/MobileNav/MobileNav";
@@ -27,6 +27,7 @@ import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
 
+const GoProduct = lazy(() => import("../telegramOrders/GoProduct.jsx"));
 const AccountOrders = lazy(() => import("../telegramOrders/AccountOrders.jsx"));
 const ServerStorefront = lazy(() =>
   import("../telegramOrders/AccountOrders.jsx").then((module) => ({
@@ -46,6 +47,11 @@ function matchesPath(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+function GoOrderRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/account/orders?order=${encodeURIComponent(id)}`} replace />;
+}
+
 export default function AppRoutes() {
   const { pathname } = useLocation();
   const { isMiniMode, status: miniStatus, goLinked, retry: retryMini, error: miniError } = useMiniApp();
@@ -55,11 +61,12 @@ export default function AppRoutes() {
   const isHome = pathname === "/";
   const isMap = matchesPath(pathname.toLowerCase(), "/map");
   const compactFooter = isHome || pathname === "/seller";
-  const contentClass = isMap
-    ? "container site-content--map"
-    : compactFooter
-      ? "container site-content--compact-footer"
-      : "container";
+  const contentClass = [
+    "container",
+    isMap && "site-content--map",
+    compactFooter && "site-content--compact-footer",
+    pathname === "/ai" && "site-content--ai",
+  ].filter(Boolean).join(" ");
   const showFooter =
     !isAuthPage &&
     !isMap &&
@@ -109,10 +116,10 @@ export default function AppRoutes() {
       <main className={contentClass}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
+          <Route path="/product/:id" element={goPhoneAccountsEnabled && /^[a-f0-9]{24}$/i.test(pathname.split("/").at(-1)) ? <Suspense fallback={loading}><GoProduct /></Suspense> : <Product />} />
+          <Route path="/cart" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Cart />} />
+          <Route path="/checkout" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Checkout />} />
+          <Route path="/orders" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Orders />} />
           <Route
             path="/telegram/link"
             element={
@@ -129,7 +136,7 @@ export default function AppRoutes() {
               </Suspense>
             }
           />
-          <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/orders/:id" element={goPhoneAccountsEnabled ? <GoOrderRedirect /> : <OrderDetails />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route
             path="/map"

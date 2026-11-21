@@ -10,10 +10,16 @@
   --ink: #432015;
   --muted: #8b7364;
   --gold: #f4b41b;
+  --market-accent: #9c5c37;
+  --market-icon-bg: #f1dfcb;
+  --market-feature-bg: linear-gradient(115deg, #fffaf2, #f7ebdc);
+  --market-card-edge: var(--line);
+  --market-card-shadow: 0 12px 30px #4320150d;
+  --market-hero-wash: #f9eddd;
   --green: #4f9d75;
   --line: rgba(67, 32, 21, 0.1);
 
-  --site-max-width: 1400px;
+  --site-max-width: 1500px;
   --container-padding: 20px;
   --nav-space: 110px;
 }
@@ -65,6 +71,11 @@ body {
   max-width: var(--site-max-width);
   margin: 0 auto;
   padding: 16px var(--container-padding);
+}
+
+.container.site-content--ai {
+  max-width: none;
+  padding-inline: 0;
 }
 
 button,
