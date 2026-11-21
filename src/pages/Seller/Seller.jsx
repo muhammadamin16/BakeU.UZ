@@ -1,15 +1,13 @@
+import { publicGoCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Search, ShoppingBag, Store, X } from "lucide-react";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { useCartStore } from "../../store/cartStore";
-import { useCatalog } from "../../store/sellerData";
 import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop.jsx";
-import ServerCatalog from "./ServerCatalog.jsx";
-import { serverStorefrontEnabled } from "../../api/goAccount.js";
 import "./Seller.css";
 
 const t = (value) => translateText(String(value ?? ""));
@@ -19,13 +17,15 @@ export default function Seller() {
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
   const initialQuery = params.get("q") || "";
+  if (shopId && publicGoCatalogEnabled) return <Navigate replace to={`/shop/${encodeURIComponent(shopId)}`} />;
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
     : <SellerCatalog key={JSON.stringify([tab, initialQuery])} tab={tab} initialQuery={initialQuery} />;
 }
 
 function SellerCatalog({ tab, initialQuery }) {
-  const { products, shops } = useCatalog();
+  const { products, shops, loading, catalogError } = usePublicCatalog();
+  const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
@@ -61,7 +61,11 @@ function SellerCatalog({ tab, initialQuery }) {
   }, [notice]);
 
   const reset = () => { setQuery(""); setCategory("Все"); };
-  const addProduct = (product) => { add(product); setNotice(product.name); };
+  const addProduct = (product) => {
+    if (publicGoCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
+    add(product);
+    setNotice(product.name);
+  };
 
   return (
     <main className="seller-page seller-page--professional product-catalog">
@@ -102,9 +106,10 @@ function SellerCatalog({ tab, initialQuery }) {
             ))}
           </div>
         ) : (
-          <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-grid-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={items?.[product.id] ?? 0} onAdd={addProduct} /></div>)}</div>
+          <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-grid-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={publicGoCatalogEnabled ? 0 : (items?.[product.id] ?? 0)} onAdd={addProduct} /></div>)}</div>
         )}
-        {(showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
+        {(loading || catalogError) && <p role="status">{t(catalogError || "Загрузка…")}</p>}
+        {!loading && !catalogError && (showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}
 
       </section>
       <div className={`seller-notice seller-notice--toast ${notice ? "is-visible" : ""}`} role="status" aria-live="polite"><Check size={17} />{notice && t(`Добавлено в корзину: ${notice}`)}</div>

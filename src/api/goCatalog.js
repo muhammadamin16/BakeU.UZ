@@ -9,21 +9,24 @@ export async function loadGoCatalog(base, { fetchImpl = fetch, signal } = {}) {
     if (!response.ok) throw new Error("Не удалось загрузить магазины с сервера.");
     return response.json();
   }
-  async function markets() {
+  async function pages(path, acceptLegacyArray = false) {
     const result = [], cursors = new Set();
     let next = "";
     do {
-      const page = await read("/markets?limit=100&after=" + encodeURIComponent(next));
-      if (!Array.isArray(page.items) || typeof page.next !== "string" || cursors.has(page.next) || result.length >= 10000) throw new Error("Сервер вернул неверный список магазинов.");
+      const page = await read(path + "?limit=100&after=" + encodeURIComponent(next));
+      if (acceptLegacyArray && !next && Array.isArray(page)) return page;
+      if (!Array.isArray(page?.items) || typeof page.next !== "string" ||
+          cursors.has(page.next) || result.length + page.items.length > 10000) {
+        throw new Error("Сервер вернул неверный каталог.");
+      }
       result.push(...page.items);
       next = page.next;
       if (next) cursors.add(next);
     } while (next);
     return result;
   }
-  const [shops, products] = await Promise.all([markets(), read("/products")]);
-  if (!Array.isArray(products)) throw new Error("Сервер вернул неверный каталог.");
-  return { markets: shops, products };
+  const [markets, products] = await Promise.all([pages("/markets"), pages("/products", true)]);
+  return { markets, products };
 }
 
 export function projectGoMapCatalog({ markets, products }, imageURL = () => "") {
@@ -46,4 +49,20 @@ export function projectGoMapCatalog({ markets, products }, imageURL = () => "") 
         image: imageURL(product.imageURLs?.[0]) || "/images/products/cake.jpg" };
     });
   return { sellers, products: mappedProducts };
+}
+
+export function projectGoCatalog({ markets, products }, imageURL = () => "") {
+  const shops = markets.filter((shop) => shop.id && shop.sellerId && shop.name)
+    .map((shop) => ({ ...shop, logo: imageURL(shop.logoURL), server: true }));
+  const shopBySeller = new Map(shops.map((shop) => [shop.sellerId, shop.id]));
+  return {
+    shops,
+    products: products.filter((product) => product.available === true &&
+      shopBySeller.has(product.sellerId) && product.id && product.title &&
+      Number.isFinite(product.price) && product.price >= 0)
+      .map((product) => ({
+        ...product, name: product.title, shopId: shopBySeller.get(product.sellerId),
+        image: imageURL(product.imageURLs?.[0]), rating: product.ratingAvg,
+      })),
+  };
 }

@@ -1,5 +1,6 @@
+import { publicGoCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowDown, ArrowRight, ArrowUp, ArrowUpRight,
   MapPin, Search, ShoppingBag, Sparkles, X,
@@ -10,13 +11,14 @@ import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import TopBanner from "../../components/TopBanner/TopBanner.jsx";
 import { ProductCard, ShopCard } from "../Seller/SellerParts";
-import { categories, useCatalog } from "../../store/sellerData";
+import { categories } from "../../store/sellerData";
 import { useCartStore } from "../../store/cartStore";
 import "./Home.css";
 
 const PREVIEW_BATCHES = 3;
 export default function Home() {
-  const { products, shops } = useCatalog();
+  const { products, shops, loading, catalogError } = usePublicCatalog();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
   const [notice, setNotice] = useState(null);
@@ -75,6 +77,7 @@ export default function Home() {
   };
   const resetFilters = () => { setQuery(""); setCategory("Все"); setBatches(1); };
   const handleAdd = (product) => {
+    if (publicGoCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
     add(product);
     setNotice(product.name);
   };
@@ -118,7 +121,7 @@ export default function Home() {
           {isFiltered && <button type="button" onClick={resetFilters}>{translateText("Сбросить фильтры")} <X size={14} /></button>}
         </div>
 
-        {visibleProducts.length > 0 ? (
+        {loading || catalogError ? <p role="status">{translateText(catalogError || "Загрузка…")}</p> : visibleProducts.length > 0 ? (
           <>
             <div className="product-grid">
               {displayedProducts.map((product, index) => (
@@ -130,7 +133,7 @@ export default function Home() {
                   <ProductCard
                     product={product}
                     shop={shopById.get(String(product.shopId))}
-                    quantity={items?.[product.id] ?? 0}
+                    quantity={publicGoCatalogEnabled ? 0 : (items?.[product.id] ?? 0)}
                     onAdd={handleAdd}
                   />
                 </div>

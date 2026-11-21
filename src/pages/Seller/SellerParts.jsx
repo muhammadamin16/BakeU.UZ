@@ -9,7 +9,7 @@ import "./SellerParts.css";
 
 const t = (value) => translateText(String(value ?? ""));
 const productLink = (id) => `/product/${encodeURIComponent(String(id))}`;
-const sellerLink = (id) => `/seller${shopUrl(id)}`;
+const sellerLink = (shop) => shop.server ? `/shop/${encodeURIComponent(shop.id)}` : `/seller${shopUrl(shop.id)}`;
 
 export function ShopLogo({ shop }) {
   const [failed, setFailed] = useState(false);
@@ -29,7 +29,7 @@ export function ProductCard({ product, quantity, onAdd, shop }) {
       quantity={quantity}
       onAdd={onAdd}
       sellerName={shop?.name}
-      sellerUrl={shop ? sellerLink(shop.id) : undefined}
+      sellerUrl={shop ? sellerLink(shop) : undefined}
     />
   );
 }
@@ -43,11 +43,11 @@ export function ShopCard({ shop, products = catalogProducts }) {
     <article className="catalog-card seller-shop">
       <div className="catalog-card__media seller-shop__cover">
         {main ? (
-          <Link className="seller-shop__cover-link" to={sellerLink(shop.id)} aria-label={t(shop.name)}>
+          <Link className="seller-shop__cover-link" to={sellerLink(shop)} aria-label={t(shop.name)}>
             <ProductImage product={main} />
           </Link>
         ) : (
-          <Link className="seller-shop__cover-link" to={sellerLink(shop.id)} aria-label={t(shop.name)}>
+          <Link className="seller-shop__cover-link" to={sellerLink(shop)} aria-label={t(shop.name)}>
             <span className="seller-shop__cover-empty"><Store size={32} /></span>
           </Link>
         )}
@@ -55,7 +55,7 @@ export function ShopCard({ shop, products = catalogProducts }) {
       </div>
 
       <div className="catalog-card__body">
-        <Link className="seller-shop__top" to={sellerLink(shop.id)}>
+        <Link className="seller-shop__top" to={sellerLink(shop)}>
           <ShopLogo shop={shop} />
           <div className="seller-shop__identity">
             <h2>{t(shop.name)}</h2>
@@ -78,7 +78,7 @@ export function ShopCard({ shop, products = catalogProducts }) {
           )) : <span className="seller-shop__no-products">{t("Скоро появятся товары")}</span>}
         </div>
 
-        <Link className="seller-shop__open" to={sellerLink(shop.id)}>
+        <Link className="seller-shop__open" to={sellerLink(shop)}>
           {t("Открыть магазин")}
           <ArrowUpRight size={16} />
         </Link>
