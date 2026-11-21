@@ -73,6 +73,11 @@ body {
   padding: 16px var(--container-padding);
 }
 
+.container.site-content--ai {
+  max-width: none;
+  padding-inline: 0;
+}
+
 button,
 input,
 textarea,

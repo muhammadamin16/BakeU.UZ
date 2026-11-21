@@ -1,3 +1,4 @@
+import { seedLegacyApplication } from "./helpers.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setup, fields } from "./helpers.js";
@@ -29,13 +30,15 @@ test("registration persists one user, hashes password, queues only public data",
     db.close();
   }
 });
-test("seller creates pending application; decisions are idempotent", async () => {
+test("seller registers directly and legacy application decisions are idempotent", async () => {
   const { db, repo, auth } = setup();
   try {
     const result = await auth.register(fields("seller"));
-    const a = result.application;
+    assert.equal(result.user.role, "seller");
+    assert.equal(result.application, null);
+    assert.equal(repo.pendingOutbox().length, 1);
+    const a = seedLegacyApplication(db, repo, result.user);
     assert.equal(a.status, "На проверке");
-    assert.equal(repo.pendingOutbox().length, 2);
     assert.equal(repo.decide(a.id, "Одобрено", "12345").changed, true);
     assert.equal(
       repo.decide(a.id, "Отклонено", "12345", "late").changed,

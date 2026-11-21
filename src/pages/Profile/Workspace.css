@@ -955,3 +955,15 @@
 .bw-page .bw-content,.bw-page .cu-main{min-width:0}
 .bw-page .bw-actions>a,.bw-page .bw-actions>button{white-space:normal}
 @media(max-width:780px){.bw-page{padding-bottom:max(180px,calc(140px + env(safe-area-inset-bottom,0px)))}}
+
+/* Seller shop visual preview */
+.bw-shop-overview{display:flex;flex-direction:column;gap:10px}
+.bw-shop-overview .bw-heading{margin-bottom:5px}
+.bw-shop-overview .bw-heading h2{margin:6px 0}
+.bw-shop-preview-cover{height:165px;overflow:hidden;border-radius:17px;background:linear-gradient(125deg,#f3d4a3,#f5e8d8);display:flex;align-items:center;justify-content:center;color:#936a43;text-align:center;font-size:13px}
+.bw-shop-preview-cover img{width:100%;height:100%;object-fit:cover}
+.bw-shop-preview-identity{display:flex;align-items:center;gap:15px;margin:0 0 8px}
+.bw-shop-preview-identity .bw-avatar{margin-top:-35px;position:relative;box-shadow:0 4px 16px #43201519}
+.bw-shop-preview-identity h3{margin:0 0 6px;font-size:17px;overflow-wrap:anywhere}
+.bw-shop-preview-identity p{margin:0;overflow-wrap:anywhere}
+@media(max-width:600px){.bw-shop-preview-cover{height:135px}.bw-shop-preview-identity .bw-avatar{width:64px;height:64px}.bw-shop-overview .bw-heading{flex-direction:row;align-items:center;flex-wrap:wrap}}

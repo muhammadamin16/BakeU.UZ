@@ -1,4 +1,5 @@
-import { createMiniAppAuth } from "./miniAppAuth.js";
+import { createMiniAppAuth, verifyInitData } from "./miniAppAuth.js";
+import { createOrdersApi } from "../orders/api.js";
 import { createServer } from "node:http";
 import { createRateLimiter } from "../middleware/rateLimit.js";
 import { HttpError } from "./auth.js";
@@ -26,10 +27,11 @@ async function readJson(req) {
     throw new HttpError(400, "Ожидается объект.");
   return result;
 }
-export function createApiServer({ auth, repo, config }) {
+export function createApiServer({ auth, repo, config, ordersSettings = { enabled: false } }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 15 * 60000 });
   let concurrentAuth = 0;
   const miniAuth = createMiniAppAuth(repo, config);
+  const goAccounts = ordersSettings.accountsEnabled ? createOrdersApi(ordersSettings) : null;
   const allowMini = createRateLimiter({ limit: 60, windowMs: 60000 });
   return createServer(
     { requestTimeout: 20000, headersTimeout: 10000 },
@@ -64,8 +66,23 @@ export function createApiServer({ auth, repo, config }) {
           return res.end();
         }
         const path = new URL(req.url, "http://localhost").pathname;
+        if (path === "/api/telegram/config" && req.method === "GET")
+          return send(200, { enabled: ordersSettings.enabled, apiBase: ordersSettings.enabled ? ordersSettings.baseUrl + "/api" : "" });
         if (path === "/health" && req.method === "GET")
           return send(200, { ok: true, service: "bakeu-bot-api" });
+        if (path === "/api/miniapp/go-session" && req.method === "POST") {
+          if (!goAccounts) throw new HttpError(503, "Аккаунты Mini App ещё не подключены.");
+          const ip = config.trustProxy ? String(req.headers["x-real-ip"] || req.socket.remoteAddress) : req.socket.remoteAddress;
+          if (!allowMini(ip)) throw new HttpError(429,"Повторите вход через минуту.");
+          const data = await readJson(req);
+          const telegramUser = verifyInitData(data.initData, config.token);
+          const launch = await goAccounts.launchSession(telegramUser.id);
+          if (launch?.linked !== false && !(launch?.linked === true && /^[a-f0-9]{64}$/.test(launch.ticket || "") && /^[a-f0-9]{24}$/.test(launch.uid || ""))) throw new HttpError(502,"Сервер аккаунтов вернул неверный ответ.");
+          // The legacy admin-only API keeps its own restricted capability. No
+          // customer/seller identity or session is created in SQLite here.
+          const admin = config.adminIds.includes(telegramUser.id) ? miniAuth.open(data.initData) : null;
+          return send(200,{...launch,telegramUser,admin});
+        }
         if (path === "/api/miniapp/session" && req.method === "POST") {
           const ip = config.trustProxy
             ? String(req.headers["x-real-ip"] || req.socket.remoteAddress)

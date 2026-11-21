@@ -11,6 +11,8 @@ export function mainKeyboard(config, { admin = false } = {}) {
   return {
     inline_keyboard: [
       [siteButton(config)],
+      [{ text: "📦 Мои заказы", callback_data: "bo:buyer" }],
+      [{ text: "🏬 Я продавец", callback_data: "bo:seller" }],
       [
         external("📣 Telegram-канал", config.telegramUrl, "contact:telegram"),
         external("📸 Instagram", config.instagramUrl, "contact:instagram"),

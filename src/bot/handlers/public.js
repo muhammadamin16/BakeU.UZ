@@ -7,12 +7,13 @@ import { isAdmin } from "../middleware/adminOnly.js";
 import { escapeHtml } from "../utils/html.js";
 import { renderScreen } from "../services/screens.js";
 export async function showMain(ctx) {
+  const admin = isAdmin(ctx.config, ctx.user.id);
   return renderScreen(
     ctx,
     {
       text: "<b>BakeU · с теплом к каждому</b>\n\nСвежая выпечка, любимые десерты\nи домашние пекарни — в одном месте.\n\n<i>Выберите, с чего начнём ↓</i>",
       reply_markup: mainKeyboard(ctx.config, {
-        admin: isAdmin(ctx.config, ctx.user.id),
+        admin,
       }),
     },
     { withBanner: true },

@@ -1,12 +1,27 @@
+import { seedLegacyApplication } from "./helpers.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
+import { createServer } from "node:http";
 import { verifyInitData, createMiniAppAuth } from "../services/miniAppAuth.js";
 import { createApiServer } from "../services/httpServer.js";
 import { setup, fields } from "./helpers.js";
 import { mainKeyboard } from "../keyboards/mainKeyboard.js";
 import { miniAppUrl } from "../utils/formatMessage.js";
 const token = "12345:test-bot-token-never-real-abcdefghijklmnop";
+
+test("Go Mini App launch verifies signed actor data before using the bridge and creates no SQLite customer identity",async()=>{
+  const s=setup();s.config={...s.config,token,adminIds:[]};const actors=[];
+  const backend=createServer((req,res)=>{actors.push(req.headers["x-telegram-user-id"]);assert.equal(req.headers.authorization,"Bearer "+"s".repeat(40));res.setHeader("Content-Type","application/json");res.end(JSON.stringify({linked:false}));});
+  await new Promise(resolve=>backend.listen(0,"127.0.0.1",resolve));
+  const server=createApiServer({...s,ordersSettings:{enabled:false,accountsEnabled:true,baseUrl:`http://127.0.0.1:${backend.address().port}`,token:"s".repeat(40)}});await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+  const post=body=>fetch(`http://127.0.0.1:${server.address().port}/api/miniapp/go-session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+  try{
+    const raw=sign({id:777,first_name:"Buyer"});assert.equal((await post({initData:raw.replace("Buyer","Forged")})).status,401);assert.equal(actors.length,0);
+    const response=await post({initData:raw,telegramId:"12345",role:"admin"});assert.equal(response.status,200);const launch=await response.json();assert.deepEqual(actors,["777"]);assert.equal(launch.linked,false);assert.equal(launch.telegramUser.id,"777");assert.equal(launch.admin,null);assert.ok(!JSON.stringify(launch).includes("s".repeat(40)));
+    assert.equal(s.repo.stats().customers,0);assert.equal(s.db.prepare("SELECT COUNT(*) n FROM miniapp_sessions").get().n,0);
+  }finally{await new Promise(resolve=>server.close(resolve));await new Promise(resolve=>backend.close(resolve));s.db.close();}
+});
 function sign(
   user = { id: 12345, first_name: "Admin" },
   date = Math.floor(Date.now() / 1000),
@@ -100,7 +115,8 @@ test("admin authority is rechecked on server; body role and normal account token
 test("server Mini App API protects real registrations and application decisions", async () => {
   const s = setup();
   s.config = { ...s.config, token, adminIds: ["12345"] };
-  const { application } = await s.auth.register(fields("seller"));
+  const { user } = await s.auth.register(fields("seller"));
+  const application = seedLegacyApplication(s.db, s.repo, user);
   const server = createApiServer(s);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${server.address().port}/api/miniapp`;

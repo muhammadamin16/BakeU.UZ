@@ -27,6 +27,7 @@ export default function Orders() {
         </p>
       </header>
       <div className="ck-actions">
+        <Link className="ck-button primary" to="/account/orders">Заказы аккаунта BakeU</Link>
         <Link className="ck-button primary" to="/cart">
           <ShoppingBag size={16} />
           {translateText("Корзина")}

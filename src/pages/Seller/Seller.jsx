@@ -8,6 +8,8 @@ import { useCatalog } from "../../store/sellerData";
 import CatalogCategories from "../../components/CatalogCategories/CatalogCategories";
 import { ProductCard, ShopCard } from "./SellerParts";
 import SellerShop from "./SellerShop.jsx";
+import ServerCatalog from "./ServerCatalog.jsx";
+import { serverStorefrontEnabled } from "../../api/goAccount.js";
 import "./Seller.css";
 
 const t = (value) => translateText(String(value ?? ""));

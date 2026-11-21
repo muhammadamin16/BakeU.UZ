@@ -17,7 +17,7 @@ export default function MiniAppProvider({ children }) {
   const retry = useCallback(async () => {
     setState((previous) => ({ ...previous, status: "loading", error: "" }));
     try {
-      const session = await authenticateMiniApp();
+      const session = await authenticateMiniApp({ force: true });
       setState(
         session
           ? { ...session, status: "ready", error: "" }
