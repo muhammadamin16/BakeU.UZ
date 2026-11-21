@@ -1,11 +1,12 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
+import { createServerCart, includesSavedCart, lineKey, restoreCart } from "./serverCart.js";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
-import { goAccount as sharedGoAccount, goAPIBase } from "../api/goAccount.js";
+import { goAccount as sharedGoAccount, goAPIBase, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import "./orders.css";
 const configured = (
   goAPIBase ||
@@ -71,9 +72,15 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
       controller.abort();
     };
   }, [transport]);
-  const selected = catalog.products.filter((p) => qty[p.id] > 0);
-  const groups = catalog.markets.filter((m) =>
-    selected.some((p) => p.sellerId === m.sellerId),
+  const rows = catalog.products.flatMap((product) => [
+    { product, variant: null, key: lineKey(product.id) },
+    ...(product.variants || []).filter(({ id }) => id).map((variant) => ({
+      product, variant, key: lineKey(product.id, variant.id),
+    })),
+  ]);
+  const selected = rows.filter(({ key }) => qty[key] > 0);
+  const groups = catalog.markets.filter((market) =>
+    selected.some(({ product }) => product.sellerId === market.sellerId),
   );
   const update = () => {
     setSaved(false);
@@ -86,76 +93,109 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
+        if (needsCartReview) {
+          setError("Проверьте сохранённые позиции перед оформлением.");
+          return;
+        }
         setBusy(true);
         setError("");
         try {
-          const deliveries = Object.fromEntries(
-            groups.map((m) => [
-              m.id,
-              choices[m.id] || {
-                fulfillment: m.fulfillment === "pickup" ? "pickup" : "delivery",
+          if (!attempt.current) {
+            const items = selected.map(({ product, variant, key }) => ({
+              productId: product.id,
+              variantId: variant?.id || "",
+              qty: qty[key],
+            }));
+            const latestCart = await cart.load();
+            setSavedCart(latestCart);
+            if (!includesSavedCart(latestCart.items, items)) {
+              throw Error("Корзина изменилась. Загрузите её в оформление или обновите сохранённые позиции.");
+            }
+            const deliveries = Object.fromEntries(groups.map((market) => [
+              market.id, choices[market.id] || {
+                fulfillment: market.fulfillment === "pickup" ? "pickup" : "delivery",
               },
-            ]),
-          );
-          await client.checkout({
-            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id] })),
-            deliveries,
-            requestId: attempt,
-          });
+            ]));
+            attempt.current = { items, deliveries, requestId: crypto.randomUUID(), cartRevision: latestCart.revision };
+          }
+          await client.checkout(attempt.current);
           setQty({});
           setChoices({});
           setAttempt(crypto.randomUUID());
           setSaved(true);
           onCreated();
         } catch (failure) {
-          setError(failure.message || "Заказ не сохранён.");
+          if (failure.status === 409) {
+            attempt.current = null;
+            setError("Корзина или заказ изменились. Обновите корзину перед повторной отправкой.");
+          } else {
+            setError(failure.message || "Заказ не сохранён.");
+          }
         } finally {
           setBusy(false);
         }
       }}
     >
-      <fieldset disabled={busy}>
+      <fieldset disabled={busy || loadingCart}>
         <h2>Оформить заказ</h2>
         <p>
           Выберите товары. Оплата и стоимость доставки согласуются с продавцом.
         </p>
         {catalog.error && <p role="alert">{catalog.error}</p>}
-        {catalog.products.map((p) => (
-          <label
-            key={p.id}
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              margin: "12px 0",
-            }}
-          >
-            {p.imageURLs?.[0] && (
-              <img
-                src={new URL(p.imageURLs[0], transport.base).href}
-                width="64"
-                height="64"
-                alt={p.title}
-                style={{ objectFit: "cover", borderRadius: 14 }}
-              />
-            )}
-            <span>
-              {p.title} · {Number(p.price).toLocaleString("ru-RU")} сум
-            </span>
-            <input
-              aria-label={"Количество: " + p.title}
-              type="number"
-              min="0"
-              max="1000"
-              value={qty[p.id] || 0}
-              disabled={busy}
-              onChange={(e) => {
-                setQty({ ...qty, [p.id]: Number(e.target.value) });
+        <section aria-label="Серверная корзина">
+          <h3>Сохранённая корзина</h3>
+          {cartNotice && <p role="status">{cartNotice}</p>}
+          <button type="button" onClick={() => changeCart("load")}>Обновить корзину</button>
+          {savedLines?.length === 0 && <p>Сохранённых товаров пока нет.</p>}
+          {savedLines?.length > 0 && (
+            <>
+              <button type="button" disabled={!catalog.products.length} onClick={() => {
+                const restored = restoreCart(savedLines, catalog.products);
+                setQty(restored.qty);
+                setChoices({});
+                setNeedsCartReview(restored.skipped.length > 0);
+                setCartNotice(restored.skipped.length ? "В корзине есть недоступные или повторяющиеся позиции. Удалите лишние строки и загрузите корзину снова." : "Корзина загружена.");
                 update();
-              }}
-            />
-          </label>
-        ))}
+              }}>Загрузить в оформление</button>
+              <ul>
+                {savedLines.map((line) => {
+                  const product = catalog.products.find(({ id }) => id === line.productId);
+                  const variant = product?.variants?.find(({ id }) => id === line.variantId);
+                  return (
+                    <li key={JSON.stringify([line.productId, line.variantId])}>
+                      {product?.title || "Недоступный товар"}{line.variantId ? ` · ${variant?.name || "Недоступный вариант"}` : ""} × {line.qty}
+                      {" "}<button type="button" onClick={() => changeCart("remove", line)}>Убрать из корзины</button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </section>
+
+        {rows.map(({ product, variant, key }) => {
+          const label = variant ? `${product.title} · ${variant.name}` : product.title;
+          return (
+            <div key={key} className="tg-orders-line">
+              {!variant && product.imageURLs?.[0] && (
+                <img src={new URL(product.imageURLs[0], transport.base).href}
+                  width="64" height="64" alt={product.title} />
+              )}
+              <label>
+                {label} · {Number(variant?.price ?? product.price).toLocaleString("ru-RU")} сум
+                <input aria-label={`Количество: ${label}`} type="number" min="0" max="1000"
+                  value={qty[key] || 0} onChange={(event) => {
+                    setQty({ ...qty, [key]: Number(event.target.value) });
+                    update();
+                  }} />
+              </label>
+              <button type="button" disabled={!savedCart || !qty[key]}
+                onClick={() => changeCart("save", { productId: product.id, variantId: variant?.id || "", qty: qty[key] })}>
+                Сохранить в корзине
+              </button>
+            </div>
+          );
+        })}
         {!catalog.error && !catalog.products.length && <p>Товаров пока нет.</p>}
         {groups.map((m) => (
           <section key={m.id}>
@@ -218,6 +258,12 @@ function ConnectedAccount({ transport, challenge, productId }) {
     () => pinGoAccount(transport, uid, role),
     [transport, uid, role],
   );
+  const sellerApi = useMemo(() => ({
+    request: (path, method, body) => pinned.request(path, { method, body }),
+    requestWithOptions: pinned.request,
+    login: transport.login,
+    logout: transport.logout,
+  }), [pinned, transport]);
   const client = useMemo(
     () => createWebsiteOrdersClient(pinned.request),
     [pinned],
@@ -311,7 +357,7 @@ function ConnectedAccount({ transport, challenge, productId }) {
           />
           {account.role === "seller" && transport.shared && (
             <Suspense fallback={<p>Загрузка настроек…</p>}>
-              <SellerSettings />
+              <SellerSettings accountApi={sellerApi} />
             </Suspense>
           )}
           <ServerOrdersPanel
@@ -348,6 +394,7 @@ function ServerProfile({ account, transport, onSaved }) {
   return (
     <details>
       <summary>Настройки профиля</summary>
+      {account.verifiedPhoneE164 && <p>Подтверждённый номер аккаунта: <strong>{account.verifiedPhoneE164}</strong>. Телефон ниже — контакт для заказов.</p>}
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -466,7 +513,7 @@ export function ServerStorefront() {
           signal: controller.signal,
         });
         const products = await api.request(
-          "/products?sellerId=" + encodeURIComponent(market.sellerId),
+          "/products?seller=" + encodeURIComponent(market.sellerId),
           { signal: controller.signal },
         );
         if (active)

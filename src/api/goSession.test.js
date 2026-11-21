@@ -2,6 +2,27 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createGoSession } from "./goSession.js";
 
+test("phone proof establishes the same shared session used by orders without storing a token in legacy auth", async () => {
+  const requests = [];
+  const session = createGoSession("/api", { fetchImpl: async (path, options) => {
+    requests.push({path, options});
+    if (path === "/api/auth/phone/start") return Response.json({id: "a".repeat(48)});
+    if (path === "/api/auth/phone/verify") return Response.json({token: "verified-go-access", user: {uid: "go-user", role: "customer"}});
+    assert.equal(options.headers.Authorization, "Bearer verified-go-access");
+    return Response.json({uid: "go-user", role: "customer"});
+  } });
+  await session.startPhone({purpose: "login", phone: "+998901234567"});
+  const user = await session.verifyPhone("a".repeat(48), "012345");
+  assert.equal(user.uid, "go-user");
+  assert.equal((await session.request("/me")).uid, "go-user");
+  assert.equal(requests.length, 3);
+  for (const {options} of requests.slice(0, 2)) {
+    assert.equal(options.credentials, "include");
+    assert.equal(options.headers["X-BakeU-Session"], "browser");
+    assert.equal(options.headers.Authorization, undefined);
+  }
+});
+
 test("restores from a cookie and coalesces concurrent JWT refresh after 401", async () => {
   let rotations = 0;
   let signedOut = false;

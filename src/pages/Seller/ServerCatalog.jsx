@@ -4,10 +4,10 @@ import { goAPIBase, productImageURL } from "../../api/goAccount.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
 
-export default function ServerCatalog() {
+export default function ServerCatalog({ initialQuery = "" }) {
   const [items, setItems] = useState(null);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${goAPIBase}/products`, { credentials: "omit", signal: controller.signal })

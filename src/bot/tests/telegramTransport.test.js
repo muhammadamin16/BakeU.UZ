@@ -11,6 +11,23 @@ import {
 } from "../../telegramOrders/transport.js";
 import { createWebsiteOrdersClient } from "../../telegramOrders/client.js";
 
+test("checkout preserves variant identity, strips client prices and refuses a server without variant support", async () => {
+  const writes = [];
+  let variantsEnabled = false;
+  const client = createWebsiteOrdersClient(async (path, options) => {
+    if (path === "/orders/capabilities") return { workflowVersion: 2, idempotency: true, history: true, deliveryScheduling: true, variantSnapshots: variantsEnabled };
+    writes.push(options.body);
+    return {orders: [{id: "order", status: "pending"}]};
+  });
+  const date = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  const input = {items: [{productId: "product", variantId: "a".repeat(24), qty: 2, price: 1, variantName: "Forged"}], delivery: {fulfillment: "pickup", date, time: "12:00"}, requestId: "variant-attempt"};
+  await assert.rejects(client.checkout(input), /варианта/);
+  assert.equal(writes.length, 0);
+  variantsEnabled = true;
+  await client.checkout(input);
+  assert.deepEqual(writes[0].items, [{productId: "product", variantId: "a".repeat(24), qty: 2}]);
+});
+
 test("public bot discovery exposes the Go URL but never the bridge secret", async () => {
   const s = setup();
   const server = createApiServer({

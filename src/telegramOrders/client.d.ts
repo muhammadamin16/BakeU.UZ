@@ -39,10 +39,11 @@ export function createWebsiteOrdersClient(request: GoRequest): {
     requestId: string,
   ): Promise<GoOrder>;
   checkout(input: {
-    items: { productId: string; qty: number }[];
+    items: { productId: string; variantId?: string; qty: number }[];
     delivery?: Delivery;
     deliveries?: Record<string, Delivery>;
     requestId: string;
+    cartRevision?: string;
   }): Promise<{ orders: GoOrder[] }>;
   notifications(
     signal?: AbortSignal,

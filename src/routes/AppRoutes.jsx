@@ -3,7 +3,7 @@ import { translateText } from "../i18n/index.js";
 import { useMiniApp } from "../miniapp/context";
 import Welcome from "../miniapp/pages/Welcome";
 import AdminGate from "../miniapp/components/AdminGate";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
 
 import Header from "../components/Header/Header";
 import MobileNav from "../components/MobileNav/MobileNav";
@@ -20,6 +20,9 @@ import Home from "../pages/Home/Home";
 import Chat from "../pages/Messages/Chat";
 
 import Login from "../pages/Auth/Login/Login";
+import GoPhoneAccount from "../pages/Auth/GoPhoneAccount.jsx";
+import { goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { miniLaunch } from "../miniapp/telegram.js";
 import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import Seller from "../pages/Seller/Seller";
@@ -45,7 +48,7 @@ function matchesPath(pathname, base) {
 
 export default function AppRoutes() {
   const { pathname } = useLocation();
-  const { isMiniMode } = useMiniApp();
+  const { isMiniMode, status: miniStatus, goLinked, retry: retryMini, error: miniError } = useMiniApp();
   const loading = <p role="status">{translateText("Загрузка…")}</p>;
 
   const isAuthPage = AUTH_PATHS.includes(pathname);
@@ -61,6 +64,18 @@ export default function AppRoutes() {
     !isAuthPage &&
     !isMap &&
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
+
+  const privateGoPage = ["/account/orders", "/profile", "/orders", "/checkout", "/cart", "/messages"].some((base) => matchesPath(pathname, base));
+  if (goPhoneAccountsEnabled && miniLaunch.isTelegram && privateGoPage && (miniStatus !== "ready" || goLinked === false))
+    return <main className="tg-orders-panel" style={{ maxWidth: 720, margin: "24px auto" }}>
+      <h1>Аккаунт BakeU</h1>
+      {miniStatus === "loading" ? loading : <>
+        <p role="status">{miniError || "Подтвердите аккаунт для этого Telegram-профиля. Ваши заказы сохранятся в одном аккаунте."}</p>
+        <Link to="/register">Создать подтверждённый аккаунт</Link>
+        <Link to="/miniapp">На главную</Link>
+        <button type="button" onClick={retryMini}>Проверить привязку снова</button>
+      </>}
+    </main>;
 
   if (
     matchesPath(pathname, "/telegram/link") ||
@@ -135,9 +150,9 @@ export default function AppRoutes() {
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="login" /> : <Login />} />
+          <Route path="/register" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="register" register /> : <Register />} />
+          <Route path="/profile" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Profile />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

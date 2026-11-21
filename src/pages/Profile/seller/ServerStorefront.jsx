@@ -11,16 +11,18 @@ const fields = [
   ["lat", "Широта", "number"], ["lng", "Долгота", "number"],
 ];
 
-async function loadShop() {
+async function loadShop(api) {
   return api.request("/market/mine");
 }
 
-export default function ServerStorefront() {
+export default function ServerStorefront({ accountApi = api }) {
+  const api = accountApi;
   const [shop, setShop] = useState(null);
   const [draft, setDraft] = useState(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
+  const [logo, setLogo] = useState(null);
   const sellerId = shop?.sellerId;
   const ordersClient = useMemo(() => sellerId ? createWebsiteOrdersClient(async (path, options) => {
     const result = await api.requestWithOptions(path, options);
@@ -28,10 +30,10 @@ export default function ServerStorefront() {
       throw Error("Сессия продавца изменилась. Откройте настройки магазина снова.");
     }
     return result;
-  }) : null, [sellerId]);
+  }) : null, [sellerId, api]);
   useEffect(() => {
     let active = true;
-    loadShop().then((data) => {
+    loadShop(api).then((data) => {
       if (active) { setShop(data); setDraft(data); }
     }).catch((error) => {
       if (active) {
@@ -40,7 +42,7 @@ export default function ServerStorefront() {
       }
     }).finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
-  }, []);
+  }, [api]);
 
   async function run(action) {
     setBusy(true);
@@ -63,7 +65,7 @@ export default function ServerStorefront() {
     return run(async () => {
       await api.login(values.get("email"), values.get("password"));
       setNeedsLogin(false);
-      const data = await loadShop();
+      const data = await loadShop(api);
       setShop(data);
       setDraft(data);
     });
@@ -83,10 +85,23 @@ export default function ServerStorefront() {
       } else if (shop.lat != null || shop.lng != null) {
         payload.clearPoint = true;
       }
-      const data = await api.request("/market/mine", "PATCH", payload);
+      let data;
+      if (shop.status === "approved") {
+        data = await api.request("/market/mine", "PATCH", payload);
+      } else {
+        if (!logo || logo.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(logo.type)) throw Error("Выберите логотип JPEG, PNG или WebP до 5 МБ.");
+        const body = new FormData();
+        for (const key of ["name", "description", "city", "area", "address", "fulfillment", "lat", "lng"]) {
+          if (payload[key] != null) body.append(key, String(payload[key]));
+        }
+        body.append("phone", draft.phone || "");
+        body.append("email", draft.email || "");
+        body.append("logo", logo);
+        data = await api.request("/market", "POST", body);
+      }
       setShop(data);
       setDraft(data);
-      setNotice("Настройки сохранены.");
+      setNotice(data.status === "pending" ? "Заявка отправлена на проверку. Магазин появится после одобрения." : "Настройки сохранены.");
     });
   }
 
@@ -102,14 +117,28 @@ export default function ServerStorefront() {
         </form>
       ) : draft ? (
         <>
+          <p>Статус магазина: {{ draft: "Черновик", pending: "На проверке", rejected: "Отклонён", approved: "Одобрен" }[shop.status] || shop.status}</p>
+          {shop.rejectionReason && <p role="status">{shop.rejectionReason}</p>}
           <form onSubmit={save}>
-            <fieldset disabled={busy || shop.status !== "approved"} className="bw-fields">
+            <fieldset disabled={busy} className="bw-fields">
               {fields.map(([key, label, type = "text"]) => (
                 <label className="bw-field" key={key}>{translateText(label)}
                   <input type={type} step={type === "number" ? "any" : undefined}
                     value={draft[key] ?? ""} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
                 </label>
               ))}
+              <button type="button" className="bw-btn" onClick={() => {
+                if (!navigator.geolocation) { setNotice("Геолокация недоступна в этом браузере."); return; }
+                navigator.geolocation.getCurrentPosition(({ coords }) => {
+                  setDraft((current) => ({ ...current, lat: coords.latitude, lng: coords.longitude }));
+                  setNotice("Точка магазина выбрана. Проверьте адрес и сохраните.");
+                }, () => setNotice("Не удалось определить точку. Введите координаты вручную."), { timeout: 10000 });
+              }}>Указать местоположение магазина</button>
+              {shop.status !== "approved" && <>
+                <label className="bw-field">Контактный телефон<input type="tel" required value={draft.phone || ""} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} /></label>
+                <label className="bw-field">Email магазина<input type="email" required value={draft.email || ""} onChange={(event) => setDraft({ ...draft, email: event.target.value })} /></label>
+                <label className="bw-field">Логотип магазина (до 5 МБ)<input type="file" required accept="image/jpeg,image/png,image/webp" onChange={(event) => setLogo(event.target.files?.[0] || null)} /></label>
+              </>}
               <label className="bw-field">{translateText("Способ получения")}
                 <select value={draft.fulfillment} onChange={(event) => setDraft({ ...draft, fulfillment: event.target.value })}>
                   <option value="pickup">{translateText("Самовывоз")}</option>
@@ -117,11 +146,11 @@ export default function ServerStorefront() {
                   <option value="both">{translateText("Самовывоз и доставка")}</option>
                 </select>
               </label>
-              <button className="bw-btn primary">{translateText("Сохранить изменения")}</button>
+              <button className="bw-btn primary">{shop.status === "approved" ? translateText("Сохранить изменения") : "Отправить заявку на открытие магазина"}</button>
             </fieldset>
           </form>
-          {shop.status !== "approved" && <p>{translateText("Редактирование доступно после одобрения магазина.")}</p>}
-          {shop.status === "approved" && <ServerProducts key={sellerId} sellerId={sellerId} />}
+          {shop.status !== "approved" && <p>Заполните описание, город и добавьте логотип. Товары станут доступны после одобрения магазина.</p>}
+          {shop.status === "approved" && <ServerProducts key={sellerId} sellerId={sellerId} accountApi={api} />}
           {ordersClient && (
             <>
               <h3>{translateText("Заказы")}</h3>
