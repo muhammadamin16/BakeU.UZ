@@ -92,3 +92,8 @@ creating either PR. These are **comparison links, not created PRs**:
 
 - https://github.com/muhammadamin16/BakeU.UZ/compare/Amin...codex/production-integration-audit-20261121
 - https://github.com/muhammadamin16/BakeU-Backend/compare/main...codex/production-integration-audit-20261121
+
+For tests performed after both previous PRs were merged, use
+[CONTINUATION-20261122.md](CONTINUATION-20261122.md). That record supersedes the
+old branch/PR publication status above; it does not turn historical local tests
+into live production verification.

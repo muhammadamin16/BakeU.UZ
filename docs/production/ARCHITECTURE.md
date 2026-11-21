@@ -74,3 +74,11 @@ Read [ROLLOUT.md](ROLLOUT.md) for exact variables and coordinated activation,
 `docs/production/MIGRATION.md` for field mapping and synthetic dry-run findings.
 Production access, actual snapshots, approved claim resolution, deployment and
 real delivery remain explicit human gates; no live success is claimed.
+
+## 22 November continuation
+
+The previous feature branches have now been merged into both targets. See
+[CONTINUATION-20261122.md](CONTINUATION-20261122.md) for the current source heads,
+confirmed owner-provided standalone diagnosis, new safe fixes, test results,
+remaining gates and image-specific backup-first plan. Historical baseline issues
+in the table above must not be mistaken for missing merged features.

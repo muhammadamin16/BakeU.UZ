@@ -1,5 +1,14 @@
 # Railway deployment, activation and rollback
 
+22 November continuation: the old feature branches are merged (website PR22,
+backend PR14 plus backend PR13). The owner confirmed standalone MongoDB in the
+Railway mongo-ha image: RS_SEEDS/RS_ENABLED/RS_NAME/RS_KEY are absent. Its44 MB
+backup has not been restore-verified. **MongoDB readiness and verified restore
+come before Go → bot → website → live tests → future Cloudflare/bakeu.uz work.**
+Keep production cutover/self-service flags off and do not activate bakeu.uz.
+The exact image-specific plan and rollback are in the backend companion:
+https://github.com/muhammadamin16/BakeU-Backend/blob/codex/mongodb-readiness-20261122/docs/production/MONGODB_READINESS.md
+
 Prepared 21 November 2026. **No live deployment, variable change, migration or
 merge has been performed.** Production cannot be called integrated until the
 live acceptance checklist below is completed. Read ARCHITECTURE.md first; the
@@ -74,7 +83,7 @@ in this document. Go needs no BOT_TOKEN.
 | USE_WEB_APP | Legacy launch option; npm run miniapp explicitly uses Mini App mode |
 
 Check from a private bot runtime shell: `npm run miniapp:check` (schema/config,
-no Telegram call), then `npm run bridge:check` (GET-only protected diagnostics;
+no Telegram call), then `npm run bridge:check -- --configured` (GET-only preflight with existing connection settings and feature flags still off;
 no actor, notification lease or send). Do not paste full process environment,
 connection strings, tokens or personal records into logs/support chats.
 
