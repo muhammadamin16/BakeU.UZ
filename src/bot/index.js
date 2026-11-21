@@ -11,6 +11,9 @@ import {
 import { createAuth } from "./services/auth.js";
 import { createApiServer } from "./services/httpServer.js";
 import { createUpdateHandler } from "./handlers/router.js";
+import { readOrdersConfig } from './orders/config.js';
+import { createOrdersApi } from './orders/api.js';
+import { createOrdersIntegration } from './orders/integration.js';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let startupStage = "configuration";
 async function main() {
@@ -18,6 +21,8 @@ async function main() {
     miniApp: process.argv.includes("--miniapp"),
   });
   const publicSite = new URL(config.siteUrl);
+  const ordersSettings = readOrdersConfig(process.env);
+  console.log(`Telegram orders: ${ordersSettings.enabled ? "enabled" : "disabled (configure TELEGRAM_ORDERS_ENABLED, GO_BACKEND_URL and TELEGRAM_BRIDGE_TOKEN)"}.`);
   console.log(
     `Launch mode: ${config.useWebApp ? "Telegram Mini App (web_app)" : "Website link (url)"}.`,
   );
@@ -41,9 +46,12 @@ async function main() {
     telegram = createTelegram(config.token),
     notifications = createNotifications(repo, config);
   const auth = createAuth(repo, config, notifications);
-  const server = createApiServer({ auth, repo, config });
-  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth });
-  const flush = createOutboxWorker(repo, telegram);
+  const server = createApiServer({ auth, repo, config, ordersSettings });
+  const orders = createOrdersIntegration({settings:ordersSettings,config,telegram});
+  const phoneAccounts = ordersSettings.accountsEnabled ? createOrdersApi(ordersSettings) : null;
+  const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders, phoneAccounts });
+  const legacyFlush = createOutboxWorker(repo, telegram);
+  const flush = async () => { await legacyFlush(); await orders.flush(); };
   // Validate token and switch from webhook to polling without discarding pending updates.
   startupStage = "telegram";
   const me = await telegram.call("getMe");

@@ -5,7 +5,7 @@ import { showMain, publicAction } from "./public.js";
 import { adminAction } from "./admin.js";
 import { applicationMessage } from "../utils/formatMessage.js";
 import { backAdmin } from "../keyboards/adminKeyboard.js";
-export function createUpdateHandler({ repo, telegram, config, notifications, auth }) {
+export function createUpdateHandler({ repo, telegram, config, notifications, auth, orders, phoneAccounts }) {
   const allow = createRateLimiter({ limit: 20, windowMs: 60000 });
   return async (update) => {
     const callback = update.callback_query;
@@ -28,13 +28,42 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
       user,
       message: msg,
       callback: Boolean(callback),
+      orders,
     };
+    ctx.showMain = () => showMain(ctx);
     const data = callback?.data || "";
     if (callback) await telegram.answer(callback.id);
     if (!admin && !allow(chatId)) return;
     repo.rememberTelegram(user);
     const text = update.message?.text?.trim() || "";
     const command = text.split(/\s/)[0].split("@")[0];
+    const goStart = /^\/start(?:@[A-Za-z0-9_]+)? goauth_([a-f0-9]{48})$/.exec(text);
+    if (goStart) {
+      repo.clearState(chatId);
+      if (!phoneAccounts) return telegram.send(chatId, { text: "Подтверждение аккаунтов пока не подключено. Вернитесь на сайт." });
+      repo.setState(chatId, { kind: "go_verify_phone", token: goStart[1], expiresAt: Date.now() + 600000 });
+      return telegram.send(chatId, {
+        text: "🔐 Подтвердите свой номер для аккаунта BakeU. Код появится здесь после нажатия кнопки.",
+        reply_markup: { keyboard: [[{ text: "📱 Поделиться своим номером", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true },
+      });
+    }
+    const goState = repo.getState(chatId);
+    if (goState?.kind === "go_verify_phone" && update.message?.contact) {
+      const contact = update.message.contact;
+      if (String(contact.user_id || "") !== String(user.id)) return telegram.send(chatId, { text: "Поделитесь своим номером через кнопку; чужой контакт не подходит." });
+      if (!phoneAccounts || goState.expiresAt <= Date.now()) {
+        repo.clearState(chatId);
+        return telegram.send(chatId, { text: "Ссылка устарела. Запросите новый код на сайте.", reply_markup: { remove_keyboard: true } });
+      }
+      try {
+        const result = await phoneAccounts.phoneCode(String(user.id), goState.token, contact.phone_number);
+        if (!/^[0-9]{6}$/.test(result?.code || "")) throw new Error("Invalid verification reply");
+        repo.clearState(chatId);
+        return telegram.send(chatId, { text: `✅ Код BakeU: ${result.code}\n\nВведите его в приложении или на сайте, где запросили вход. Никому не сообщайте код. Срок — до 10 минут.`, reply_markup: { remove_keyboard: true } });
+      } catch {
+        return telegram.send(chatId, { text: "Номер не совпадает, код уже выдан или сервер недоступен. Запросите новую ссылку на сайте и повторите." });
+      }
+    }
     const verifyStart = /^\/start verify_([a-f0-9]{48})$/.exec(text);
     if (verifyStart) {
       repo.clearState(chatId);
@@ -63,6 +92,11 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
         text: `✅ BakeU: ваш код подтверждения — ${code}\n\nВведите его на сайте. Код действует до 10 минут.`,
         reply_markup: { remove_keyboard: true },
       });
+    }
+    if (orders && await orders.handle(ctx, update)) {
+      // Only UI navigation/selection IDs live here; actual orders stay in Go/Mongo.
+      if (repo.getState(chatId)?.kind !== "orders") repo.clearState(chatId);
+      return;
     }
     if (command === "/id")
       return telegram.send(chatId, { text: `Ваш Telegram ID: ${user.id}` });

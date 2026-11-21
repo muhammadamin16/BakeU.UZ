@@ -14,12 +14,10 @@ html.ai-lock body {
 
 .ai {
   --ai-ink: #432015;
-  --ai-muted: #8b7364;
-  --ai-gold: #f4b41b;
-  --ai-accent: #c17a3a;
-  --ai-violet: #7b4d9e;
-  --ai-paper: #fffcf7;
-  --ai-soft: #f8f1e6;
+  --ai-muted: #715b51;
+  --ai-accent: #a34629;
+  --ai-paper: #fffdfa;
+  --ai-soft: #f7eee5;
   --ai-line: rgb(67 32 21 / 9%);
   --ai-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -29,17 +27,15 @@ html.ai-lock body {
     Если MobileNav выше/ниже, поменяйте значение в media-запросе ниже.
   */
   --ai-top: 0px;
-  --ai-bottom: 16px;
-  --ai-gap: 0px;
+  --ai-bottom: calc(var(--nav-space, 110px) + env(safe-area-inset-bottom, 0px));
 
   width: 100%;
   height: calc(100vh - var(--ai-top) - var(--ai-bottom));
-  height: calc(85dvh - var(--ai-top) - var(--ai-bottom));
+  height: calc(100dvh - var(--ai-top) - var(--ai-bottom));
   min-height: 0;
   margin: 0 auto;
-  padding-top: var(--ai-gap);
   color: var(--ai-ink);
-  font-family: Arial, system-ui, -apple-system, sans-serif;
+  font-family: inherit;
 }
 
 .ai,
@@ -86,11 +82,11 @@ html.ai-lock body {
 .ai__card {
   position: relative;
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 90%);
+  border: 1px solid var(--ai-line);
   border-radius: 28px;
   background: var(--ai-paper);
   box-shadow:
@@ -105,7 +101,7 @@ html.ai-lock body {
   flex-direction: column;
   gap: 12px;
   min-height: 0;
-  padding: 18px 14px 14px;
+  padding: 24px 16px 16px;
   border-right: 1px solid var(--ai-line);
   background: var(--ai-soft);
 }
@@ -134,19 +130,19 @@ html.ai-lock body {
   gap: 9px;
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgb(244 180 27 / 55%);
+  border: 1px solid var(--ai-line);
   border-radius: 14px;
-  background: linear-gradient(135deg, #f7c34a, #f0aa12);
-  color: #3a2a12;
+  background: var(--ai-paper);
+  color: var(--ai-ink);
   font-size: 13.5px;
   font-weight: 800;
-  box-shadow: 0 3px 12px rgb(244 180 27 / 25%);
+  box-shadow: 0 2px 10px rgb(67 32 21 / 5%);
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .ai-new:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgb(244 180 27 / 34%);
+  box-shadow: 0 4px 12px rgb(67 32 21 / 8%);
 }
 
 .ai-search {
@@ -157,7 +153,7 @@ html.ai-lock body {
   border: 1px solid var(--ai-line);
   border-radius: 12px;
   background: var(--ai-paper);
-  color: #a39486;
+  color: var(--ai-muted);
 }
 
 .ai-search:focus-within {
@@ -335,7 +331,7 @@ html.ai-lock body {
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid rgb(67 32 21 / 5%);
-  background: linear-gradient(135deg, #f0e4f5 0%, #e9d8f0 100%);
+  background: var(--ai-paper);
 }
 
 .ai-icon-btn {
@@ -348,13 +344,13 @@ html.ai-lock body {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgb(255 255 255 / 58%);
+  background: var(--ai-soft);
   color: var(--ai-ink);
   transition: background 150ms ease, transform 150ms ease;
 }
 
 .ai-icon-btn:hover {
-  background: rgb(255 255 255 / 92%);
+  background: #f3dfce;
 }
 
 .ai__history-btn {
@@ -392,8 +388,8 @@ html.ai-lock body {
   width: 40px;
   height: 40px;
   border-radius: 13px;
-  background: rgb(255 255 255 / 65%);
-  color: var(--ai-violet);
+  background: var(--ai-soft);
+  color: var(--ai-accent);
 }
 
 .ai__title > div {
@@ -423,7 +419,7 @@ html.ai-lock body {
   flex-direction: column;
   gap: 12px;
   min-height: 0;
-  padding: 22px 22px 12px;
+  padding: 24px max(22px, calc((100% - 720px) / 2)) 16px;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--ai-paper);
@@ -473,10 +469,10 @@ html.ai-lock body {
 .ai-bubble--user {
   align-self: flex-end;
   border-bottom-right-radius: 5px;
-  background: linear-gradient(135deg, #f4b41b, #e8a810);
-  color: #3a2a12;
+  background: #f8e5d6;
+  color: var(--ai-ink);
   font-weight: 500;
-  box-shadow: 0 3px 12px rgb(244 180 27 / 25%);
+  box-shadow: 0 2px 10px rgb(67 32 21 / 5%);
 }
 
 .ai-bubble--user time {
@@ -489,41 +485,15 @@ html.ai-lock body {
   color: #8e2e28;
 }
 
-.ai-bubble--typing {
-  display: flex;
+.ai-bubble__action {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  width: fit-content;
-  padding: 16px 18px;
-}
-
-.ai-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #b8a090;
-  animation: ai-dot 1.25s ease-in-out infinite;
-}
-
-.ai-dot:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.ai-dot:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes ai-dot {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  30% {
-    transform: translateY(-4px);
-    opacity: 1;
-  }
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--ai-accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ================= Welcome (пустой чат) ================= */
@@ -533,7 +503,7 @@ html.ai-lock body {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 560px;
+  max-width: 670px;
   margin: auto;
   padding: 8px 0;
   text-align: center;
@@ -543,18 +513,19 @@ html.ai-lock body {
 .ai-welcome__badge {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 16px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #f0e4f5, #e4d0ee);
-  color: var(--ai-violet);
-  box-shadow: 0 6px 20px rgb(123 77 158 / 16%);
+  background: var(--ai-accent);
+  color: white;
+  box-shadow: 0 8px 24px rgb(163 70 41 / 18%);
 }
 
 .ai-welcome h2 {
-  font-size: 22px;
-  font-weight: 800;
+  font-family: Georgia, serif;
+  font-size: clamp(30px, 4vw, 55px);
+  font-weight: 400;
   letter-spacing: -0.03em;
 }
 
@@ -575,11 +546,15 @@ html.ai-lock body {
 }
 
 .ai-chip {
-  min-height: 56px;
-  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 10px 12px;
   border: 1px solid var(--ai-line);
   border-radius: 16px;
-  background: var(--ai-soft);
+  background: var(--ai-paper);
   color: var(--ai-ink);
   font-size: 13px;
   font-weight: 500;
@@ -591,31 +566,71 @@ html.ai-lock body {
 
 .ai-chip:hover {
   border-color: rgb(193 122 58 / 35%);
-  background: #fff;
+  background: var(--ai-soft);
   box-shadow: 0 3px 12px rgb(67 32 21 / 6%);
   transform: translateY(-1px);
 }
 
-/* ================= Form ================= */
+.ai-chip__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f8e5d6;
+  color: var(--ai-accent);
+}
+
+.ai-chip__copy {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-chip__copy span {
+  color: var(--ai-muted);
+  font-size: 12px;
+}
+
+.ai-chip__arrow {
+  color: var(--ai-accent);
+}
+
+.ai-composer {
+  flex-shrink: 0;
+  padding: 0 max(16px, calc((100% - 720px) / 2)) 12px;
+  background: var(--ai-paper);
+}
+
+.ai-composer p {
+  margin-top: 7px;
+  color: var(--ai-muted);
+  font-size: 11px;
+  text-align: center;
+}
 
 .ai__form {
   display: flex;
-  flex-shrink: 0;
   align-items: flex-end;
-  gap: 10px;
-  padding: 14px 16px 16px;
-  border-top: 1px solid var(--ai-line);
-  background: var(--ai-soft);
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--ai-line);
+  border-radius: 17px;
+  background: var(--ai-paper);
+  box-shadow: 0 4px 16px rgb(67 32 21 / 7%);
+}
+
+.ai__form:focus-within {
+  border-color: var(--ai-accent);
 }
 
 .ai .ai__form textarea {
   flex: 1;
   min-width: 0;
-  min-height: 48px;
+  min-height: 42px;
   max-height: 120px;
-  padding: 13px 18px;
-  border: 1px solid var(--ai-line);
-  border-radius: 24px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
   outline: none;
   background: var(--ai-paper);
   color: var(--ai-ink);
@@ -626,32 +641,26 @@ html.ai-lock body {
 }
 
 .ai__form textarea::placeholder {
-  color: #a39486;
-}
-
-.ai__form textarea:focus {
-  border-color: rgb(193 122 58 / 45%);
-  box-shadow: 0 0 0 3px rgb(244 180 27 / 15%);
+  color: var(--ai-muted);
 }
 
 .ai__send {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f4b41b, #e8a810);
-  color: #3a2a12;
-  box-shadow: 0 3px 14px rgb(244 180 27 / 30%);
+  border-radius: 12px;
+  background: var(--ai-accent);
+  color: white;
   transition: transform 150ms ease, box-shadow 180ms ease, opacity 180ms ease;
 }
 
 .ai__send:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgb(244 180 27 / 40%);
+  box-shadow: 0 3px 10px rgb(163 70 41 / 24%);
 }
 
 .ai__send:disabled {
@@ -663,8 +672,6 @@ html.ai-lock body {
 /* ================= Tablet / Mobile: выдвижная история ================= */
 
 @media (max-width: 860px) {
-
-
   .ai__card {
     grid-template-columns: minmax(0, 1fr);
     border-radius: 22px;
@@ -752,7 +759,7 @@ html.ai-lock body {
   }
 
   .ai-welcome h2 {
-    font-size: 19px;
+    font-size: 32px;
   }
 
   .ai-welcome p {
@@ -766,14 +773,13 @@ html.ai-lock body {
   }
 
   .ai-chip {
-    min-height: 46px;
-    padding: 10px 14px;
+    min-height: 56px;
+    padding: 7px 10px;
     font-size: 12.5px;
   }
 
-  .ai__form {
-    gap: 8px;
-    padding: 10px 12px 12px;
+  .ai-composer {
+    padding: 0 12px 8px;
   }
 }
 

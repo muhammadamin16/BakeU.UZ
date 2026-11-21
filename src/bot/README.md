@@ -4,7 +4,7 @@ Node.js **24 LTS** or newer is required (built-in SQLite, fetch, env-file suppor
 
 ## What is included
 
-- Six public buttons: BakeU website, Telegram, Instagram, email, support, about.
+- Six existing public buttons: BakeU website, Telegram, Instagram, email, support, about; plus both **Мои заказы** and **Я продавец** for the optional shared-Go orders integration. Public buttons do not grant private-data access.
 - Website opens with a URL button; set `USE_WEB_APP=true` for an HTTPS Telegram Mini App instead.
 - `/start`, `/cancel`, `/id`; numeric-ID-only private admin panel via `/admin`.
 - Admin statistics; paginated server customers and sellers; store applications; approve/reject with a reason; support ticket list and replies.
@@ -115,3 +115,21 @@ See `../miniapp/README.md` for the winter welcome screen, launch setup, Vercel/V
 If you deploy elsewhere, set optional `MINI_APP_URL=https://your-real-https-site` in `src/bot/.env`. The active Mini App origin is added to the configured CORS allowlist. For the old SITE_URL/USE_WEB_APP behavior, use `npm run bot:website` from the repository root.
 
 After `git pull origin Amin`, stop the previous bot with Ctrl+C, run `npm run bot`, and send `/start` to get a fresh button. Existing Telegram messages retain their original keyboards. Button icons vary by Telegram client; use the printed launch mode or the actual opening behavior rather than the arrow glyph to identify the mode. The HTTPS account/admin API still needs a public backend; this launch fix does not deploy or tunnel localhost.
+
+## Shared Go/MongoDB orders (opt-in)
+
+The separate [Telegram orders integration](../../docs/telegram-orders/README.md) adds public buyer/seller entry buttons with confirmed role checks, account-link challenges, numbered/paginated seller/buyer orders, saved delivery location and a server outbox worker. It is **disabled by default** until the shared Go API and website route implement the documented contract. Commerce data never falls back to this legacy SQLite account database. See the linked handoff for exact backend dependencies, website mounting and staging checks; existing setup sections above describe the legacy account/admin/support service.
+
+## Railway build boundary
+
+Use Railway **Root Directory `src/bot`**, this folder's `Dockerfile`, and repository config `src/bot/railway.json`. The image copies this folder to `/app` and runs `node index.js --miniapp` as the `node` user. Its healthcheck is `/health`; Railway supplies `PORT`. Keep the existing environment variables and persistent database volume.
+
+All runtime imports must stay inside this build context, with Linux-correct filename case. The shared pure orders module lives at `orders/domain.js`; the website's `src/telegramOrders/domain.js` re-exports it. Importing `../../telegramOrders/domain.js` from a bot module escapes `/app` and fails even when the orders feature is disabled. The domain implementation is unchanged; only its location/imports moved.
+
+`npm run bot:test` now includes a regression that copies only the deployable bot files into a temporary isolated folder and starts the real entrypoint with `--miniapp --check`, for both orders feature settings. It excludes private environment/data and never contacts Telegram. A local image can be built from the repository root with `docker build -t bakeu-bot-import-fix src/bot`.
+
+The startup fix was also checked in the actual Docker image on Node **v24.22.3**, with networking disabled and a test-only Telegram transport: the real entrypoint bound `0.0.0.0:3000`, `/health` returned HTTP 200, and SIGTERM shut it down with exit code 0. This checks container startup, not live Telegram authentication or production deployment.
+
+## Go bridge implementation
+
+The shared Go bridge now exists in the paired backend integration branch. See [activation](../../docs/telegram-orders/ACTIVATION.md) for actual endpoints, proof/order pages and protected Railway variables. The feature flag remains off until both services are reviewed/configured. The bot-only build boundary remains unchanged.

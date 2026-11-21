@@ -1,3 +1,4 @@
+import { seedLegacyApplication } from "./helpers.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -13,9 +14,9 @@ import { createOutboxWorker } from "../services/adminNotifications.js";
 import { mainKeyboard } from "../keyboards/mainKeyboard.js";
 import { readConfig } from "../config/index.js";
 import { createRateLimiter } from "../middleware/rateLimit.js";
-test("main menu has six buttons and working website link", () => {
+test("main menu has eight buttons and working website link", () => {
   const buttons = mainKeyboard(config).inline_keyboard.flat();
-  assert.equal(buttons.length, 6);
+  assert.equal(buttons.length, 8);
   assert.equal(buttons[0].url, "https://bakeu.uz");
   assert.ok(buttons.some((x) => x.callback_data === "support"));
 });
@@ -23,11 +24,12 @@ test("non-admin forged callbacks cannot list users or approve applications", asy
   const s = setup(),
     telegram = mockTelegram();
   try {
-    const result = await s.auth.register(fields("seller"));
+    const { user } = await s.auth.register(fields("seller"));
+    const application = seedLegacyApplication(s.db, s.repo, user);
     const handle = createUpdateHandler({ ...s, telegram });
-    await handle(callback(999, `app:approve:${result.application.id}`));
+    await handle(callback(999, `app:approve:${application.id}`));
     assert.equal(
-      s.repo.application(result.application.id).status,
+      s.repo.application(application.id).status,
       "На проверке",
     );
     assert.match(telegram.messages.at(-1).text, /только администратору/);
@@ -67,7 +69,8 @@ test("reject flow stores reason and repeated decision is refused", async () => {
   const s = setup(),
     telegram = mockTelegram();
   try {
-    const { application } = await s.auth.register(fields("seller"));
+    const { user } = await s.auth.register(fields("seller"));
+    const application = seedLegacyApplication(s.db, s.repo, user);
     const handle = createUpdateHandler({ ...s, telegram });
     await handle(callback(12345, `app:reject:${application.id}`));
     await handle(message(12345, "Уточните адрес магазина."));

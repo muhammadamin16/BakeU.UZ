@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { openDatabase } from "../database/index.js";
 import { createRepository } from "../database/repository.js";
 import { createAuth } from "../services/auth.js";
@@ -29,6 +30,13 @@ export function setup() {
   const notifications = createNotifications(repo, config);
   const auth = createAuth(repo, config, notifications);
   return { db, repo, auth, config, notifications };
+}
+export function seedLegacyApplication(db, repo, user) {
+  const id = randomUUID();
+  db.prepare(
+    "INSERT INTO applications(id,user_id,shop,address,created_at) VALUES(?,?,?,?,?)",
+  ).run(id, user.id, "Сладкий дом", "Ташкент", new Date().toISOString());
+  return repo.application(id);
 }
 export function mockTelegram() {
   const messages = [];
