@@ -19,7 +19,6 @@ export default function Seller() {
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
   const initialQuery = params.get("q") || "";
-  if (serverStorefrontEnabled && !shopId && tab === "products") return <ServerCatalog key={initialQuery} initialQuery={initialQuery} />;
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
     : <SellerCatalog key={JSON.stringify([tab, initialQuery])} tab={tab} initialQuery={initialQuery} />;
