@@ -11,7 +11,7 @@
 
 /* Keep each control's sizing and layout while sharing the language switcher's surface. */
 :is(#root, .bakeu-auth-overlay) :is(
-  button:not(.bakeu-header__languages *, .leaflet-container *),
+  button:not(.bakeu-header__languages *, .leaflet-container *, .ai *),
   input:is([type="submit"], [type="button"], [type="reset"]),
   a[role="button"],
   a:is(.bu-button, .ck-button, .pd-button, .bw-btn, .map-btn, .shop-route-button,
