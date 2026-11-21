@@ -1,11 +1,12 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
+import { createServerCart, includesSavedCart, lineKey, restoreCart } from "./serverCart.js";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
-import { goAccount as sharedGoAccount, goAPIBase } from "../api/goAccount.js";
+import { goAccount as sharedGoAccount, goAPIBase, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import "./orders.css";
 const configured = (
   goAPIBase ||
@@ -21,17 +22,56 @@ const botBase = (
     ? "/api"
     : "https://bakeuuz-production.up.railway.app/api")
 ).trim();
-function CatalogCheckout({ transport, client, onCreated }) {
+function CatalogCheckout({ transport, client, onCreated, productId }) {
   const [catalog, setCatalog] = useState({
       products: [],
       markets: [],
       error: "",
     }),
-    [qty, setQty] = useState({}),
+    [qty, setQty] = useState(() => productId ? { [lineKey(productId)]: 1 } : {}),
     [choices, setChoices] = useState({}),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(() => crypto.randomUUID());
+  const [saved, setSaved] = useState(false);
+  const cart = useMemo(() => createServerCart(transport.request), [transport]);
+  const [savedCart, setSavedCart] = useState(null);
+  const savedLines = savedCart?.items;
+  const [loadingCart, setLoadingCart] = useState(true);
+  const [cartNotice, setCartNotice] = useState("");
+  const [needsCartReview, setNeedsCartReview] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    cart.load(controller.signal).then((snapshot) => {
+      if (!controller.signal.aborted) setSavedCart(snapshot);
+    }).catch((failure) => {
+      if (!controller.signal.aborted) setCartNotice(failure.message || "Не удалось загрузить корзину.");
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoadingCart(false);
+    });
+    return () => controller.abort();
+  }, [cart]);
+  async function changeCart(action, line) {
+    setBusy(true);
+    setCartNotice("");
+    try {
+      if (action !== "load" && !savedCart) throw Error("Сначала обновите корзину.");
+      const snapshot = action === "load" ? await cart.load() : await cart[action](line, savedCart.revision);
+      setSavedCart(snapshot);
+      if (!snapshot.items.length) setNeedsCartReview(false);
+      setCartNotice("Серверная корзина обновлена.");
+    } catch (failure) {
+      if (failure.status === 409) {
+        setSavedCart(null);
+        setCartNotice("Корзина изменилась на другом устройстве. Обновите её и повторите действие.");
+      } else {
+        setCartNotice(failure.message || "Не удалось обновить корзину.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const attempt = useRef(null);
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -52,7 +92,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
         } while (after && markets.length < 10000);
         if (active)
           setCatalog({
-            products: Array.isArray(products) ? products : [],
+            products: Array.isArray(products) ? products.filter((product) => product.available) : [],
             markets,
             error: "",
           });
@@ -70,12 +110,19 @@ function CatalogCheckout({ transport, client, onCreated }) {
       controller.abort();
     };
   }, [transport]);
-  const selected = catalog.products.filter((p) => qty[p.id] > 0);
-  const groups = catalog.markets.filter((m) =>
-    selected.some((p) => p.sellerId === m.sellerId),
+  const rows = catalog.products.flatMap((product) => [
+    { product, variant: null, key: lineKey(product.id) },
+    ...(product.variants || []).filter(({ id }) => id).map((variant) => ({
+      product, variant, key: lineKey(product.id, variant.id),
+    })),
+  ]);
+  const selected = rows.filter(({ key }) => qty[key] > 0);
+  const groups = catalog.markets.filter((market) =>
+    selected.some(({ product }) => product.sellerId === market.sellerId),
   );
   const update = () => {
-    setAttempt(crypto.randomUUID());
+    setSaved(false);
+    attempt.current = null;
     setError("");
   };
   return (
@@ -84,75 +131,111 @@ function CatalogCheckout({ transport, client, onCreated }) {
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
+        if (needsCartReview) {
+          setError("Проверьте сохранённые позиции перед оформлением.");
+          return;
+        }
         setBusy(true);
         setError("");
         try {
-          const deliveries = Object.fromEntries(
-            groups.map((m) => [
-              m.id,
-              choices[m.id] || {
-                fulfillment: m.fulfillment === "pickup" ? "pickup" : "delivery",
+          if (!attempt.current) {
+            const items = selected.map(({ product, variant, key }) => ({
+              productId: product.id,
+              variantId: variant?.id || "",
+              qty: qty[key],
+            }));
+            const latestCart = await cart.load();
+            setSavedCart(latestCart);
+            if (!includesSavedCart(latestCart.items, items)) {
+              throw Error("Корзина изменилась. Загрузите её в оформление или обновите сохранённые позиции.");
+            }
+            const deliveries = Object.fromEntries(groups.map((market) => [
+              market.id, choices[market.id] || {
+                fulfillment: market.fulfillment === "pickup" ? "pickup" : "delivery",
               },
-            ]),
-          );
-          await client.checkout({
-            items: selected.map((p) => ({ productId: p.id, qty: qty[p.id] })),
-            deliveries,
-            requestId: attempt,
-          });
+            ]));
+            attempt.current = { items, deliveries, requestId: crypto.randomUUID(), cartRevision: latestCart.revision };
+          }
+          await client.checkout(attempt.current);
           setQty({});
           setChoices({});
-          setAttempt(crypto.randomUUID());
+          attempt.current = null;
+          setSavedCart(null);
+          await cart.load().then(setSavedCart).catch(() => setCartNotice("Обновите корзину, чтобы загрузить актуальные позиции."));
+          setSaved(true);
           onCreated();
         } catch (failure) {
-          setError(failure.message || "Заказ не сохранён.");
+          if (failure.status === 409) {
+            attempt.current = null;
+            setError("Корзина или заказ изменились. Обновите корзину перед повторной отправкой.");
+          } else {
+            setError(failure.message || "Заказ не сохранён.");
+          }
         } finally {
           setBusy(false);
         }
       }}
     >
-      <fieldset disabled={busy}>
+      <fieldset disabled={busy || loadingCart}>
         <h2>Оформить заказ</h2>
         <p>
           Выберите товары. Оплата и стоимость доставки согласуются с продавцом.
         </p>
         {catalog.error && <p role="alert">{catalog.error}</p>}
-        {catalog.products.map((p) => (
-          <label
-            key={p.id}
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              margin: "12px 0",
-            }}
-          >
-            {p.imageURLs?.[0] && (
-              <img
-                src={new URL(p.imageURLs[0], transport.base).href}
-                width="64"
-                height="64"
-                alt={p.title}
-                style={{ objectFit: "cover", borderRadius: 14 }}
-              />
-            )}
-            <span>
-              {p.title} · {Number(p.price).toLocaleString("ru-RU")} сум
-            </span>
-            <input
-              aria-label={"Количество: " + p.title}
-              type="number"
-              min="0"
-              max="1000"
-              value={qty[p.id] || 0}
-              disabled={busy}
-              onChange={(e) => {
-                setQty({ ...qty, [p.id]: Number(e.target.value) });
+        <section aria-label="Серверная корзина">
+          <h3>Сохранённая корзина</h3>
+          {cartNotice && <p role="status">{cartNotice}</p>}
+          <button type="button" onClick={() => changeCart("load")}>Обновить корзину</button>
+          {savedLines?.length === 0 && <p>Сохранённых товаров пока нет.</p>}
+          {savedLines?.length > 0 && (
+            <>
+              <button type="button" disabled={!catalog.products.length} onClick={() => {
+                const restored = restoreCart(savedLines, catalog.products);
+                setQty(restored.qty);
+                setChoices({});
+                setNeedsCartReview(restored.skipped.length > 0);
+                setCartNotice(restored.skipped.length ? "В корзине есть недоступные или повторяющиеся позиции. Удалите лишние строки и загрузите корзину снова." : "Корзина загружена.");
                 update();
-              }}
-            />
-          </label>
-        ))}
+              }}>Загрузить в оформление</button>
+              <ul>
+                {savedLines.map((line) => {
+                  const product = catalog.products.find(({ id }) => id === line.productId);
+                  const variant = product?.variants?.find(({ id }) => id === line.variantId);
+                  return (
+                    <li key={JSON.stringify([line.productId, line.variantId])}>
+                      {product?.title || "Недоступный товар"}{line.variantId ? ` · ${variant?.name || "Недоступный вариант"}` : ""} × {line.qty}
+                      {" "}<button type="button" onClick={() => changeCart("remove", line)}>Убрать из корзины</button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </section>
+
+        {rows.map(({ product, variant, key }) => {
+          const label = variant ? `${product.title} · ${variant.name}` : product.title;
+          return (
+            <div key={key} className="tg-orders-line">
+              {!variant && product.imageURLs?.[0] && (
+                <img src={new URL(product.imageURLs[0], transport.base).href}
+                  width="64" height="64" alt={product.title} />
+              )}
+              <label>
+                {label} · {Number(variant?.price ?? product.price).toLocaleString("ru-RU")} сум
+                <input aria-label={`Количество: ${label}`} type="number" min="0" max="1000"
+                  value={qty[key] || 0} onChange={(event) => {
+                    setQty({ ...qty, [key]: Number(event.target.value) });
+                    update();
+                  }} />
+              </label>
+              <button type="button" disabled={!savedCart || !qty[key]}
+                onClick={() => changeCart("save", { productId: product.id, variantId: variant?.id || "", qty: qty[key] })}>
+                Сохранить в корзине
+              </button>
+            </div>
+          );
+        })}
         {!catalog.error && !catalog.products.length && <p>Товаров пока нет.</p>}
         {groups.map((m) => (
           <section key={m.id}>
@@ -175,6 +258,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
             />
           </section>
         ))}
+        {saved && <p role="status">Заказ сохранён. Он появится в истории заказов.</p>}
         {error && <p role="alert">{error}</p>}
         <button disabled={busy || !selected.length || groups.length === 0}>
           {busy ? "Сохраняем заказ…" : "Оформить заказ"}
@@ -183,7 +267,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
     </form>
   );
 }
-function ConnectedAccount({ transport, challenge }) {
+function ConnectedAccount({ transport, challenge, productId }) {
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -191,12 +275,35 @@ function ConnectedAccount({ transport, challenge }) {
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [revision, setRevision] = useState(0);
+  const [restoring, setRestoring] = useState(() => transport.shared && !challenge);
+  useEffect(() => {
+    if (!transport.shared || challenge) return;
+    const controller = new AbortController();
+    transport.request("/me", { signal: controller.signal }).then((user) => {
+      if (!controller.signal.aborted && user?.uid && ["customer", "seller"].includes(user.role)) {
+        setAccount(user);
+      }
+    }).catch((failure) => {
+      if (!controller.signal.aborted && failure.status !== 401) {
+        setError(failure.message || "Не удалось восстановить сессию.");
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setRestoring(false);
+    });
+    return () => controller.abort();
+  }, [transport, challenge]);
   const uid = account?.uid,
     role = account?.role;
   const pinned = useMemo(
     () => pinGoAccount(transport, uid, role),
     [transport, uid, role],
   );
+  const sellerApi = useMemo(() => ({
+    request: (path, method, body) => pinned.request(path, { method, body }),
+    requestWithOptions: pinned.request,
+    login: transport.login,
+    logout: transport.logout,
+  }), [pinned, transport]);
   const client = useMemo(
     () => createWebsiteOrdersClient(pinned.request),
     [pinned],
@@ -205,7 +312,9 @@ function ConnectedAccount({ transport, challenge }) {
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
-      {!account && (
+      {!account && goPhoneAccountsEnabled && <p><Link to="/login">Войти по подтверждённому телефону</Link> · <Link to="/register">Создать аккаунт</Link></p>}
+      {restoring && <p role="status">Восстанавливаем сессию…</p>}
+      {!account && !restoring && (
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -289,7 +398,7 @@ function ConnectedAccount({ transport, challenge }) {
           />
           {account.role === "seller" && transport.shared && (
             <Suspense fallback={<p>Загрузка настроек…</p>}>
-              <SellerSettings />
+              <SellerSettings accountApi={sellerApi} />
             </Suspense>
           )}
           <ServerOrdersPanel
@@ -303,6 +412,8 @@ function ConnectedAccount({ transport, challenge }) {
           />
           {account.role === "customer" && (
             <CatalogCheckout
+              key={account.uid + ":" + productId}
+              productId={productId}
               client={client}
               transport={pinned}
               onCreated={() => setRevision((v) => v + 1)}
@@ -324,6 +435,7 @@ function ServerProfile({ account, transport, onSaved }) {
   return (
     <details>
       <summary>Настройки профиля</summary>
+      {account.verifiedPhoneE164 && <p>Подтверждённый номер аккаунта: <strong>{account.verifiedPhoneE164}</strong>. Телефон ниже — контакт для заказов.</p>}
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -366,6 +478,8 @@ function ServerProfile({ account, transport, onSaved }) {
 export default function AccountOrders() {
   const [params] = useSearchParams();
   const challenge = params.get("challenge") || "";
+  const requestedProduct = params.get("product") || "";
+  const productId = /^[A-Za-z0-9_-]{1,36}$/.test(requestedProduct) ? requestedProduct : "";
   const [connection, setConnection] = useState({
     transport: null,
     error: "",
@@ -413,6 +527,7 @@ export default function AccountOrders() {
           key={challenge}
           transport={connection.transport}
           challenge={challenge}
+          productId={productId}
         />
       )}
     </div>
@@ -439,13 +554,13 @@ export function ServerStorefront() {
           signal: controller.signal,
         });
         const products = await api.request(
-          "/products?sellerId=" + encodeURIComponent(market.sellerId),
+          "/products?seller=" + encodeURIComponent(market.sellerId),
           { signal: controller.signal },
         );
         if (active)
           setState({
             market,
-            products: Array.isArray(products) ? products : [],
+            products: Array.isArray(products) ? products.filter((product) => product.available) : [],
             base,
             error: "",
           });

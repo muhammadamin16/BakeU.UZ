@@ -54,8 +54,8 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false }) {
           <p>{Number(order.total).toLocaleString("ru-RU")} сум</p>
           <ul>
             {order.items.map((item, index) => (
-              <li key={item.productId || index}>
-                {item.title} × {item.qty} —{" "}
+              <li key={item.productId ? item.productId + ":" + (item.variantId || "") : index}>
+                {item.title}{item.variantName ? ` (${item.variantName})` : ""} × {item.qty} —{" "}
                 {(item.price * item.qty).toLocaleString("ru-RU")} сум
               </li>
             ))}

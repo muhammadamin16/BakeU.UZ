@@ -52,7 +52,7 @@ export function orderCard(
   const rows = items
     .map(
       (item) =>
-        `• ${text(item.title, 80)} × ${item.qty} · ${money(item.price)} / шт. = ${money(item.price * item.qty)}`,
+        `• ${text(item.title, 80)}${item.variantName ? ` (${text(item.variantName, 80)})` : ""} × ${item.qty} · ${money(item.price)} / шт. = ${money(item.price * item.qty)}`,
     )
     .join("\n");
   const history = (order.history || [])

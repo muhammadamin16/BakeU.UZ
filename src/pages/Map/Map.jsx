@@ -1,4 +1,6 @@
 import { useShopStore } from "../../store/shopStore";
+import { goAPIBase, serverStorefrontEnabled, productImageURL } from "../../api/goAccount.js";
+import { loadGoCatalog, projectGoMapCatalog } from "../../api/goCatalog.js";
 import { Link } from "react-router-dom";
 import {
   getDevicePosition,
@@ -346,7 +348,7 @@ const priceIcon = (price, selected) =>
 const sellerIcon = (badge, color, selected) =>
   L.divIcon({
     className: "map-marker",
-    html: `<div class="seller-pill ${selected ? "is-selected" : ""}" style="background:${color}">${badge}</div>`,
+    html: `<div class="seller-pill ${selected ? "is-selected" : ""}" style="background:${/^#[a-f0-9]{3,6}$/i.test(color) ? color : "#b77b48"}">${String(badge).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char])}</div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
@@ -399,6 +401,19 @@ function MapClickHandler({ onMapClick }) {
 
 export default function MapPage() {
   const language = useLanguage();
+  const [serverCatalog, setServerCatalog] = useState({ markets: [], products: [], loading: serverStorefrontEnabled, error: "" });
+  const [catalogRevision, setCatalogRevision] = useState(0);
+  useEffect(() => {
+    if (!serverStorefrontEnabled) return;
+    const controller = new AbortController();
+    loadGoCatalog(goAPIBase, { signal: controller.signal }).then((catalog) => {
+      if (!controller.signal.aborted) setServerCatalog({ ...catalog, loading: false, error: "" });
+    }).catch((error) => {
+      if (!controller.signal.aborted) setServerCatalog({ markets: [], products: [], loading: false, error: error.message });
+    });
+    return () => controller.abort();
+  }, [catalogRevision]);
+  const serverMap = useMemo(() => projectGoMapCatalog(serverCatalog, productImageURL), [serverCatalog]);
   const savedShops = useShopStore((s) => s.shops);
   const savedProducts = useShopStore((s) => s.products);
   const locatedShops = useMemo(() => Object.values(savedShops).filter(
@@ -406,7 +421,7 @@ export default function MapPage() {
       shop.lat !== "" && shop.lng !== "" &&
       Number.isFinite(Number(shop.lat)) && Number.isFinite(Number(shop.lng))
   ), [savedShops]);
-  const mapSellers = useMemo(() => [
+  const legacySellers = useMemo(() => [
     ...sellers,
     ...locatedShops.map((shop) => ({
       id: shop.id,
@@ -420,7 +435,7 @@ export default function MapPage() {
       image: shop.logo || "/images/products/cake.jpg",
     })),
   ], [locatedShops]);
-  const mapProducts = useMemo(() => [
+  const legacyProducts = useMemo(() => [
     ...products,
     ...Object.values(savedProducts).filter(
       (product) => product.available !== false && locatedShops.some((shop) => shop.id === product.shopId)
@@ -437,6 +452,8 @@ export default function MapPage() {
       };
     }),
   ], [savedProducts, savedShops, locatedShops]);
+  const mapSellers = serverStorefrontEnabled ? serverMap.sellers : legacySellers;
+  const mapProducts = serverStorefrontEnabled ? serverMap.products : legacyProducts;
   const [activeTab, setActiveTab] = useState("products");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -676,7 +693,9 @@ export default function MapPage() {
 
   const selected = filtered.find((i) => i.id === selectedId) || null;
   const selectedShop = selected?.shopId ?? selected?.id;
-  const detailPath = activeTab === "products" && selected?.id !== "smit"
+  const detailPath = serverStorefrontEnabled
+    ? activeTab === "products" ? `/account/orders?product=${selected?.id}` : `/shop/${selectedShop}`
+    : activeTab === "products" && selected?.id !== "smit"
     ? `/product/${selected?.id}`
     : `/seller?shop=${selectedShop}`;
 
@@ -719,6 +738,8 @@ export default function MapPage() {
         {/* ===== Chap panel ===== */}
         <aside className="map-sidebar" ref={sidebarRef} aria-labelledby="map-heading" tabIndex={0}>
           <h1 id="map-heading">{translateText("Карта")}</h1>
+          {serverStorefrontEnabled && serverCatalog.loading && <p role="status">Загружаем магазины…</p>}
+          {serverStorefrontEnabled && serverCatalog.error && <div role="alert"><p>{serverCatalog.error}</p><button type="button" className="map-btn" onClick={() => setCatalogRevision((value) => value + 1)}>Повторить загрузку</button></div>}
           <div className="map-toolbar">
             <label className="map-search">
               <Search size={20} strokeWidth={1.8} />
@@ -910,8 +931,8 @@ export default function MapPage() {
                   <Link className="map-btn map-btn--dark" to={detailPath}>
                     {translateText("Подробнее")}
                   </Link>
-                  <Link className="map-btn map-btn--light" to={`/messages?seller=${selectedShop}`}>
-                    {translateText("Написать")}
+                  <Link className="map-btn map-btn--light" to={serverStorefrontEnabled ? `/shop/${selectedShop}` : `/messages?seller=${selectedShop}`}>
+                    {translateText(serverStorefrontEnabled ? "Открыть магазин" : "Написать")}
                   </Link>
                 </div>
                 <button

@@ -1,6 +1,7 @@
 export function readOrdersConfig(env = process.env) {
   const enabled = env.TELEGRAM_ORDERS_ENABLED === "true";
-  if (!enabled) return { enabled: false };
+  const accountsEnabled = env.GO_ACCOUNTS_ENABLED === "true";
+  if (!enabled && !accountsEnabled) return { enabled: false };
   let url;
   try {
     url = new URL(env.GO_BACKEND_URL);
@@ -28,6 +29,7 @@ export function readOrdersConfig(env = process.env) {
     );
   return {
     enabled,
+    accountsEnabled,
     baseUrl: url.href.replace(/\/$/, "").replace(/\/api$/, ""),
     token: env.TELEGRAM_BRIDGE_TOKEN,
   };

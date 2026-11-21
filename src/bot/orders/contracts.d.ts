@@ -34,7 +34,7 @@ export interface Order {
   createdAt: string;
   comment?: string;
   location?: { latitude: number; longitude: number };
-  items: { productId: string; title: string; price: number; qty: number }[];
+  items: { productId: string; variantId?: string; variantName?: string; title: string; price: number; qty: number }[];
   history: { status: Status; at: string }[];
 }
 export interface Job {
@@ -46,6 +46,8 @@ export interface Job {
   order: Order;
 }
 export interface TelegramBridge {
+  phoneCode(actor: string, id: string, phone: string): Promise<{ code: string }>;
+  launchSession(actor: string): Promise<{ linked: false } | { linked: true; ticket: string; uid: string }>;
   identity(actor: string): Promise<Identity | null>;
   startLink(
     actor: string,
