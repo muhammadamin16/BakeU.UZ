@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { goAPIBase, productImageURL } from "../../api/goAccount.js";
 import { matchesLocalizedSearch, translateText } from "../../i18n/index.js";
 import { normalizeSearch } from "../../i18n/alphabet.js";
@@ -44,6 +45,9 @@ export default function ServerCatalog() {
               {item.variants?.length > 0 && (
                 <ul>{item.variants.map(({ name, price }) => <li key={name}>{name} · {price.toLocaleString()} UZS</li>)}</ul>
               )}
+              <Link className="bw-btn primary" to={`/account/orders?product=${encodeURIComponent(item.id)}`}>
+                {translateText("Оформить заказ")}
+              </Link>
             </article>
           );
         })}

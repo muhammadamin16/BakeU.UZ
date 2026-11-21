@@ -21,16 +21,17 @@ const botBase = (
     ? "/api"
     : "https://bakeuuz-production.up.railway.app/api")
 ).trim();
-function CatalogCheckout({ transport, client, onCreated }) {
+function CatalogCheckout({ transport, client, onCreated, productId }) {
   const [catalog, setCatalog] = useState({
       products: [],
       markets: [],
       error: "",
     }),
-    [qty, setQty] = useState({}),
+    [qty, setQty] = useState(() => productId ? { [productId]: 1 } : {}),
     [choices, setChoices] = useState({}),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
   const [attempt, setAttempt] = useState(() => crypto.randomUUID());
   useEffect(() => {
     let active = true;
@@ -52,7 +53,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
         } while (after && markets.length < 10000);
         if (active)
           setCatalog({
-            products: Array.isArray(products) ? products : [],
+            products: Array.isArray(products) ? products.filter((product) => product.available) : [],
             markets,
             error: "",
           });
@@ -75,6 +76,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
     selected.some((p) => p.sellerId === m.sellerId),
   );
   const update = () => {
+    setSaved(false);
     setAttempt(crypto.randomUUID());
     setError("");
   };
@@ -103,6 +105,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
           setQty({});
           setChoices({});
           setAttempt(crypto.randomUUID());
+          setSaved(true);
           onCreated();
         } catch (failure) {
           setError(failure.message || "Заказ не сохранён.");
@@ -175,6 +178,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
             />
           </section>
         ))}
+        {saved && <p role="status">Заказ сохранён. Он появится в истории заказов.</p>}
         {error && <p role="alert">{error}</p>}
         <button disabled={busy || !selected.length || groups.length === 0}>
           {busy ? "Сохраняем заказ…" : "Оформить заказ"}
@@ -183,7 +187,7 @@ function CatalogCheckout({ transport, client, onCreated }) {
     </form>
   );
 }
-function ConnectedAccount({ transport, challenge }) {
+function ConnectedAccount({ transport, challenge, productId }) {
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -191,6 +195,23 @@ function ConnectedAccount({ transport, challenge }) {
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [revision, setRevision] = useState(0);
+  const [restoring, setRestoring] = useState(() => transport.shared && !challenge);
+  useEffect(() => {
+    if (!transport.shared || challenge) return;
+    const controller = new AbortController();
+    transport.request("/me", { signal: controller.signal }).then((user) => {
+      if (!controller.signal.aborted && user?.uid && ["customer", "seller"].includes(user.role)) {
+        setAccount(user);
+      }
+    }).catch((failure) => {
+      if (!controller.signal.aborted && failure.status !== 401) {
+        setError(failure.message || "Не удалось восстановить сессию.");
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setRestoring(false);
+    });
+    return () => controller.abort();
+  }, [transport, challenge]);
   const uid = account?.uid,
     role = account?.role;
   const pinned = useMemo(
@@ -205,7 +226,8 @@ function ConnectedAccount({ transport, challenge }) {
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
-      {!account && (
+      {restoring && <p role="status">Восстанавливаем сессию…</p>}
+      {!account && !restoring && (
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -303,6 +325,8 @@ function ConnectedAccount({ transport, challenge }) {
           />
           {account.role === "customer" && (
             <CatalogCheckout
+              key={account.uid + ":" + productId}
+              productId={productId}
               client={client}
               transport={pinned}
               onCreated={() => setRevision((v) => v + 1)}
@@ -366,6 +390,8 @@ function ServerProfile({ account, transport, onSaved }) {
 export default function AccountOrders() {
   const [params] = useSearchParams();
   const challenge = params.get("challenge") || "";
+  const requestedProduct = params.get("product") || "";
+  const productId = /^[A-Za-z0-9_-]{1,36}$/.test(requestedProduct) ? requestedProduct : "";
   const [connection, setConnection] = useState({
     transport: null,
     error: "",
@@ -413,6 +439,7 @@ export default function AccountOrders() {
           key={challenge}
           transport={connection.transport}
           challenge={challenge}
+          productId={productId}
         />
       )}
     </div>
@@ -445,7 +472,7 @@ export function ServerStorefront() {
         if (active)
           setState({
             market,
-            products: Array.isArray(products) ? products : [],
+            products: Array.isArray(products) ? products.filter((product) => product.available) : [],
             base,
             error: "",
           });
