@@ -117,10 +117,10 @@ export default function ServerStorefront({ accountApi = api }) {
         </form>
       ) : draft ? (
         <>
-          <p>Статус магазина: {{ draft: "Черновик", pending: "На проверке", rejected: "Отклонён", approved: "Одобрен" }[shop.status] || shop.status}</p>
+          <p>Статус магазина: {{ draft: "Черновик", pending: "На проверке", rejected: "Отклонён", approved: "Одобрен", suspended: "Приостановлен" }[shop.status] || shop.status}</p>
           {shop.rejectionReason && <p role="status">{shop.rejectionReason}</p>}
           <form onSubmit={save}>
-            <fieldset disabled={busy} className="bw-fields">
+            <fieldset disabled={busy || shop.status === "suspended"} className="bw-fields">
               {fields.map(([key, label, type = "text"]) => (
                 <label className="bw-field" key={key}>{translateText(label)}
                   <input type={type} step={type === "number" ? "any" : undefined}
@@ -149,7 +149,7 @@ export default function ServerStorefront({ accountApi = api }) {
               <button className="bw-btn primary">{shop.status === "approved" ? translateText("Сохранить изменения") : "Отправить заявку на открытие магазина"}</button>
             </fieldset>
           </form>
-          {shop.status !== "approved" && <p>Заполните описание, город и добавьте логотип. Товары станут доступны после одобрения магазина.</p>}
+          {shop.status === "suspended" ? <p>Магазин приостановлен. Обратитесь в поддержку.</p> : shop.status !== "approved" && <p>Заполните описание, город и добавьте логотип. Товары станут доступны после одобрения магазина.</p>}
           {shop.status === "approved" && <ServerProducts key={sellerId} sellerId={sellerId} accountApi={api} />}
           {ordersClient && (
             <>

@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { devPortPlugin, readDevPort } from "./scripts/dev-port.js";
+import { publicBuildMetadata } from "./scripts/build-metadata.mjs";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,7 +14,10 @@ export default defineConfig(({ mode }) => {
   );
 
   return {
-    plugins: [react(), devPortPlugin()],
+    plugins: [react(), devPortPlugin(), {
+      name: "bakeu-public-build-metadata",
+      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata(env)) }); },
+    }],
 
     optimizeDeps: {
       entries: ["index.html"],

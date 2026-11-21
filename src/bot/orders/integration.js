@@ -24,6 +24,7 @@ import {
 import { createOrdersWorker } from "./worker.js";
 const b = (text, callback_data) => ({ text, callback_data });
 const roleFor = (intent) => (intent === "seller" ? "SELLER" : "CLIENT");
+const sellingOrder = (who, order) => who.user.role === "SELLER" && order.sellerId === who.user.id && order.shopId === who.shopId;
 const listCallback = (audience, view, page) =>
   `bo:list:${audience}:${view}:${page}`;
 const validView = (view) =>
@@ -58,7 +59,7 @@ export function createOrdersIntegration({
   async function identity(ctx, role) {
     const record = await currentIdentity(ctx);
     if (!record) throw new BridgeError(401);
-    if (role && record.user.role !== role) throw new BridgeError(403);
+    if (role && record.user.role !== role && !(role === "CLIENT" && record.user.role === "SELLER" && record.user.canBuy === true)) throw new BridgeError(403);
     return record;
   }
   async function linking(ctx, intent) {
@@ -90,7 +91,7 @@ export function createOrdersIntegration({
   }
   function backToList(ctx, order, who) {
     const state = ui(ctx);
-    const intent = who.user.role === "SELLER" ? "seller" : "buyer";
+    const intent = sellingOrder(who,order) ? "seller" : "buyer";
     if (
       state?.intent === intent &&
       state.screen === "list" &&
@@ -108,13 +109,13 @@ export function createOrdersIntegration({
     const returnTo = backToList(ctx, order, who);
     remember(ctx, {
       screen: "detail",
-      intent: who.user.role === "SELLER" ? "seller" : "buyer",
+      intent: sellingOrder(who,order) ? "seller" : "buyer",
       returnTo,
     });
     return display(
       ctx,
       orderCard(order, {
-        seller: who.user.role === "SELLER",
+        seller: sellingOrder(who,order),
         page,
         returnTo,
         siteUrl: config.siteUrl,
@@ -452,7 +453,7 @@ export function createOrdersIntegration({
           const from = statusCodes[fromCode],
             target = statusCodes[toCode];
           if (
-            who.user.role !== "SELLER" ||
+            !sellingOrder(who,order) ||
             from !== order.status ||
             !nextStatuses(from, order.fulfillment).includes(target)
           )
@@ -476,7 +477,7 @@ export function createOrdersIntegration({
         } else if (/^bo:(location|contact):[A-Za-z0-9_-]{1,36}$/.test(data)) {
           const [, action, id] = data.split(":");
           const { who, order } = await owned(ctx, id);
-          if (action === "contact" && who.user.role !== "SELLER")
+          if (action === "contact" && !sellingOrder(who,order))
             throw new BridgeError(403);
           if (
             action === "location" &&

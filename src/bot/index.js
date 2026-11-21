@@ -13,6 +13,7 @@ import { createApiServer } from "./services/httpServer.js";
 import { createUpdateHandler } from "./handlers/router.js";
 import { readOrdersConfig } from './orders/config.js';
 import { createOrdersApi } from './orders/api.js';
+import { createWorkerDiagnostics } from './services/workerDiagnostics.js';
 import { createOrdersIntegration } from './orders/integration.js';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let startupStage = "configuration";
@@ -51,7 +52,12 @@ async function main() {
   const phoneAccounts = ordersSettings.accountsEnabled ? createOrdersApi(ordersSettings) : null;
   const handle = createUpdateHandler({ repo, telegram, config, notifications, auth, orders, phoneAccounts });
   const legacyFlush = createOutboxWorker(repo, telegram);
-  const flush = async () => { await legacyFlush(); await orders.flush(); };
+  const diagnoseLegacy = createWorkerDiagnostics("legacy_sqlite");
+  // A legacy SQLite error must not stop committed Mongo order notifications.
+  const flush = async () => {
+    const results = await Promise.allSettled([legacyFlush(), orders.flush()]);
+    for (let i = 0; i < results.length; i++) if (results[i].status === "rejected") diagnoseLegacy(i === 0 ? "legacy_flush" : "mongo_flush", results[i].reason);
+  };
   // Validate token and switch from webhook to polling without discarding pending updates.
   startupStage = "telegram";
   const me = await telegram.call("getMe");
@@ -108,7 +114,7 @@ async function main() {
   const timer = setInterval(() => {
     if (flushing) return;
     flushing = flush()
-      .catch(() => console.warn("Outbox worker failed; will retry."))
+      .catch((error) => diagnoseLegacy("scheduler", error))
       .finally(() => {
         flushing = null;
       });
