@@ -17,6 +17,7 @@ import {
   Croissant,
   MapPin,
   History,
+  MessageSquare,
   MessageSquarePlus,
   ShieldCheck,
   Search,
@@ -118,6 +119,9 @@ export default function AiAssistant() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const confirmTimer = useRef(null);
+  const historyRef = useRef(null);
+  const historyButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
   useFullViewport(rootRef);
 
@@ -163,13 +167,41 @@ export default function AiAssistant() {
     }
   }, [activeId]);
 
-  // Escape закрывает панель истории
+  const closeHistory = useCallback(() => {
+    setHistoryOpen(false);
+    requestAnimationFrame(() => historyButtonRef.current?.focus());
+  }, []);
+
   useEffect(() => {
     if (!historyOpen) return undefined;
-    const onKey = (event) => event.key === "Escape" && setHistoryOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [historyOpen]);
+    closeButtonRef.current?.focus();
+
+    function handleHistoryKeys(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeHistory();
+      }
+      if (event.key !== "Tab") return;
+      const controls = [...(historyRef.current?.querySelectorAll("button:not(:disabled), input") ?? [])];
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+
+    const desktop = window.matchMedia("(min-width: 861px)");
+    desktop.addEventListener("change", closeHistory);
+    document.addEventListener("keydown", handleHistoryKeys);
+    return () => {
+      desktop.removeEventListener("change", closeHistory);
+      document.removeEventListener("keydown", handleHistoryKeys);
+    };
+  }, [historyOpen, closeHistory]);
 
   const askConfirm = (id) => {
     setConfirmId(id);
@@ -222,12 +254,15 @@ export default function AiAssistant() {
     setActiveId(null);
     setInput("");
     setHistoryOpen(false);
-    inputRef.current?.focus();
+    requestAnimationFrame(() => {
+      if (window.matchMedia("(hover: hover)").matches) inputRef.current?.focus();
+      else historyButtonRef.current?.focus();
+    });
   };
 
   const openChat = (id) => {
     setActiveId(id);
-    setHistoryOpen(false);
+    if (historyOpen) closeHistory();
     setConfirmId(null);
   };
 
@@ -265,14 +300,19 @@ export default function AiAssistant() {
         {/* ===== История ===== */}
         <aside
           className={`ai-history ${historyOpen ? "is-open" : ""}`}
-          aria-label={translateText("История чатов")}
+          ref={historyRef}
+          id="ai-history"
+          role={historyOpen ? "dialog" : undefined}
+          aria-modal={historyOpen || undefined}
+          aria-labelledby="ai-history-title"
         >
           <div className="ai-history__top">
-            <h2>{translateText("История")}</h2>
+            <h2 id="ai-history-title">{translateText("История чатов")}</h2>
             <button
               type="button"
               className="ai-icon-btn ai-history__close"
-              onClick={() => setHistoryOpen(false)}
+              ref={closeButtonRef}
+              onClick={closeHistory}
               aria-label={translateText("Закрыть историю")}
             >
               <X size={18} />
@@ -297,13 +337,12 @@ export default function AiAssistant() {
             </div>
           )}
 
-          <div className="ai-history__list" id="ai-history-list">
+          <div className="ai-history__list">
             {chats.length === 0 && (
-              <p className="ai-history__empty">
-                {translateText(
-                  "Здесь появятся ваши разговоры с помощником. Задайте первый вопрос.",
-                )}
-              </p>
+              <div className="ai-history__empty">
+                <MessageSquare size={22} aria-hidden="true" />
+                <p>{translateText("Здесь появятся ваши разговоры с помощником. Задайте первый вопрос.")}</p>
+              </div>
             )}
 
             {chats.length > 0 && groups.length === 0 && (
@@ -327,6 +366,7 @@ export default function AiAssistant() {
                         onClick={() => openChat(chat.id)}
                         aria-current={chat.id === activeId ? "true" : undefined}
                       >
+                        <MessageSquare size={16} aria-hidden="true" />
                         <span className="ai-chat__title">
                           {chat.title}
                         </span>
@@ -344,11 +384,9 @@ export default function AiAssistant() {
                           confirmId === chat.id ? "is-confirm" : ""
                         }`}
                         onClick={() => deleteChat(chat.id)}
-                        aria-label={translateText(
-                          confirmId === chat.id
-                            ? "Подтвердить удаление"
-                            : `Удалить чат: ${chat.title}`,
-                        )}
+                        aria-label={confirmId === chat.id
+                          ? translateText("Подтвердить удаление")
+                          : `${translateText("Удалить чат")} · ${chat.title}`}
                       >
                         {confirmId === chat.id ? (
                           translateText("Удалить?")
@@ -383,27 +421,25 @@ export default function AiAssistant() {
           <button
             type="button"
             className="ai-backdrop"
-            onClick={() => setHistoryOpen(false)}
+            onClick={closeHistory}
             aria-label={translateText("Закрыть историю")}
             tabIndex={-1}
           />
         )}
 
         {/* ===== Чат ===== */}
-        <section className="ai-chatpane">
+        <section className="ai-chatpane" inert={historyOpen}>
           <header className="ai__header">
             <button
               type="button"
               className="ai-icon-btn ai__history-btn"
+              ref={historyButtonRef}
               onClick={() => setHistoryOpen(true)}
               aria-expanded={historyOpen}
-              aria-controls="ai-history-list"
+              aria-controls="ai-history"
               aria-label={translateText("Открыть историю чатов")}
             >
               <History size={18} />
-              {chats.length > 0 && (
-                <span className="ai__count">{chats.length}</span>
-              )}
             </button>
 
             <div className="ai__title">
@@ -418,7 +454,7 @@ export default function AiAssistant() {
 
             <button
               type="button"
-              className="ai-icon-btn"
+              className="ai-icon-btn ai__new-btn"
               onClick={startNewChat}
               aria-label={translateText("Начать новый чат")}
               title={translateText("Новый чат")}
@@ -435,11 +471,10 @@ export default function AiAssistant() {
           >
             {isNewChat ? (
               <div className="ai-welcome">
-                <span className="ai-welcome__badge" aria-hidden="true">
-                  <Sparkles size={26} strokeWidth={2} />
-                </span>
-                <h2>{translateText("Чем помочь?")}</h2>
-                <p>{translateText("Подберём, где искать выпечку, и поможем разобраться с выбором.")}</p>
+                <div className="ai-welcome__hero">
+                  <h2>{translateText("Чем помочь?")}</h2>
+                  <p>{translateText("Подберём, где искать выпечку, и поможем разобраться с выбором.")}</p>
+                </div>
 
                 <div className="ai-welcome__grid">
                   {TOPICS.map(({ Icon, title, question }) => (
