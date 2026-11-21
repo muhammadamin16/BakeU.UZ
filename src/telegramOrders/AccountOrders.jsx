@@ -28,50 +28,12 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
       markets: [],
       error: "",
     }),
-    [qty, setQty] = useState(() => productId ? { [lineKey(productId)]: 1 } : {}),
+    [qty, setQty] = useState(() => productId ? { [productId]: 1 } : {}),
     [choices, setChoices] = useState({}),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const cart = useMemo(() => createServerCart(transport.request), [transport]);
-  const [savedCart, setSavedCart] = useState(null);
-  const savedLines = savedCart?.items;
-  const [loadingCart, setLoadingCart] = useState(true);
-  const [cartNotice, setCartNotice] = useState("");
-  const [needsCartReview, setNeedsCartReview] = useState(false);
-  useEffect(() => {
-    const controller = new AbortController();
-    cart.load(controller.signal).then((snapshot) => {
-      if (!controller.signal.aborted) setSavedCart(snapshot);
-    }).catch((failure) => {
-      if (!controller.signal.aborted) setCartNotice(failure.message || "Не удалось загрузить корзину.");
-    }).finally(() => {
-      if (!controller.signal.aborted) setLoadingCart(false);
-    });
-    return () => controller.abort();
-  }, [cart]);
-  async function changeCart(action, line) {
-    setBusy(true);
-    setCartNotice("");
-    try {
-      if (action !== "load" && !savedCart) throw Error("Сначала обновите корзину.");
-      const snapshot = action === "load" ? await cart.load() : await cart[action](line, savedCart.revision);
-      setSavedCart(snapshot);
-      if (!snapshot.items.length) setNeedsCartReview(false);
-      setCartNotice("Серверная корзина обновлена.");
-    } catch (failure) {
-      if (failure.status === 409) {
-        setSavedCart(null);
-        setCartNotice("Корзина изменилась на другом устройстве. Обновите её и повторите действие.");
-      } else {
-        setCartNotice(failure.message || "Не удалось обновить корзину.");
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const attempt = useRef(null);
+  const [attempt, setAttempt] = useState(() => crypto.randomUUID());
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -122,7 +84,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
   );
   const update = () => {
     setSaved(false);
-    attempt.current = null;
+    setAttempt(crypto.randomUUID());
     setError("");
   };
   return (
@@ -159,9 +121,7 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
           await client.checkout(attempt.current);
           setQty({});
           setChoices({});
-          attempt.current = null;
-          setSavedCart(null);
-          await cart.load().then(setSavedCart).catch(() => setCartNotice("Обновите корзину, чтобы загрузить актуальные позиции."));
+          setAttempt(crypto.randomUUID());
           setSaved(true);
           onCreated();
         } catch (failure) {
@@ -312,7 +272,6 @@ function ConnectedAccount({ transport, challenge, productId }) {
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
-      {!account && goPhoneAccountsEnabled && <p><Link to="/login">Войти по подтверждённому телефону</Link> · <Link to="/register">Создать аккаунт</Link></p>}
       {restoring && <p role="status">Восстанавливаем сессию…</p>}
       {!account && !restoring && (
         <form

@@ -1,6 +1,7 @@
 import { normalizeSearch } from "../../i18n/alphabet.js";
-import { getLocale } from "../../i18n/index.js";
-import { translateText } from "../../i18n/index.js";
+import { getLocale, translateText } from "../../i18n/index.js";
+import { useLanguage } from "../../i18n/useLanguage.js";
+import { Link } from "react-router-dom";
 import {
   useCallback,
   useEffect,
@@ -11,9 +12,14 @@ import {
 } from "react";
 import {
   ArrowUp,
+  ArrowUpRight,
+  CakeSlice,
+  Croissant,
+  MapPin,
   History,
+  MessageSquare,
   MessageSquarePlus,
-  RotateCcw,
+  ShieldCheck,
   Search,
   Sparkles,
   Trash2,
@@ -29,58 +35,38 @@ import {
 } from "../../store/aiHistory";
 import "./AiAssistant.css";
 
-const SUGGESTIONS = [
-  "Шоколадный торт на 8 человек до 250 000 сум",
-  "Самса к ужину недорого",
-  "Есть ли торт без орехов?",
-  "Что вкусного рядом со мной?",
+const TOPICS = [
+  { Icon: CakeSlice, title: "Торт на праздник", question: "Как выбрать торт на праздник?" },
+  { Icon: Croissant, title: "Выпечка к ужину", question: "Где посмотреть самсу?" },
+  { Icon: ShieldCheck, title: "Состав и аллергены", question: "Есть ли торт без орехов?" },
+  { Icon: MapPin, title: "Мастера рядом", question: "Что вкусного рядом со мной?" },
 ];
 
-const GREETING =
-  "Здравствуйте! Что ищем: торт на праздник, выпечку к чаю или хлеб на каждый день?";
+function getReply(question) {
+  const text = normalizeSearch(question);
+  const map = /рядом|близко|yaqin|hudud|карта|xarita/.test(text);
+  const allergen = /орех|аллерг|глютен|состав|yong|allerg|glyuten|tarkib/.test(text);
+  const category = [
+    [/торт|tort|праздник|bayram/, "торт"],
+    [/самс|сомс|somsa|samsa/, "самса"],
+    [/печень|pechen/, "Печенье"],
+    [/хлеб|\bnon\b/, "Хлеб"],
+  ].find(([pattern]) => pattern.test(text))?.[1];
 
-const ERROR_TEXT = "Не удалось получить ответ. Попробуйте ещё раз.";
-
-/** Демо-ответы. Здесь позже подключается настоящий API. */
-async function getAiReply(userText) {
-  await new Promise((resolve) =>
-    setTimeout(resolve, 800 + Math.random() * 500),
-  );
-
-  const lower = normalizeSearch(userText);
-
-  if (
-    lower.includes("торт") ||
-    lower.includes("tort") ||
-    lower.includes("праздник") ||
-    lower.includes("bayram")
-  ) {
-    return "Отлично! Для торта уточните: сколько гостей, бюджет и есть ли аллергии (орехи, глютен и т.д.)? Могу сразу предложить варианты от 180 000 до 450 000 сум.";
+  if (allergen) {
+    return {
+      text: "При аллергии уточните у продавца состав и возможный контакт с аллергенами. Условия могут различаться у разных мастеров.",
+      category,
+    };
   }
-  if (
-    lower.includes("самса") ||
-    lower.includes("somsa") ||
-    lower.includes("ужин") ||
-    lower.includes("kechki")
-  ) {
-    return "Самса — отличный выбор! У нас есть классическая с мясом и куриная. Сколько штук нужно и в каком районе забрать?";
+  if (map) return { text: "Откройте карту BakeU, чтобы посмотреть мастеров и товары в вашем районе.", map: true };
+  if (category) {
+    return {
+      text: "Посмотрите варианты в каталоге BakeU. Цену, размер порции и сроки лучше уточнить в карточке товара или у продавца.",
+      category,
+    };
   }
-  if (
-    lower.includes("орех") ||
-    lower.includes("yong") ||
-    lower.includes("аллерг") ||
-    lower.includes("allerg")
-  ) {
-    return "Да, есть торты и десерты без орехов. Могу показать варианты с маркировкой «без орехов». Какой повод и на сколько человек?";
-  }
-  if (
-    lower.includes("рядом") ||
-    lower.includes("yaqin") ||
-    lower.includes("близко")
-  ) {
-    return "Сейчас посмотрю мастеров рядом с вами. Разрешите геолокацию или напишите район — подберу ближайшие варианты.";
-  }
-  return "Понял вас. Расскажите чуть подробнее: бюджет, количество гостей, повод и район — подберу самые подходящие варианты на BakeU.";
+  return { text: "Могу направить вас в каталог или на карту. Для поиска товара напишите, что ищете, например торт, самсу, печенье или хлеб." };
 }
 
 const formatTime = (timestamp) =>
@@ -121,10 +107,10 @@ function useFullViewport(rootRef) {
 }
 
 export default function AiAssistant() {
+  useLanguage();
   const [chats, setChats] = useState(loadChats);
   const [activeId, setActiveId] = useState(null); // null = новый чат
   const [input, setInput] = useState("");
-  const [pendingId, setPendingId] = useState(null); // чат, который ждёт ответа
   const [historyOpen, setHistoryOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState(null); // "all" или id чата
@@ -133,6 +119,9 @@ export default function AiAssistant() {
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const confirmTimer = useRef(null);
+  const historyRef = useRef(null);
+  const historyButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
   useFullViewport(rootRef);
 
@@ -141,7 +130,6 @@ export default function AiAssistant() {
     [chats, activeId],
   );
   const messages = activeChat ? activeChat.messages : [];
-  const isTyping = pendingId !== null && pendingId === activeId;
   const isNewChat = messages.length === 0;
 
   // Сохранение истории
@@ -162,7 +150,7 @@ export default function AiAssistant() {
       top: container.scrollHeight,
       behavior: reduced ? "auto" : "smooth",
     });
-  }, [messages.length, isTyping, activeId]);
+  }, [messages.length, activeId]);
 
   // Авто-высота поля ввода
   useEffect(() => {
@@ -174,19 +162,46 @@ export default function AiAssistant() {
 
   // Фокус на поле ввода (только на устройствах с мышью, чтобы не вызывать клавиатуру)
   useEffect(() => {
-    if (isTyping) return;
     if (window.matchMedia("(hover: hover)").matches) {
       inputRef.current?.focus();
     }
-  }, [isTyping, activeId]);
+  }, [activeId]);
 
-  // Escape закрывает панель истории
+  const closeHistory = useCallback(() => {
+    setHistoryOpen(false);
+    requestAnimationFrame(() => historyButtonRef.current?.focus());
+  }, []);
+
   useEffect(() => {
     if (!historyOpen) return undefined;
-    const onKey = (event) => event.key === "Escape" && setHistoryOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [historyOpen]);
+    closeButtonRef.current?.focus();
+
+    function handleHistoryKeys(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeHistory();
+      }
+      if (event.key !== "Tab") return;
+      const controls = [...(historyRef.current?.querySelectorAll("button:not(:disabled), input") ?? [])];
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+
+    const desktop = window.matchMedia("(min-width: 861px)");
+    desktop.addEventListener("change", closeHistory);
+    document.addEventListener("keydown", handleHistoryKeys);
+    return () => {
+      desktop.removeEventListener("change", closeHistory);
+      document.removeEventListener("keydown", handleHistoryKeys);
+    };
+  }, [historyOpen, closeHistory]);
 
   const askConfirm = (id) => {
     setConfirmId(id);
@@ -194,69 +209,30 @@ export default function AiAssistant() {
     confirmTimer.current = setTimeout(() => setConfirmId(null), 3000);
   };
 
-  const appendMessage = useCallback((chatId, message) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              updatedAt: message.time,
-              messages: [...chat.messages, message],
-            }
+  const handleSend = useCallback((text) => {
+    const value = (text ?? input).trim();
+    if (!value) return;
+
+    const time = Date.now();
+    const nextMessages = [
+      { id: createId(), role: "user", text: value, time },
+      { id: createId(), role: "assistant", ...getReply(value), time, hasCatalogAction: true },
+    ];
+
+    if (activeId) {
+      setChats((current) => current.map((chat) =>
+        chat.id === activeId
+          ? { ...chat, updatedAt: time, messages: [...chat.messages, ...nextMessages] }
           : chat,
-      ),
-    );
-  }, []);
-
-  const handleSend = useCallback(
-    async (text) => {
-      const value = (text ?? input).trim();
-      if (!value || isTyping) return;
-
-      const time = Date.now();
-      const userMessage = { id: createId(), role: "user", text: value, time };
-      let chatId = activeId;
-
-      if (!chatId) {
-        chatId = createId();
-        const created = {
-          id: chatId,
-          title: makeTitle(value),
-          createdAt: time,
-          updatedAt: time,
-          messages: [userMessage],
-        };
-        setChats((prev) => [created, ...prev]);
-        setActiveId(chatId);
-      } else {
-        appendMessage(chatId, userMessage);
-      }
-
-      setInput("");
-      setPendingId(chatId);
-
-      try {
-        const replyText = await getAiReply(value);
-        appendMessage(chatId, {
-          id: createId(),
-          role: "assistant",
-          text: replyText,
-          time: Date.now(),
-        });
-      } catch {
-        appendMessage(chatId, {
-          id: createId(),
-          role: "assistant",
-          text: ERROR_TEXT,
-          time: Date.now(),
-          isError: true,
-        });
-      } finally {
-        setPendingId((current) => (current === chatId ? null : current));
-      }
-    },
-    [input, isTyping, activeId, appendMessage],
-  );
+      ));
+    } else {
+      const id = createId();
+      const chat = { id, title: makeTitle(value), createdAt: time, updatedAt: time, messages: nextMessages };
+      setChats((current) => [chat, ...current]);
+      setActiveId(id);
+    }
+    setInput("");
+  }, [activeId, input]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -278,12 +254,15 @@ export default function AiAssistant() {
     setActiveId(null);
     setInput("");
     setHistoryOpen(false);
-    inputRef.current?.focus();
+    requestAnimationFrame(() => {
+      if (window.matchMedia("(hover: hover)").matches) inputRef.current?.focus();
+      else historyButtonRef.current?.focus();
+    });
   };
 
   const openChat = (id) => {
     setActiveId(id);
-    setHistoryOpen(false);
+    if (historyOpen) closeHistory();
     setConfirmId(null);
   };
 
@@ -321,14 +300,19 @@ export default function AiAssistant() {
         {/* ===== История ===== */}
         <aside
           className={`ai-history ${historyOpen ? "is-open" : ""}`}
-          aria-label={translateText("История чатов")}
+          ref={historyRef}
+          id="ai-history"
+          role={historyOpen ? "dialog" : undefined}
+          aria-modal={historyOpen || undefined}
+          aria-labelledby="ai-history-title"
         >
           <div className="ai-history__top">
-            <h2>{translateText("История")}</h2>
+            <h2 id="ai-history-title">{translateText("История чатов")}</h2>
             <button
               type="button"
               className="ai-icon-btn ai-history__close"
-              onClick={() => setHistoryOpen(false)}
+              ref={closeButtonRef}
+              onClick={closeHistory}
               aria-label={translateText("Закрыть историю")}
             >
               <X size={18} />
@@ -355,11 +339,10 @@ export default function AiAssistant() {
 
           <div className="ai-history__list">
             {chats.length === 0 && (
-              <p className="ai-history__empty">
-                {translateText(
-                  "Здесь появятся ваши разговоры с помощником. Задайте первый вопрос.",
-                )}
-              </p>
+              <div className="ai-history__empty">
+                <MessageSquare size={22} aria-hidden="true" />
+                <p>{translateText("Здесь появятся ваши разговоры с помощником. Задайте первый вопрос.")}</p>
+              </div>
             )}
 
             {chats.length > 0 && groups.length === 0 && (
@@ -383,8 +366,9 @@ export default function AiAssistant() {
                         onClick={() => openChat(chat.id)}
                         aria-current={chat.id === activeId ? "true" : undefined}
                       >
+                        <MessageSquare size={16} aria-hidden="true" />
                         <span className="ai-chat__title">
-                          {translateText(chat.title)}
+                          {chat.title}
                         </span>
                         <span className="ai-chat__meta">
                           {translateText(chat.messages.length)}{" "}
@@ -400,11 +384,9 @@ export default function AiAssistant() {
                           confirmId === chat.id ? "is-confirm" : ""
                         }`}
                         onClick={() => deleteChat(chat.id)}
-                        aria-label={translateText(
-                          confirmId === chat.id
-                            ? "Подтвердить удаление"
-                            : `Удалить чат: ${chat.title}`,
-                        )}
+                        aria-label={confirmId === chat.id
+                          ? translateText("Подтвердить удаление")
+                          : `${translateText("Удалить чат")} · ${chat.title}`}
                       >
                         {confirmId === chat.id ? (
                           translateText("Удалить?")
@@ -439,25 +421,25 @@ export default function AiAssistant() {
           <button
             type="button"
             className="ai-backdrop"
-            onClick={() => setHistoryOpen(false)}
+            onClick={closeHistory}
             aria-label={translateText("Закрыть историю")}
             tabIndex={-1}
           />
         )}
 
         {/* ===== Чат ===== */}
-        <section className="ai-chatpane">
+        <section className="ai-chatpane" inert={historyOpen}>
           <header className="ai__header">
             <button
               type="button"
               className="ai-icon-btn ai__history-btn"
+              ref={historyButtonRef}
               onClick={() => setHistoryOpen(true)}
+              aria-expanded={historyOpen}
+              aria-controls="ai-history"
               aria-label={translateText("Открыть историю чатов")}
             >
               <History size={18} />
-              {chats.length > 0 && (
-                <span className="ai__count">{chats.length}</span>
-              )}
             </button>
 
             <div className="ai__title">
@@ -466,24 +448,18 @@ export default function AiAssistant() {
               </span>
               <div>
                 <h1>{translateText("Помощник BakeU")}</h1>
-                <p>
-                  {translateText(
-                    activeChat
-                      ? activeChat.title
-                      : "Бюджет, повод, гости, район — обычными словами",
-                  )}
-                </p>
+                {activeChat && <p>{activeChat.title}</p>}
               </div>
             </div>
 
             <button
               type="button"
-              className="ai-icon-btn"
+              className="ai-icon-btn ai__new-btn"
               onClick={startNewChat}
               aria-label={translateText("Начать новый чат")}
               title={translateText("Новый чат")}
             >
-              <RotateCcw size={17} />
+              <MessageSquarePlus size={18} />
             </button>
           </header>
 
@@ -495,21 +471,25 @@ export default function AiAssistant() {
           >
             {isNewChat ? (
               <div className="ai-welcome">
-                <span className="ai-welcome__badge" aria-hidden="true">
-                  <Sparkles size={26} strokeWidth={2} />
-                </span>
-                <h2>{translateText("Чем помочь?")}</h2>
-                <p>{translateText(GREETING)}</p>
+                <div className="ai-welcome__hero">
+                  <h2>{translateText("Чем помочь?")}</h2>
+                  <p>{translateText("Подберём, где искать выпечку, и поможем разобраться с выбором.")}</p>
+                </div>
 
                 <div className="ai-welcome__grid">
-                  {SUGGESTIONS.map((item) => (
+                  {TOPICS.map(({ Icon, title, question }) => (
                     <button
-                      key={item}
+                      key={title}
                       type="button"
                       className="ai-chip"
-                      onClick={() => handleSend(translateText(item))}
+                      onClick={() => handleSend(translateText(question))}
                     >
-                      {translateText(item)}
+                      <span className="ai-chip__icon"><Icon size={20} aria-hidden="true" /></span>
+                      <span className="ai-chip__copy">
+                        <strong>{translateText(title)}</strong>
+                        <span>{translateText(question)}</span>
+                      </span>
+                      <ArrowUpRight className="ai-chip__arrow" size={16} aria-hidden="true" />
                     </button>
                   ))}
                 </div>
@@ -527,6 +507,17 @@ export default function AiAssistant() {
                       ? translateText(message.text)
                       : message.text}
                   </p>
+                  {message.role === "assistant" && message.hasCatalogAction && (
+                    <Link
+                      className="ai-bubble__action"
+                      to={message.map
+                        ? "/map"
+                        : `/seller?tab=products${message.category ? `&q=${encodeURIComponent(message.category)}` : ""}`}
+                    >
+                      {translateText(message.map ? "Открыть карту" : "Открыть каталог")}
+                      <ArrowUpRight size={15} aria-hidden="true" />
+                    </Link>
+                  )}
                   <time dateTime={new Date(message.time).toISOString()}>
                     {translateText(formatTime(message.time))}
                   </time>
@@ -534,39 +525,32 @@ export default function AiAssistant() {
               ))
             )}
 
-            {isTyping && (
-              <div
-                className="ai-bubble ai-bubble--assistant ai-bubble--typing"
-                aria-label={translateText("Помощник печатает")}
-              >
-                <span className="ai-dot" />
-                <span className="ai-dot" />
-                <span className="ai-dot" />
-              </div>
-            )}
           </div>
 
-          <form className="ai__form" onSubmit={handleSubmit}>
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={translateText("Напишите, что нужно…")}
-              aria-label={translateText("Сообщение помощнику")}
-              autoComplete="off"
-              maxLength={1000}
-            />
-            <button
-              type="submit"
-              className="ai__send"
-              disabled={!input.trim() || isTyping}
-              aria-label={translateText("Отправить")}
-            >
-              <ArrowUp size={19} strokeWidth={2.6} />
-            </button>
-          </form>
+          <footer className="ai-composer">
+            <form className="ai__form" onSubmit={handleSubmit}>
+              <textarea
+                ref={inputRef}
+                rows={1}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={translateText("Напишите, что нужно…")}
+                aria-label={translateText("Сообщение помощнику")}
+                autoComplete="off"
+                maxLength={1000}
+              />
+              <button
+                type="submit"
+                className="ai__send"
+                disabled={!input.trim()}
+                aria-label={translateText("Отправить")}
+              >
+                <ArrowUp size={19} strokeWidth={2.6} />
+              </button>
+            </form>
+            <p>{translateText("Помощник использует готовые ответы и ссылки BakeU.")}</p>
+          </footer>
         </section>
       </div>
     </div>
