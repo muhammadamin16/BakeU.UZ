@@ -211,3 +211,18 @@ Needed: owner-managed Railway access (no tokens in chat), verified backup restor
 actual private URI/PORT references, live bridge diagnostics and deployed commits,
 legacy-account recovery decisions, self-service rule/admin UID approval, real
 Telegram test delivery and a separate production deployment/migration approval.
+
+### Gateway isolation and build identity
+
+In every Railway staging environment set WEB_GO_API_URL and WEB_BOT_API_URL
+explicitly before deployment. The gateway refuses missing values and its known
+production API origins in non-production Railway environments. Check private
+service references too, because the gateway cannot infer their destination.
+Go runtime mode also requires explicit upstreams. A Go-enabled browser build
+and WEB_ACCOUNTS_MODE=legacy are incompatible.
+
+If Railway supplies RAILWAY_GIT_COMMIT_SHA to the Docker build, the static
+/bakeu-build.json includes its validated 40-character commit. Compare it with
+the selected Railway deployment commit and GitHub. If it is absent, verify
+the SHA in the Railway deployment details; a successful metadata response
+alone does not identify the build.

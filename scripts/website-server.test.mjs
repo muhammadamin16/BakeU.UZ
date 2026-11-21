@@ -21,7 +21,7 @@ test("website routes explicit Go sessions without confusing legacy login or expo
 });
 
 test("cutover rejects a stale or cross-site frontend build rather than falling back to SQLite",async()=>{
-  const dir=await mkdtemp(join(tmpdir(),"bakeu-build-config-"));const config=readWebsiteConfig({WEB_DIST_DIR:dir,WEB_ACCOUNTS_MODE:"go",PUBLIC_SITE_URL:"https://bakeu.test"});
+  const dir=await mkdtemp(join(tmpdir(),"bakeu-build-config-"));const config=readWebsiteConfig({WEB_DIST_DIR:dir,WEB_ACCOUNTS_MODE:"go",WEB_GO_API_URL:"https://go.test",WEB_BOT_API_URL:"https://bot.test",PUBLIC_SITE_URL:"https://bakeu.test"});
   try{
     await assert.rejects(validateWebsiteBuild(config));
     await writeFile(join(dir,"bakeu-build.json"),JSON.stringify(publicBuildMetadata({VITE_GO_PHONE_ACCOUNTS:"false"})));
@@ -30,6 +30,7 @@ test("cutover rejects a stale or cross-site frontend build rather than falling b
     await assert.rejects(validateWebsiteBuild(config));
     await writeFile(join(dir,"bakeu-build.json"),JSON.stringify(publicBuildMetadata({VITE_GO_PHONE_ACCOUNTS:"true",VITE_GO_API_URL:"/api"})));
     await validateWebsiteBuild(config);
+    await assert.rejects(validateWebsiteBuild({ ...config, mode: "legacy" }), /requires WEB_ACCOUNTS_MODE=go/);
     assert.throws(()=>publicBuildMetadata({VITE_GO_API_URL:"https://user:secret@example.test/api"}));
   }finally{await rm(dir,{recursive:true,force:true});}
 });
@@ -76,4 +77,18 @@ test("production server preserves Go cookies/methods/multipart and never returns
     assert.equal((await fetch(base + "/assets/missing.js")).status, 404);
     assert.equal((await fetch(base + "/assets/app.js")).headers.get("cache-control"), "public, max-age=31536000, immutable");
   } finally { await new Promise((resolve) => server.close(resolve)); await rm(dir, { recursive: true, force: true }); }
+});
+
+test("Railway staging requires explicit isolated upstreams even in legacy mode", () => {
+  const staging = { RAILWAY_ENVIRONMENT_NAME: "stading" };
+  assert.throws(() => readWebsiteConfig(staging), /explicitly/);
+  assert.throws(() => readWebsiteConfig({ ...staging, WEB_GO_API_URL: "https://bakeu-backend-production.up.railway.app", WEB_BOT_API_URL: "https://test-bot.example" }), /known production/);
+  assert.equal(readWebsiteConfig({ ...staging, WEB_GO_API_URL: "http://go.railway.internal:8080", WEB_BOT_API_URL: "https://test-bot.example" }).go, "http://go.railway.internal:8080");
+  assert.throws(() => readWebsiteConfig({ WEB_ACCOUNTS_MODE: "go" }), /explicitly/);
+});
+
+test("build metadata exposes only a validated build-time revision", () => {
+  const sha = "A".repeat(40);
+  assert.equal(publicBuildMetadata({ RAILWAY_GIT_COMMIT_SHA: sha }).commit, sha.toLowerCase());
+  assert.equal(publicBuildMetadata({ RAILWAY_GIT_COMMIT_SHA: "untrusted-build-input" }).commit, undefined);
 });
