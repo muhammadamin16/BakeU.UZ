@@ -128,3 +128,12 @@ The bridge preflight was exercised against the actual new Go diagnostic handler
 on disposable replica and standalone storage. It returned respectively
 MONGO_TRANSACTIONS_READY and MONGO_STANDALONE, and --configured also worked with
 bot feature flags false. No worker was activated and no Telegram message sent.
+
+## Publication
+
+Both new feature branches were pushed. Draft PR creation against backend main
+and website Amin was attempted, but GitHub API returned Forbidden. No new PR,
+merge or production deployment is claimed. Review comparisons:
+
+- https://github.com/muhammadamin16/BakeU-Backend/compare/main...codex/mongodb-readiness-20261122
+- https://github.com/muhammadamin16/BakeU.UZ/compare/Amin...codex/mongodb-readiness-20261122
