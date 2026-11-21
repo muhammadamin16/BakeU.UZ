@@ -2,6 +2,11 @@ export function readOrdersConfig(env = process.env) {
   const enabled = env.TELEGRAM_ORDERS_ENABLED === "true";
   const accountsEnabled = env.GO_ACCOUNTS_ENABLED === "true";
   if (!enabled && !accountsEnabled) return { enabled: false };
+  return { enabled, accountsEnabled, ...readBridgeConnection(env) };
+}
+
+// Shared validation without enabling account routes, workers or feature flags.
+export function readBridgeConnection(env = process.env) {
   let url;
   try {
     url = new URL(env.GO_BACKEND_URL);
@@ -28,8 +33,6 @@ export function readOrdersConfig(env = process.env) {
       "TELEGRAM_BRIDGE_TOKEN must be a separate service credential of at least 32 characters.",
     );
   return {
-    enabled,
-    accountsEnabled,
     baseUrl: url.href.replace(/\/$/, "").replace(/\/api$/, ""),
     token: env.TELEGRAM_BRIDGE_TOKEN,
   };
