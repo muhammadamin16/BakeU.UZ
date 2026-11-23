@@ -1,62 +1,115 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { goAccount } from "../../api/goAccount.js";
 import AuthShell from "./AuthShell.jsx";
+import PhoneInput from "./PhoneInput.jsx";
+import { completeUzPhone } from "./uzPhone.js";
 import { useMiniApp } from "../../miniapp/context.js";
+import { translateText as t } from "../../i18n/index.js";
 import "./GoPhoneAccount.css";
 
 export default function GoPhoneAccount({ register = false }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const mini = useMiniApp();
-  const [draft, setDraft] = useState({ phone: "", name: "", email: "", password: "", role: "customer", marketName: "", address: "" });
+  const [draft, setDraft] = useState({ phone: "", firstName: "", lastName: "", role: "customer", marketName: "", address: "" });
+  const [step, setStep] = useState(register ? 1 : 2);
   const [pending, setPending] = useState(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const change = (key) => (event) => setDraft((value) => ({ ...value, [key]: event.target.value }));
+  const seller = draft.role === "seller";
+
+  function update(key, value) {
+    setDraft((current) => ({ ...current, [key]: value }));
+    setError("");
+  }
+  const change = (key) => (event) => update(key, event.target.value);
+
   async function submit(event) {
     event.preventDefault();
     if (busy) return;
-    setBusy(true); setError("");
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    setBusy(true);
+    setError("");
     try {
       if (pending) {
-        if (Date.parse(pending.expiresAt) <= Date.now()) throw new Error("Код устарел. Запросите новый.");
+        if (Date.parse(pending.expiresAt) <= Date.now()) throw Error("Код устарел. Запросите новый.");
         await goAccount.verifyPhone(pending.id, code);
         if (mini.isMiniMode) await mini.retry();
-        navigate("/account/orders", { replace: true });
+        const search = typeof state?.ordersSearch === "string"
+          ? new URLSearchParams(state.ordersSearch)
+          : new URLSearchParams();
+        navigate({ pathname: "/account/orders", search: search.toString() }, { replace: true });
       } else {
-        const result = await goAccount.startPhone({ ...draft, purpose: register ? "register" : "login" });
-        const url = new URL(result.telegramUrl);
-        if (url.origin !== "https://t.me" || !/^[a-f0-9]{48}$/.test(result.id) || !Number.isFinite(Date.parse(result.expiresAt))) throw new Error("Сервер вернул неверную ссылку подтверждения.");
+        const phone = register ? completeUzPhone(draft.phone) : draft.phone.trim();
+        if (!phone) throw Error("Введите номер в формате +998 XX XXX XX XX.");
+        const firstName = draft.firstName.trim();
+        const lastName = draft.lastName.trim();
+        if (register && (!firstName || !lastName)) throw Error("Заполните все обязательные поля.");
+        const payload = { phone, purpose: register ? "register" : "login" };
+        if (register) {
+          Object.assign(payload, { name: firstName + " " + lastName, role: draft.role });
+          if (seller) Object.assign(payload, { marketName: draft.marketName.trim(), address: draft.address.trim() });
+        }
+        const result = await goAccount.startPhone(payload);
+        if (new URL(result.telegramUrl).origin !== "https://t.me" || !/^[a-f0-9]{48}$/.test(result.id) || !Number.isFinite(Date.parse(result.expiresAt))) {
+          throw Error("Сервер вернул неверную ссылку подтверждения.");
+        }
         setPending(result);
-        setDraft((value) => ({ ...value, password: "" }));
+        setStep(3);
       }
-    } catch (failure) { setError(failure.message || "Не удалось подтвердить аккаунт."); }
-    finally { setBusy(false); }
+    } catch (failure) {
+      setError(failure.message || "Не удалось подтвердить аккаунт.");
+    } finally {
+      setBusy(false);
+    }
   }
-  if (!goAccount) return <AuthShell><div className="go-phone-auth"><h1 id="bk-auth-title">Аккаунт BakeU</h1><p role="alert">Вход и регистрация временно недоступны. Повторите позже.</p><Link to="/">На главную</Link></div></AuthShell>;
-  return <AuthShell><form className="go-phone-auth" onSubmit={submit}>
-    <h1 id="bk-auth-title">{register ? "Создать аккаунт BakeU" : "Войти в BakeU"}</h1>
-    <p>Подтвердите номер через Telegram. Аккаунт и заказы сохраняются на сервере.</p>
-    {!pending ? <>
-      <label>Номер телефона<input required type="tel" autoComplete="tel" maxLength={30} placeholder="+998 90 123 45 67" value={draft.phone} onChange={change("phone")} /></label>
-      {register && <>
-        <label>Имя и фамилия<input required autoComplete="name" minLength={2} maxLength={120} value={draft.name} onChange={change("name")} /></label>
-        <label>Email<input required type="email" autoComplete="email" maxLength={254} value={draft.email} onChange={change("email")} /></label>
-        <label>Пароль<input required type="password" autoComplete="new-password" minLength={8} maxLength={72} value={draft.password} onChange={change("password")} /></label>
-        <label>Тип аккаунта<select aria-label="Тип аккаунта" value={draft.role} onChange={change("role")}><option value="customer">Я покупатель</option><option value="seller">Я продавец</option></select></label>
-        {draft.role === "seller" && <label>Название магазина<input required minLength={2} maxLength={120} value={draft.marketName} onChange={change("marketName")} /></label>}
-        <label>Адрес (необязательно)<input autoComplete="street-address" maxLength={500} value={draft.address} onChange={change("address")} /></label>
-      </>}
-    </> : <>
-      <a className="go-phone-link" href={pending.telegramUrl} target="_blank" rel="noopener noreferrer">Открыть Telegram и получить код ↗</a>
-      <p>Нажмите «Поделиться своим номером» в боте и введите полученный код здесь.</p>
-      <label>Код из Telegram<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} /></label>
-      <button type="button" disabled={busy} onClick={() => { setPending(null); setCode(""); setError(""); }}>Изменить данные / запросить новый код</button>
-    </>}
-    {error && <p className="go-phone-error" role="alert">{error}</p>}
-    <button disabled={busy}>{busy ? "Подождите…" : pending ? "Подтвердить и войти" : "Получить код в Telegram"}</button>
-    <Link to={register ? "/login" : "/register"}>{register ? "Уже есть подтверждённый аккаунт? Войти" : "Создать аккаунт"}</Link>
-    <Link to="/account/orders">Вход в существующий Go-аккаунт по email</Link>
-  </form></AuthShell>;
+
+  if (!goAccount) return <AuthShell><div className="go-phone-auth"><h1 id="bk-auth-title">{t("Аккаунт BakeU")}</h1><p role="alert">{t("Вход и регистрация временно недоступны. Повторите позже.")}</p><Link to="/">{t("На главную")}</Link></div></AuthShell>;
+  return (
+    <AuthShell>
+      <form className="go-phone-auth" onSubmit={submit}>
+        <h1 id="bk-auth-title">{t(register ? "Создать аккаунт BakeU" : "Войти в BakeU")}</h1>
+        {register && <p>{step} / 3 · {t(["Тип аккаунта", "Ваши данные", "Подтверждение Telegram"][step - 1])}</p>}
+        <fieldset disabled={busy}>
+          {step === 1 && (
+            <label>{t("Тип аккаунта")}
+              <select value={draft.role} onChange={change("role")}>
+                <option value="customer">{t("Я покупатель")}</option>
+                <option value="seller">{t("Я продавец")}</option>
+              </select>
+            </label>
+          )}
+          {step === 2 && <>
+            {register && <>
+              <label>{t("Имя")}<input required autoComplete="given-name" maxLength={59} value={draft.firstName} onChange={change("firstName")} /></label>
+              <label>{t("Фамилия")}<input required autoComplete="family-name" maxLength={60} value={draft.lastName} onChange={change("lastName")} /></label>
+            </>}
+            <label htmlFor="go-auth-phone">{t("Телефон")}</label>
+            {register
+              ? <PhoneInput id="go-auth-phone" value={draft.phone} onChange={(value) => update("phone", value)} />
+              : <input id="go-auth-phone" required type="tel" autoComplete="tel" maxLength={30} placeholder="+998 90 123 45 67" value={draft.phone} onChange={change("phone")} />}
+            {register && seller && <>
+              <label>{t("Название магазина")}<input required minLength={2} maxLength={120} autoComplete="organization" value={draft.marketName} onChange={change("marketName")} /></label>
+              <label>{t("Адрес (необязательно)")}<input autoComplete="street-address" maxLength={500} value={draft.address} onChange={change("address")} /></label>
+            </>}
+            {register && <button type="button" onClick={() => { setStep(1); setError(""); }}>{t("Назад")}</button>}
+          </>}
+          {pending && <>
+            <a className="go-phone-link" href={pending.telegramUrl} target="_blank" rel="noopener noreferrer">{t("Открыть Telegram и получить код")} ↗</a>
+            <p>{t("Нажмите «Поделиться своим номером» в боте и введите полученный код здесь.")}</p>
+            <label>{t("Код из Telegram")}<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }} /></label>
+            <button type="button" onClick={() => { setPending(null); setStep(2); setCode(""); setError(""); }}>{t("Изменить данные / запросить новый код")}</button>
+          </>}
+        </fieldset>
+        {error && <p className="go-phone-error" role="alert">{t(error)}</p>}
+        <button disabled={busy}>{t(busy ? "Подождите…" : ["Продолжить", "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
+        <Link to={register ? "/login" : "/register"} state={state}>{t(register ? "Уже есть подтверждённый аккаунт? Войти" : "Создать аккаунт")}</Link>
+      </form>
+    </AuthShell>
+  );
 }

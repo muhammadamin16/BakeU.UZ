@@ -1,21 +1,6 @@
-// Browser-safe adapter. No bot token or admin IDs are ever bundled with Vite.
-// In local development, /api is handled by the Vite proxy. The Railway-hosted
-// frontend has no /api proxy: phone verification belongs to the Node bot API,
-// not to the Go/MongoDB backend or the static website.
-const configuredBase = (import.meta.env.VITE_ACCOUNT_API_URL || "").trim().replace(/\/$/, "");
-const productionBotAPI = "https://bakeu-bot-production.up.railway.app/api";
-const railwayWebsiteHosts = new Set([
-  "bakeu-website-production.up.railway.app",
-  "bakeu.uz",
-  "www.bakeu.uz",
-]);
-const isProductionWebsite =
-  typeof window !== "undefined" && railwayWebsiteHosts.has(window.location.hostname);
-const base =
-  isProductionWebsite && (!configuredBase || configuredBase === "/api")
-    ? productionBotAPI
-    : configuredBase;
-export const accountApiEnabled = Boolean(base);
+// Website builds use the gateway. Native builds can configure an absolute API URL.
+export const accountApiBase = (import.meta.env.VITE_ACCOUNT_API_URL || "").trim().replace(/\/$/, "");
+export const accountApiEnabled = Boolean(accountApiBase);
 const TOKEN_KEY = "bakeu-server-session-v1";
 function cache(result) {
   let records;
@@ -36,7 +21,7 @@ async function request(path, method = "GET", body) {
   const token = sessionStorage.getItem(TOKEN_KEY);
   let response;
   try {
-    response = await fetch(`${base}${path}`, {
+    response = await fetch(`${accountApiBase}${path}`, {
       method,
       headers: {
         ...(body ? { "Content-Type": "application/json" } : {}),

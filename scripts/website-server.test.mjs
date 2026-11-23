@@ -28,7 +28,7 @@ test("cutover rejects a stale or cross-site frontend build rather than falling b
     await assert.rejects(validateWebsiteBuild(config));
     await writeFile(join(dir,"bakeu-build.json"),JSON.stringify(publicBuildMetadata({VITE_GO_PHONE_ACCOUNTS:"true",VITE_GO_API_URL:"https://other.up.railway.app/api"})));
     await assert.rejects(validateWebsiteBuild(config));
-    await writeFile(join(dir,"bakeu-build.json"),JSON.stringify(publicBuildMetadata({VITE_GO_PHONE_ACCOUNTS:"true",VITE_GO_API_URL:"/api"})));
+    await writeFile(join(dir,"bakeu-build.json"),JSON.stringify(publicBuildMetadata({VITE_GO_PHONE_ACCOUNTS:"true",VITE_GO_API_URL:"/api",VITE_ACCOUNT_API_URL:"/api"})));
     await validateWebsiteBuild(config);
     await assert.rejects(validateWebsiteBuild({ ...config, mode: "legacy" }), /requires WEB_ACCOUNTS_MODE=go/);
     assert.throws(()=>publicBuildMetadata({VITE_GO_API_URL:"https://user:secret@example.test/api"}));
@@ -56,6 +56,7 @@ test("production server preserves Go cookies/methods/multipart and never returns
     const auth = await fetch(base + "/api/auth/phone/verify", { method: "POST", headers: { Origin: "https://bakeu.test", "X-BakeU-Session": "browser", "Content-Type": "application/json", Cookie: "__Host-bakeu-refresh=old; other=never-upstream", "X-Telegram-User-Id": "forged" }, body: '{"id":"proof","code":"123456"}' });
     assert.equal(auth.status, 200); assert.match(auth.headers.get("set-cookie"), /HttpOnly/);
     assert.equal(calls[0].url, "https://go.test/api/auth/phone/verify");
+    assert.equal(calls[0].init.headers.origin, "https://bakeu.test");
     assert.equal(calls[0].init.headers.cookie, "__Host-bakeu-refresh=old");
     assert.equal(calls[0].init.headers["x-telegram-user-id"], undefined);
     assert.equal(calls[0].init.body.toString(), '{"id":"proof","code":"123456"}');

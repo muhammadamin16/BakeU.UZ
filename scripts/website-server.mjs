@@ -62,7 +62,7 @@ export async function validateWebsiteBuild(config) {
     throw Error("A Go account build requires WEB_ACCOUNTS_MODE=go.");
   }
   if (config.mode === "go") {
-    const sameOriginAPI = metadata.goAPI === "/api" || config.allowed.some((origin) => metadata.goAPI === origin + "/api");
+    const sameOriginAPI = metadata.goAPI === "/api" && metadata.botAPI === "/api";
     if (!metadata.phoneAccounts || !sameOriginAPI) throw Error("Go account mode requires a Go-enabled website build using the same-origin API gateway.");
   }
 }

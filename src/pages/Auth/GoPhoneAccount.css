@@ -8,3 +8,4 @@
 .go-phone-auth button:disabled { opacity:.6; cursor:wait; }
 .go-phone-auth a { color:#8a4c28; }
 .go-phone-error { color:#9e2b26; background:#fff3f1; border-radius:12px; padding:12px; }
+.go-phone-auth fieldset { display:grid; gap:12px; margin:0; padding:0; border:0; min-inline-size:0; }
