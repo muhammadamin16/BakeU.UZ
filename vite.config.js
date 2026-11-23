@@ -16,7 +16,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), devPortPlugin(), {
       name: "bakeu-public-build-metadata",
-      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata(env)) }); },
+      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata({
+          ...env, RAILWAY_GIT_COMMIT_SHA: process.env.RAILWAY_GIT_COMMIT_SHA,
+        })) }); },
     }],
 
     optimizeDeps: {
