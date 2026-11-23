@@ -2,6 +2,7 @@ import { miniAppUrl } from "./utils/formatMessage.js";
 import { formatStartupError } from "./utils/startupError.js";
 import { readConfig } from "./config/index.js";
 import { openDatabase } from "./database/index.js";
+import { prepareSQLitePermissions } from "./database/permissions.js";
 import { createRepository } from "./database/repository.js";
 import { createTelegram } from "./services/telegram.js";
 import {
@@ -35,6 +36,8 @@ async function main() {
       "Use npm run bot from the repository root to launch the Mini App.",
     );
   startupStage = "database";
+  prepareSQLitePermissions(config.databasePath);
+  if (process.platform === "linux") console.log(`SQLite service identity: uid=${process.getuid()} gid=${process.getgid()}.`);
   const db = openDatabase(config.databasePath);
   if (process.argv.includes("--check")) {
     console.log(
