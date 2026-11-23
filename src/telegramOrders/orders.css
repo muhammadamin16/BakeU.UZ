@@ -79,3 +79,10 @@
 .tg-orders-line input {
   inline-size: 5rem;
 }
+
+.tg-orders-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 12px;
+}

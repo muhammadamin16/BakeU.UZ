@@ -1,44 +1,48 @@
-# BakeU production integration status (2026-11-19)
+# BakeU website, Go API and Telegram bot on Railway
 
-## Services and public URLs
-- Website: https://bakeu-website-production.up.railway.app
-- Telegram bot / account API: https://bakeuuz-production.up.railway.app
-- Go/MongoDB backend: separate Railway service; configure its real URL separately, **not** as `VITE_ACCOUNT_API_URL`.
+The Railway website serves the frontend and proxies relative `/api` requests.
+Go handles phone accounts, browser refresh sessions, orders, the catalog and
+seller APIs. The bot handles Telegram and legacy Node endpoints. The gateway
+forwards the original browser `Origin` so the selected upstream can enforce
+its own policy. The gateway's successful OPTIONS response does not establish
+that Go will accept the browser's request.
 
-## Site authentication (current implementation)
-Phone registration/login uses the Telegram bot's **Node + SQLite** API:
-- `POST /api/auth/start-registration`
-- `POST /api/auth/verify-registration`
-- `POST /api/auth/start-login`
-- `POST /api/auth/verify-login`
-- `GET /health`
+## Verify before promoting a build
 
-In Railway's **BakeU-WebSite** variables, set:
-```dotenv
-VITE_ACCOUNT_API_URL=https://bakeuuz-production.up.railway.app/api
-```
-Rebuild/redeploy the website, because Vite embeds this value at build time. Current frontend also uses the known bot API for production website domains if `VITE_ACCOUNT_API_URL` is absent or `/api` (no website reverse proxy is installed). For local development use `VITE_ACCOUNT_API_URL=/api` and Vite's proxy.
+1. In staging, deploy the compatible BakeU-Backend revision first. Confirm
+   phone signup accepts a name, phone and role without email or password.
+   Seller registration also sends the shop name. Existing phone proof and
+   transaction behavior is documented in [the rollout guide](production/ROLLOUT.md).
+2. On the website service, build with `VITE_GO_PHONE_ACCOUNTS=true`,
+   `VITE_GO_API_URL=/api` and `VITE_ACCOUNT_API_URL=/api`. The runtime
+   uses `WEB_ACCOUNTS_MODE=go` and explicit `WEB_GO_API_URL` and
+   `WEB_BOT_API_URL` upstreams. Verify the built settings at
+   `/bakeu-build.json`.
+3. Verify each public website HTTPS origin against `WEB_ALLOWED_ORIGINS`
+   on the website and `AUTH_BROWSER_ORIGINS` on Go. For the Railway URL,
+   the exact entry is `https://bakeu-website-production.up.railway.app`.
+   Use origins without paths or trailing slashes. Add custom domains only
+   if they are active and intended to serve the application. Verify the
+   bot's `ALLOWED_ORIGINS` for browser calls to bot routes. Apply any
+   approved configuration corrections through the Railway service owner.
+4. With staging URLs supplied, run the read-only check.
 
-In the **BakeU-bot** variables configure `ALLOWED_ORIGINS` to include the **exact** website origin:
-```dotenv
-ALLOWED_ORIGINS=https://bakeu-website-production.up.railway.app,https://bakeu.uz,https://www.bakeu.uz
-MINI_APP_URL=https://bakeu-website-production.up.railway.app
-SITE_URL=https://bakeu-website-production.up.railway.app
-TRUST_PROXY=false
-```
-Keep `BOT_TOKEN` and `ADMIN_IDS` in **Railway Variables**, never source control or frontend variables. **Rotate any previously shown BOT_TOKEN via BotFather**.
+   ```bash
+   BAKEU_WEBSITE_URL=https://your-staging-website.example \
+   BAKEU_GO_URL=https://your-staging-go.example \
+   BAKEU_BOT_URL=https://your-staging-bot.example \
+   BAKEU_EXPECT_ACCOUNTS_MODE=go npm run deploy:check
+   ```
 
-Railway public networking **Target Port** must match the real runtime `PORT` in deploy logs. For the reported deployment it was **8080**, not 3001. `GET https://bakeuuz-production.up.railway.app/health` must return `{"ok":true,"service":"bakeu-bot-api"}`.
+   `gateway_go_browser_origin` and `go_browser_origin` should both
+   return HTTP 401 for the anonymous request with the website's Origin.
+   `go_origin_rejected` identifies a Go rejection.
+   `website_origin_rejected` identifies a gateway rejection.
+5. In staging, use test Telegram accounts for buyer and seller signup,
+   login, session refresh after reload, order history and seller orders.
+   After review and approval, promote Go before the website and rerun
+   the read-only production check with `BAKEU_EXPECT_ACCOUNTS_MODE=go`.
 
-## Persistent storage — do not lose user accounts
-Node bot uses SQLite, not MongoDB. Before switching `DATABASE_PATH`, back up existing `data/bakeu.sqlite` and verify a persistent Railway volume. If a volume is mounted at `/data`, use `DATABASE_PATH=/data/bakeu.sqlite`; moving the path alone does not migrate historical accounts.
-
-## Go backend integration remains separate
-`BakeU-Backend` is Go/Gin with MongoDB. It currently provides email/password `/api/auth/signup` and `/api/auth/login`, not Telegram phone verification endpoints. The two accounts stores are **not synchronized**. No automatic migration or 100% end-to-end production verification should be claimed until a deliberate data migration and role/identity reconciliation is implemented and tested.
-
-## Smoke-check command
-From `BakeU.UZ`:
-```bash
-npm run deploy:check
-```
-It safely checks website HTML, bot health, CORS OPTIONS, and the presence of the phone auth route using intentionally invalid input. It does **not** create users. A complete end-to-end test must additionally register a fresh real Telegram account, share the matching phone contact with the bot, enter the code, log out, log in, and verify persistence after redeploy.
+Follow the [rollout guide](production/ROLLOUT.md) for persistent SQLite volume
+and MongoDB configuration. This release requires no existing account or
+database migration.

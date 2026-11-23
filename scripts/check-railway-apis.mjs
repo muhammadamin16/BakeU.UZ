@@ -35,17 +35,37 @@ const tests = [
   ["browser_refresh_preflight", website + "/api/auth/refresh", (r) => r.status === 204 && r.headers.get("access-control-allow-origin") === website,
     { method: "OPTIONS", headers: { Origin: website, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type,x-bakeu-session" } }],
 ];
+// Preflight terminates at the gateway. A read-only authenticated route
+// additionally exercises the Go origin check without submitting credentials.
+function goOriginResult(response, body) {
+  if (response.status === 401) return true;
+  const { error } = JSON.parse(body);
+  return {
+    ok: false,
+    category: response.status === 403 && error === "request origin is not allowed"
+      ? "go_origin_rejected"
+      : response.status === 403 && error === "Источник запроса не разрешён."
+        ? "website_origin_rejected"
+        : "unexpected_auth_response",
+  };
+}
+const browserHeaders = { headers: { Origin: website } };
+tests.push(
+  ["gateway_go_browser_origin", website + "/api/me", goOriginResult, browserHeaders],
+  ["go_browser_origin", go + "/api/me", goOriginResult, browserHeaders],
+);
 let failed = 0;
 for (const [name, url, check, init] of tests) {
   try {
     const response = await fetch(url, { ...init, redirect: "error", signal: AbortSignal.timeout(12000) });
     const body = await response.text();
-    const ok = check(response, body);
+    const result = check(response, body);
+    const { ok, category } = typeof result === "boolean" ? { ok: result } : result;
     if (!ok) failed++;
-    console.log(JSON.stringify({ check: name, ok, httpStatus: response.status }));
+    console.log(JSON.stringify({ check: name, ok, category, httpStatus: response.status }));
   } catch { failed++; console.log(JSON.stringify({ check: name, ok: false, category: "network_or_invalid_response" })); }
 }
-const consistency = accountBuildStatus(observedMode, observedBuild, website, expectedMode);
+const consistency = accountBuildStatus(observedMode, observedBuild, expectedMode);
 if (!consistency.ok) failed++;
 console.log(JSON.stringify({ check: "build_runtime_account_mode", ...consistency }));
 console.log(JSON.stringify({ failed, limitation: "Public probes do not verify ownership, login, orders, persistence or Telegram delivery." }));

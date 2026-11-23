@@ -1,8 +1,8 @@
-// HashRouter needs /#/admin. Accept the common /admin development URL too.
+// Accept direct admin and account links in the HashRouter website.
 // Telegram launch parameters and explicit hash routes must stay untouched.
-export function normalizeAdminUrl(input) {
+export function normalizeWebsiteUrl(input) {
   const url = new URL(input);
-  if (!/^\/admin(?:\/|$)/.test(url.pathname) || url.hash) return url;
+  if (!/^\/(?:admin(?:\/|$)|(?:account\/orders|login|register)\/?$)/.test(url.pathname) || url.hash) return url;
   if (
     url.searchParams.get("miniapp") === "1" ||
     [...url.searchParams.keys()].some((key) => key.startsWith("tgWebApp"))

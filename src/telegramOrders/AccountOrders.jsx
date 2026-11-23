@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useLocation, Link } from "react-router-dom";
+import { accountApiBase } from "../bot/client/accountApi.js";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
 import { createServerCart, includesSavedCart, lineKey, restoreCart } from "./serverCart.js";
@@ -23,12 +24,7 @@ const configured = (
 const SellerSettings = lazy(
   () => import("../pages/Profile/seller/ServerStorefront.jsx"),
 );
-const botBase = (
-  import.meta.env.VITE_ACCOUNT_API_URL ||
-  (import.meta.env.DEV
-    ? "/api"
-    : "https://bakeu-bot-production.up.railway.app/api")
-).trim();
+const botBase = accountApiBase || "/api";
 function CatalogCheckout({ transport, client, onCreated, productId }) {
   const [catalog, setCatalog] = useState({
       products: [],
@@ -301,6 +297,8 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
   );
 }
 function ConnectedAccount({ transport, challenge, productId, orderId }) {
+  const { pathname, search } = useLocation();
+  const authState = pathname === "/account/orders" ? { ordersSearch: search } : null;
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -347,10 +345,16 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
   return (
     <div className="tg-orders-panel">
       <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
-      {!account && goPhoneAccountsEnabled && <p><Link to="/login">Войти по подтверждённому телефону</Link> · <Link to="/register">Создать аккаунт</Link></p>}
+      {!account && !restoring && goPhoneAccountsEnabled && (
+        <div className="tg-orders-account-actions">
+          <Link className="bw-btn primary" to="/login" state={authState}>{t("Войти по подтверждённому телефону")}</Link>
+          <Link className="bw-btn" to="/register" state={authState}>{t("Создать аккаунт")}</Link>
+          {challenge && <p>{t("Для входа через Telegram подтвердите телефон аккаунта.")}</p>}
+        </div>
+      )}
       {restoring && <p role="status">Восстанавливаем сессию…</p>}
       {!challenge && !account && !restoring && goPhoneAccountsEnabled && <GuestCart />}
-      {!account && !restoring && (
+      {!account && !restoring && !goPhoneAccountsEnabled && (
         <form
           onSubmit={async (e) => {
             e.preventDefault();
