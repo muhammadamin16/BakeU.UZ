@@ -80,6 +80,11 @@ Register/login return `{user, token, application}`. Profile returns `{user, appl
 
 ## Production
 
+For Railway `/data/bakeu.sqlite` permission errors, see the
+[volume-preserving SQLite startup fix](../../docs/production/BOT_SQLITE_PERMISSIONS.md).
+The Docker image prepares only managed storage metadata, then the bot process
+drops to `node` before opening SQLite; the existing volume is retained.
+
 1. Install Node 24 LTS on a VPS. Place the project at `/opt/BakeU.UZ`; create a dedicated `bakeu` service user. Give that user access to the project and ownership of `src/bot/data`. Protect `.env` with mode 600 and keep it out of Git.
 2. Set `SITE_URL` to the real HTTPS site, exact `ALLOWED_ORIGINS`, `API_HOST=127.0.0.1`; enable `TRUST_PROXY=true` only behind the supplied Nginx configuration which overwrites `X-Real-IP`.
 3. Copy/adjust `deploy/bakeu-bot.service` to systemd. It runs the bot separately from the frontend. Adjust `/usr/bin/node` if your Node installation uses another path. Create the data directory before starting the service. Enable/start with `systemctl enable --now bakeu-bot`.

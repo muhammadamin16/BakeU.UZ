@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "bot:volume:test": "node scripts/check-bot-volume-permissions.mjs",
     "test:integration": "node --test scripts/*.test.* src/api/*.test.js src/miniapp/*.test.js src/telegramOrders/*.test.js src/store/*.test.js src/i18n/*.test.js src/platform/*.test.js src/routes/*.test.js src/admin/utils/*.test.js",
     "start": "node scripts/website-server.mjs",
     "dev": "vite",
