@@ -1,6 +1,6 @@
 import {
-  closeSync, constants, fchmodSync, fchownSync, fstatSync,
-  lstatSync, mkdirSync, openSync, readFileSync,
+  closeSync, constants, fchownSync, fstatSync,
+  lstatSync, openSync, readFileSync,
 } from "node:fs";
 import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,52 +22,39 @@ function childOf(path, root) {
   return rest !== "" && rest !== ".." && !rest.startsWith(".." + sep) && !isAbsolute(rest);
 }
 function safeFile(stat) { return stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1; }
-function repairFile(path, uid, gid) {
-  // Descriptors + O_NOFOLLOW avoid following a swapped final symlink. Never
-  // recurse through volume contents, truncate a file or open SQLite as root.
-  const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
-  try {
-    const stat = fstatSync(fd);
-    if (!safeFile(stat)) throw new SQLitePermissionError("unsafe_path");
-    if (stat.uid !== uid || stat.gid !== gid) fchownSync(fd, uid, gid);
-    if ((stat.mode & 0o7777) !== 0o600) fchmodSync(fd, 0o600);
-  } finally { closeSync(fd); }
-}
-
-function prepareManagedFiles(path, root, uid, gid) {
+function prepareDirectory(path, root, uid, gid) {
   const descriptors = [];
   const directoryFlags = constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_DIRECTORY;
   try {
     let parent = openSync("/", directoryFlags); descriptors.push(parent);
-    // Anchor every component with a held directory FD. A renamed parent or
-    // swapped symlink cannot redirect privileged chown/chmod outside this tree.
+    // Anchor validation with held FDs. Only the literal /data mount directory
+    // can be chowned; neither descendants nor existing SQLite files are changed.
     for (const part of root.split(sep).filter(Boolean)) {
       const child = `/proc/self/fd/${parent}/${part}`;
       const stat = statIfPresent(child);
-      if (stat && (!stat.isDirectory() || stat.isSymbolicLink())) throw new SQLitePermissionError("unsafe_path");
-      if (!stat) mkdirSync(child, { mode: 0o700 });
+      if (!stat || !stat.isDirectory() || stat.isSymbolicLink()) throw new SQLitePermissionError("unsafe_path");
       parent = openSync(child, directoryFlags); descriptors.push(parent);
     }
-    const managed = [parent];
+    const mount = parent;
+    let parentExists = true;
     for (const part of relative(root, dirname(path)).split(sep).filter(Boolean)) {
       const child = `/proc/self/fd/${parent}/${part}`;
       const stat = statIfPresent(child);
       if (stat && (!stat.isDirectory() || stat.isSymbolicLink())) throw new SQLitePermissionError("unsafe_path");
-      if (!stat) mkdirSync(child, { mode: 0o700 });
-      parent = openSync(child, directoryFlags); descriptors.push(parent); managed.push(parent);
+      // Missing descendants are created later by SQLite startup AS NODE.
+      if (!stat) { parentExists = false; break; }
+      parent = openSync(child, directoryFlags); descriptors.push(parent);
     }
     const database = `/proc/self/fd/${parent}/${basename(path)}`;
-    const files = [database, database + "-wal", database + "-shm", database + "-journal"];
+    const files = parentExists ? [database, database + "-wal", database + "-shm", database + "-journal"] : [];
     for (const file of files) {
       const stat = statIfPresent(file);
       if (stat && !safeFile(stat)) throw new SQLitePermissionError("unsafe_path");
     }
-    for (const fd of managed) {
-      const stat = fstatSync(fd);
-      if (stat.uid !== uid || stat.gid !== gid) fchownSync(fd, uid, gid);
-      if ((stat.mode & 0o7777) !== 0o700) fchmodSync(fd, 0o700);
+    if (root === "/data") {
+      const stat = fstatSync(mount);
+      if (stat.uid !== uid || stat.gid !== gid) fchownSync(mount, uid, gid);
     }
-    for (const file of files) if (statIfPresent(file)) repairFile(file, uid, gid);
   } finally { for (const fd of descriptors.reverse()) closeSync(fd); }
 }
 
@@ -87,7 +74,7 @@ export function prepareSQLitePermissions(databasePath) {
       const path = resolve(databasePath);
       const root = ["/data", applicationData].find((base) => childOf(path, base));
       if (!root) throw new SQLitePermissionError("unsupported_root_path");
-      prepareManagedFiles(path, root, uid, gid);
+      prepareDirectory(path, root, uid, gid);
     }
     process.umask(0o077);
     process.initgroups("node", gid);
