@@ -1,8 +1,10 @@
 import { ConfigError } from "../config/index.js";
 import { TelegramError } from "../services/telegram.js";
+import { SQLitePermissionError } from "../database/permissions.js";
 
 // Deliberately do not print raw error.message, cause, stack or request URLs.
 export function formatStartupError(error, stage = "startup") {
+  if (error instanceof SQLitePermissionError) return error.message;
   if (error instanceof ConfigError)
     return `Configuration error: ${error.message}`;
   if (error instanceof TelegramError) {
@@ -33,10 +35,10 @@ export function formatStartupError(error, stage = "startup") {
   }
   if (error?.code === "EADDRINUSE")
     return "API port is already in use. Stop the previous bot/server or change API_PORT (and your frontend proxy) before retrying.";
+  if (stage === "database")
+    return "SQLite database could not be opened. Check DATABASE_PATH and write access to its parent directory, database, -wal and -shm files. Preserve the existing volume and database.";
   if (["EACCES", "EPERM"].includes(error?.code))
     return "Permission denied. Check access to src/bot/data and the configured API port.";
-  if (stage === "database")
-    return "SQLite database could not be opened. Check DATABASE_PATH and write permissions to src/bot/data. Do not delete an existing database.";
   const label =
     {
       configuration: "configuration",
