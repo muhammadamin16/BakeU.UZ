@@ -18,7 +18,7 @@ html.ai-lock .bakeu-snowfall { display: none; }
   --ai-line: var(--line);
   --ai-content-gutter: max(clamp(16px, 3vw, 36px), calc((100% - 860px) / 2));
   --ai-bottom: calc(var(--nav-space, 110px) + env(safe-area-inset-bottom, 0px));
-  width: 100%;
+
   height: calc(100vh - var(--ai-top, 0px) - var(--ai-bottom));
   height: calc(100dvh - var(--ai-top, 0px) - var(--ai-bottom));
   min-height: 0;
