@@ -8,9 +8,7 @@ import "./AdminLayout.css";
 import "./AdminGlass.css";
 import "./AdminManagement.css";
 import { useAdminStore } from "../store/adminStore";
-import { useAdminAccess } from "../../miniapp/useAdminAccess";
 export default function AdminLayout() {
-  const { demoPreview } = useAdminAccess();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const { pathname } = useLocation();
@@ -46,14 +44,12 @@ export default function AdminLayout() {
       <div className="ad-main">
         <Header onMenu={() => setOpen(true)} />
         <main className="ad-content">
-          {demoPreview && (
-            <p className="ad-demo-preview" role="status">
-              <strong>{translateText("Демонстрационная админка.")}</strong>
-              {translateText(
-                " Изменения сохраняются только в этом браузере. Серверные аккаунты и заявки требуют входа через Telegram.",
-              )}
-            </p>
-          )}
+          <p className="ad-demo-preview" role="status">
+            <strong>{translateText("Демонстрационная админка.")}</strong>
+            {translateText(
+              " Эти списки и изменения хранятся только в этом браузере и не являются данными MongoDB.",
+            )}
+          </p>
           {error && (
             <p role="alert" className="ad-form-error">
               {translateText(error)}

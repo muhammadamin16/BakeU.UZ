@@ -468,7 +468,7 @@
   "Ничего не найдено.": "Heç narsa topilmadi.",
   "сообщение": "xabar",
   "сообщ.": "xabar",
-  "Подтвердить удаление": "Öçirişni tasdiqlaş",
+  "Подтвердить удаление": "Olib taşlaşni tasdiqlaş",
   "Удалить чат": "Çatni öçiriş",
   "Удалить?": "Öçirilsinmi?",
   "Точно очистить всё?": "Hammasi tozalansinmi?",
@@ -1344,5 +1344,13 @@
   "Сессия истекла. Войдите по подтверждённому телефону через Telegram.": "Sessiya muddati tugadi. Tasdiqlangan telefon raqamingiz bilan Telegram orqali kiring.",
   "Войти по телефону через Telegram": "Telefon bilan Telegram orqali kiriş",
   "Укажите имя, фамилию и тип аккаунта.": "Ism, familiya va hisob turini kiriting.",
-  "Укажите название магазина и подробный адрес.": "Dökon nomi va töliq manzilini kiriting."
+  "Укажите название магазина и подробный адрес.": "Dökon nomi va töliq manzilini kiriting.",
+  "Укажите название и цену больше 0, не более 1 000 000 000 000 сум.": "Nomi va narxini kiriting: 0 dan katta, 1 000 000 000 000 sömdan oşmasin.",
+  "Проверьте названия и цены вариантов товара.": "Mahsulot variantlari nomlari va narxlarini tekşiring.",
+  "Выберите изображение JPEG, PNG, WebP или GIF до 5 МБ.": "5 MB gaça JPEG, PNG, WebP yoki GIF rasm tanlang.",
+  "Товар удалён из каталога. Данные и история заказов сохранены.": "Mahsulot katalogdan olib taşlandi. Ma'lumotlar va buyurtmalar tarixi saqlandi.",
+  "В магазине пока нет товаров.": "Dökonda hali mahsulot yöq.",
+  "Удаление товара": "Mahsulotni olib taşlaş",
+  "Убрать товар из каталога? Данные и история заказов сохранятся.": "Mahsulot katalogdan olib taşlansinmi? Ma'lumotlar va buyurtmalar tarixi saqlanadi.",
+  " Эти списки и изменения хранятся только в этом браузере и не являются данными MongoDB.": " Bu röyxatlar va özgarişlar faqat şu brauzerda saqlanadi. Ular MongoDB ma'lumotlari emas."
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { goAccount as api, productImageURL } from "../../../api/goAccount.js";
 import { translateText } from "../../../i18n/index.js";
+import { maxProductPrice, productPayload, validateProductImage } from "../../../api/productPayload.js";
 
 const emptyProduct = { title: "", description: "", category: "", price: "", available: true, variants: [] };
 
@@ -10,6 +11,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
   const [draft, setDraft] = useState(emptyProduct);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -25,11 +27,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
     setBusy(true);
     setNotice("");
     try {
-      const payload = {
-        title: draft.title.trim(), description: draft.description, category: draft.category,
-        price: Number(draft.price), available: draft.available,
-        variants: (draft.variants || []).map(({ id, name, price }) => ({ ...(id ? { id } : {}), name, price: Number(price) })),
-      };
+      const payload = productPayload(draft);
       const item = await api.request(draft.id ? `/products/${encodeURIComponent(draft.id)}` : "/products",
         draft.id ? "PUT" : "POST", payload);
       setProducts((current) => [...current.filter(({ id }) => id !== item.id), item]);
@@ -49,12 +47,31 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
     setBusy(true);
     setNotice("");
     try {
+      validateProductImage(file);
       const body = new FormData();
       body.append("image", file);
       const result = await api.request(`/products/${encodeURIComponent(draft.id)}/image`, "POST", body);
       setDraft((current) => ({ ...current, imageURLs: result.imageURLs }));
       setProducts((current) => current.map((product) => product.id === draft.id
         ? { ...product, imageURLs: result.imageURLs } : product));
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!deleting || busy) return;
+    const id = deleting.id;
+    setBusy(true);
+    setNotice("");
+    try {
+      await api.request(`/products/${encodeURIComponent(id)}`, "DELETE");
+      setProducts((current) => current.filter((product) => product.id !== id));
+      setDraft((current) => current.id === id ? emptyProduct : current);
+      setDeleting(null);
+      setNotice("Товар удалён из каталога. Данные и история заказов сохранены.");
     } catch (error) {
       setNotice(error.message);
     } finally {
@@ -72,15 +89,25 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
     <section aria-busy={busy}>
       <h3>{translateText("Товары магазина")}</h3>
       {notice && <p role="status">{translateText(notice)}</p>}
+      {!busy && !products.length && !notice && <p>{translateText("В магазине пока нет товаров.")}</p>}
       <ul>
         {products.map((product) => (
           <li key={product.id}>
+            {productImageURL(product.imageURLs?.[0]) && <img src={productImageURL(product.imageURLs[0])} alt={product.title} width="64" />}
             <button className="bw-btn" type="button" disabled={busy} onClick={() => setDraft(product)}>
               {product.title}
+            </button>
+            <button className="bw-btn" type="button" disabled={busy} onClick={() => setDeleting(product)} aria-label={`${translateText("Удалить товар")}: ${product.title}`}>
+              {translateText("Удалить товар")}
             </button>
           </li>
         ))}
       </ul>
+      {deleting && <div role="group" aria-label={translateText("Удаление товара")}>
+        <p>{deleting.title} · {translateText("Убрать товар из каталога? Данные и история заказов сохранятся.")}</p>
+        <button className="bw-btn" type="button" disabled={busy} onClick={remove}>{translateText("Подтвердить удаление")}</button>
+        <button className="bw-btn" type="button" disabled={busy} onClick={() => setDeleting(null)}>{translateText("Отмена")}</button>
+      </div>}
       <form onSubmit={save}>
         <fieldset className="bw-fields" disabled={busy}>
           <legend>{translateText(draft.id ? "Редактировать товар" : "Добавить товар")}</legend>
@@ -92,6 +119,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
               <input type={type} value={draft[key] ?? ""}
                 required={key === "title" || key === "price"}
                 min={key === "price" ? "0.01" : undefined} step={key === "price" ? "any" : undefined}
+                max={key === "price" ? maxProductPrice : undefined}
                 onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
             </label>
           ))}
@@ -105,7 +133,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
                 <input value={variant.name} required maxLength={100} onChange={(event) => updateVariant(index, { name: event.target.value })} />
               </label>
               <label className="bw-field">{translateText("Цена")}
-                <input value={variant.price} type="number" min="0.01" step="any" required onChange={(event) => updateVariant(index, { price: event.target.value })} />
+                <input value={variant.price} type="number" min="0.01" max={maxProductPrice} step="any" required onChange={(event) => updateVariant(index, { price: event.target.value })} />
               </label>
               <button className="bw-btn" type="button" onClick={() => setDraft({ ...draft, variants: draft.variants.filter((_, i) => i !== index) })}>{translateText("Удалить вариант")}</button>
             </div>

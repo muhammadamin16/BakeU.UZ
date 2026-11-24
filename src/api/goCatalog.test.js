@@ -28,6 +28,8 @@ test("server map joins products to the actual owner and rejects missing or inval
   assert.equal(result.sellers.length, 1);assert.equal(result.products.length, 1);
   assert.equal(result.products[0].shopId, "shop");assert.equal(result.products[0].lat, 0);
   assert.equal(result.products[0].rating, 0);
+  assert.equal(result.sellers[0].image, "/images/no-photo.svg");
+  assert.equal(result.products[0].image, "/images/no-photo.svg");
 });
 
 test("public projection never adds demo products or orphaned sellers", async () => {

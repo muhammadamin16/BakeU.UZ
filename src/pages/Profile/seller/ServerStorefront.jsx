@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { goAccount as api, goPhoneAccountsEnabled } from "../../../api/goAccount.js";
 import { translateText } from "../../../i18n/index.js";
 import { createWebsiteOrdersClient } from "../../../telegramOrders/client.js";
 import ServerOrdersPanel from "../../../telegramOrders/ServerOrdersPanel.jsx";
 import ServerProducts from "./ServerProducts.jsx";
+const ShopLocationPicker = lazy(() => import("../../../components/ShopLocationPicker/ShopLocationPicker.jsx"));
 
 const fields = [
   ["name", "Название магазина"], ["description", "Описание магазина"],
@@ -80,6 +81,7 @@ export default function ServerStorefront({ accountApi = api }) {
       const hasLat = draft.lat != null && draft.lat !== "";
       const hasLng = draft.lng != null && draft.lng !== "";
       if (hasLat !== hasLng) throw Error("Укажите обе координаты.");
+      if (goPhoneAccountsEnabled && !hasLat) throw Error("Выберите точку магазина на карте.");
       if (hasLat) {
         payload.lat = Number(draft.lat);
         payload.lng = Number(draft.lng);
@@ -127,19 +129,21 @@ export default function ServerStorefront({ accountApi = api }) {
           {shop.rejectionReason && <p role="status">{shop.rejectionReason}</p>}
           <form onSubmit={save}>
             <fieldset disabled={busy || shop.status === "suspended"} className="bw-fields">
-              {fields.map(([key, label, type = "text"]) => (
+              {fields.filter(([key]) => !goPhoneAccountsEnabled || !["address", "lat", "lng"].includes(key)).map(([key, label, type = "text"]) => (
                 <label className="bw-field" key={key}>{translateText(label)}
                   <input type={type} step={type === "number" ? "any" : undefined}
                     value={draft[key] ?? ""} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
                 </label>
               ))}
-              <button type="button" className="bw-btn" onClick={() => {
+              {goPhoneAccountsEnabled ? <Suspense fallback={<p role="status">{translateText("Загрузка карты…")}</p>}>
+                <ShopLocationPicker key={shop.id} value={draft} onChange={setDraft} id="go-settings-address" />
+              </Suspense> : <button type="button" className="bw-btn" onClick={() => {
                 if (!navigator.geolocation) { setNotice("Геолокация недоступна в этом браузере."); return; }
                 navigator.geolocation.getCurrentPosition(({ coords }) => {
                   setDraft((current) => ({ ...current, lat: coords.latitude, lng: coords.longitude }));
                   setNotice("Точка магазина выбрана. Проверьте адрес и сохраните.");
                 }, () => setNotice("Не удалось определить точку. Введите координаты вручную."), { timeout: 10000 });
-              }}>Указать местоположение магазина</button>
+              }}>Указать местоположение магазина</button>}
               {shop.status !== "approved" && <>
                 <label className="bw-field">Контактный телефон<input type="tel" required value={draft.phone || ""} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} /></label>
                 <label className="bw-field">Email магазина<input type="email" required value={draft.email || ""} onChange={(event) => setDraft({ ...draft, email: event.target.value })} /></label>

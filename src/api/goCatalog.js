@@ -37,7 +37,7 @@ export function projectGoMapCatalog({ markets, products }, imageURL = () => "") 
       badge: [...shop.name].slice(0, 2).join(""), badgeColor: "#b77b48",
       categories: shop.description || "Домашняя выпечка", rating: 0,
       lat: shop.lat, lng: shop.lng,
-      image: imageURL(shop.logoURL) || "/images/products/cake.jpg",
+      image: imageURL(shop.logoURL) || "/images/no-photo.svg",
     }));
   const bySeller = new Map(sellers.map((shop) => [shop.sellerId, shop]));
   const mappedProducts = products.filter((product) => product.available === true && bySeller.has(product.sellerId) &&
@@ -46,7 +46,7 @@ export function projectGoMapCatalog({ markets, products }, imageURL = () => "") 
       return { id: product.id, shopId: shop.id, name: product.title, price: product.price,
         seller: shop.name, lat: shop.lat, lng: shop.lng,
         rating: Number.isFinite(product.ratingAvg) ? product.ratingAvg : 0,
-        image: imageURL(product.imageURLs?.[0]) || "/images/products/cake.jpg" };
+        image: imageURL(product.imageURLs?.[0]) || "/images/no-photo.svg" };
     });
   return { sellers, products: mappedProducts };
 }

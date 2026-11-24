@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-24",
+  "timezone": "Asia/Tashkent",
+  "branch": "codex/marketplace-p0-20261124",
+  "scope": "P0 review branches only; no live migration, merge or deploy",
+  "basePhoneFrontendCommit": "8d9c36ed00121ca713e81816270ff141e07c5f1e",
+  "basePhoneBackendCommit": "c3845af0dd34152f68feb64598983704a7cc4023",
+  "tests": {
+    "frontend": {
+      "pass": 95,
+      "fail": 0,
+      "skip": 0
+    },
+    "bot": {
+      "pass": 71,
+      "fail": 0,
+      "skip": 0
+    },
+    "goRace": {
+      "passIncludingSubtests": 71,
+      "fail": 0,
+      "skip": 0
+    },
+    "goVet": "PASS",
+    "frontendLint": {
+      "errors": 0,
+      "existingWarnings": 2
+    },
+    "goEnabledWebsiteBuild": "PASS",
+    "crossRepositoryPhoneContract": {
+      "ok": true,
+      "buyerAndSellerPhoneOnly": true,
+      "realGoMongoAndBotHandler": true,
+      "sellerApprovedWithCoordinates": true,
+      "duplicatePhoneRefused": true,
+      "codeReplayRefused": true,
+      "loginUIDPreserved": true,
+      "existingRefreshSessionPreserved": true,
+      "sqliteAccountsCreated": 0,
+      "telegramNetworkCalled": false,
+      "productionTouched": false
+    },
+    "browserE2E": {
+      "ok": true,
+      "source": "new_isolated_local_fixture",
+      "database": "bakeu_p0_browser_staging_test_be7c5c03cfc842419104fdd27f4143d6",
+      "buyerSellerPhoneOnly": true,
+      "mapClickAndGPS": true,
+      "addressEditRequiresNewPoint": true,
+      "pendingReload": true,
+      "sellerApprovedWithoutApplication": true,
+      "productCreateEditImageArchiveViaUI": true,
+      "gridfsRoundTrip": true,
+      "historicalOrdersRetained": true,
+      "activeAcceptedOrderCount": true,
+      "browserCloseAndBackendRestartSameUID": true,
+      "websiteMiniAppSameGoUID": true,
+      "demoAdminExplicitlyLabelled": true,
+      "sqliteAccountsCreated": 0,
+      "realTelegramNetworkCalled": false,
+      "productionTouched": false
+    },
+    "botSourceDockerBuild": "PASS",
+    "botDockerNonRootCheck": "PASS uid=1000 gid=1000; no Telegram network",
+    "goStaticBinaryBuild": "PASS Go 1.26.4",
+    "goRuntimeNonRootContainer": "PASS actual API /readyz 200, real Go/Mongo/Bot contract and read-only index CLI",
+    "freshGoSourceDockerBuild": "BLOCKED: image layer extraction ran out of local Docker disk space; not a passing clean build",
+    "githubHostedWorkflows": "Added and YAML parsed; remote Actions run not claimed"
+  },
+  "staging": {
+    "deployed": false,
+    "liveAcceptanceVerified": false,
+    "readOnlyHealthProbes": "All three CONNECT tunnel 403, destination HTTP 000; not an upstream health response",
+    "realTelegramContactAndDeliveryVerified": false,
+    "realMapProviderAvailabilityVerified": false,
+    "backupRestoreAndExistingDatabaseInventoryVerified": false,
+    "emailIndexTransitionApplied": false
+  },
+  "preservation": {
+    "productDeletion": "archive only; Mongo document/GridFS/order snapshots retained",
+    "marketLegacyFields": "bounded $set with CAS; existing fields retained in real Mongo integration tests",
+    "existingAccountUIDsAndSessionFixtures": "preserved; no automatic mutable-phone/SQLite identity merge",
+    "productionTouched": false,
+    "existingVolumesRecreated": false,
+    "merged": false,
+    "deployed": false
+  },
+  "nextOperatorStep": "Review MARKETPLACE_P0.md, verified isolated staging backup/index gate, then manually connect matching branches to staging only"
+}

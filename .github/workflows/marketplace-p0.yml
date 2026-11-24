@@ -1,0 +1,85 @@
+name: Marketplace P0 contract and browser
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      backend_ref:
+        description: Matching reviewed BakeU-Backend branch or commit
+        default: codex/marketplace-p0-20261124
+        required: true
+permissions:
+  contents: read
+jobs:
+  p0:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: website
+      - uses: actions/checkout@v4
+        with:
+          repository: muhammadamin16/BakeU-Backend
+          ref: ${{ inputs.backend_ref || 'codex/marketplace-p0-20261124' }}
+          path: backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.26.4
+          cache-dependency-path: backend/go.sum
+      - name: Disposable Mongo replica set and standalone
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name bakeu-p0-mongo --network host mongo:8.0 mongod --replSet rs0 --bind_ip 127.0.0.1
+          docker run -d --name bakeu-p0-standalone --network host mongo:8.0 mongod --port 27018 --bind_ip 127.0.0.1
+          for attempt in {1..60}; do
+            if docker exec bakeu-p0-mongo mongosh --quiet --eval 'db.adminCommand({ping:1})' >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          docker exec bakeu-p0-mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
+          for attempt in {1..60}; do
+            if docker exec bakeu-p0-mongo mongosh --quiet --eval 'if(!db.hello().isWritablePrimary) quit(1)' >/dev/null 2>&1; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Go unit, Mongo integration, race and vet
+        working-directory: backend
+        env:
+          BAKEU_TEST_MONGO_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0
+          BAKEU_TEST_STANDALONE_MONGO_URI: mongodb://127.0.0.1:27018/?directConnection=true
+        run: |
+          go test -count=1 -race ./...
+          go vet ./...
+          CGO_ENABLED=0 go build -trimpath -o "$RUNNER_TEMP/bakeu-p0-server" ./cmd/server
+      - name: Website and Bot contracts
+        working-directory: website
+        run: |
+          npm ci
+          npm run test:integration
+          npm --prefix src/bot test
+          npm run lint
+      - name: Build matching Go account website
+        working-directory: website
+        env:
+          VITE_GO_API_URL: /api
+          VITE_ACCOUNT_API_URL: /api
+          VITE_GO_PHONE_ACCOUNTS: 'true'
+        run: npm run build
+      - name: Isolated HTTPS browser and Mini App E2E
+        working-directory: website
+        env:
+          BAKEU_P0_MONGO_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true
+        run: |
+          npx playwright install --with-deps chromium
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout "$RUNNER_TEMP/bakeu-p0.key" -out "$RUNNER_TEMP/bakeu-p0.crt" -days 1 -subj '/CN=127.0.0.1' -addext 'subjectAltName=IP:127.0.0.1'
+          BAKEU_P0_SERVER_BINARY="$RUNNER_TEMP/bakeu-p0-server" BAKEU_P0_TLS_KEY="$RUNNER_TEMP/bakeu-p0.key" BAKEU_P0_TLS_CERT="$RUNNER_TEMP/bakeu-p0.crt" npm run test:p0:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: marketplace-p0-isolated-evidence
+          path: website/test-results/p0
