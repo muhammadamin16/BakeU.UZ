@@ -1,20 +1,23 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { goAccount } from "../../api/goAccount.js";
 import AuthShell from "./AuthShell.jsx";
 import PhoneInput from "./PhoneInput.jsx";
-import { completeUzPhone } from "./uzPhone.js";
+import { phoneStartPayload, readPhonePending, savePhonePending, clearPhonePending } from "./phoneAccountForm.js";
 import { useMiniApp } from "../../miniapp/context.js";
 import { translateText as t } from "../../i18n/index.js";
 import "./GoPhoneAccount.css";
+
+const ShopLocationPicker = lazy(() => import("../../components/ShopLocationPicker/ShopLocationPicker.jsx"));
 
 export default function GoPhoneAccount({ register = false }) {
   const navigate = useNavigate();
   const { state } = useLocation();
   const mini = useMiniApp();
-  const [draft, setDraft] = useState({ phone: "", firstName: "", lastName: "", role: "customer", marketName: "", address: "" });
-  const [step, setStep] = useState(register ? 1 : 2);
-  const [pending, setPending] = useState(null);
+  const purpose = register ? "register" : "login";
+  const [draft, setDraft] = useState({ phone: "", firstName: "", lastName: "", role: "customer", marketName: "", address: "", lat: null, lng: null });
+  const [pending, setPending] = useState(() => readPhonePending(purpose));
+  const [step, setStep] = useState(() => pending ? 3 : register ? 1 : 2);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -39,27 +42,17 @@ export default function GoPhoneAccount({ register = false }) {
       if (pending) {
         if (Date.parse(pending.expiresAt) <= Date.now()) throw Error("Код устарел. Запросите новый.");
         await goAccount.verifyPhone(pending.id, code);
+        clearPhonePending(purpose);
+        setPending(null);
         if (mini.isMiniMode) await mini.retry();
         const search = typeof state?.ordersSearch === "string"
           ? new URLSearchParams(state.ordersSearch)
           : new URLSearchParams();
         navigate({ pathname: "/account/orders", search: search.toString() }, { replace: true });
       } else {
-        const phone = register ? completeUzPhone(draft.phone) : draft.phone.trim();
-        if (!phone) throw Error("Введите номер в формате +998 XX XXX XX XX.");
-        const firstName = draft.firstName.trim();
-        const lastName = draft.lastName.trim();
-        if (register && (!firstName || !lastName)) throw Error("Заполните все обязательные поля.");
-        const payload = { phone, purpose: register ? "register" : "login" };
-        if (register) {
-          Object.assign(payload, { name: firstName + " " + lastName, role: draft.role });
-          if (seller) Object.assign(payload, { marketName: draft.marketName.trim(), address: draft.address.trim() });
-        }
+        const payload = phoneStartPayload(draft, register);
         const result = await goAccount.startPhone(payload);
-        if (new URL(result.telegramUrl).origin !== "https://t.me" || !/^[a-f0-9]{48}$/.test(result.id) || !Number.isFinite(Date.parse(result.expiresAt))) {
-          throw Error("Сервер вернул неверную ссылку подтверждения.");
-        }
-        setPending(result);
+        setPending(savePhonePending(purpose, result));
         setStep(3);
       }
     } catch (failure) {
@@ -86,16 +79,19 @@ export default function GoPhoneAccount({ register = false }) {
           )}
           {step === 2 && <>
             {register && <>
-              <label>{t("Имя")}<input required autoComplete="given-name" maxLength={59} value={draft.firstName} onChange={change("firstName")} /></label>
-              <label>{t("Фамилия")}<input required autoComplete="family-name" maxLength={60} value={draft.lastName} onChange={change("lastName")} /></label>
+              <label>{t("Имя")}<input required autoComplete="given-name" maxLength={80} value={draft.firstName} onChange={change("firstName")} /></label>
+              <label>{t("Фамилия")}<input required autoComplete="family-name" maxLength={80} value={draft.lastName} onChange={change("lastName")} /></label>
             </>}
             <label htmlFor="go-auth-phone">{t("Телефон")}</label>
             {register
               ? <PhoneInput id="go-auth-phone" value={draft.phone} onChange={(value) => update("phone", value)} />
               : <input id="go-auth-phone" required type="tel" autoComplete="tel" maxLength={30} placeholder="+998 90 123 45 67" value={draft.phone} onChange={change("phone")} />}
             {register && seller && <>
-              <label>{t("Название магазина")}<input required minLength={2} maxLength={120} autoComplete="organization" value={draft.marketName} onChange={change("marketName")} /></label>
-              <label>{t("Адрес (необязательно)")}<input autoComplete="street-address" maxLength={500} value={draft.address} onChange={change("address")} /></label>
+              <label>{t("Название магазина")}<input required minLength={2} maxLength={150} autoComplete="organization" value={draft.marketName} onChange={change("marketName")} /></label>
+              <Suspense fallback={<p role="status">{t("Загрузка карты…")}</p>}>
+                <ShopLocationPicker id="go-register-address" value={draft} onChange={(location) => { setDraft(location); setError(""); }} />
+              </Suspense>
+              <p>{t("Магазин откроется сразу после подтверждения телефона. Дополнительная заявка не нужна.")}</p>
             </>}
             {register && <button type="button" onClick={() => { setStep(1); setError(""); }}>{t("Назад")}</button>}
           </>}
@@ -103,9 +99,10 @@ export default function GoPhoneAccount({ register = false }) {
             <a className="go-phone-link" href={pending.telegramUrl} target="_blank" rel="noopener noreferrer">{t("Открыть Telegram и получить код")} ↗</a>
             <p>{t("Нажмите «Поделиться своим номером» в боте и введите полученный код здесь.")}</p>
             <label>{t("Код из Telegram")}<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }} /></label>
-            <button type="button" onClick={() => { setPending(null); setStep(2); setCode(""); setError(""); }}>{t("Изменить данные / запросить новый код")}</button>
+            <button type="button" onClick={() => { clearPhonePending(purpose); setPending(null); setStep(2); setCode(""); setError(""); }}>{t("Изменить данные / запросить новый код")}</button>
           </>}
         </fieldset>
+        {register && step >= 2 && <p>{t("Аккаунт появится только после подтверждения вашего номера в Telegram.")}</p>}
         {error && <p className="go-phone-error" role="alert">{t(error)}</p>}
         <button disabled={busy}>{t(busy ? "Подождите…" : ["Продолжить", "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
         <Link to={register ? "/login" : "/register"} state={state}>{t(register ? "Уже есть подтверждённый аккаунт? Войти" : "Создать аккаунт")}</Link>

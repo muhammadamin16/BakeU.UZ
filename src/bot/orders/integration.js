@@ -64,6 +64,15 @@ export function createOrdersIntegration({
   }
   async function linking(ctx, intent) {
     remember(ctx, { screen: "link", intent });
+    if (settings.accountsEnabled) return display(ctx, {
+      text: "<b>🔐 Аккаунт BakeU</b>\n\nВойдите по телефону через Telegram или зарегистрируйтесь на сайте. Поделитесь своим номером в этом боте по ссылке с сайта и введите полученный код. Аккаунт появится только после подтверждения телефона.",
+      reply_markup: { inline_keyboard: [
+        [{ text: "📱 Войти по телефону", url: firstPartyLink(config, "/login") }],
+        [{ text: "🥐 Зарегистрироваться на BakeU", url: firstPartyLink(config, "/register") }],
+        [b("🔄 Проверить привязку", `bo:account:${intent}`)],
+        mainBack,
+      ] },
+    });
     return display(ctx, {
       text:
         intent === "seller"
@@ -329,6 +338,10 @@ export function createOrdersIntegration({
             await destination(ctx, intent);
             return true;
           }
+          if (settings.accountsEnabled) {
+            await linking(ctx, intent);
+            return true;
+          }
           const challenge = await api.startLink(
             actor,
             normalizePhone(contact.phone_number),
@@ -368,6 +381,10 @@ export function createOrdersIntegration({
           return true;
         }
         if (/^bo:phone(?::(buyer|seller))?$/.test(data)) {
+          if (settings.accountsEnabled) {
+            await linking(ctx, intent);
+            return true;
+          }
           remember(ctx, { screen: "link", intent });
           await telegram.send(ctx.chatId, {
             text: "📱 Отправьте свой контакт кнопкой ниже. Совпадения телефона недостаточно: затем подтвердите существующий аккаунт на сайте.",

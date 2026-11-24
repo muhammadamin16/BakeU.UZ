@@ -92,3 +92,7 @@ Android requires a full JDK 21, Android Studio and Android SDK 36. iOS requires
 macOS and Xcode. Native builds and phone tests are separate from the web build
 and Capacitor sync. See the mobile README for API origins, existing demo-mode
 limits, secure configuration and the complete folder map.
+
+## Phone-only Go accounts
+
+The coordinated buyer/seller registration, Telegram own-contact proof, required seller map point and staging verification are documented in [PHONE_ONLY_AUTH.md](docs/production/PHONE_ONLY_AUTH.md). Enable flags only with the matching backend/index plan after review; no deployment is automatic.

@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-24",
+  "scope": "isolated_local_fixtures_only",
+  "auditedBases": {
+    "frontend": "3ca0df0",
+    "backend": "7780a70"
+  },
+  "checks": {
+    "frontendIntegration": {
+      "passed": 93,
+      "failed": 0
+    },
+    "botUnitAndIntegration": {
+      "passed": 71,
+      "failed": 0
+    },
+    "goAllPackagesRace": "passed with real disposable MongoDB 8 replica set",
+    "goVet": "passed",
+    "goStaticLinuxBuildServerAndIndexCLI": "passed",
+    "legacyPreservation": "raw existing user/unknown fields/order/session documents unchanged by index rehearsal and startup; original JWT, refresh family and credential login work",
+    "phoneProofSafety": "no account/shop before own-contact + correct code; wrong/expired/replayed proofs and concurrent duplicate phones refused",
+    "realCrossRepoContract": "passed on both local Go fixture and distroless runtime; real Go/Mongo + actual Bot handler, mocked Telegram transport; no SQLite customer created",
+    "browser": {
+      "mobileBuyerAndSeller": true,
+      "emailPasswordInputsAbsent": true,
+      "sellerMapRequired": true,
+      "addressEditClearsPoint": true,
+      "pendingProofReload": true,
+      "secureHttpOnlyCookieReload": true,
+      "actualGoProcessRestartPreservesSession": true,
+      "phoneLoginSameUID": true,
+      "sellerExpiredSessionRecoversViaPhone": true
+    },
+    "lint": {
+      "errors": 0,
+      "preExistingReactWarnings": 2
+    },
+    "goEnabledWebsiteBuild": "passed",
+    "botDockerBuildAndCheck": "passed; uid/gid 1000:1000; external networking disabled; Telegram not contacted",
+    "distrolessRuntime": "passed using locally compiled final server/CLI binaries with the source Dockerfile final base/COPY/entrypoint layout; /readyz 200 and read-only CLI verified",
+    "stagingIndexApplyGuard": "CLI refuses apply without explicit staging environment and exact staging database confirmation"
+  },
+  "limits": {
+    "freshOnlineBackendDockerBuild": "not completed: environment proxy CA, then storage.googleapis.com dependency-download 403; no TLS bypass/source Docker workaround committed",
+    "actualRailwayStaging": "all five read-only GET attempts blocked by CONNECT proxy 403 (destination HTTP 000); new code not deployed",
+    "realTelegramNetwork": "not called; own-contact delivery and code transport simulated through real handlers/API in local tests",
+    "mapProviderNetwork": "external tiles/search blocked in browser fixture; explicit map click and coordinate behavior tested"
+  },
+  "releaseGates": [
+    "Review both branches together",
+    "Verify staging backup/restore and read-only index inventory",
+    "Explicit guarded staging-only email-index transition if required",
+    "Coordinated operator-approved staging rollout and real Telegram test-account acceptance",
+    "Separate production plan; no automatic production change"
+  ],
+  "productionTouched": false,
+  "existingLiveDataDeleted": false,
+  "remoteIndexChanged": false,
+  "merged": false,
+  "deployed": false
+}

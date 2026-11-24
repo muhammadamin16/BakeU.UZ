@@ -50,7 +50,8 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
     const goState = repo.getState(chatId);
     if (goState?.kind === "go_verify_phone" && update.message?.contact) {
       const contact = update.message.contact;
-      if (String(contact.user_id || "") !== String(user.id)) return telegram.send(chatId, { text: "Поделитесь своим номером через кнопку; чужой контакт не подходит." });
+      if (String(contact.user_id || "") !== String(user.id) || msg.forward_origin || msg.forward_from || msg.forward_from_chat || msg.forward_date)
+        return telegram.send(chatId, { text: "Поделитесь своим номером через кнопку; чужой или пересланный контакт не подходит." });
       if (!phoneAccounts || goState.expiresAt <= Date.now()) {
         repo.clearState(chatId);
         return telegram.send(chatId, { text: "Ссылка устарела. Запросите новый код на сайте.", reply_markup: { remove_keyboard: true } });

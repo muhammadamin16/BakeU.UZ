@@ -1338,5 +1338,11 @@
   "Не удалось сохранить избранное.": "Sevimlilarni saqlab bölmadi.",
   "Аккаунт изменился. Повторите действие.": "Hisob özgardi. Amalni takrorlang.",
   "Товар недоступен.": "Mahsulot mavjud emas.",
-  "Неверный ответ сервера.": "Server javobi notöğri."
+  "Неверный ответ сервера.": "Server javobi notöğri.",
+  "Магазин откроется сразу после подтверждения телефона. Дополнительная заявка не нужна.": "Telefon tasdiqlangandan söng dökon darhol oçiladi. Qöşimça ariza kerak emas.",
+  "Аккаунт появится только после подтверждения вашего номера в Telegram.": "Hisob faqat telefon raqamingiz Telegram orqali tasdiqlangandan keyin oçiladi.",
+  "Сессия истекла. Войдите по подтверждённому телефону через Telegram.": "Sessiya muddati tugadi. Tasdiqlangan telefon raqamingiz bilan Telegram orqali kiring.",
+  "Войти по телефону через Telegram": "Telefon bilan Telegram orqali kiriş",
+  "Укажите имя, фамилию и тип аккаунта.": "Ism, familiya va hisob turini kiriting.",
+  "Укажите название магазина и подробный адрес.": "Dökon nomi va töliq manzilini kiriting."
 }

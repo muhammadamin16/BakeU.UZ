@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { goAccount as api } from "../../../api/goAccount.js";
+import { Link } from "react-router-dom";
+import { goAccount as api, goPhoneAccountsEnabled } from "../../../api/goAccount.js";
 import { translateText } from "../../../i18n/index.js";
 import { createWebsiteOrdersClient } from "../../../telegramOrders/client.js";
 import ServerOrdersPanel from "../../../telegramOrders/ServerOrdersPanel.jsx";
@@ -109,7 +110,12 @@ export default function ServerStorefront({ accountApi = api }) {
     <section className="bw-card" aria-busy={busy}>
       <h2>{translateText("Настройки магазина")}</h2>
       {notice && <p role="status">{translateText(notice)}</p>}
-      {needsLogin ? (
+      {needsLogin && goPhoneAccountsEnabled ? (
+        <div className="bw-fields">
+          <p>{translateText("Сессия истекла. Войдите по подтверждённому телефону через Telegram.")}</p>
+          <Link className="bw-btn primary" to="/login">{translateText("Войти по телефону через Telegram")}</Link>
+        </div>
+      ) : needsLogin ? (
         <form onSubmit={login} className="bw-fields">
           <label className="bw-field">Email<input name="email" type="email" autoComplete="username" required /></label>
           <label className="bw-field">{translateText("Пароль")}<input name="password" type="password" autoComplete="current-password" required /></label>
