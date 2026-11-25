@@ -40,7 +40,7 @@ test("explicit hash routes and non-admin paths are unchanged", () => {
       "https://example.test" + path,
     );
 });
-test("signed Telegram launch data and Mini App mode are never moved or rewritten", () => {
+test("signed Telegram launch data and Mini App mode are never moved or rewritten.", () => {
   for (const path of [
     "/admin?miniapp=1&screen=admin",
     "/admin?tgWebAppData=user%3D123%26hash%3Dabc",
