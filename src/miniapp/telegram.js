@@ -1,8 +1,8 @@
-import { normalizeAdminUrl } from "../routes/adminUrl";
+import { normalizeWebsiteUrl } from "../routes/websiteUrl";
 
 const initialUrl =
   typeof window !== "undefined"
-    ? normalizeAdminUrl(window.location.href)
+    ? normalizeWebsiteUrl(window.location.href)
     : null;
 const fragment = initialUrl ? initialUrl.hash.slice(1) : "";
 const launchParams = new URLSearchParams(

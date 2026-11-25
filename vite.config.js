@@ -1,5 +1,6 @@
 
 import react from "@vitejs/plugin-react";
+import process from "node:process";
 import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { devPortPlugin, readDevPort } from "./scripts/dev-port.js";
@@ -16,7 +17,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), devPortPlugin(), {
       name: "bakeu-public-build-metadata",
-      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata(env)) }); },
+      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata({
+          ...env, RAILWAY_GIT_COMMIT_SHA: process.env.RAILWAY_GIT_COMMIT_SHA,
+        })) }); },
     }],
 
     optimizeDeps: {

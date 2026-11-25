@@ -80,6 +80,11 @@ Register/login return `{user, token, application}`. Profile returns `{user, appl
 
 ## Production
 
+For Railway `/data/bakeu.sqlite` permission errors, see the
+[volume-preserving SQLite startup fix](../../docs/production/BOT_SQLITE_PERMISSIONS.md).
+The Docker image repairs only `/data` directory ownership, then the bot process
+drops to `node` before opening SQLite; the existing volume is retained.
+
 1. Install Node 24 LTS on a VPS. Place the project at `/opt/BakeU.UZ`; create a dedicated `bakeu` service user. Give that user access to the project and ownership of `src/bot/data`. Protect `.env` with mode 600 and keep it out of Git.
 2. Set `SITE_URL` to the real HTTPS site, exact `ALLOWED_ORIGINS`, `API_HOST=127.0.0.1`; enable `TRUST_PROXY=true` only behind the supplied Nginx configuration which overwrites `X-Real-IP`.
 3. Copy/adjust `deploy/bakeu-bot.service` to systemd. It runs the bot separately from the frontend. Adjust `/usr/bin/node` if your Node installation uses another path. Create the data directory before starting the service. Enable/start with `systemctl enable --now bakeu-bot`.
@@ -122,7 +127,7 @@ The separate [Telegram orders integration](../../docs/telegram-orders/README.md)
 
 ## Railway build boundary
 
-Use Railway **Root Directory `src/bot`**, this folder's `Dockerfile`, and repository config `src/bot/railway.json`. The image copies this folder to `/app` and runs `node index.js --miniapp` as the `node` user. Its healthcheck is `/health`; Railway supplies `PORT`. Keep the existing environment variables and persistent database volume.
+Use Railway **Root Directory `src/bot`**, this folder's `Dockerfile`, and repository config `src/bot/railway.json`. The image copies this folder to `/app` and starts `node index.js --miniapp`, repairs only `/data` directory ownership, then drops to the `node` user before SQLite or Telegram access. Its healthcheck is `/health`; Railway supplies `PORT`. Keep the existing environment variables and persistent database volume.
 
 All runtime imports must stay inside this build context, with Linux-correct filename case. The shared pure orders module lives at `orders/domain.js`; the website's `src/telegramOrders/domain.js` re-exports it. Importing `../../telegramOrders/domain.js` from a bot module escapes `/app` and fails even when the orders feature is disabled. The domain implementation is unchanged; only its location/imports moved.
 

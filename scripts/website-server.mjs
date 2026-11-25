@@ -4,6 +4,10 @@ import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const website = "https://bakeu-website-production.up.railway.app";
+const productionGo = "https://bakeu-backend-production.up.railway.app";
+const productionBot = "https://bakeu-bot-production.up.railway.app";
+const productionUpstreams = new Set([productionGo, productionBot, "https://bakeuuz-production.up.railway.app"]);
+
 const mime = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".ico": "image/x-icon", ".woff2": "font/woff2", ".mp3": "audio/mpeg", ".ogg": "audio/ogg" };
 const legacyAuth = new Set(["/api/auth/register", "/api/auth/start-registration", "/api/auth/verify-registration", "/api/auth/start-login", "/api/auth/verify-login", "/api/auth/me"]);
 
@@ -19,14 +23,23 @@ export function upstream(value, label) {
 export function readWebsiteConfig(env = process.env) {
   const mode = env.WEB_ACCOUNTS_MODE || "legacy";
   if (!["go", "legacy"].includes(mode)) throw Error("WEB_ACCOUNTS_MODE must be go or legacy.");
+  const environment = (env.RAILWAY_ENVIRONMENT_NAME || "").trim().toLowerCase();
+  const isolated = Boolean(environment && environment !== "production");
+  if ((isolated || mode === "go") && (!env.WEB_GO_API_URL?.trim() || !env.WEB_BOT_API_URL?.trim())) {
+    throw Error("Set WEB_GO_API_URL and WEB_BOT_API_URL explicitly.");
+  }
+  const go = upstream(env.WEB_GO_API_URL || productionGo, "WEB_GO_API_URL");
+  const bot = upstream(env.WEB_BOT_API_URL || productionBot, "WEB_BOT_API_URL");
+  if (isolated && (productionUpstreams.has(go) || productionUpstreams.has(bot))) {
+    throw Error("A non-production Railway environment cannot use the known production API URLs.");
+  }
   const allowed = (env.WEB_ALLOWED_ORIGINS || env.PUBLIC_SITE_URL || website).split(",").map((v) => v.trim());
   for (const origin of allowed) {
     const url = new URL(origin);
     if (origin !== url.origin || url.username || url.password || !(url.protocol === "https:" || url.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname))) throw Error("WEB_ALLOWED_ORIGINS must contain exact HTTPS origins.");
   }
   return {
-    go: upstream(env.WEB_GO_API_URL || "https://bakeu-backend-production.up.railway.app/api", "WEB_GO_API_URL"),
-    bot: upstream(env.WEB_BOT_API_URL || "https://bakeu-bot-production.up.railway.app/api", "WEB_BOT_API_URL"),
+    go, bot,
     mode, allowed, dist: resolve(env.WEB_DIST_DIR || "dist"),
   };
 }
@@ -45,8 +58,11 @@ export async function validateWebsiteBuild(config) {
   let metadata;
   try { metadata = JSON.parse(await readFile(resolve(config.dist, "bakeu-build.json"), "utf8")); }
   catch { if (config.mode === "go") throw Error("Rebuild the website with verified Go account settings before enabling WEB_ACCOUNTS_MODE=go."); return; }
+  if (config.mode === "legacy" && metadata.phoneAccounts === true) {
+    throw Error("A Go account build requires WEB_ACCOUNTS_MODE=go.");
+  }
   if (config.mode === "go") {
-    const sameOriginAPI = metadata.goAPI === "/api" || config.allowed.some((origin) => metadata.goAPI === origin + "/api");
+    const sameOriginAPI = metadata.goAPI === "/api" && metadata.botAPI === "/api";
     if (!metadata.phoneAccounts || !sameOriginAPI) throw Error("Go account mode requires a Go-enabled website build using the same-origin API gateway.");
   }
 }

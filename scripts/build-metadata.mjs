@@ -9,6 +9,8 @@ export function publicBuildMetadata(env) {
     return value;
   };
   const result = { schemaVersion: 1, phoneAccounts: env.VITE_GO_PHONE_ACCOUNTS === "true", goAPI: api(env.VITE_GO_API_URL, "VITE_GO_API_URL"), botAPI: api(env.VITE_ACCOUNT_API_URL, "VITE_ACCOUNT_API_URL") };
+  const revision = env.RAILWAY_GIT_COMMIT_SHA;
+  if (typeof revision === "string" && /^[0-9a-f]{40}$/i.test(revision)) result.commit = revision.toLowerCase();
   if (result.phoneAccounts && !result.goAPI) throw Error("VITE_GO_PHONE_ACCOUNTS requires VITE_GO_API_URL. Build with /api for the website gateway.");
   return result;
 }
