@@ -175,7 +175,9 @@ export function prepareCheckout(
     now = Date.now(),
   },
 ) {
-  if (!account || !["client", "seller"].includes(account.role) || !buyerId)
+  if (account?.role === "seller")
+    throw Error("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.");
+  if (account?.role !== "client" || !buyerId)
     throw Error("Войдите в аккаунт, чтобы сохранить заявку.");
   if (!/^[a-zA-Z0-9-]{10,80}$/.test(checkoutId || ""))
     throw Error("Обновите страницу оформления.");

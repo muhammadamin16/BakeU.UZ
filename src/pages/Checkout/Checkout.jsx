@@ -167,7 +167,14 @@ export default function Checkout() {
           )}
         </p>
       </header>
-      {!Object.keys(cart.items).length ? (
+      {account?.role === "seller" ? (
+        <section className="ck-card ck-empty">
+          <ShoppingBag size={36} />
+          <h2>{translateText("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.")}</h2>
+          <Link className="ck-button primary" to="/register?next=%2Fcheckout">{translateText("Стать покупателем")}</Link>
+          <Link className="ck-button" to="/login?next=%2Fcheckout">{translateText("Войти как покупатель")}</Link>
+        </section>
+      ) : !Object.keys(cart.items).length ? (
         <section className="ck-card ck-empty">
           <ShoppingBag size={36} />
           <h2>{translateText("В корзине пока пусто")}</h2>

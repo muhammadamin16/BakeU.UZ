@@ -207,13 +207,12 @@ test("phone, identity, future date and delivery address are validated before any
   assert.throws(() => prepareCheckout(state(), i), /полный адрес/);
 });
 
-test("seller buyers can buy elsewhere but cannot order from their own store", () => {
+test("a seller must sign in as a buyer before checkout", () => {
   const i = input();
   i.account.role = "seller";
-  i.ownShopId = "own-other";
+  assert.throws(() => prepareCheckout(state(), i), /аккаунт покупателя/);
+  i.account.role = "client";
   assert.equal(prepareCheckout(state(), i).orders.length, 3);
-  i.ownShopId = "bakeu";
-  assert.throws(() => prepareCheckout(state(), i), /собственном/);
 });
 
 test("each seller receives a separate local conversation with only its own items", () => {

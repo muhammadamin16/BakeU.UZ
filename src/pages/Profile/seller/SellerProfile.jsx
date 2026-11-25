@@ -253,9 +253,9 @@ export default function SellerProfile({ account, onLogout }) {
             </p>
           </div>
           <div className="bw-actions">
-            <Link className="bw-btn" to="/seller?tab=products">
+            <Link className="bw-btn" to="/register?next=%2Fcheckout">
               <ShoppingBag size={17} />
-              {translateText("Для заказа")}
+              {translateText("Стать покупателем")}
             </Link>
             {saved && (
               <Link

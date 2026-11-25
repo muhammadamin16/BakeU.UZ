@@ -36,6 +36,16 @@ export default defineConfig(({ mode }) => {
             env.VITE_BOT_API_PROXY_TARGET ||
             "http://127.0.0.1:3001",
           changeOrigin: true,
+          configure(proxy) {
+            if (env.VITE_GO_LOCAL_ACCOUNTS !== "true") return;
+            proxy.on("proxyReq", (outgoing, incoming) => {
+              const host = incoming.headers.host;
+              if (/^(127\.0\.0\.1|localhost):\d+$/.test(host || "") &&
+                  incoming.headers.origin === `http://${host}`) {
+                outgoing.removeHeader("origin");
+              }
+            });
+          },
         },
       },
     },

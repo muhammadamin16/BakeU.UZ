@@ -1,4 +1,4 @@
-export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = globalThis.navigator?.locks } = {}) {
+export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = globalThis.navigator?.locks, browserSession = true } = {}) {
   let access = "";
   let pending;
   const listeners = new Set();
@@ -26,10 +26,11 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
   }
 
   function authRequest(path, body) {
-    return call(path, { method: "POST", body, headers: sessionMode, credentials: "include" });
+    return call(path, { method: "POST", body, headers: browserSession ? sessionMode : undefined, credentials: browserSession ? "include" : "omit" });
   }
 
   function refresh() {
+    if (!browserSession) return Promise.reject(Object.assign(new Error("Войдите в аккаунт BakeU."), { status: 401 }));
     if (!pending) {
       pending = locked(async () => {
         const data = await authRequest("/auth/refresh");
@@ -83,9 +84,20 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
         return data.user;
       });
     },
-    async login(email, password) {
+    async login(email, password, role) {
       return locked(async () => {
         const data = await authRequest("/auth/login", { email, password });
+        if (role && data.user?.role !== role) {
+          throw new Error(role === "customer" ? "Войдите с данными аккаунта покупателя." : "Войдите с данными аккаунта продавца.");
+        }
+        access = data.token;
+        notify(data.user);
+        return data.user;
+      });
+    },
+    async signup(profile) {
+      return locked(async () => {
+        const data = await authRequest("/auth/signup", profile);
         access = data.token;
         notify(data.user);
         return data.user;
@@ -101,7 +113,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
     },
     async logout() {
       return locked(async () => {
-        try { await authRequest("/auth/logout"); }
+        try { if (browserSession) await authRequest("/auth/logout"); }
         finally { access = ""; notify(null); }
       });
     },

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { goAccount, goAPIBase, productImageURL } from "../api/goAccount.js";
+import { goAccount, goAPIBase, goLocalAccountsEnabled, productImageURL } from "../api/goAccount.js";
 import { useCartStore } from "../store/cartStore.js";
 import { createServerCart, lineKey } from "./serverCart.js";
+import { translateText as t } from "../i18n/index.js";
 import FavoriteButton from "../components/FavoriteButton/FavoriteButton.jsx";
 import "./orders.css";
 
@@ -14,6 +15,7 @@ export default function GoProduct() {
 function CatalogProduct({ id }) {
   const [product, setProduct] = useState(null);
   const [notice, setNotice] = useState("");
+  const [sellerBlocked, setSellerBlocked] = useState(false);
   const [variantId, setVariantId] = useState("");
   const [busy, setBusy] = useState(false);
   const add = useCartStore((state) => state.add);
@@ -50,7 +52,11 @@ function CatalogProduct({ id }) {
         setNotice("Товар сохранён в гостевой корзине.");
         return;
       }
-      if (!["customer", "seller"].includes(buyer.role)) throw Error("Для покупки войдите в аккаунт.");
+      if (buyer.role === "seller") {
+        setSellerBlocked(true);
+        setNotice("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.");
+        return;
+      }
       const request = async (path, options) => {
         const account = await goAccount.request("/me");
         if (account.uid !== buyer.uid) throw Error("Аккаунт изменился. Повторите действие.");
@@ -73,12 +79,15 @@ function CatalogProduct({ id }) {
   return (
     <section className="tg-orders-panel">
       <Link to="/seller">Каталог</Link>{" · "}<Link to="/cart">Корзина</Link>
-      {(!goAPIBase || notice) && <p role="status">{notice || "Подключение к каталогу не настроено."}</p>}
+      {(!goAPIBase || notice) && <p role="status">{t(notice || "Подключение к каталогу не настроено.")}</p>}
+      {sellerBlocked && <Link className="bw-btn primary" to={goLocalAccountsEnabled
+        ? `/account/orders?auth=buyer&product=${encodeURIComponent(id)}` : "/login"}>{t("Стать покупателем")}</Link>}
       {!product && goAPIBase && !notice && <p role="status">Загрузка товара…</p>}
       {product && <>
         <h1>{product.title}</h1>
         <FavoriteButton product={{ ...product, name: product.title }} />
         {image && <img src={image} width="160" alt={product.title} />}
+        <p>{product.category}</p>
         <p>{product.description}</p>
         <p>{Number(selected?.price ?? product.price).toLocaleString("ru-RU")} UZS</p>
         {product.variants?.some((variant) => variant.id) && (

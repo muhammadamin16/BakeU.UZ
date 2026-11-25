@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { goAccount as api, productImageURL } from "../../../api/goAccount.js";
+import { PRODUCT_CATEGORIES } from "../../Product/productDetails.js";
 import { translateText } from "../../../i18n/index.js";
 
 const emptyProduct = { title: "", description: "", category: "", price: "", available: true, variants: [] };
@@ -86,7 +87,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
           <legend>{translateText(draft.id ? "Редактировать товар" : "Добавить товар")}</legend>
           {[
             ["title", "Название", "text"], ["description", "Описание", "text"],
-            ["category", "Категория", "text"], ["price", "Цена", "number"],
+            ["price", "Цена", "number"],
           ].map(([key, label, type]) => (
             <label className="bw-field" key={key}>{translateText(label)}
               <input type={type} value={draft[key] ?? ""}
@@ -95,6 +96,13 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
                 onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
             </label>
           ))}
+          <label className="bw-field">{translateText("Категория")}
+            <select required value={draft.category || ""} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
+              <option value="" disabled>{translateText("Выберите категорию")}</option>
+              {draft.category && !PRODUCT_CATEGORIES.includes(draft.category) && <option>{draft.category}</option>}
+              {PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{translateText(category)}</option>)}
+            </select>
+          </label>
           <label className="bw-field">
             <input type="checkbox" checked={draft.available} onChange={(event) => setDraft({ ...draft, available: event.target.checked })} />
             {translateText("В наличии")}

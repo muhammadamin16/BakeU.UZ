@@ -12,10 +12,17 @@ const fields = [
 ];
 
 async function loadShop(api) {
-  return api.request("/market/mine");
+  try {
+    return await api.request("/market/mine");
+  } catch (error) {
+    if (error.status !== 404) throw error;
+    const user = await api.request("/me");
+    if (user.role !== "seller") throw Error("Войдите с данными аккаунта продавца.");
+    return { status: "draft", sellerId: user.uid, phone: user.phone, email: user.email, fulfillment: "both" };
+  }
 }
 
-export default function ServerStorefront({ accountApi = api }) {
+export default function ServerStorefront({ accountApi = api, embedded = false }) {
   const api = accountApi;
   const [shop, setShop] = useState(null);
   const [draft, setDraft] = useState(null);
@@ -24,13 +31,13 @@ export default function ServerStorefront({ accountApi = api }) {
   const [notice, setNotice] = useState("");
   const [logo, setLogo] = useState(null);
   const sellerId = shop?.sellerId;
-  const ordersClient = useMemo(() => sellerId ? createWebsiteOrdersClient(async (path, options) => {
+  const ordersClient = useMemo(() => sellerId && !embedded ? createWebsiteOrdersClient(async (path, options) => {
     const result = await api.requestWithOptions(path, options);
     if (path === "/me" && (result.uid !== sellerId || result.role !== "seller")) {
       throw Error("Сессия продавца изменилась. Откройте настройки магазина снова.");
     }
     return result;
-  }) : null, [sellerId, api]);
+  }) : null, [sellerId, api, embedded]);
   useEffect(() => {
     let active = true;
     loadShop(api).then((data) => {
@@ -123,7 +130,7 @@ export default function ServerStorefront({ accountApi = api }) {
             <fieldset disabled={busy || shop.status === "suspended"} className="bw-fields">
               {fields.map(([key, label, type = "text"]) => (
                 <label className="bw-field" key={key}>{translateText(label)}
-                  <input type={type} step={type === "number" ? "any" : undefined}
+                  <input type={type} required={["name", "description", "city"].includes(key)} step={type === "number" ? "any" : undefined}
                     value={draft[key] ?? ""} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
                 </label>
               ))}
@@ -159,7 +166,7 @@ export default function ServerStorefront({ accountApi = api }) {
           )}
         </>
       ) : null}
-      {!needsLogin && !busy && (
+      {!embedded && !needsLogin && !busy && (
         <button className="bw-btn" type="button" onClick={() => run(async () => {
           await api.logout();
           setShop(null);

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams, useLocation, Link } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { accountApiBase } from "../bot/client/accountApi.js";
 import { discoverGoApi, createGoTransport, pinGoAccount } from "./transport.js";
 import { createWebsiteOrdersClient } from "./client.js";
@@ -10,8 +10,9 @@ import GuestCart from "./GuestCart.jsx";
 import ServerOrdersPanel from "./ServerOrdersPanel.jsx";
 import ServerNotifications from "./ServerNotifications.jsx";
 import DeliveryFields from "./DeliveryFields.jsx";
-import { goAccount as sharedGoAccount, goAPIBase, goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { goAccount as sharedGoAccount, goAPIBase, goLocalAccountsEnabled, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import "./orders.css";
+import GoEmailAccount from "./GoEmailAccount.jsx";
 import SellerSummary from "./SellerSummary.jsx";
 import { translateText as t } from "../i18n/index.js";
 const OpenOwnShop = lazy(() => import("./OpenOwnShop.jsx"));
@@ -298,6 +299,15 @@ function CatalogCheckout({ transport, client, onCreated, productId }) {
 }
 function ConnectedAccount({ transport, challenge, productId, orderId }) {
   const { pathname, search } = useLocation();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const intent = params.get("auth");
+  const checkout = params.get("checkout") === "1";
+  const orderParams = new URLSearchParams();
+  if (productId) orderParams.set("product", productId);
+  if (checkout) orderParams.set("checkout", "1");
+  const returnTo = "/account/orders" + (orderParams.size ? "?" + orderParams : "");
+  const switchToBuyer = "?auth=buyer" + (orderParams.size ? "&" + orderParams : "");
   const authState = pathname === "/account/orders" ? { ordersSearch: search } : null;
   const [account, setAccount] = useState(null),
     [email, setEmail] = useState(""),
@@ -342,9 +352,22 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
   );
   const buyerClient = useMemo(() => createWebsiteOrdersClient(pinned.request, { audience: "buyer" }), [pinned]);
 
+  if (goLocalAccountsEnabled && !challenge && !restoring && (!account || intent)) {
+    return <div className="tg-orders-panel">
+      <GoEmailAccount key={search} transport={transport} intent={intent || "login"} orderParams={orderParams}
+        register={params.get("register") === "1" && ["buyer", "shop"].includes(intent)}
+        cancelTo={account ? returnTo : "/seller"}
+        onSuccess={(user) => {
+          setAccount(user);
+          setOrdersAudience("auto");
+          navigate(returnTo, { replace: true });
+        }} />
+    </div>;
+  }
+
   return (
     <div className="tg-orders-panel">
-      <h1>{challenge ? "Подтверждение Telegram" : "Мои заказы BakeU"}</h1>
+      <h1>{challenge ? "Подтверждение Telegram" : account?.role === "seller" ? t("Кабинет продавца") : t("Мои заказы BakeU")}</h1>
       {!account && !restoring && goPhoneAccountsEnabled && (
         <div className="tg-orders-account-actions">
           <Link className="bw-btn primary" to="/login" state={authState}>{t("Войти по подтверждённому телефону")}</Link>
@@ -423,6 +446,16 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
       {account && (
         <>
           <p>{account.name}</p>
+          <div className="tg-orders-account-actions">
+            {account.role === "seller" ? <Link className="bw-btn primary"
+              to={goLocalAccountsEnabled ? switchToBuyer : "/login"}>
+              {t("Стать покупателем")}
+            </Link> : goLocalAccountsEnabled && <Link className="bw-btn" to="?auth=shop">{t("Войти в магазин")}</Link>}
+            {account.capabilities?.admin && <Link className="bw-btn" to="/admin">{t("Панель администратора")}</Link>}
+          </div>
+          {account.role === "seller" && (productId || checkout) && (
+            <p className="bw-card" role="status">{t("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.")}</p>
+          )}
           <button
             onClick={async () => {
               await transport.logout().catch(() => {});
@@ -447,7 +480,7 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
           {account.role === "seller" && <SellerSummary transport={pinned} />}
           {account.role === "seller" && transport.shared && !account.capabilities?.openShop && (
             <Suspense fallback={<p>Загрузка настроек…</p>}>
-              <SellerSettings accountApi={sellerApi} />
+              <SellerSettings key={account.uid} accountApi={sellerApi} embedded />
             </Suspense>
           )}
           {account.role === "seller" && <div role="group" aria-label={t("Раздел заказов")}><button type="button" onClick={() => setOrdersAudience("buyer")}>{t("Мои покупки")}</button><button type="button" onClick={() => setOrdersAudience("seller")}>{t("Заказы моего магазина")}</button></div>}
@@ -461,7 +494,7 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
             client={client}
             sessionKey={account.uid + ":" + revision}
           />
-          {["customer", "seller"].includes(account.role) && (
+          {account.role === "customer" && (
             <CatalogCheckout
               key={account.uid + ":" + productId}
               productId={productId}
@@ -548,6 +581,7 @@ export default function AccountOrders() {
                 shared: true,
                 request: sharedGoAccount.requestWithOptions,
                 login: sharedGoAccount.login,
+                signup: sharedGoAccount.signup,
                 logout: sharedGoAccount.logout,
               }
             : createGoTransport(base, {

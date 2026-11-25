@@ -22,7 +22,7 @@ import Chat from "../pages/Messages/Chat";
 import Login from "../pages/Auth/Login/Login";
 import GoPhoneAccount from "../pages/Auth/GoPhoneAccount.jsx";
 import { publicGoCatalogEnabled } from "../api/usePublicCatalog.js";
-import { goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { goLocalAccountsEnabled, goPhoneAccountsEnabled } from "../api/goAccount.js";
 import { miniLaunch } from "../miniapp/telegram.js";
 import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
@@ -36,6 +36,7 @@ const ServerStorefront = lazy(() =>
   })),
 );
 
+const ServerWorkspace = lazy(() => import("../admin/pages/ServerWorkspace.jsx"));
 const AdminRoutes = lazy(() => import("../admin/routes/AdminRoutes"));
 const MapPage = lazy(() => import("../pages/Map/Map"));
 const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
@@ -101,6 +102,8 @@ export default function AppRoutes() {
       </Suspense>
     );
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
+  if (matchesPath(pathname, "/admin") && !matchesPath(pathname, "/admin/telegram") && (goLocalAccountsEnabled || goPhoneAccountsEnabled))
+    return <Suspense fallback={loading}><ServerWorkspace /></Suspense>;
   if (matchesPath(pathname, "/admin"))
     return (
       <AdminGate allowDemoPreview>
@@ -118,9 +121,9 @@ export default function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={publicGoCatalogEnabled ? <Suspense fallback={loading}><GoProduct /></Suspense> : <Product />} />
-          <Route path="/cart" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Cart />} />
-          <Route path="/checkout" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Checkout />} />
-          <Route path="/orders" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Orders />} />
+          <Route path="/cart" element={(goPhoneAccountsEnabled || goLocalAccountsEnabled) ? <Navigate to="/account/orders?checkout=1" replace /> : <Cart />} />
+          <Route path="/checkout" element={(goPhoneAccountsEnabled || goLocalAccountsEnabled) ? <Navigate to="/account/orders?checkout=1" replace /> : <Checkout />} />
+          <Route path="/orders" element={(goPhoneAccountsEnabled || goLocalAccountsEnabled) ? <Navigate to="/account/orders" replace /> : <Orders />} />
           <Route
             path="/telegram/link"
             element={
@@ -137,7 +140,7 @@ export default function AppRoutes() {
               </Suspense>
             }
           />
-          <Route path="/orders/:id" element={goPhoneAccountsEnabled ? <GoOrderRedirect /> : <OrderDetails />} />
+          <Route path="/orders/:id" element={(goPhoneAccountsEnabled || goLocalAccountsEnabled) ? <GoOrderRedirect /> : <OrderDetails />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route
             path="/map"
@@ -158,15 +161,15 @@ export default function AppRoutes() {
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
 
-          <Route path="/login" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="login" /> : <Login />} />
-          <Route path="/register" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="register" register /> : <Register />} />
-          <Route path="/profile" element={goPhoneAccountsEnabled ? <Navigate to="/account/orders" replace /> : <Profile />} />
+          <Route path="/login" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="login" /> : goLocalAccountsEnabled ? <Navigate to="/account/orders?auth=login" replace /> : <Login />} />
+          <Route path="/register" element={goPhoneAccountsEnabled ? <GoPhoneAccount key="register" register /> : goLocalAccountsEnabled ? <Navigate to="/account/orders?auth=buyer&register=1" replace /> : <Register />} />
+          <Route path="/profile" element={(goPhoneAccountsEnabled || goLocalAccountsEnabled) ? <Navigate to="/account/orders" replace /> : <Profile />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      {isHome && !isMiniMode && <AuthModal />}
+      {isHome && !isMiniMode && !goLocalAccountsEnabled && <AuthModal />}
 
       <MobileNav />
       {showFooter && <Footer />}
