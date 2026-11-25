@@ -52,6 +52,30 @@ export const products = [
     image: "/images/products/somsa.jpg",
     shopId: "bakeu",
   },
+  {
+    id: "demo-achichuk",
+    name: "Салат Ачичук",
+    category: "Салаты",
+    price: 23000,
+    image: "/images/products/achi-chuchuk.webp",
+    shopId: "bakeu",
+  },
+  {
+    id: "demo-cucumber-salad",
+    name: "Салат с огурцами и зеленью",
+    category: "Салаты",
+    price: 25000,
+    image: "/images/products/cucumber-salad.webp",
+    shopId: "bakeu",
+  },
+  {
+    id: "demo-summer-salad",
+    name: "Летний овощной салат",
+    category: "Салаты",
+    price: 26000,
+    image: "/images/products/summer-salad.webp",
+    shopId: "bakeu",
+  },
   ...DEMO_BAKERIES.flatMap(({ id, specialty, image, items }) =>
     items.map(([name, price], index) => ({
       id: `demo-${id}-${index + 1}`,
