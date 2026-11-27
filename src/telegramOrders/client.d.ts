@@ -5,6 +5,7 @@ export type GoRequest = (
     body?: unknown;
     headers?: Record<string, string>;
     signal?: AbortSignal;
+    responseType?: "blob";
   },
 ) => Promise<unknown>;
 export interface GoOrder {
@@ -46,9 +47,10 @@ export function createWebsiteOrdersClient(request: GoRequest, options?: { audien
     requestId: string;
     cartRevision?: string;
   }): Promise<{ orders: GoOrder[] }>;
-  notifications(
-    signal?: AbortSignal,
-  ): Promise<
-    { id: string; userId: string; title: string; telegramState: string }[]
-  >;
+  complain(id: string, subject: string): Promise<{ id: string; status: string }>;
+  notifications(signal?: AbortSignal): Promise<{
+    items: { id: string; userId: string; title: string; telegramState: string; read?: boolean }[];
+    unread: number;
+  }>;
+  readNotification(id: string): Promise<void>;
 };

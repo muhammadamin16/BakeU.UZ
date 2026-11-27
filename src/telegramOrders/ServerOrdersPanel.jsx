@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { translateText as t } from "../i18n/index.js";
 import OrderProgress from "./OrderProgress";
 import { nextStatuses, statusLabels } from "./domain.js";
 function OrdersSession({ client, sessionKey, transitionsEnabled = false, orderId = "" }) {
@@ -70,6 +72,7 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false, orderId
             </p>
           )}
           <OrderProgress order={order} />
+          {goPhoneAccountsEnabled && state.audience === "buyer" && <ComplaintForm client={client} orderId={order.id} />}
           {transitionsEnabled &&
             order.workflowVersion >= 2 &&
             state.user?.role === "seller" &&
@@ -104,4 +107,27 @@ function OrdersSession({ client, sessionKey, transitionsEnabled = false, orderId
 
 export default function ServerOrdersPanel(props) {
   return <OrdersSession key={props.sessionKey || "signed-out"} {...props} />;
+}
+
+function ComplaintForm({ client, orderId }) {
+  const [subject, setSubject] = useState("");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  return <details>
+    <summary>{t("Подать жалобу")}</summary>
+    <form onSubmit={async event => {
+      event.preventDefault();
+      setBusy(true);
+      try {
+        await client.complain(orderId, subject);
+        setSubject("");
+        setStatus("Жалоба отправлена.");
+      } catch (failure) { setStatus(failure.message); }
+      finally { setBusy(false); }
+    }}>
+      <label>{t("Жалоба")}<textarea required minLength={5} maxLength={500} value={subject} onChange={event => setSubject(event.target.value)} /></label>
+      <button disabled={busy}>{t("Отправить")}</button>
+      {status && <p role="status">{t(status)}</p>}
+    </form>
+  </details>;
 }

@@ -48,6 +48,10 @@ export default function GoPhoneAccount({ register = false }) {
         const search = typeof state?.ordersSearch === "string"
           ? new URLSearchParams(state.ordersSearch)
           : new URLSearchParams();
+        if (typeof state?.next === "string" && state.next.startsWith("/messages?")) {
+          navigate(state.next, { replace: true });
+          return;
+        }
         navigate({ pathname: "/account/orders", search: search.toString() }, { replace: true });
       } else {
         const payload = phoneStartPayload(draft, register);

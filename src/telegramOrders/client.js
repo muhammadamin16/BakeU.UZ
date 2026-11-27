@@ -95,6 +95,9 @@ export function createWebsiteOrdersClient(request, { audience = "auto" } = {}) {
         throw new Error("Сервер не подтвердил заказ.");
       return result;
     },
+    complain(id, subject) {
+      return request(`/orders/${encodeURIComponent(id)}/complaints`, { method: "POST", body: { subject } });
+    },
     async notifications(signal) {
       const user = await request("/me", { signal });
       const result = await request("/me/notifications", { signal });
@@ -104,7 +107,10 @@ export function createWebsiteOrdersClient(request, { audience = "auto" } = {}) {
         result.items.some((item) => item.userId !== user.uid)
       )
         throw new Error("Неверный ответ сервера уведомлений.");
-      return result.items;
+      return result;
+    },
+    readNotification(id) {
+      return request(`/me/notifications/${encodeURIComponent(id)}/read`, { method: "PUT" });
     },
   };
 }

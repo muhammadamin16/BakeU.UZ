@@ -676,6 +676,7 @@ export function ServerStorefront() {
       {state.market && (
         <>
           <h1>{state.market.name}</h1>
+          {goPhoneAccountsEnabled && <ShopCommunity key={id} id={id} />}
           <p>{state.market.description}</p>
           <p>
             {state.market.address ||
@@ -705,4 +706,38 @@ export function ServerStorefront() {
       )}
     </main>
   );
+}
+
+function ShopCommunity({ id }) {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const path = `/markets/${encodeURIComponent(id)}/follow`;
+  useEffect(() => {
+    const controller = new AbortController();
+    sharedGoAccount.requestWithOptions(path, { signal: controller.signal }).then(result => {
+      if (!controller.signal.aborted) setState(result);
+    }).catch(async failure => {
+      if (controller.signal.aborted || failure.status !== 401) return;
+      try {
+        const result = await fetch(goAPIBase + path, { signal: controller.signal, credentials: "omit" });
+        if (result.ok) setState({ ...await result.json(), guest: true });
+      } catch { /* A follower count is optional when the service is unavailable. */ }
+    });
+    return () => controller.abort();
+  }, [path]);
+  async function toggle() {
+    setBusy(true);
+    setError("");
+    try { setState(await sharedGoAccount.request(path, state.following ? "DELETE" : "PUT")); }
+    catch (failure) { setError(failure.message); }
+    finally { setBusy(false); }
+  }
+  return <div className="tg-orders-account-actions">
+    <Link className="bw-btn" to={"/messages?seller=" + encodeURIComponent(id)}>{t("Написать магазину")}</Link>
+    {state && <span>{t("Подписчики")}: {state.followers}</span>}
+    {state?.guest ? <Link to="/login">{t("Подписаться")}</Link> : state &&
+      <button type="button" className="bw-btn" disabled={busy} onClick={toggle}>{t(state.following ? "Отписаться" : "Подписаться")}</button>}
+    {error && <span role="alert">{t(error)}</span>}
+  </div>;
 }

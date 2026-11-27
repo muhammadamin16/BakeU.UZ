@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { goAccount, goAPIBase, productImageURL } from "../api/goAccount.js";
+import { goAccount, goAPIBase, goPhoneAccountsEnabled, productImageURL } from "../api/goAccount.js";
 import { useCartStore } from "../store/cartStore.js";
 import { createServerCart, lineKey } from "./serverCart.js";
 import { translateText as t } from "../i18n/index.js";
@@ -114,7 +114,51 @@ function CatalogProduct({ id }) {
         )}
         <button type="button" disabled={busy || !product.available} onClick={save}>Добавить в корзину</button>
         {!product.available && <p>Товар недоступен.</p>}
+        {goPhoneAccountsEnabled && <ServerReviews id={id} />}
       </>}
     </section>
   );
+}
+
+function ServerReviews({ id }) {
+  const path = `/products/${encodeURIComponent(id)}/reviews`;
+  const [items, setItems] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(goAPIBase + path, { signal: controller.signal, credentials: "omit" }).then(response => {
+      if (!response.ok) throw new Error("Отзывы недоступны.");
+      return response.json();
+    }).then(reviews => {
+      if (!controller.signal.aborted && Array.isArray(reviews)) setItems(reviews);
+    }).catch(error => { if (!controller.signal.aborted) setNotice(error.message); });
+    return () => controller.abort();
+  }, [path, revision]);
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setNotice("");
+    try {
+      await goAccount.request(path, "POST", { rating, comment });
+      setComment("");
+      setRevision(value => value + 1);
+    } catch (error) { setNotice(error.status === 403 ? "Отзыв доступен после завершённой покупки." : error.message); }
+    finally { setBusy(false); }
+  }
+  return <section>
+    <h2>{t("Отзывы")}</h2>
+    {items.map(review => <article key={review.id}><strong>{review.authorName} · {review.rating}/5</strong><p>{review.comment}</p></article>)}
+    {notice && <p role="status">{t(notice)}</p>}
+    <form onSubmit={submit}>
+      <label>{t("Оценка")} <select value={rating} onChange={event => setRating(Number(event.target.value))}>
+        {[5, 4, 3, 2, 1].map(value => <option key={value}>{value}</option>)}
+      </select></label>
+      <label>{t("Отзыв")} <textarea maxLength={2000} value={comment} onChange={event => setComment(event.target.value)} /></label>
+      <button disabled={busy}>{t("Отправить отзыв")}</button>
+    </form>
+  </section>;
 }

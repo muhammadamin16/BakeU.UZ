@@ -63,6 +63,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
   }
 
   return {
+    async socketToken() { await refresh(); return access; },
     async exchangeTelegram(ticket) {
       return locked(async () => {
         access = "";

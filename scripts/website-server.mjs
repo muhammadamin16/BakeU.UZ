@@ -51,7 +51,7 @@ export function apiDestination(path, headers, mode) {
     const explicitGo = ["browser", "refresh"].includes(headers["x-bakeu-session"]) || /^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(headers.authorization || "");
     return mode === "go" || explicitGo ? "go" : "bot";
   }
-  return /^\/api\/(auth\/(phone(?:\/|$)|signup$|refresh$|logout-all$)|me(?:\/|$)|profile$|markets?(?:\/|$)|products(?:\/|$)|cart(?:\/|$)|orders(?:\/|$)|images(?:\/|$)|seller\/dashboard$|favorites(?:\/|$)|admin(?:\/|$))/.test(path) ? "go" : null;
+  return /^\/api\/(auth\/(phone(?:\/|$)|signup$|refresh$|logout-all$)|me(?:\/|$)|profile$|markets?(?:\/|$)|chats(?:\/|$)|chat\/socket(?:\/|$)|products(?:\/|$)|cart(?:\/|$)|orders(?:\/|$)|images(?:\/|$)|seller\/dashboard$|favorites(?:\/|$)|admin(?:\/|$))/.test(path) ? "go" : null;
 }
 
 export async function validateWebsiteBuild(config) {
