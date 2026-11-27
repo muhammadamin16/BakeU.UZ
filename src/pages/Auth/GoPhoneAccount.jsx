@@ -1,3 +1,4 @@
+import { localTestMode } from "../../api/localTestMode.js";
 import { lazy, Suspense, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { goAccount } from "../../api/goAccount.js";
@@ -100,15 +101,20 @@ export default function GoPhoneAccount({ register = false }) {
             {register && <button type="button" onClick={() => { setStep(1); setError(""); }}>{t("Назад")}</button>}
           </>}
           {pending && <>
-            <a className="go-phone-link" href={pending.telegramUrl} target="_blank" rel="noopener noreferrer">{t("Открыть Telegram и получить код")} ↗</a>
-            <p>{t("Нажмите «Поделиться своим номером» в боте и введите полученный код здесь.")}</p>
-            <label>{t("Код из Telegram")}<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }} /></label>
+            {localTestMode ? <>
+              <label>LOCAL TEST · Challenge ID<input aria-label="Challenge ID" value={pending.id} readOnly onFocus={event => event.target.select()} /></label>
+              <p>PowerShell: <code>npm run local:proof -- &lt;Challenge ID&gt;</code></p>
+            </> : <>
+              <a className="go-phone-link" href={pending.telegramUrl} target="_blank" rel="noopener noreferrer">{t("Открыть Telegram и получить код")} ↗</a>
+              <p>{t("Нажмите «Поделиться своим номером» в боте и введите полученный код здесь.")}</p>
+            </>}
+            <label>{localTestMode ? "LOCAL TEST · Code" : t("Код из Telegram")}<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }} /></label>
             <button type="button" onClick={() => { clearPhonePending(purpose); setPending(null); setStep(2); setCode(""); setError(""); }}>{t("Изменить данные / запросить новый код")}</button>
           </>}
         </fieldset>
         {register && step >= 2 && <p>{t("Аккаунт появится только после подтверждения вашего номера в Telegram.")}</p>}
         {error && <p className="go-phone-error" role="alert">{t(error)}</p>}
-        <button disabled={busy}>{t(busy ? "Подождите…" : ["Продолжить", "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
+        <button disabled={busy}>{t(busy ? "Подождите…" : ["Продолжить", localTestMode ? "LOCAL TEST · Request code" : "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
         <Link to={register ? "/login" : "/register"} state={state}>{t(register ? "Уже есть подтверждённый аккаунт? Войти" : "Создать аккаунт")}</Link>
       </form>
     </AuthShell>

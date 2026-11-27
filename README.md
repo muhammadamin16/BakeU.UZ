@@ -92,3 +92,8 @@ Android requires a full JDK 21, Android Studio and Android SDK 36. iOS requires
 macOS and Xcode. Native builds and phone tests are separate from the web build
 and Capacitor sync. See the mobile README for API origins, existing demo-mode
 limits, secure configuration and the complete folder map.
+
+## Local marketplace and Admin on Windows
+
+See [LOCAL_START.md](LOCAL_START.md) for the PowerShell workflow, isolated
+MongoDB replica set, fixture seed and local phone proof.

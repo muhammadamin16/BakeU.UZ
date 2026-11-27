@@ -25,7 +25,10 @@
     "app:sync": "npm --prefix apps/mobile run sync",
     "app:android": "npm --prefix apps/mobile run android",
     "app:ios": "npm --prefix apps/mobile run ios",
-    "deploy:check": "node scripts/check-railway-apis.mjs"
+    "deploy:check": "node scripts/check-railway-apis.mjs",
+    "local:start": "node scripts/local-marketplace.mjs start",
+    "local:proof": "node scripts/local-marketplace.mjs proof",
+    "local:stop": "node scripts/local-marketplace.mjs stop"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
