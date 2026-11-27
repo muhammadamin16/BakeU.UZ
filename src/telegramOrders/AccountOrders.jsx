@@ -447,13 +447,13 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
         <>
           <p>{account.name}</p>
           <div className="tg-orders-account-actions">
-            {account.role === "seller" ? <Link className="bw-btn primary"
+            {!goPhoneAccountsEnabled && account.role === "seller" ? <Link className="bw-btn primary"
               to={goLocalAccountsEnabled ? switchToBuyer : "/login"}>
               {t("Стать покупателем")}
-            </Link> : goLocalAccountsEnabled && <Link className="bw-btn" to="?auth=shop">{t("Войти в магазин")}</Link>}
+            </Link> : goLocalAccountsEnabled && !goPhoneAccountsEnabled && <Link className="bw-btn" to="?auth=shop">{t("Войти в магазин")}</Link>}
             {account.capabilities?.admin && <Link className="bw-btn" to="/admin">{t("Панель администратора")}</Link>}
           </div>
-          {account.role === "seller" && (productId || checkout) && (
+          {!goPhoneAccountsEnabled && account.role === "seller" && (productId || checkout) && (
             <p className="bw-card" role="status">{t("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.")}</p>
           )}
           <button
@@ -494,7 +494,7 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
             client={client}
             sessionKey={account.uid + ":" + revision}
           />
-          {account.role === "customer" && (
+          {(account.role === "customer" || goPhoneAccountsEnabled && account.role === "seller") && (
             <CatalogCheckout
               key={account.uid + ":" + productId}
               productId={productId}
