@@ -50,7 +50,7 @@ export function createUpdateHandler({ repo, telegram, config, notifications, aut
     const goState = repo.getState(chatId);
     if (goState?.kind === "go_verify_phone" && update.message?.contact) {
       const contact = update.message.contact;
-      if (msg.forward_origin || msg.forward_date || msg.forward_from || msg.forward_sender_name || msg.is_automatic_forward ||
+      if (msg.forward_origin || msg.forward_date || msg.forward_from || msg.forward_from_chat || msg.forward_sender_name || msg.is_automatic_forward ||
           String(contact.user_id || "") !== String(user.id)) {
         return telegram.send(chatId, { text: "Поделитесь своим номером через кнопку; чужой контакт не подходит." });
       }

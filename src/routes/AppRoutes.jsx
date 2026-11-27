@@ -102,8 +102,15 @@ export default function AppRoutes() {
       </Suspense>
     );
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
-  if (matchesPath(pathname, "/admin") && !matchesPath(pathname, "/admin/telegram") && (goLocalAccountsEnabled || goPhoneAccountsEnabled))
+  if (matchesPath(pathname, "/admin") && (goPhoneAccountsEnabled ||
+      goLocalAccountsEnabled && !matchesPath(pathname, "/admin/telegram"))) {
+    if (goPhoneAccountsEnabled && miniLaunch.isTelegram && miniStatus === "loading") return loading;
+    if (goPhoneAccountsEnabled && miniLaunch.isTelegram && !goLinked) return <main className="bsa-page">
+      <p role="alert">{miniError || translateText("Подтвердите аккаунт в Telegram.")}</p>
+      <Link to="/login">{translateText("Войти")}</Link>
+    </main>;
     return <Suspense fallback={loading}><ServerWorkspace /></Suspense>;
+  }
   if (matchesPath(pathname, "/admin"))
     return (
       <AdminGate allowDemoPreview>

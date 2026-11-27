@@ -1,11 +1,11 @@
 // A verified Telegram launch is exchanged for the same Go session used by the
 // website. Telegram identity never selects a user through editable profile data.
-export function createGoMiniSession({ goAccount, openLaunch, readAdmin, setAdminToken }) {
-  let expectedUID = "", telegramUser, admin = null, signedOut = false;
+export function createGoMiniSession({ goAccount, openLaunch, setAdminToken }) {
+  let expectedUID = "", telegramUser, signedOut = false;
   const view = (user) => ({
     user: user ? { ...user, id: user.uid, firstName: user.name || telegramUser.firstName, telegramId: telegramUser.id } : telegramUser,
-    isAdmin: admin?.isAdmin === true,
-    links: admin?.links || {},
+    isAdmin: user?.capabilities?.admin === true,
+    links: {},
     goLinked: Boolean(user),
   });
   return {
@@ -24,14 +24,12 @@ export function createGoMiniSession({ goAccount, openLaunch, readAdmin, setAdmin
           return null;
         }
         if (user?.uid !== expectedUID) throw new Error("Аккаунт изменился. Откройте Mini App заново.");
-        if (admin) admin = await readAdmin();
         return view(user);
       }
       const launch = await openLaunch(initData);
       if (!launch?.telegramUser?.id || ![true, false].includes(launch.linked)) throw new Error("Не удалось подтвердить Telegram.");
       telegramUser = launch.telegramUser;
-      admin = launch.admin;
-      setAdminToken(admin?.token || "");
+      setAdminToken("");
       if (!launch.linked) {
         // A different Telegram actor must not inherit an earlier website cookie.
         await goAccount.logout();

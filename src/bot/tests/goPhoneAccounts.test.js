@@ -18,6 +18,12 @@ test("Go account verification accepts only a private actor's own contact and nev
     await handle(message(711, `/start goauth_${token}`));
     assert.equal(s.repo.getState("711").kind, "go_verify_phone");
     await handle(contact(711, 999));
+    const forwarded = contact(711);
+    forwarded.message.forward_origin = { type: "user", sender_user: { id: 711 } };
+    await handle(forwarded);
+    const unowned = contact(711);
+    delete unowned.message.contact.user_id;
+    await handle(unowned);
     await handle(contact(711, 711, "group"));
     assert.equal(calls.length, 0);
     await handle(contact(711));

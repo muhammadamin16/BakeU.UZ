@@ -196,16 +196,16 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
   );
 }
 
-function ProductPhoto({ api, product, url }) {
+export function ProductPhoto({ api, product, url, admin = false }) {
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(false);
   const id = product.id;
-  const draft = product.draft;
+  const privatePreview = admin || product.draft;
   useEffect(() => {
-    if (!draft || !productImageURL(url)) return;
+    if (!privatePreview || !productImageURL(url)) return;
     const controller = new AbortController();
     let objectURL;
-    api.requestWithOptions(`/me/products/${encodeURIComponent(id)}/images/${url.split("/").at(-1)}`,
+    api.requestWithOptions(`/${admin ? "admin" : "me"}/products/${encodeURIComponent(id)}/images/${url.split("/").at(-1)}`,
       { responseType: "blob", signal: controller.signal }).then(blob => {
       if (controller.signal.aborted) return;
       objectURL = URL.createObjectURL(blob);
@@ -215,8 +215,8 @@ function ProductPhoto({ api, product, url }) {
       controller.abort();
       if (objectURL) URL.revokeObjectURL(objectURL);
     };
-  }, [api, draft, id, url]);
-  const src = draft ? preview : productImageURL(url);
-  if (error && draft) return <span role="status">{translateText("Фото недоступно")}</span>;
+  }, [admin, api, privatePreview, id, url]);
+  const src = privatePreview ? preview : productImageURL(url);
+  if (error && privatePreview) return <span role="status">{translateText("Фото недоступно")}</span>;
   return src ? <img src={src} alt={product.title} width="96" /> : null;
 }

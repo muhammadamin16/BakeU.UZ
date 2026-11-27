@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { goAccount as api } from "../../../api/goAccount.js";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { goAccount as api, goPhoneAccountsEnabled } from "../../../api/goAccount.js";
+import { Link } from "react-router-dom";
 import { translateText } from "../../../i18n/index.js";
 import { createWebsiteOrdersClient } from "../../../telegramOrders/client.js";
 import ServerOrdersPanel from "../../../telegramOrders/ServerOrdersPanel.jsx";
 import ServerProducts from "./ServerProducts.jsx";
+
+const ShopLocationPicker = lazy(() => import("../../../components/ShopLocationPicker/ShopLocationPicker.jsx"));
 
 const fields = [
   ["name", "Название магазина"], ["description", "Описание магазина"],
@@ -83,6 +86,7 @@ export default function ServerStorefront({ accountApi = api, embedded = false })
     return run(async () => {
       const payload = Object.fromEntries(fields.slice(0, 5).map(([key]) => [key, draft[key] ?? ""]));
       payload.fulfillment = draft.fulfillment;
+      if (goPhoneAccountsEnabled) payload.pointConfirmed = draft.pointConfirmed === true;
       const hasLat = draft.lat != null && draft.lat !== "";
       const hasLng = draft.lng != null && draft.lng !== "";
       if (hasLat !== hasLng) throw Error("Укажите обе координаты.");
@@ -116,7 +120,7 @@ export default function ServerStorefront({ accountApi = api, embedded = false })
     <section className="bw-card" aria-busy={busy}>
       <h2>{translateText("Настройки магазина")}</h2>
       {notice && <p role="status">{translateText(notice)}</p>}
-      {needsLogin ? (
+      {needsLogin && goPhoneAccountsEnabled ? <Link to="/login">{translateText("Войти")}</Link> : needsLogin ? (
         <form onSubmit={login} className="bw-fields">
           <label className="bw-field">Email<input name="email" type="email" autoComplete="username" required /></label>
           <label className="bw-field">{translateText("Пароль")}<input name="password" type="password" autoComplete="current-password" required /></label>
@@ -127,21 +131,26 @@ export default function ServerStorefront({ accountApi = api, embedded = false })
           <p>Статус магазина: {{ draft: "Черновик", pending: "На проверке", rejected: "Отклонён", approved: "Одобрен", suspended: "Приостановлен" }[shop.status] || shop.status}</p>
           {shop.rejectionReason && <p role="status">{shop.rejectionReason}</p>}
           <form onSubmit={save}>
-            <fieldset disabled={busy || shop.status === "suspended"} className="bw-fields">
-              {fields.map(([key, label, type = "text"]) => (
+            <fieldset disabled={busy || shop.status === "suspended" || (goPhoneAccountsEnabled && shop.status !== "approved")} className="bw-fields">
+              {fields.filter(([key]) => !goPhoneAccountsEnabled || !["address", "lat", "lng"].includes(key)).map(([key, label, type = "text"]) => (
                 <label className="bw-field" key={key}>{translateText(label)}
-                  <input type={type} required={["name", "description", "city"].includes(key)} step={type === "number" ? "any" : undefined}
+                  <input type={type} required={goPhoneAccountsEnabled ? key === "name" : ["name", "description", "city"].includes(key)} step={type === "number" ? "any" : undefined}
                     value={draft[key] ?? ""} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
                 </label>
               ))}
-              <button type="button" className="bw-btn" onClick={() => {
+              {goPhoneAccountsEnabled && <Suspense fallback={<p role="status">{translateText("Загрузка карты…")}</p>}>
+                <ShopLocationPicker id="seller-shop-point" value={draft} onChange={updated => setDraft({
+                  ...updated, pointConfirmed: updated.address === draft.address && Number.isFinite(updated.lat) && Number.isFinite(updated.lng),
+                })} />
+              </Suspense>}
+              {!goPhoneAccountsEnabled && <button type="button" className="bw-btn" onClick={() => {
                 if (!navigator.geolocation) { setNotice("Геолокация недоступна в этом браузере."); return; }
                 navigator.geolocation.getCurrentPosition(({ coords }) => {
                   setDraft((current) => ({ ...current, lat: coords.latitude, lng: coords.longitude }));
                   setNotice("Точка магазина выбрана. Проверьте адрес и сохраните.");
                 }, () => setNotice("Не удалось определить точку. Введите координаты вручную."), { timeout: 10000 });
-              }}>Указать местоположение магазина</button>
-              {shop.status !== "approved" && <>
+              }}>Указать местоположение магазина</button>}
+              {!goPhoneAccountsEnabled && shop.status !== "approved" && <>
                 <label className="bw-field">Контактный телефон<input type="tel" required value={draft.phone || ""} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} /></label>
                 <label className="bw-field">Email магазина<input type="email" required value={draft.email || ""} onChange={(event) => setDraft({ ...draft, email: event.target.value })} /></label>
                 <label className="bw-field">Логотип магазина (до 5 МБ)<input type="file" required accept="image/jpeg,image/png,image/webp" onChange={(event) => setLogo(event.target.files?.[0] || null)} /></label>

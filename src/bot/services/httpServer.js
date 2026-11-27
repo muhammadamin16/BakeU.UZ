@@ -81,11 +81,8 @@ export function createApiServer({ auth, repo, config, ordersSettings = { enabled
           const data = await readJson(req);
           const telegramUser = verifyInitData(data.initData, config.token);
           const launch = await goAccounts.launchSession(telegramUser.id);
-          if (launch?.linked !== false && !(launch?.linked === true && /^[a-f0-9]{64}$/.test(launch.ticket || "") && /^[a-f0-9]{24}$/.test(launch.uid || ""))) throw new HttpError(502,"Сервер аккаунтов вернул неверный ответ.");
-          // The legacy admin-only API keeps its own restricted capability. No
-          // customer/seller identity or session is created in SQLite here.
-          const admin = config.adminIds.includes(telegramUser.id) ? miniAuth.open(data.initData) : null;
-          return send(200,{...launch,telegramUser,admin});
+          if (launch?.linked !== false && !(launch?.linked === true && /^[a-f0-9]{64}$/.test(launch.ticket || "") && /^[A-Za-z0-9_-]{1,80}$/.test(launch.uid || ""))) throw new HttpError(502,"Сервер аккаунтов вернул неверный ответ.");
+          return send(200,{...launch,telegramUser,admin:null});
         }
         if (path === "/api/miniapp/session" && req.method === "POST") {
           const ip = config.trustProxy

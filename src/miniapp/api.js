@@ -87,7 +87,6 @@ async function verify() {
 const goMini = createGoMiniSession({
   goAccount,
   openLaunch: (initData) => miniRequest("/go-session", { method: "POST", body: { initData }, token: "" }),
-  readAdmin: () => miniRequest("/me"),
   setAdminToken: setToken,
 });
 export function authenticateMiniApp(options) {
