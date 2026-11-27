@@ -49,3 +49,19 @@
 .bsa-product { display: flex; gap: .5rem; align-items: center; }
 .bsa-product img { width: 3rem; height: 3rem; object-fit: cover; border-radius: .5rem; }
 .bsa-totals { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+.bsa-settings fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: .75rem;
+  max-width: 32rem;
+}
+.bsa-settings label {
+  display: grid;
+  gap: .25rem;
+}
+.bsa-settings label:has(input[type="checkbox"]) {
+  display: flex;
+  gap: .5rem;
+}

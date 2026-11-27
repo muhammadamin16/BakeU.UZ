@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import { translateText } from "../i18n/index.js";
 import { useMiniApp } from "../miniapp/context";
 import Welcome from "../miniapp/pages/Welcome";
-import AdminGate from "../miniapp/components/AdminGate";
 import { Routes, Route, Navigate, useLocation, useParams, Link } from "react-router-dom";
 
 import Header from "../components/Header/Header";
@@ -36,8 +35,7 @@ const ServerStorefront = lazy(() =>
   })),
 );
 
-const ServerWorkspace = lazy(() => import("../admin/pages/ServerWorkspace.jsx"));
-const AdminRoutes = lazy(() => import("../admin/routes/AdminRoutes"));
+const ServerWorkspace = lazy(() => import("../admin/routes/AdminRoutes.jsx"));
 const MapPage = lazy(() => import("../pages/Map/Map"));
 const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
 
@@ -102,23 +100,10 @@ export default function AppRoutes() {
       </Suspense>
     );
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
-  if (matchesPath(pathname, "/admin") && (goPhoneAccountsEnabled ||
-      goLocalAccountsEnabled && !matchesPath(pathname, "/admin/telegram"))) {
+  if (matchesPath(pathname, "/admin")) {
     if (goPhoneAccountsEnabled && miniLaunch.isTelegram && miniStatus === "loading") return loading;
-    if (goPhoneAccountsEnabled && miniLaunch.isTelegram && !goLinked) return <main className="bsa-page">
-      <p role="alert">{miniError || translateText("Подтвердите аккаунт в Telegram.")}</p>
-      <Link to="/login">{translateText("Войти")}</Link>
-    </main>;
     return <Suspense fallback={loading}><ServerWorkspace /></Suspense>;
   }
-  if (matchesPath(pathname, "/admin"))
-    return (
-      <AdminGate allowDemoPreview>
-        <Suspense fallback={loading}>
-          <AdminRoutes />
-        </Suspense>
-      </AdminGate>
-    );
 
   return (
     <>
