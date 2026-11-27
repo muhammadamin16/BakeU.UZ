@@ -352,7 +352,7 @@ function ConnectedAccount({ transport, challenge, productId, orderId }) {
   );
   const buyerClient = useMemo(() => createWebsiteOrdersClient(pinned.request, { audience: "buyer" }), [pinned]);
 
-  if (goLocalAccountsEnabled && !challenge && !restoring && (!account || intent)) {
+  if (goLocalAccountsEnabled && !goPhoneAccountsEnabled && !challenge && !restoring && (!account || intent)) {
     return <div className="tg-orders-panel">
       <GoEmailAccount key={search} transport={transport} intent={intent || "login"} orderParams={orderParams}
         register={params.get("register") === "1" && ["buyer", "shop"].includes(intent)}
