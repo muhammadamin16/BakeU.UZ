@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { goAccount, goAPIBase, goLocalAccountsEnabled, productImageURL } from "../api/goAccount.js";
+import { goAccount, goAPIBase, productImageURL } from "../api/goAccount.js";
 import { useCartStore } from "../store/cartStore.js";
 import { createServerCart, lineKey } from "./serverCart.js";
 import { translateText as t } from "../i18n/index.js";
 import FavoriteButton from "../components/FavoriteButton/FavoriteButton.jsx";
+import PhotoCarousel from "../components/PhotoCarousel/PhotoCarousel.jsx";
 import "./orders.css";
 
 export default function GoProduct() {
@@ -15,7 +16,6 @@ export default function GoProduct() {
 function CatalogProduct({ id }) {
   const [product, setProduct] = useState(null);
   const [notice, setNotice] = useState("");
-  const [sellerBlocked, setSellerBlocked] = useState(false);
   const [variantId, setVariantId] = useState("");
   const [busy, setBusy] = useState(false);
   const add = useCartStore((state) => state.add);
@@ -52,9 +52,8 @@ function CatalogProduct({ id }) {
         setNotice("Товар сохранён в гостевой корзине.");
         return;
       }
-      if (buyer.role === "seller") {
-        setSellerBlocked(true);
-        setNotice("Вы вошли как продавец. Для оформления заказа войдите в аккаунт покупателя.");
+      if (buyer.uid === product.sellerId) {
+        setNotice("Нельзя заказать собственный товар.");
         return;
       }
       const request = async (path, options) => {
@@ -75,20 +74,37 @@ function CatalogProduct({ id }) {
   }
 
   const selected = product?.variants?.find((variant) => variant.id === variantId);
-  const image = productImageURL(product?.imageURLs?.[0]);
+  const photos = (product?.imageURLs || []).map(productImageURL).filter(Boolean);
+  const [image] = photos;
   return (
     <section className="tg-orders-panel">
       <Link to="/seller">Каталог</Link>{" · "}<Link to="/cart">Корзина</Link>
       {(!goAPIBase || notice) && <p role="status">{t(notice || "Подключение к каталогу не настроено.")}</p>}
-      {sellerBlocked && <Link className="bw-btn primary" to={goLocalAccountsEnabled
-        ? `/account/orders?auth=buyer&product=${encodeURIComponent(id)}` : "/login"}>{t("Стать покупателем")}</Link>}
       {!product && goAPIBase && !notice && <p role="status">Загрузка товара…</p>}
       {product && <>
         <h1>{product.title}</h1>
         <FavoriteButton product={{ ...product, name: product.title }} />
-        {image && <img src={image} width="160" alt={product.title} />}
+        {image && <PhotoCarousel
+          product={{ image, images: photos }}
+          thumbnails
+          renderImage={(src) => <img src={src} alt={product.title} />}
+        />}
         <p>{product.category}</p>
-        <p>{product.description}</p>
+        <p>{product.description || t("Не указано")}</p>
+        <dl>
+          {[
+            ["Единица измерения", product.unit],
+            ["Вес", product.weight],
+            ["Порции", product.portions],
+            ["Состав", product.ingredients],
+            ["Аллергены", product.allergens],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{t(label)}</dt>
+              <dd>{value ?? t("Не указано")}</dd>
+            </div>
+          ))}
+        </dl>
         <p>{Number(selected?.price ?? product.price).toLocaleString("ru-RU")} UZS</p>
         {product.variants?.some((variant) => variant.id) && (
           <label>Вариант <select disabled={busy} value={variantId} onChange={(event) => setVariantId(event.target.value)}>
