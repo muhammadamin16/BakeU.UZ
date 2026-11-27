@@ -7,7 +7,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
   const locked = (action) =>
     locks?.request("bakeu-go-session", action) ?? action();
 
-  async function call(path, { method = "GET", body, headers, signal, credentials = "omit" } = {}) {
+  async function call(path, { method = "GET", body, headers, signal, credentials = "omit", responseType } = {}) {
     const multipart = body instanceof FormData;
     const timeout = AbortSignal.timeout(15000);
     const response = await fetchImpl(base + path, {
@@ -16,6 +16,7 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
       body: body === undefined || multipart ? body : JSON.stringify(body),
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
+    if (response.ok && responseType === "blob") return response.blob();
     const data = response.status === 204 ? null : await response.json().catch(() => null);
     if (!response.ok || (data === null && response.status !== 204)) {
       const error = new Error(data?.error || `Ошибка API (HTTP ${response.status}).`);
@@ -40,12 +41,12 @@ export function createGoSession(base, { fetchImpl = globalThis.fetch, locks = gl
     return pending;
   }
 
-  async function requestWithOptions(path, { method, body, headers, signal } = {}) {
+  async function requestWithOptions(path, { method, body, headers, signal, responseType } = {}) {
     signal?.throwIfAborted();
     if (!access) await refresh();
     const sent = access;
     const protectedRequest = (token) =>
-      call(path, { method, body, signal, headers: { ...headers, Authorization: `Bearer ${token}` } });
+      call(path, { method, body, signal, responseType, headers: { ...headers, Authorization: `Bearer ${token}` } });
     try {
       return await protectedRequest(sent);
     } catch (error) {

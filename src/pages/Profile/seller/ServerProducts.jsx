@@ -14,7 +14,7 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
 
   useEffect(() => {
     let active = true;
-    api.request(`/products?seller=${encodeURIComponent(sellerId)}`)
+    api.request("/me/products")
       .then((items) => { if (active) setProducts(items); })
       .catch((error) => { if (active) setNotice(error.message); })
       .finally(() => { if (active) setBusy(false); });
@@ -29,6 +29,8 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
       const payload = {
         title: draft.title.trim(), description: draft.description, category: draft.category,
         price: Number(draft.price), available: draft.available,
+        ...(draft.id && { revision: draft.revision }),
+        ...Object.fromEntries(["unit", "weight", "portions", "ingredients", "allergens"].map(key => [key, draft[key] || ""])),
         variants: (draft.variants || []).map(({ id, name, price }) => ({ ...(id ? { id } : {}), name, price: Number(price) })),
       };
       const item = await api.request(draft.id ? `/products/${encodeURIComponent(draft.id)}` : "/products",
@@ -43,19 +45,51 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
     }
   }
 
-  async function upload(event) {
-    const file = event.target.files?.[0];
+  async function upload(event, replacement) {
+    const files = [...(event.target.files || [])];
     event.target.value = "";
-    if (!file) return;
+    if (!files.length) return;
     setBusy(true);
     setNotice("");
     try {
       const body = new FormData();
-      body.append("image", file);
+      for (const file of files) body.append("image", file);
+      if (replacement) body.append("replace", replacement);
       const result = await api.request(`/products/${encodeURIComponent(draft.id)}/image`, "POST", body);
-      setDraft((current) => ({ ...current, imageURLs: result.imageURLs }));
-      setProducts((current) => current.map((product) => product.id === draft.id
-        ? { ...product, imageURLs: result.imageURLs } : product));
+      updateSaved(result);
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function updateSaved(item) {
+    setDraft(item);
+    setProducts((items) => items.map((product) => product.id === item.id ? item : product));
+  }
+
+  async function changePhotos(patch) {
+    setBusy(true);
+    setNotice("");
+    try {
+      const item = await api.request(`/products/${encodeURIComponent(draft.id)}`, "PUT", { ...patch, revision: draft.revision });
+      updateSaved(item);
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function archive() {
+    if (!window.confirm(translateText("Архивировать товар?"))) return;
+    setBusy(true);
+    try {
+      await api.request(`/products/${encodeURIComponent(draft.id)}`, "DELETE");
+      setProducts((items) => items.filter((item) => item.id !== draft.id));
+      setDraft(emptyProduct);
+      setNotice("Товар архивирован.");
     } catch (error) {
       setNotice(error.message);
     } finally {
@@ -87,7 +121,9 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
           <legend>{translateText(draft.id ? "Редактировать товар" : "Добавить товар")}</legend>
           {[
             ["title", "Название", "text"], ["description", "Описание", "text"],
-            ["price", "Цена", "number"],
+            ["price", "Цена", "number"], ["unit", "Единица измерения", "text"],
+            ["weight", "Вес", "text"], ["portions", "Порции", "text"],
+            ["ingredients", "Состав", "text"], ["allergens", "Аллергены", "text"],
           ].map(([key, label, type]) => (
             <label className="bw-field" key={key}>{translateText(label)}
               <input type={type} value={draft[key] ?? ""}
@@ -129,15 +165,58 @@ export default function ServerProducts({ sellerId, accountApi = api }) {
       {draft.id && (
         <fieldset disabled={busy}>
           <legend>{translateText("Фотографии товара")}</legend>
-          {(draft.imageURLs || []).map(productImageURL).filter(Boolean).map((url) => (
-            <img key={url} src={url} alt={draft.title} width="96" />
+          {(draft.imageURLs || []).map((url, index, urls) => (
+            <div key={url}>
+              <ProductPhoto api={api} product={draft} url={url} />
+              {index === 0 ? <span>{translateText("Обложка")}</span> : (
+                <button type="button" onClick={() => {
+                  const ordered = [...urls];
+                  [ordered[index - 1], ordered[index]] = [ordered[index], ordered[index - 1]];
+                  changePhotos({ imageURLs: ordered });
+                }}>{translateText("Переместить влево")}</button>
+              )}
+              <button type="button" onClick={() => changePhotos({ imageURLs: urls.filter(photo => photo !== url) })}>
+                {translateText("Удалить фото")}
+              </button>
+              <label>{translateText("Заменить фото")}
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => upload(event, url)} />
+              </label>
+            </div>
           ))}
           <label className="bw-field">{translateText("Загрузить фото")}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple
               onChange={upload} disabled={(draft.imageURLs?.length || 0) >= 5} />
           </label>
+          {draft.draft && <button type="button" disabled={(draft.imageURLs?.length || 0) < 2}
+            onClick={() => changePhotos({ publish: true })}>{translateText("Опубликовать товар")}</button>}
+          <button type="button" onClick={archive}>{translateText("Архивировать товар")}</button>
         </fieldset>
       )}
     </section>
   );
+}
+
+function ProductPhoto({ api, product, url }) {
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState(false);
+  const id = product.id;
+  const draft = product.draft;
+  useEffect(() => {
+    if (!draft || !productImageURL(url)) return;
+    const controller = new AbortController();
+    let objectURL;
+    api.requestWithOptions(`/me/products/${encodeURIComponent(id)}/images/${url.split("/").at(-1)}`,
+      { responseType: "blob", signal: controller.signal }).then(blob => {
+      if (controller.signal.aborted) return;
+      objectURL = URL.createObjectURL(blob);
+      setPreview(objectURL);
+    }).catch(() => { if (!controller.signal.aborted) setError(true); });
+    return () => {
+      controller.abort();
+      if (objectURL) URL.revokeObjectURL(objectURL);
+    };
+  }, [api, draft, id, url]);
+  const src = draft ? preview : productImageURL(url);
+  if (error && draft) return <span role="status">{translateText("Фото недоступно")}</span>;
+  return src ? <img src={src} alt={product.title} width="96" /> : null;
 }
