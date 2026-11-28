@@ -1,34 +1,17 @@
 {
-  "name": "bakeu-uz",
+  "name": "bakeu-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "bot:volume:test": "node scripts/check-bot-volume-permissions.mjs",
-    "test:integration": "node --test scripts/*.test.* src/api/*.test.js src/miniapp/*.test.js src/telegramOrders/*.test.js src/store/*.test.js src/i18n/*.test.js src/platform/*.test.js src/routes/*.test.js src/admin/utils/*.test.js",
-    "start": "node scripts/website-server.mjs",
     "dev": "vite",
     "dev:admin": "vite --open /#/admin",
     "build": "vite build",
-    "lint": "eslint .",
+    "start": "node scripts/serve.mjs",
     "preview": "vite preview",
-    "bot": "npm --prefix src/bot run miniapp",
-    "bot:check": "npm --prefix src/bot run miniapp:check",
-    "bot:test": "npm --prefix src/bot test",
-    "miniapp:test": "node scripts/check-miniapp.mjs",
-    "bot:website": "npm --prefix src/bot start",
-    "app:install": "npm --prefix apps/mobile ci",
-    "app:dev": "npm --prefix apps/mobile run dev",
-    "app:build": "npm --prefix apps/mobile run build",
-    "app:check": "npm --prefix apps/mobile run check",
-    "app:parity": "npm --prefix apps/mobile run parity",
-    "app:sync": "npm --prefix apps/mobile run sync",
-    "app:android": "npm --prefix apps/mobile run android",
-    "app:ios": "npm --prefix apps/mobile run ios",
-    "deploy:check": "node scripts/check-railway-apis.mjs",
-    "local:start": "node scripts/local-marketplace.mjs start",
-    "local:proof": "node scripts/local-marketplace.mjs proof",
-    "local:stop": "node scripts/local-marketplace.mjs stop"
+    "lint": "eslint .",
+    "test": "node --test scripts/*.test.* src/api/*.test.js src/miniapp/*.test.js src/orders/*.test.js src/store/*.test.js src/i18n/*.test.js src/platform/*.test.js src/routes/*.test.js",
+    "check": "npm test && npm run lint && npm run build"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
@@ -50,5 +33,8 @@
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
     "vite": "^8.3.6"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

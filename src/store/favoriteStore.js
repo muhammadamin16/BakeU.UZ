@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { productData } from "./productData";
-import { goAccount, goPhoneAccountsEnabled } from "../api/goAccount.js";
+import { accountAPI, phoneAccountsEnabled } from "../api/account.js";
 import { createFavoritesController } from "./serverFavorites.js";
 
 const guestStore = create(persist(() => ({ items: {} }), { name: "bakeu-favorites-products-v1" }));
@@ -16,7 +16,7 @@ const guest = {
 };
 let controller;
 export const useFavoriteStore = create((set) => ({
-  items: goPhoneAccountsEnabled ? {} : guest.read(), busy: false, error: "",
+  items: phoneAccountsEnabled ? {} : guest.read(), busy: false, error: "",
   load: () => run(() => controller?.load()),
   toggle: (product) => run(async () => {
     if (!controller) {
@@ -38,7 +38,7 @@ async function run(action) {
   catch (error) { useFavoriteStore.setState({ error: error.message || "Не удалось сохранить избранное." }); }
   finally { useFavoriteStore.setState({ busy: false }); }
 }
-if (goPhoneAccountsEnabled && goAccount) {
-  controller = createFavoritesController({ request: goAccount.requestWithOptions, guest, publish: useFavoriteStore.setState });
-  goAccount.subscribeAccount((user) => { controller.reset(user); void useFavoriteStore.getState().load(); });
+if (phoneAccountsEnabled && accountAPI) {
+  controller = createFavoritesController({ request: accountAPI.requestWithOptions, guest, publish: useFavoriteStore.setState });
+  accountAPI.subscribeAccount((user) => { controller.reset(user); void useFavoriteStore.getState().load(); });
 }

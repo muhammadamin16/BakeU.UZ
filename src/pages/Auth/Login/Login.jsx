@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { translateText as t } from "../../../i18n/index.js";
-import { accountApiEnabled, startTelegramLogin, verifyTelegramLogin } from "../../../bot/client/accountApi";
+import { accountApiEnabled, startTelegramLogin, verifyTelegramLogin } from "../../../api/legacyAccounts";
 import { authReturnTo, authLink } from "../../../store/navigation";
 import { isLoggedIn } from "../../../store/session";
 import AuthShell from "../AuthShell";

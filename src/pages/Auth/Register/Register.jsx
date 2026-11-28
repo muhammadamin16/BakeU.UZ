@@ -1,7 +1,7 @@
 import ShopLocationPicker from "../../../components/ShopLocationPicker/ShopLocationPicker";
 import { translateText } from "../../../i18n/index.js";
 import { authReturnTo, authLink } from "../../../store/navigation";
-import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../bot/client/accountApi";
+import { accountApiEnabled, startTelegramRegistration, verifyTelegramRegistration } from "../../../api/legacyAccounts";
 import { useState } from "react";
 
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";

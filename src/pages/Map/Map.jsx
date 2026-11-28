@@ -1,6 +1,6 @@
 import { useShopStore } from "../../store/shopStore";
-import { goAPIBase, serverStorefrontEnabled, productImageURL } from "../../api/goAccount.js";
-import { loadGoCatalog, projectGoMapCatalog } from "../../api/goCatalog.js";
+import { apiBaseURL, serverAccountsEnabled, productImageURL } from "../../api/account.js";
+import { loadCatalog, projectMapCatalog } from "../../api/catalog.js";
 import { Link } from "react-router-dom";
 import {
   getDevicePosition,
@@ -401,19 +401,19 @@ function MapClickHandler({ onMapClick }) {
 
 export default function MapPage() {
   const language = useLanguage();
-  const [serverCatalog, setServerCatalog] = useState({ markets: [], products: [], loading: serverStorefrontEnabled, error: "" });
+  const [serverCatalog, setServerCatalog] = useState({ markets: [], products: [], loading: serverAccountsEnabled, error: "" });
   const [catalogRevision, setCatalogRevision] = useState(0);
   useEffect(() => {
-    if (!serverStorefrontEnabled) return;
+    if (!serverAccountsEnabled) return;
     const controller = new AbortController();
-    loadGoCatalog(goAPIBase, { signal: controller.signal }).then((catalog) => {
+    loadCatalog(apiBaseURL, { signal: controller.signal }).then((catalog) => {
       if (!controller.signal.aborted) setServerCatalog({ ...catalog, loading: false, error: "" });
     }).catch((error) => {
       if (!controller.signal.aborted) setServerCatalog({ markets: [], products: [], loading: false, error: error.message });
     });
     return () => controller.abort();
   }, [catalogRevision]);
-  const serverMap = useMemo(() => projectGoMapCatalog(serverCatalog, productImageURL), [serverCatalog]);
+  const serverMap = useMemo(() => projectMapCatalog(serverCatalog, productImageURL), [serverCatalog]);
   const savedShops = useShopStore((s) => s.shops);
   const savedProducts = useShopStore((s) => s.products);
   const locatedShops = useMemo(() => Object.values(savedShops).filter(
@@ -452,8 +452,8 @@ export default function MapPage() {
       };
     }),
   ], [savedProducts, savedShops, locatedShops]);
-  const mapSellers = serverStorefrontEnabled ? serverMap.sellers : legacySellers;
-  const mapProducts = serverStorefrontEnabled ? serverMap.products : legacyProducts;
+  const mapSellers = serverAccountsEnabled ? serverMap.sellers : legacySellers;
+  const mapProducts = serverAccountsEnabled ? serverMap.products : legacyProducts;
   const [activeTab, setActiveTab] = useState("products");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -693,7 +693,7 @@ export default function MapPage() {
 
   const selected = filtered.find((i) => i.id === selectedId) || null;
   const selectedShop = selected?.shopId ?? selected?.id;
-  const detailPath = serverStorefrontEnabled
+  const detailPath = serverAccountsEnabled
     ? activeTab === "products" ? `/account/orders?product=${selected?.id}` : `/shop/${selectedShop}`
     : activeTab === "products" && selected?.id !== "smit"
     ? `/product/${selected?.id}`
@@ -738,8 +738,8 @@ export default function MapPage() {
         {/* ===== Chap panel ===== */}
         <aside className="map-sidebar" ref={sidebarRef} aria-labelledby="map-heading" tabIndex={0}>
           <h1 id="map-heading">{translateText("Карта")}</h1>
-          {serverStorefrontEnabled && serverCatalog.loading && <p role="status">Загружаем магазины…</p>}
-          {serverStorefrontEnabled && serverCatalog.error && <div role="alert"><p>{serverCatalog.error}</p><button type="button" className="map-btn" onClick={() => setCatalogRevision((value) => value + 1)}>Повторить загрузку</button></div>}
+          {serverAccountsEnabled && serverCatalog.loading && <p role="status">Загружаем магазины…</p>}
+          {serverAccountsEnabled && serverCatalog.error && <div role="alert"><p>{serverCatalog.error}</p><button type="button" className="map-btn" onClick={() => setCatalogRevision((value) => value + 1)}>Повторить загрузку</button></div>}
           <div className="map-toolbar">
             <label className="map-search">
               <Search size={20} strokeWidth={1.8} />
@@ -931,8 +931,8 @@ export default function MapPage() {
                   <Link className="map-btn map-btn--dark" to={detailPath}>
                     {translateText("Подробнее")}
                   </Link>
-                  <Link className="map-btn map-btn--light" to={serverStorefrontEnabled ? `/shop/${selectedShop}` : `/messages?seller=${selectedShop}`}>
-                    {translateText(serverStorefrontEnabled ? "Открыть магазин" : "Написать")}
+                  <Link className="map-btn map-btn--light" to={serverAccountsEnabled ? `/shop/${selectedShop}` : `/messages?seller=${selectedShop}`}>
+                    {translateText(serverAccountsEnabled ? "Открыть магазин" : "Написать")}
                   </Link>
                 </div>
                 <button

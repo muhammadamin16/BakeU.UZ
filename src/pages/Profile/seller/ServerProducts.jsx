@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { goAccount as api, productImageURL } from "../../../api/goAccount.js";
+import { accountAPI as api, productImageURL } from "../../../api/account.js";
 import { PRODUCT_CATEGORIES } from "../../Product/productDetails.js";
 import { translateText } from "../../../i18n/index.js";
 

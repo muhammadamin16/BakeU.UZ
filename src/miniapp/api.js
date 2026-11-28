@@ -1,10 +1,8 @@
 import { miniLaunch } from "./telegram";
-import { goAccount, goPhoneAccountsEnabled } from "../api/goAccount.js";
-import { createGoMiniSession } from "./goSession.js";
-const base = (import.meta.env.VITE_ACCOUNT_API_URL || "/api").replace(
-  /\/$/,
-  "",
-);
+import { accountAPI, phoneAccountsEnabled } from "../api/account.js";
+import { createMiniAccountSession } from "./accountSession.js";
+import { readPublicConfig } from "../api/config.js";
+const base = readPublicConfig(import.meta.env).miniAppAPI;
 const KEY = "bakeu-miniapp-session-v1";
 let memoryToken = "";
 let pending;
@@ -84,14 +82,14 @@ async function verify() {
     expiresAt: result.expiresAt,
   };
 }
-const goMini = createGoMiniSession({
-  goAccount,
+const accountMini = createMiniAccountSession({
+  accountAPI,
   openLaunch: (initData) => miniRequest("/go-session", { method: "POST", body: { initData }, token: "" }),
   setAdminToken: setToken,
 });
 export function authenticateMiniApp(options) {
   if (!pending)
-    pending = (goPhoneAccountsEnabled ? goMini.authenticate(miniLaunch.initData, options) : verify()).finally(() => {
+    pending = (phoneAccountsEnabled ? accountMini.authenticate(miniLaunch.initData, options) : verify()).finally(() => {
       pending = null;
     });
   return pending;

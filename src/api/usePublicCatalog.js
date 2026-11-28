@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
-import { goAPIBase, goPhoneAccountsEnabled, productImageURL, serverStorefrontEnabled } from "./goAccount.js";
-import { loadGoCatalog, projectGoCatalog } from "./goCatalog.js";
+import { apiBaseURL, phoneAccountsEnabled, productImageURL, serverAccountsEnabled } from "./account.js";
+import { loadCatalog, projectCatalog } from "./catalog.js";
 import { useCatalog } from "../store/sellerData.js";
 
-export const publicGoCatalogEnabled = goPhoneAccountsEnabled || serverStorefrontEnabled;
+export const serverCatalogEnabled = phoneAccountsEnabled || serverAccountsEnabled;
 const emptyCatalog = { shops: [], products: [] };
 
 export function usePublicCatalog() {
   const local = useCatalog();
   const [remote, setRemote] = useState(() => ({
     ...emptyCatalog,
-    loading: Boolean(goAPIBase),
-    catalogError: goAPIBase ? "" : "Серверный каталог не настроен.",
+    loading: Boolean(apiBaseURL),
+    catalogError: apiBaseURL ? "" : "Серверный каталог не настроен.",
   }));
   useEffect(() => {
-    if (!publicGoCatalogEnabled || !goAPIBase) return;
+    if (!serverCatalogEnabled || !apiBaseURL) return;
     const controller = new AbortController();
-    loadGoCatalog(goAPIBase, { signal: controller.signal }).then((result) => {
+    loadCatalog(apiBaseURL, { signal: controller.signal }).then((result) => {
       if (!controller.signal.aborted) {
-        setRemote({ ...projectGoCatalog(result, productImageURL), loading: false, catalogError: "" });
+        setRemote({ ...projectCatalog(result, productImageURL), loading: false, catalogError: "" });
       }
     }).catch(() => {
       if (!controller.signal.aborted) {
@@ -27,5 +27,5 @@ export function usePublicCatalog() {
     });
     return () => controller.abort();
   }, []);
-  return publicGoCatalogEnabled ? remote : { ...local, loading: false, catalogError: "" };
+  return serverCatalogEnabled ? remote : { ...local, loading: false, catalogError: "" };
 }

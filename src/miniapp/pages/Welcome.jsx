@@ -24,7 +24,7 @@ const snow = Array.from({ length: 16 }, (_, i) => ({
 }));
 export default function Welcome() {
   const navigate = useNavigate();
-  const { status, user, isAdmin, error, retry, links, goLinked } = useMiniApp();
+  const { status, user, isAdmin, error, retry, links, accountLinked } = useMiniApp();
   const enter = () => {
     haptic();
     navigate("/");
@@ -147,7 +147,7 @@ export default function Welcome() {
           className="mini-access"
           aria-label={translateText("Telegram holati")}
         >
-          {goLinked === false && status === "ready" && <p>Для заказов <Link to="/register">подтвердите аккаунт BakeU</Link>. Существующий аккаунт можно привязать через кнопки покупателя/продавца в боте.</p>}
+          {accountLinked === false && status === "ready" && <p>Для заказов <Link to="/register">подтвердите аккаунт BakeU</Link>. Существующий аккаунт можно привязать через кнопки покупателя/продавца в боте.</p>}
           {status === "loading" ? (
             <p>
               <LoaderCircle className="mini-spin" size={16} />

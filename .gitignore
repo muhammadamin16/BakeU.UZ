@@ -11,6 +11,7 @@ node_modules
 .bakeu-local/
 dist
 dist-ssr
+test-results/
 *.local
 
 # Editor directories and files
@@ -24,11 +25,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Secrets and bot runtime data
+# Private configuration and data from older checkouts
 .env
 .env.*
 !.env.example
-src/bot/data/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

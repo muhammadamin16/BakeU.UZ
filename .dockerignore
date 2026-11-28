@@ -3,12 +3,6 @@ node_modules
 dist
 .env
 .env.*
-**/.env
-**/.env.*
-**/node_modules
+.bakeu-local
 **/*.sqlite*
 **/*.log
-apps/mobile/android
-apps/mobile/ios
-
-.bakeu-local

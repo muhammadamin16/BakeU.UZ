@@ -1,62 +1,43 @@
-
-import react from "@vitejs/plugin-react";
 import process from "node:process";
+import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { devPortPlugin, readDevPort } from "./scripts/dev-port.js";
 import { publicBuildMetadata } from "./scripts/build-metadata.mjs";
+import { upstream } from "./scripts/serve.mjs";
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(
-    mode,
-    fileURLToPath(new URL(".", import.meta.url)),
-    "VITE_"
-  );
-
+  const env = { ...loadEnv(mode, fileURLToPath(new URL(".", import.meta.url)), "VITE_"), ...process.env };
+  const backend = upstream(env.VITE_BACKEND_PROXY_TARGET || "http://127.0.0.1:38119", "VITE_BACKEND_PROXY_TARGET");
+  const bot = env.VITE_MINIAPP_PROXY_TARGET ? upstream(env.VITE_MINIAPP_PROXY_TARGET, "VITE_MINIAPP_PROXY_TARGET") : backend;
+  const proxy = target => ({
+    target, changeOrigin: true, ws: true,
+  });
   return {
     plugins: [react(), devPortPlugin(), {
+      name: "bakeu-public-api-only",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const path = new URL(req.url, "http://localhost").pathname;
+          if (path === "/api/integrations" || path.startsWith("/api/integrations/")) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Service routes are not public frontend routes." }));
+            return;
+          }
+          next();
+        });
+      },
+    }, {
       name: "bakeu-public-build-metadata",
-      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata({
-          ...env, RAILWAY_GIT_COMMIT_SHA: process.env.RAILWAY_GIT_COMMIT_SHA,
-        })) }); },
+      generateBundle() { this.emitFile({ type: "asset", fileName: "bakeu-build.json", source: JSON.stringify(publicBuildMetadata(env)) }); },
     }],
-
-    optimizeDeps: {
-      entries: ["index.html"],
-    },
-
     server: {
-      host: "127.0.0.1",
-      port: readDevPort(env.VITE_DEV_PORT),
-      strictPort: false,
+      host: "localhost", port: readDevPort(env.VITE_DEV_PORT), strictPort: false,
       proxy: {
-        "/api": {
-          target:
-            env.VITE_BOT_API_PROXY_TARGET ||
-            "http://127.0.0.1:3001",
-          changeOrigin: true,
-          configure(proxy) {
-            if (env.VITE_GO_LOCAL_ACCOUNTS !== "true") return;
-            proxy.on("proxyReq", (outgoing, incoming) => {
-              const host = incoming.headers.host;
-              if (/^(127\.0\.0\.1|localhost):\d+$/.test(host || "") &&
-                  incoming.headers.origin === `http://${host}`) {
-                outgoing.removeHeader("origin");
-              }
-            });
-          },
-        },
+        "/api/miniapp": proxy(bot), "/api/telegram/config": proxy(bot),
+        "/api": proxy(backend),
       },
     },
-
-    preview: {
-      host: "0.0.0.0",
-      allowedHosts: [
-        "bakeu-website-production.up.railway.app",
-        "bakeu.uz",
-        "www.bakeu.uz",
-      ],
-    },
+    preview: { host: "localhost" },
   };
 });

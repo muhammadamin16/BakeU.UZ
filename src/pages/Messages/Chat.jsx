@@ -5,9 +5,9 @@ import ProfileChat from "../Profile/ProfileChat";
 import { shopIdFor } from "../../store/shopStore";
 import "../Profile/Workspace.css";
 import ServerChat from "./ServerChat.jsx";
-import { goPhoneAccountsEnabled } from "../../api/goAccount.js";
+import { phoneAccountsEnabled } from "../../api/account.js";
 export default function Chat() {
-  return goPhoneAccountsEnabled ? <ServerChat /> : <DemoChat />;
+  return phoneAccountsEnabled ? <ServerChat /> : <DemoChat />;
 }
 function DemoChat() {
   const [params] = useSearchParams();

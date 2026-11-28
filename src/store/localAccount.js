@@ -4,7 +4,7 @@ import {
   registerServer,
   loginServer,
   saveServerProfile,
-} from "../bot/client/accountApi";
+} from "../api/legacyAccounts";
 // Local prototype only; server-side authentication is required for production.
 const KEY = "bakeu-accounts-v2";
 export function readAccounts() {

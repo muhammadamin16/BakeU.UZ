@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { goAccount, productImageURL } from "../../api/goAccount.js";
+import { accountAPI, productImageURL } from "../../api/account.js";
 import { translateText as t } from "../../i18n/index.js";
 import { ProductPhoto } from "../../pages/Profile/seller/ServerProducts.jsx";
-import { nextStatuses, statusLabels } from "../../telegramOrders/domain.js";
-import MarketModeration from "../../telegramOrders/MarketModeration.jsx";
+import { nextStatuses, statusLabels } from "../../orders/domain.js";
+import MarketModeration from "../../orders/MarketModeration.jsx";
 import "./ServerWorkspace.css";
 
 const sections = [
@@ -26,7 +26,7 @@ function adminRoute(pathname, params) {
   if (!sections.some(([key]) => key === section) || parts.length > 2 || (id && !detailSections.has(section))) return {};
   try { return { section, id: id && decodeURIComponent(id) }; } catch { return {}; }
 }
-const moderationTransport = { request: goAccount?.requestWithOptions };
+const moderationTransport = { request: accountAPI?.requestWithOptions };
 const periods = [["day", "День"], ["week", "Неделя"], ["month", "Месяц"], ["year", "Год"]];
 const money = (value) => Number(value).toLocaleString("ru-RU") + " UZS";
 const tashkentDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tashkent" });
@@ -117,8 +117,8 @@ export default function ServerWorkspace() {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (!goAccount) return;
-    goAccount.requestWithOptions("/me", { signal: controller.signal }).then((user) => {
+    if (!accountAPI) return;
+    accountAPI.requestWithOptions("/me", { signal: controller.signal }).then((user) => {
       if (!controller.signal.aborted) setAccount(user);
     }).catch((error) => {
       if (!controller.signal.aborted) setAccessError(error.message);
@@ -129,7 +129,7 @@ export default function ServerWorkspace() {
   useEffect(() => {
     if (!account?.capabilities?.admin || !path) return;
     const controller = new AbortController();
-    goAccount.requestWithOptions(path, { signal: controller.signal }).then((data) => {
+    accountAPI.requestWithOptions(path, { signal: controller.signal }).then((data) => {
       if (!controller.signal.aborted) setResult({ path, data, error: "" });
     }).catch((error) => {
       if (!controller.signal.aborted) setResult({ path, data: null, error: error.message });
@@ -140,7 +140,7 @@ export default function ServerWorkspace() {
   useEffect(() => {
     if (!account?.capabilities?.admin) return;
     const controller = new AbortController();
-    goAccount.requestWithOptions("/admin/overview", { signal: controller.signal }).then(data => {
+    accountAPI.requestWithOptions("/admin/overview", { signal: controller.signal }).then(data => {
       if (!controller.signal.aborted) setOverview(data);
     }).catch(() => {});
     return () => controller.abort();
@@ -148,7 +148,7 @@ export default function ServerWorkspace() {
 
   if (!account?.capabilities?.admin) return <main className="bsa-page">
     <h1>{t("Панель администратора")}</h1>
-    {!goAccount ? <p role="alert">{t("API администратора не настроен.")}</p> : account || accessError ? <>
+    {!accountAPI ? <p role="alert">{t("API администратора не настроен.")}</p> : account || accessError ? <>
       <p role="alert">{t(account ? "Для доступа войдите в аккаунт администратора." : accessError)}</p>
       <Link className="bw-btn primary" to="/login">{t("Войти")}</Link>
     </> : <p role="status">{t("Проверяем доступ…")}</p>}
@@ -249,14 +249,14 @@ function AccountActions({ row, refresh, initial }) {
     setBusy(true);
     setError("");
     try {
-      await goAccount.request(base + "/status", "PATCH", { action, ...(action === "freeze" && { freezeUntil: new Date(freezeUntil).toISOString() }) });
-      setData(await goAccount.request(base));
+      await accountAPI.request(base + "/status", "PATCH", { action, ...(action === "freeze" && { freezeUntil: new Date(freezeUntil).toISOString() }) });
+      setData(await accountAPI.request(base));
       refresh();
     } catch (failure) { setError(failure.message); }
     finally { setBusy(false); }
   }
   return <details open={initial ? true : undefined} onToggle={event => {
-    if (!initial && event.target.open) goAccount.request(base).then(setData).catch(failure => setError(failure.message));
+    if (!initial && event.target.open) accountAPI.request(base).then(setData).catch(failure => setError(failure.message));
   }}>
     <summary>{row.name || row.uid}</summary>
     {data && <>
@@ -281,7 +281,7 @@ function ProductModeration({ row, refresh }) {
       setBusy(true);
       setError("");
       try {
-        await goAccount.request(`/admin/products/${encodeURIComponent(row.id)}/status`, "PATCH", {
+        await accountAPI.request(`/admin/products/${encodeURIComponent(row.id)}/status`, "PATCH", {
           status: hidden ? "approved" : "hidden", expectedStatus: hidden ? "hidden" : "approved",
         });
         refresh();
@@ -302,7 +302,7 @@ function ComplaintStatus({ row, refresh }) {
       <button type="button" key={status} disabled={busy} onClick={async () => {
         setBusy(true);
         try {
-          await goAccount.request(`/admin/complaints/${encodeURIComponent(row.id)}/status`, "PATCH", { status });
+          await accountAPI.request(`/admin/complaints/${encodeURIComponent(row.id)}/status`, "PATCH", { status });
           refresh();
         } catch (failure) { setError(failure.message); }
         finally { setBusy(false); }
@@ -316,7 +316,7 @@ function AdminPhotos({ row }) {
   const [open, setOpen] = useState(false);
   return <details onToggle={event => setOpen(event.currentTarget.open)}>
     <summary>{t("Фотографии товара")}</summary>
-    {open && row.imageURLs.map(url => <ProductPhoto key={url} product={row} url={url} api={goAccount} admin />)}
+    {open && row.imageURLs.map(url => <ProductPhoto key={url} product={row} url={url} api={accountAPI} admin />)}
   </details>;
 }
 
@@ -362,7 +362,7 @@ function AdminAccountRecord({ row, refresh }) {
   const [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
-    goAccount.requestWithOptions(`/admin/users/${encodeURIComponent(row.id)}`, { signal: controller.signal })
+    accountAPI.requestWithOptions(`/admin/users/${encodeURIComponent(row.id)}`, { signal: controller.signal })
       .then(data => { if (!controller.signal.aborted) setProfile(data); })
       .catch(failure => { if (!controller.signal.aborted) setError(failure.message); });
     return () => controller.abort();
@@ -385,7 +385,7 @@ function ShopActions({ row, refresh }) {
     setBusy(true);
     setError("");
     try {
-      await goAccount.request(`/admin/markets/${encodeURIComponent(row.id)}/status`, "PATCH", {
+      await accountAPI.request(`/admin/markets/${encodeURIComponent(row.id)}/status`, "PATCH", {
         status, expectedStatus: row.status, reason,
       });
       setReason("");
@@ -409,7 +409,7 @@ function AdminPreferences({ initial, refresh }) {
     setBusy(true);
     setResult({});
     try {
-      const saved = await goAccount.request("/admin/settings", "PUT", form);
+      const saved = await accountAPI.request("/admin/settings", "PUT", form);
       setForm(saved);
       setResult({ saved: true });
       refresh();
@@ -447,7 +447,7 @@ function OrderActions({ row, refresh }) {
     setError("");
     setBusy(true);
     try {
-      await goAccount.requestWithOptions(`/admin/orders/${encodeURIComponent(row.id)}/status`, {
+      await accountAPI.requestWithOptions(`/admin/orders/${encodeURIComponent(row.id)}/status`, {
         method: "PATCH", headers: { "Idempotency-Key": crypto.randomUUID() },
         body: { status, expectedStatus: row.status, expectedVersion: row.version },
       });
@@ -468,7 +468,7 @@ function NotificationRead({ id, refresh }) {
     setBusy(true);
     setError("");
     try {
-      await goAccount.request("/admin/notifications/read", "PATCH", id ? { id } : {});
+      await accountAPI.request("/admin/notifications/read", "PATCH", id ? { id } : {});
       refresh();
     } catch (failure) { setError(failure.message); }
     finally { setBusy(false); }

@@ -11,7 +11,7 @@ import { PRODUCT_CATEGORIES } from "../../Product/productDetails";
 import ProfileChat from "../ProfileChat";
 import ShopImageEditor from "./ShopImageEditor";
 import ServerStorefront from "./ServerStorefront";
-import { serverStorefrontEnabled } from "../../../api/goAccount.js";
+import { serverAccountsEnabled } from "../../../api/account.js";
 import { Orders, Reviews, Sales } from "../Activity";
 import { useWorkspace, setAutoReply } from "../../../store/workspaceStore";
 import { useEffect, useState } from "react";
@@ -104,12 +104,12 @@ export default function SellerProfile({ account, onLogout }) {
   useEffect(() => {
     if (!saved && account.company && account.location) {
       saveShop({
-        ...initial(),
+        ...draft,
         description: "Домашняя выпечка на заказ",
         initials: account.company.slice(0, 2).toUpperCase(),
       });
     }
-  }, [saved, account.company, account.location, id, saveShop]);
+  }, [saved, account.company, account.location, id, saveShop, draft]);
   const products = Object.values(allProducts).filter((p) => p.shopId === id);
   const update = (key, value) => setDraft((d) => ({ ...d, [key]: value }));
   async function upload(event, key, product = false) {
@@ -507,7 +507,7 @@ export default function SellerProfile({ account, onLogout }) {
             )}
           </section>
         )}
-        {tab === "settings" && (serverStorefrontEnabled ? <ServerStorefront /> : (
+        {tab === "settings" && (serverAccountsEnabled ? <ServerStorefront /> : (
           <form className="bw-card" onSubmit={save}>
             <h2>{translateText("Настройки магазина")}</h2>
             <p>{translateText("Добавьте обложку и логотип. Перемещайте фото пальцем или мышью, настройте масштаб и нажмите «Применить».")}</p>

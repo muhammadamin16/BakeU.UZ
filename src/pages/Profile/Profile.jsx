@@ -2,7 +2,7 @@ import { translateText } from "../../i18n/index.js";
 import {
   accountApiEnabled,
   getServerProfile,
-} from "../../bot/client/accountApi";
+} from "../../api/legacyAccounts";
 import {
   saveLocalProfile,
   readAccounts,
@@ -56,7 +56,7 @@ export default function Profile() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [account?.id, account?.server]);
+  }, [account?.id, account?.server, account?.role]);
 
   if (params.get("shop"))
     return <SellerShop key={params.get("shop")} shopId={params.get("shop")} />;

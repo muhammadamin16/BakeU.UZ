@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { goAccount, goAPIBase } from "../../api/goAccount.js";
+import { accountAPI, apiBaseURL } from "../../api/account.js";
 import { translateText as t } from "../../i18n/index.js";
 
 const merge = (a, b) => [...new Map([...a, ...b].map(message => [message.id, message])).values()]
@@ -25,7 +25,7 @@ export default function ServerChat() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const request = (path, options) => goAccount.requestWithOptions(path, { ...options, signal: controller.signal });
+    const request = (path, options) => accountAPI.requestWithOptions(path, { ...options, signal: controller.signal });
     let socket;
     const handleError = error => { if (!controller.signal.aborted) setError(error.message); };
     (async () => {
@@ -42,11 +42,11 @@ export default function ServerChat() {
       }
       await reload.current();
       if (controller.signal.aborted) return;
-      const base = new URL(goAPIBase, location.origin);
+      const base = new URL(apiBaseURL, location.origin);
       socket = io(base.origin, {
         path: base.pathname.replace(/\/$/, "") + "/chat/socket",
         transports: ["polling"],
-        auth: callback => goAccount.socketToken().then(token => callback({ token })).catch(() => callback({})),
+        auth: callback => accountAPI.socketToken().then(token => callback({ token })).catch(() => callback({})),
       });
       socket.on("connect", () => {
         reload.current().catch(handleError);
@@ -71,7 +71,7 @@ export default function ServerChat() {
     activeChat.current = selected;
     if (!selected) return;
     const controller = new AbortController();
-    goAccount.requestWithOptions(`/chats/${selected}/messages`, { signal: controller.signal }).then(result => {
+    accountAPI.requestWithOptions(`/chats/${selected}/messages`, { signal: controller.signal }).then(result => {
       if (!controller.signal.aborted) {
         setMessages(current => merge(current, result.items));
         setCursor(result.next);
@@ -83,7 +83,7 @@ export default function ServerChat() {
   const through = messages.at(-1)?.sequence;
   useEffect(() => {
     if (!selected || through === undefined) return;
-    goAccount.request(`/chats/${selected}/read`, "PUT", { through })
+    accountAPI.request(`/chats/${selected}/read`, "PUT", { through })
       .then(() => reload.current()).catch(error => setError(error.message));
     end.current?.scrollIntoView({ block: "nearest" });
   }, [selected, through]);
@@ -93,7 +93,7 @@ export default function ServerChat() {
     if (!text.trim() || busy) return;
     setBusy(true);
     try {
-      const message = await goAccount.request(`/chats/${selected}/messages`, "POST", { text });
+      const message = await accountAPI.request(`/chats/${selected}/messages`, "POST", { text });
       if (activeChat.current === selected) {
         setMessages(items => merge(items, [message]));
         setText("");
@@ -103,7 +103,7 @@ export default function ServerChat() {
   }
   async function loadEarlier() {
     try {
-      const result = await goAccount.request(`/chats/${selected}/messages?before=${encodeURIComponent(cursor)}`);
+      const result = await accountAPI.request(`/chats/${selected}/messages?before=${encodeURIComponent(cursor)}`);
       if (activeChat.current === selected) {
         setMessages(current => merge(current, result.items));
         setCursor(result.next);

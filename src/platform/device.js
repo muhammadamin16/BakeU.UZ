@@ -1,4 +1,4 @@
-// The website uses browser APIs; the mobile entry registers Capacitor providers.
+// The website uses browser APIs; optional browser-device providers can be registered.
 // This adapter never changes account roles or server authorization.
 let device = null;
 export function configureDevice(provider) {

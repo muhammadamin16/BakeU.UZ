@@ -1,4 +1,4 @@
-import { publicGoCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
+import { serverCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Search, ShoppingBag, Store, X } from "lucide-react";
@@ -17,7 +17,7 @@ export default function Seller() {
   const shopId = params.get("shop");
   const tab = params.get("tab") === "sellers" ? "sellers" : "products";
   const initialQuery = params.get("q") || "";
-  if (shopId && publicGoCatalogEnabled) return <Navigate replace to={`/shop/${encodeURIComponent(shopId)}`} />;
+  if (shopId && serverCatalogEnabled) return <Navigate replace to={`/shop/${encodeURIComponent(shopId)}`} />;
   return shopId
     ? <SellerShop key={shopId} shopId={shopId} />
     : <SellerCatalog key={JSON.stringify([tab, initialQuery])} tab={tab} initialQuery={initialQuery} />;
@@ -62,7 +62,7 @@ function SellerCatalog({ tab, initialQuery }) {
 
   const reset = () => { setQuery(""); setCategory("Все"); };
   const addProduct = (product) => {
-    if (publicGoCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
+    if (serverCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
     add(product);
     setNotice(product.name);
   };
@@ -106,7 +106,7 @@ function SellerCatalog({ tab, initialQuery }) {
             ))}
           </div>
         ) : (
-          <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-grid-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={publicGoCatalogEnabled ? 0 : (items?.[product.id] ?? 0)} onAdd={addProduct} /></div>)}</div>
+          <div className="product-grid">{visibleProducts.map((product, index) => <div key={product.id} className="seller-grid-entry" style={{ "--seller-stagger": `${(index % 16) * 20}ms` }}><ProductCard product={product} shop={shopById.get(String(product.shopId))} quantity={serverCatalogEnabled ? 0 : (items?.[product.id] ?? 0)} onAdd={addProduct} /></div>)}</div>
         )}
         {(loading || catalogError) && <p role="status">{t(catalogError || "Загрузка…")}</p>}
         {!loading && !catalogError && (showSellers ? visibleShops.length === 0 : visibleProducts.length === 0) && <div className="seller-empty"><Search size={25} /><h2>{t("Ничего не найдено")}</h2><button type="button" onClick={reset}>{t("Сбросить")}</button></div>}

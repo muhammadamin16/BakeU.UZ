@@ -1,5 +1,5 @@
 import ShopLocationPicker from "../../../components/ShopLocationPicker/ShopLocationPicker";
-import { openSellerShop, accountApiEnabled } from "../../../bot/client/accountApi";
+import { openSellerShop, accountApiEnabled } from "../../../api/legacyAccounts";
 import { translateText } from "../../../i18n/index.js";
 import "./ClientProfile.css";
 import ProfileChat from "../ProfileChat";

@@ -1,4 +1,4 @@
-import { publicGoCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
+import { serverCatalogEnabled, usePublicCatalog } from "../../api/usePublicCatalog.js";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -77,7 +77,7 @@ export default function Home() {
   };
   const resetFilters = () => { setQuery(""); setCategory("Все"); setBatches(1); };
   const handleAdd = (product) => {
-    if (publicGoCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
+    if (serverCatalogEnabled) return navigate(`/product/${encodeURIComponent(product.id)}`);
     add(product);
     setNotice(product.name);
   };
@@ -133,7 +133,7 @@ export default function Home() {
                   <ProductCard
                     product={product}
                     shop={shopById.get(String(product.shopId))}
-                    quantity={publicGoCatalogEnabled ? 0 : (items?.[product.id] ?? 0)}
+                    quantity={serverCatalogEnabled ? 0 : (items?.[product.id] ?? 0)}
                     onAdd={handleAdd}
                   />
                 </div>

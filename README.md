@@ -1,99 +1,107 @@
-# React + Vite
+# BakeU Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite website, Admin UI and Telegram Mini App **browser interface**.
+This repository contains frontend code only. Accounts, permissions, MongoDB,
+photos and orders are served by the separate `BakeU-Backend` API. The Telegram
+Bot is a separate application; its server, token and SQLite do not belong here.
 
-Currently, two official plugins are available:
+## Start on your laptop
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Install Node.js **24+**. Open PowerShell in this repository:
 
-## Local development port
-
-Run `npm install` and `npm run dev`, then open the **Local** address printed by
-Vite. The usual port is **5173** again: `http://127.0.0.1:5173/`.
-The demo admin is at the same address followed by `#/admin`.
-Vite also prints a separate **Admin** link with the actual selected port.
-To start directly in the admin instead of the storefront, use:
-
-```sh
-npm run dev:admin
+```powershell
+npm.cmd ci
+Copy-Item .env.example .env.local
+npm.cmd run dev
 ```
 
-This opens the demo admin in the default browser. `npm run dev` continues to
-serve the storefront. Plain `/admin` and `/admin/products/...` URLs are converted
-to their `/#/admin...` equivalents before routing when the host serves the SPA
-entry point (as the Vite development server does). Explicit hash routes and
-Telegram launch parameters are preserved. `/#/admin/telegram` still requires
-verified server admin access.
+Copy `.env.example` only when creating a new `.env.local`; keep any existing
+personal settings. Open the **Local** URL printed by Vite. The default is
+`http://localhost:5173/`; Windows-reserved or occupied ports use an available
+fallback. Admin is the same address with `/#/admin`. To open it directly:
 
-To choose your own port on Windows or Mac, create or edit **`.env.local`** in the
-repository root (beside `package.json`) and add:
+```powershell
+npm.cmd run dev:admin
+```
+
+Frontend development itself needs **no Docker or database**. To use accounts,
+catalog, chat and Admin data, start your Backend separately and set its actual
+local address in `.env.local`:
 
 ```dotenv
-VITE_DEV_PORT=8080
+VITE_API_URL=/api
+VITE_BACKEND_PROXY_TARGET=http://127.0.0.1:38119
 ```
 
-Keep any existing lines in that file. Stop the dev server with Ctrl+C and run
-`npm run dev` again. The example opens `http://127.0.0.1:8080/#/admin` when 8080
-is available. `.env.local` is personal and is not committed to Git.
+`38119` is an example matching the existing local Backend setup. Change it if
+your API listens elsewhere. Add the exact printed website Origin to the
+Backend's allowed browser origins. Use `localhost` in Chrome/Edge for the local
+Secure-cookie session flow. Restart Vite after configuration changes.
 
-For a one-time override:
+Admin authorization is checked by Backend. There is no demo Admin fallback,
+default admin password or frontend privilege bypass. An empty/unavailable API
+is shown honestly. Phone proof and any local fixture accounts are prepared by
+the separate Backend/Bot tooling; this repository does not seed users or start
+MongoDB. The old `local:start`, `local:proof`, `bot:*` and `app:*` commands were
+removed with those separate applications.
 
-```sh
-npm run dev -- --port 5173
+## Folder map
+
+```text
+public/              Images, logos, music and other browser assets
+src/
+  api/               Public configuration, HTTP session and catalog clients
+  admin/             Server-backed Admin pages and routing
+  components/        Shared UI: navigation, gallery, map picker, winter theme
+  orders/            Browser order/account/checkout screens and API adapters
+  pages/             Storefront, authentication, profiles, map and messages
+  miniapp/           Telegram SDK and Mini App browser-session integration
+  store/             Browser state, server favorites and guest-cart helpers
+  i18n/, locales/    Russian/Uzbek translations
+  platform/          Browser location, clipboard and sharing adapters
+  styles/            Shared site styles
+scripts/             Frontend port selection, build metadata, static hosting
 ```
 
-If Windows reserves the requested port, or another server occupies it, the dev
-server reports the reason and chooses an available port, starting with 3000.
-Automatic fallback skips 3001 because the bot/account API uses it. Always use
-the actual **Local** address printed by the terminal. To require an exact port
-and fail instead of falling back, add `--strictPort`.
+`src/api/legacyAccounts.js` is a **browser HTTP adapter** retained for older
+presentation paths; it contains no server/database implementation. Frontend
+API modules now use technology-neutral names instead of `Go*`/`telegramOrders`.
 
-Changing the frontend port does not change the API port, public Vercel address
-or Telegram configuration. If you test server accounts locally, add the selected
-frontend origin to `ALLOWED_ORIGINS` in your private `src/bot/.env`, preserving
-existing origins, and restart the API. The independent browser demo needs no API.
+## Check changes
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-## BakeU App — Android / iOS
-
-The complete website is also bundled as a Capacitor application in
-[apps/mobile/](apps/mobile/README.md). It uses the same `src/main.jsx`, pages,
-admin routes, translations, state, CSS and `public/` assets. There are no separate
-placeholder screens to keep in sync. Server-only bot code stays outside the app.
-
-From the repository root, with Node.js 24+:
-
-```sh
-npm ci
-npm run app:install
-npm run app:dev
+```powershell
+npm.cmd run check
 ```
 
-The app development server uses port 4300; the website keeps its existing port.
+This runs the frontend tests, ESLint and production build. Tests use controlled
+HTTP fixtures and do not contact Production or open a MongoDB/SQLite database.
+Do not commit `node_modules`, `dist`, `.env.local` or runtime credentials.
 
-```sh
-npm run app:check
-npm run app:parity
-npm run app:sync
-npm run app:android
-npm run app:ios
+## Build and host
+
+```powershell
+npm.cmd run build
+npm.cmd run preview
 ```
 
-`app:parity` compares every bundled website module and public asset by SHA-256.
-Android requires a full JDK 21, Android Studio and Android SDK 36. iOS requires
-macOS and Xcode. Native builds and phone tests are separate from the web build
-and Capacitor sync. See the mobile README for API origins, existing demo-mode
-limits, secure configuration and the complete folder map.
+The output is `dist/`. `preview` is a local static preview; use Vite development
+proxy or an actual reverse proxy to access `/api`.
 
-## Local marketplace and Admin on Windows
+For Docker/Railway or a Node static host, `npm start` serves the built frontend
+and forwards public API requests to **explicitly configured external services**:
 
-See [LOCAL_START.md](LOCAL_START.md) for the PowerShell workflow, isolated
-MongoDB replica set, fixture seed and local phone proof.
+```powershell
+$env:BACKEND_URL="http://127.0.0.1:38119"
+$env:WEB_ALLOWED_ORIGINS="http://localhost:8080"
+npm.cmd start
+```
+
+`GET /healthz` reports frontend hosting health, not database readiness. Without
+`BACKEND_URL`, API requests return a JSON configuration error rather than
+connecting to a hardcoded Production service. Hosting is not a Backend: it has
+no account/business logic, database driver, seed, worker or Bot implementation.
+
+See [API and hosting configuration](docs/API.md) for Telegram endpoints and
+public/runtime settings. Existing site design, gallery, translations and Admin
+screens use the same external contracts; no Production deployment is performed
+by installing or building this repository.
