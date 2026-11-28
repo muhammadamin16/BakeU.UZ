@@ -1,0 +1,14 @@
+.frontend-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem 1rem;
+  padding: .55rem 1rem;
+  background: #fff2d9;
+  border-bottom: 1px solid #ead5b6;
+  color: #704526;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+.frontend-preview a { color: inherit; text-decoration: underline; font-weight: 600; }

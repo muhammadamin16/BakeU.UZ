@@ -14,12 +14,17 @@ export function publicApiURL(value, label) {
 }
 
 export function readPublicConfig(env = {}) {
+  const mode = env.VITE_APP_MODE ?? "frontend";
+  if (!["frontend", "server"].includes(mode)) throw Error("VITE_APP_MODE must be frontend or server.");
+  // Preview is explicit and independent of stale API values in .env.local.
+  // Never fall back to demo data after a server-mode request fails.
+  if (mode === "frontend") return { mode, api: "", miniAppAPI: "", phoneAccounts: false };
   // Older deployments may still supply these public names during the move.
   // The client is independent of the Backend implementation language.
   const api = publicApiURL(env.VITE_API_URL ?? env.VITE_GO_API_URL ?? "/api", "VITE_API_URL");
   const miniAppAPI = publicApiURL(env.VITE_MINIAPP_API_URL ?? env.VITE_ACCOUNT_API_URL ?? "/api", "VITE_MINIAPP_API_URL");
   const flag = env.VITE_PHONE_ACCOUNTS ?? env.VITE_GO_PHONE_ACCOUNTS ?? "true";
   if (!["true", "false"].includes(flag)) throw Error("VITE_PHONE_ACCOUNTS must be true or false.");
-  if (flag === "true" && !api) throw Error("Phone accounts require VITE_API_URL.");
-  return { api, miniAppAPI, phoneAccounts: flag === "true" };
+  if (!api) throw Error("Server mode requires VITE_API_URL.");
+  return { mode, api, miniAppAPI, phoneAccounts: flag === "true" };
 }

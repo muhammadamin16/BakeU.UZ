@@ -1,4 +1,4 @@
-import { accountAPI } from "../api/account.js";
+import { accountAPI, frontendOnly } from "../api/account.js";
 import { logoutServer } from "../api/legacyAccounts";
 const PROFILE_KEY = "bakeu-demo-profile";
 const CHAT_ROLE_KEY = "bakeu-chat-role";
@@ -9,6 +9,7 @@ let authModalDismissed = false;
 
 /** sessionStorage'dan joriy profilni xavfsiz o'qiydi. */
 export function getSessionProfile() {
+  if (frontendOnly) return null;
   try {
     const raw = sessionStorage.getItem(PROFILE_KEY);
     return raw ? JSON.parse(raw) : null;

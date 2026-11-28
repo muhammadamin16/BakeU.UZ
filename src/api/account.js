@@ -2,6 +2,7 @@ import { createAccountSession } from "./session.js";
 import { readPublicConfig } from "./config.js";
 
 const config = readPublicConfig(import.meta.env);
+export const frontendOnly = config.mode === "frontend";
 export const apiBaseURL = config.api;
 export const serverAccountsEnabled = Boolean(apiBaseURL);
 export const phoneAccountsEnabled = config.phoneAccounts;

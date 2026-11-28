@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { devPortPlugin, readDevPort } from "./scripts/dev-port.js";
+import { readPublicConfig } from "./src/api/config.js";
 
 // Optional development proxy; no Backend process is started by this project.
 function proxyTarget(value, label) {
@@ -18,8 +19,9 @@ function proxyTarget(value, label) {
 
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, fileURLToPath(new URL(".", import.meta.url)), "VITE_"), ...process.env };
-  const backend = proxyTarget(env.VITE_BACKEND_PROXY_TARGET, "VITE_BACKEND_PROXY_TARGET");
-  const bot = proxyTarget(env.VITE_MINIAPP_PROXY_TARGET, "VITE_MINIAPP_PROXY_TARGET") || backend;
+  const frontendOnly = readPublicConfig(env).mode === "frontend";
+  const backend = frontendOnly ? undefined : proxyTarget(env.VITE_BACKEND_PROXY_TARGET, "VITE_BACKEND_PROXY_TARGET");
+  const bot = frontendOnly ? undefined : proxyTarget(env.VITE_MINIAPP_PROXY_TARGET, "VITE_MINIAPP_PROXY_TARGET") || backend;
   const proxy = target => ({
     target, changeOrigin: true, ws: true,
   });

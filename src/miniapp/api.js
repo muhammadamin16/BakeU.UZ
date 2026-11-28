@@ -1,5 +1,5 @@
 import { miniLaunch } from "./telegram";
-import { accountAPI, phoneAccountsEnabled } from "../api/account.js";
+import { accountAPI, phoneAccountsEnabled, frontendOnly } from "../api/account.js";
 import { createMiniAccountSession } from "./accountSession.js";
 import { readPublicConfig } from "../api/config.js";
 const base = readPublicConfig(import.meta.env).miniAppAPI;
@@ -27,6 +27,7 @@ export async function miniRequest(
   path,
   { method = "GET", body, token = getToken() } = {},
 ) {
+  if (frontendOnly) throw Error("Frontend preview: Telegram verification will be connected with Backend.");
   let response;
   try {
     response = await fetch(`${base}/miniapp${path}`, {
@@ -88,6 +89,7 @@ const accountMini = createMiniAccountSession({
   setAdminToken: setToken,
 });
 export function authenticateMiniApp(options) {
+  if (frontendOnly) return Promise.resolve(null);
   if (!pending)
     pending = (phoneAccountsEnabled ? accountMini.authenticate(miniLaunch.initData, options) : verify()).finally(() => {
       pending = null;
