@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:admin": "vite --open /#/admin",
     "build": "vite build",
-    "start": "vite",
+    "start": "node scripts/serve.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "node --test scripts/*.test.* src/api/*.test.js src/miniapp/*.test.js src/orders/*.test.js src/store/*.test.js src/i18n/*.test.js src/platform/*.test.js src/routes/*.test.js",

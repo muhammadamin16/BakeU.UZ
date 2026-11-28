@@ -21,7 +21,7 @@ import Chat from "../pages/Messages/Chat";
 import Login from "../pages/Auth/Login/Login";
 import PhoneAccount from "../pages/Auth/PhoneAccount.jsx";
 import { serverCatalogEnabled } from "../api/usePublicCatalog.js";
-import { frontendOnly, localAccountsEnabled, phoneAccountsEnabled } from "../api/account.js";
+import { localAccountsEnabled, phoneAccountsEnabled } from "../api/account.js";
 import { miniLaunch } from "../miniapp/telegram.js";
 import Register from "../pages/Auth/Register/Register";
 import Profile from "../pages/Profile/Profile";
@@ -36,7 +36,6 @@ const ServerStorefront = lazy(() =>
 );
 
 const ServerWorkspace = lazy(() => import("../admin/routes/AdminRoutes.jsx"));
-const FrontendAdmin = lazy(() => import("../admin/pages/FrontendPreview.jsx"));
 const MapPage = lazy(() => import("../pages/Map/Map"));
 const AiAssistant = lazy(() => import("../pages/AiAssistant/AiAssistant"));
 
@@ -54,7 +53,7 @@ function OrderRedirect() {
 }
 
 export default function AppRoutes() {
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const { isMiniMode, status: miniStatus, accountLinked, retry: retryMini, error: miniError } = useMiniApp();
   const loading = <p role="status">{translateText("Загрузка…")}</p>;
 
@@ -74,14 +73,6 @@ export default function AppRoutes() {
     !NO_FOOTER_PREFIXES.some((base) => matchesPath(pathname, base));
 
   const privateAccountPage = ["/account/orders", "/profile", "/orders", "/checkout", "/cart", "/messages"].some((base) => matchesPath(pathname, base));
-  if (frontendOnly && matchesPath(pathname, "/account/orders"))
-    return <Navigate replace to={new URLSearchParams(search).has("checkout") ? "/checkout" : "/orders"} />;
-  if (frontendOnly && matchesPath(pathname, "/telegram/link"))
-    return <Navigate replace to="/register" />;
-  if (frontendOnly && matchesPath(pathname, "/shop")) {
-    const id = pathname.split("/")[2];
-    return <Navigate replace to={id ? "/seller?shop=" + encodeURIComponent(id) : "/seller?tab=sellers"} />;
-  }
   if (phoneAccountsEnabled && miniLaunch.isTelegram && privateAccountPage && (miniStatus !== "ready" || accountLinked === false))
     return <main className="tg-orders-panel" style={{ maxWidth: 720, margin: "24px auto" }}>
       <h1>Аккаунт BakeU</h1>
@@ -110,7 +101,6 @@ export default function AppRoutes() {
     );
   if (matchesPath(pathname, "/miniapp")) return <Welcome />;
   if (matchesPath(pathname, "/admin")) {
-    if (frontendOnly) return <Suspense fallback={loading}><FrontendAdmin /></Suspense>;
     if (phoneAccountsEnabled && miniLaunch.isTelegram && miniStatus === "loading") return loading;
     return <Suspense fallback={loading}><ServerWorkspace /></Suspense>;
   }
@@ -163,15 +153,15 @@ export default function AppRoutes() {
           <Route path="/messages" element={<Chat />} />
           <Route path="/seller" element={<Seller />} />
 
-          <Route path="/login" element={(frontendOnly || phoneAccountsEnabled) ? <PhoneAccount key="login" /> : localAccountsEnabled ? <Navigate to="/account/orders?auth=login" replace /> : <Login />} />
-          <Route path="/register" element={(frontendOnly || phoneAccountsEnabled) ? <PhoneAccount key="register" register /> : localAccountsEnabled ? <Navigate to="/account/orders?auth=buyer&register=1" replace /> : <Register />} />
+          <Route path="/login" element={phoneAccountsEnabled ? <PhoneAccount key="login" /> : localAccountsEnabled ? <Navigate to="/account/orders?auth=login" replace /> : <Login />} />
+          <Route path="/register" element={phoneAccountsEnabled ? <PhoneAccount key="register" register /> : localAccountsEnabled ? <Navigate to="/account/orders?auth=buyer&register=1" replace /> : <Register />} />
           <Route path="/profile" element={(phoneAccountsEnabled || localAccountsEnabled) ? <Navigate to="/account/orders" replace /> : <Profile />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      {isHome && !isMiniMode && !localAccountsEnabled && !frontendOnly && <AuthModal />}
+      {isHome && !isMiniMode && !localAccountsEnabled && <AuthModal />}
 
       <MobileNav />
       {showFooter && <Footer />}

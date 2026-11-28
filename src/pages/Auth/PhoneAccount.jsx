@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { accountAPI, frontendOnly } from "../../api/account.js";
+import { accountAPI } from "../../api/account.js";
 import AuthShell from "./AuthShell.jsx";
 import PhoneInput from "./PhoneInput.jsx";
 import { phoneStartPayload, readPhonePending, savePhonePending, clearPhonePending } from "./phoneAccountForm.js";
@@ -16,7 +16,7 @@ export default function PhoneAccount({ register = false }) {
   const mini = useMiniApp();
   const purpose = register ? "register" : "login";
   const [draft, setDraft] = useState({ phone: "", firstName: "", lastName: "", role: "customer", marketName: "", address: "", lat: null, lng: null });
-  const [pending, setPending] = useState(() => frontendOnly ? null : readPhonePending(purpose));
+  const [pending, setPending] = useState(() => readPhonePending(purpose));
   const [step, setStep] = useState(() => pending ? 3 : register ? 1 : 2);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,11 +39,6 @@ export default function PhoneAccount({ register = false }) {
     setBusy(true);
     setError("");
     try {
-      if (frontendOnly) {
-        phoneStartPayload(draft, register);
-        setStep(3);
-        return;
-      }
       if (pending) {
         if (Date.parse(pending.expiresAt) <= Date.now()) throw Error("Код устарел. Запросите новый.");
         await accountAPI.verifyPhone(pending.id, code);
@@ -71,12 +66,11 @@ export default function PhoneAccount({ register = false }) {
     }
   }
 
-  if (!accountAPI && !frontendOnly) return <AuthShell><div className="go-phone-auth"><h1 id="bk-auth-title">{t("Аккаунт BakeU")}</h1><p role="alert">{t("Вход и регистрация временно недоступны. Повторите позже.")}</p><Link to="/">{t("На главную")}</Link></div></AuthShell>;
+  if (!accountAPI) return <AuthShell><div className="go-phone-auth"><h1 id="bk-auth-title">{t("Аккаунт BakeU")}</h1><p role="alert">{t("Вход и регистрация временно недоступны. Повторите позже.")}</p><Link to="/">{t("На главную")}</Link></div></AuthShell>;
   return (
     <AuthShell>
       <form className="go-phone-auth" onSubmit={submit}>
         <h1 id="bk-auth-title">{t(register ? "Создать аккаунт BakeU" : "Войти в BakeU")}</h1>
-        {frontendOnly && <p role="note">{t("Предпросмотр формы. Аккаунт не создаётся; Telegram подключим вместе с Backend.")}</p>}
         {register && <p>{step} / 3 · {t(["Тип аккаунта", "Ваши данные", "Подтверждение Telegram"][step - 1])}</p>}
         <fieldset disabled={busy}>
           {step === 1 && (
@@ -111,15 +105,10 @@ export default function PhoneAccount({ register = false }) {
             <label>{t("Код из Telegram")}<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }} /></label>
             <button type="button" onClick={() => { clearPhonePending(purpose); setPending(null); setStep(2); setCode(""); setError(""); }}>{t("Изменить данные / запросить новый код")}</button>
           </>}
-          {frontendOnly && step === 3 && <>
-            <p role="status">{t("Данные проверены только в форме. Код не отправлен, телефон не подтверждён.")}</p>
-            <label>{t("Код из Telegram")}<input disabled placeholder="000000" inputMode="numeric" /></label>
-            <button type="button" onClick={() => { setStep(2); setError(""); }}>{t("Назад")}</button>
-          </>}
         </fieldset>
         {register && step >= 2 && <p>{t("Аккаунт появится только после подтверждения вашего номера в Telegram.")}</p>}
         {error && <p className="go-phone-error" role="alert">{t(error)}</p>}
-        <button disabled={busy || (frontendOnly && step === 3)}>{t(busy ? "Подождите…" : frontendOnly && step >= 2 ? "Предпросмотр подтверждения" : ["Продолжить", "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
+        <button disabled={busy}>{t(busy ? "Подождите…" : ["Продолжить", "Получить код в Telegram", "Подтвердить и войти"][step - 1])}</button>
         <Link to={register ? "/login" : "/register"} state={state}>{t(register ? "Уже есть подтверждённый аккаунт? Войти" : "Создать аккаунт")}</Link>
       </form>
     </AuthShell>

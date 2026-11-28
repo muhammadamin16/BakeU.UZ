@@ -19,7 +19,6 @@ function cache(result) {
   return result.user;
 }
 async function request(path, method = "GET", body) {
-  if (!accountApiEnabled) throw Error("Frontend preview: account services are not connected.");
   const token = sessionStorage.getItem(TOKEN_KEY);
   let response;
   try {

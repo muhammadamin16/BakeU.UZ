@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { frontendOnly } from "../api/account.js";
 export const shopIdFor = (account) => {
   const key = (
     account.id ||
@@ -31,7 +30,7 @@ export const useShopStore = create(
           return { products };
         }),
     }),
-    { name: frontendOnly ? "bakeu-preview-shops-v1" : "bakeu-local-shops-v1" },
+    { name: "bakeu-local-shops-v1" },
   ),
 );
 export function socialHandle(value, service) {

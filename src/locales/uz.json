@@ -1387,17 +1387,5 @@
   "Подать жалобу": "Şikoyat yuboriş",
   "Жалоба отправлена.": "Şikoyat yuborildi.",
   "На рассмотрении": "Körib çiqilmoqda",
-  "Рассмотреть": "Körib çiqiş",
-  "Демонстрационные товары и магазины. Backend не подключён.": "Namunaviy mahsulotlar va dökonlar. Backend ulanmagan.",
-  "Предпросмотр Admin": "Admin körinişi",
-  "Предпросмотр формы. Аккаунт не создаётся; Telegram подключим вместе с Backend.": "Forma namunasi. Akkaunt yaratilmaydi; Telegramni Backend bilan ulaymiz.",
-  "Данные проверены только в форме. Код не отправлен, телефон не подтверждён.": "Ma’lumotlar faqat formada tekşirildi. Kod yuborilmadi, telefon tasdiqlanmadi.",
-  "Предпросмотр подтверждения": "Tasdiqlaş körinişi",
-  "Только макет, без доступа к реальным аккаунтам и данным.": "Faqat maket; haqiqiy akkauntlar va ma’lumotlarga kiriş yöq.",
-  "Демо-товары": "Namuna mahsulotlar",
-  "Демо-магазины": "Namuna dökonlar",
-  "Демо-покупатели": "Namuna xaridorlar",
-  "Демо-покупатель": "Namuna xaridor",
-  "Откройте разделы, чтобы проверить таблицы и поиск. Управление реальными данными подключим вместе с Backend.": "Jadvallar va qidiruvni tekşiriş uçun bölimlarni oçing. Haqiqiy ma’lumotlar boşqaruvini Backend bilan ulaymiz.",
-  "Реальных записей пока нет. Этот раздел подключим после Backend.": "Hozirça haqiqiy yozuvlar yöq. Bu bölimni Backenddan keyin ulaymiz."
+  "Рассмотреть": "Körib çiqiş"
 }

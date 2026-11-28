@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { productData } from "./productData";
 import { catalogProducts } from "../data/cartCatalog";
-import { frontendOnly } from "../api/account.js";
 
 export const useCartStore = create(
   persist(
@@ -62,7 +61,7 @@ export const useCartStore = create(
       },
     }),
     {
-      name: frontendOnly ? "bakeu-preview-cart-v1" : "bakeu-cart",
+      name: "bakeu-cart",
       partialize: (s) => ({
         items: s.items,
         products: s.products,

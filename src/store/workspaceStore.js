@@ -2,8 +2,7 @@ import { create } from "zustand";
 import { accountId } from "./localAccount";
 import { shopIdFor } from "./shopStore";
 import { prepareCheckout } from "./checkout";
-import { frontendOnly } from "../api/account.js";
-const KEY = frontendOnly ? "bakeu-preview-workspace-v1" : "bakeu-workspace-v2";
+const KEY = "bakeu-workspace-v2";
 const empty = {
   threads: [],
   orders: [],

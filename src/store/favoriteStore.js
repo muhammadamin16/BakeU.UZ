@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { productData } from "./productData";
-import { accountAPI, phoneAccountsEnabled, frontendOnly } from "../api/account.js";
+import { accountAPI, phoneAccountsEnabled } from "../api/account.js";
 import { createFavoritesController } from "./serverFavorites.js";
 
-const guestStore = create(persist(() => ({ items: {} }), { name: frontendOnly ? "bakeu-preview-favorites-v1" : "bakeu-favorites-products-v1" }));
+const guestStore = create(persist(() => ({ items: {} }), { name: "bakeu-favorites-products-v1" }));
 const guest = {
   read: () => guestStore.getState().items,
   change(id, remove, clear) {

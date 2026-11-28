@@ -6,7 +6,6 @@ import { HashRouter, useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import WinterTheme from "./components/WinterTheme/WinterTheme";
 import BackgroundMusic from "./components/BackgroundMusic/BackgroundMusic";
-import FrontendPreview from "./components/FrontendPreview/FrontendPreview.jsx";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -15,7 +14,6 @@ function AppContent() {
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   return (
     <>
-      <FrontendPreview />
       {!isAdmin && !isWelcome && <WinterTheme />}
       {!isAdmin && !isWelcome && <MiniAppBar />}
       <AppRoutes />
